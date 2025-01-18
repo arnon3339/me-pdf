@@ -1,0 +1,17 @@
+{
+  "name": "@cloudpdf/example-vanilla",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@cloudpdf/core": "workspace:*",
+    "@cloudpdf/plugin-navigation": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}

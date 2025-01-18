@@ -1,24 +1,30 @@
 {
-  "name": "@cloudpdf/core",
-  "version": "0.0.0",
+  "name": "@cloudpdf/plugin-navigation",
+  "version": "1.0.0",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
+    "dev": "tsup --watch",
     "test": "vitest",
-    "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cloudpdf/core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
+  "peerDependencies": {
+    "@cloudpdf/core": "^0.0.0"
+  },
   "publishConfig": {
     "access": "public"
   }

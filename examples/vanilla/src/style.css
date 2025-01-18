@@ -1,0 +1,29 @@
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+
+.toolbar {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #eee;
+}
+
+.viewer-container {
+  flex: 1;
+  overflow: auto;
+  padding: 2rem;
+}
+
+.page-container {
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  padding: 2rem;
+  max-width: 800px;
+}

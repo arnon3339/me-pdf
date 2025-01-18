@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer - Vanilla Example</title>
+    <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+    <div class="pdf-viewer">
+        <div class="toolbar">
+            <button id="prevPage">Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPage">Next</button>
+        </div>
+        <div class="viewer-container">
+            <div id="pageContainer" class="page-container">
+                <!-- PDF pages will be rendered here -->
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
