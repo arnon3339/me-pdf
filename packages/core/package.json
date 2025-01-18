@@ -1,19 +1,29 @@
 {
   "name": "@cloudpdf/core",
   "version": "0.0.0",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
-    "build": "tsup",
-    "test": "vitest",
-    "lint": "eslint src/**/*.ts",
-    "typecheck": "tsc --noEmit"
+    "build": "pnpm p:build",
+    "build:watch": "pnpm p:build:watch",
+    "clean": "pnpm p:clean",
+    "lint": "pnpm p:lint",
+    "lint:fix": "pnpm p:lint:fix",
+    "typecheck": "pnpm p:typecheck",
+    "dev": "pnpm p:build:watch"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^1.0.0"
+    "typescript": "^5.0.0"
   },
   "files": [
     "dist",

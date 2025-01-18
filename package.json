@@ -2,10 +2,29 @@
   "name": "cloudpdf",
   "private": false,
   "version": "0.0.0",
+  "packageManager": "pnpm@8.15.1",
   "workspaces": [
     "packages/core", 
     "packages/plugin-navigation"
   ],
+  "scripts": {
+    "p:build": "cd $INIT_CWD && tsup --config=${PROJECT_CWD}/config/tsup.config.ts",
+    "p:build:watch": "cd $INIT_CWD && tsup --config=${PROJECT_CWD}/config/tsup.config.ts --watch",
+    "p:clean": "cd $INIT_CWD && rimraf dist",
+    "p:lint": "cd $INIT_CWD && eslint src --color",
+    "p:lint:fix": "cd $INIT_CWD && eslint src --color --fix",
+    "p:typecheck": "cd $INIT_CWD && tsc -p tsconfig.json",
+    "dev": "turbo run dev --parallel",
+    "dev:vanilla": "pnpm --filter @cloudpdf/example-vanilla run dev",
+    "build": "turbo run build",
+    "build:packages": "turbo run build --filter=./packages/*"
+  },
   "devDependencies": {
+    "turbo": "latest",
+    "tsup": "latest",
+    "rimraf": "latest",
+    "eslint": "latest",
+    "typescript": "latest",
+    "@types/node": "latest"
   }
 }

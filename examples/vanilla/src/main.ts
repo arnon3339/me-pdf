@@ -23,7 +23,7 @@ async function initializePDFViewer() {
   try {
     const response = await fetch('/sample.pdf');
     const pdfBuffer = await response.arrayBuffer();
-    await engine.loadDocument(pdfBuffer);
+    //await engine.loadDocument(pdfBuffer);
   } catch (error) {
     console.error('Error loading PDF:', error);
   }
