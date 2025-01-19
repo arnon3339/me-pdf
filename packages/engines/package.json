@@ -1,0 +1,50 @@
+{
+  "name": "@cloudpdf/engines",
+  "version": "0.0.0",
+  "description": "core components of cloudpdf",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./wasm/*": {
+      "import": "./dist/wasm/*",
+      "require": "./dist/wasm/*"
+    }
+  },
+  "scripts": {
+    "build": "PROJECT_CWD=$(pwd) pnpm -w p:build",
+    "build:watch": "PROJECT_CWD=$(pwd) pnpm -w p:build:watch",
+    "clean": "PROJECT_CWD=$(pwd) pnpm -w p:clean",
+    "lint": "PROJECT_CWD=$(pwd) pnpm -w p:lint",
+    "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
+    "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "author": "CloudPDF, Ji Chang",
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5"
+  },
+  "dependencies": {
+    "@cloudpdf/models": "workspace:*",
+    "@cloudpdf/pdfium": "workspace:*",
+    "buffer": "^6.0.3",
+    "process": "^0.11.10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

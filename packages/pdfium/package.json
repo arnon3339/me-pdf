@@ -1,0 +1,46 @@
+{
+  "name": "@cloudpdf/pdfium",
+  "version": "0.0.0",
+  "private": false,
+  "description": " PDFium webassembly for EmbedPDF viewer",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./pdfium.wasm": {
+      "import": "./dist/esm/pdfium.a0e42955.wasm",
+      "require": "./dist/cjs/pdfium.a0e42955.wasm"
+    }
+  },
+  "scripts": {
+    "build": "PROJECT_CWD=$(pwd) pnpm -w p:build",
+    "build:watch": "PROJECT_CWD=$(pwd) pnpm -w p:build:watch",
+    "clean": "PROJECT_CWD=$(pwd) pnpm -w p:clean",
+    "lint": "PROJECT_CWD=$(pwd) pnpm -w p:lint",
+    "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
+    "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck",
+    "prewasm": "node ./scripts/generate-exported-functions.js && node ./scripts/generate-exported-runtime-methods.js",
+    "wasm": "make build && cpy ./docker/dist/pdfium.js ./src --flat && cpy ./docker/dist/pdfium.wasm ./src --flat",
+    "build:all": "pnpm run wasm && pnpm run build"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "author": "CloudPDF, Ji Chang",
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "@types/emscripten": "^1.39.13"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
