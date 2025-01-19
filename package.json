@@ -4,27 +4,30 @@
   "version": "0.0.0",
   "packageManager": "pnpm@8.15.1",
   "workspaces": [
-    "packages/core", 
+    "packages/core",
     "packages/plugin-navigation"
   ],
   "scripts": {
-    "p:build": "cd $INIT_CWD && tsup --config=${PROJECT_CWD}/config/tsup.config.ts",
-    "p:build:watch": "cd $INIT_CWD && tsup --config=${PROJECT_CWD}/config/tsup.config.ts --watch",
-    "p:clean": "cd $INIT_CWD && rimraf dist",
-    "p:lint": "cd $INIT_CWD && eslint src --color",
-    "p:lint:fix": "cd $INIT_CWD && eslint src --color --fix",
-    "p:typecheck": "cd $INIT_CWD && tsc -p tsconfig.json",
+    "p:build": "cd $PROJECT_CWD && tsup --config=../../config/tsup.config.ts",
+    "p:build:watch": "cd $PROJECT_CWD && tsup --config=../../config/tsup.config.ts --watch",
+    "p:clean": "cd $PROJECT_CWD && rimraf dist",
+    "p:lint": "cd $PROJECT_CWD && eslint src --color",
+    "p:lint:fix": "cd $PROJECT_CWD && eslint src --color --fix",
+    "p:typecheck": "cd $PROJECT_CWD && tsc -p tsconfig.json",
     "dev": "turbo run dev --parallel",
     "dev:vanilla": "pnpm --filter @cloudpdf/example-vanilla run dev",
     "build": "turbo run build",
-    "build:packages": "turbo run build --filter=./packages/*"
+    "build:watch": "ROARR_LOG=true turbowatch ./config/turbowatch.config.ts | roarr"
   },
   "devDependencies": {
-    "turbo": "latest",
-    "tsup": "latest",
-    "rimraf": "latest",
+    "@roarr/cli": "^5.12.4",
+    "@types/node": "latest",
     "eslint": "latest",
-    "typescript": "latest",
-    "@types/node": "latest"
+    "glob": "^11.0.1",
+    "rimraf": "latest",
+    "tsup": "latest",
+    "turbo": "latest",
+    "turbowatch": "^2.29.4",
+    "typescript": "latest"
   }
 }

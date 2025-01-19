@@ -7,19 +7,18 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "pnpm p:build",
-    "build:watch": "pnpm p:build:watch",
-    "clean": "pnpm p:clean",
-    "lint": "pnpm p:lint",
-    "lint:fix": "pnpm p:lint:fix",
-    "typecheck": "pnpm p:typecheck",
-    "dev": "pnpm p:build:watch"
+    "build": "PROJECT_CWD=$(pwd) pnpm -w p:build",
+    "build:watch": "PROJECT_CWD=$(pwd) pnpm -w p:build:watch",
+    "clean": "PROJECT_CWD=$(pwd) pnpm -w p:clean",
+    "lint": "PROJECT_CWD=$(pwd) pnpm -w p:lint",
+    "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
+    "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
