@@ -24,6 +24,9 @@
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
+  "dependencies": {
+    "@cloudpdf/models": "workspace:*"
+  },
   "files": [
     "dist",
     "README.md"

@@ -28,7 +28,7 @@ var readyPromise = new Promise((resolve, reject) => {
   readyPromiseResolve = resolve;
   readyPromiseReject = reject;
 });
-["_malloc","_free","_PDFiumExt_Init","_PDFiumExt_OpenFileWriter","_PDFiumExt_CloseFileWriter","_PDFiumExt_GetFileWriterSize","_PDFiumExt_GetFileWriterData","_PDFiumExt_OpenFormFillInfo","_PDFiumExt_CloseFormFillInfo","_PDFiumExt_InitFormFillEnvironment","_PDFiumExt_ExitFormFillEnvironment","_PDFiumExt_SaveAsCopy","_FPDF_LoadMemDocument","_FPDF_GetPageSizeByIndexF","_FPDF_GetLastError","_FPDF_GetPageCount","_FPDF_CloseDocument","_FPDF_GetDocPermissions","_FPDF_GetDocUserPermissions","_FPDF_DestroyLibrary","_FPDF_GetMetaText","_FPDFBitmap_FillRect","_FPDFBitmap_Create","_FPDFBitmap_CreateEx","_FPDFBitmap_GetBuffer","_FPDFBitmap_GetWidth","_FPDFBitmap_GetHeight","_FPDFBitmap_GetFormat","_FPDFBitmap_Destroy","_FPDFPageObj_Destroy","_FPDFPageObj_NewImageObj","_FPDFPageObj_GetMatrix","_FPDFPageObj_SetMatrix","_FPDFPageObj_GetBounds","_FPDFPageObj_Transform","_FPDFImageObj_SetBitmap","_FPDFImageObj_GetBitmap","_FPDFPath_CountSegments","_FPDFPath_GetPathSegment","_FPDFPathSegment_GetType","_FPDFPathSegment_GetPoint","_FPDFPathSegment_GetClose","_FPDFFormObj_CountObjects","_FPDFFormObj_GetObject","_FPDFBookmark_GetFirstChild","_FPDFBookmark_GetNextSibling","_FPDFBookmark_Find","_FPDFBookmark_GetTitle","_FPDFBookmark_GetAction","_FPDFBookmark_GetDest","_FPDFAction_GetType","_FPDFAction_GetFilePath","_FPDFAction_GetDest","_FPDFAction_GetURIPath","_FPDFDest_GetDestPageIndex","_FPDFDest_GetView","_FPDFDest_GetLocationInPage","_FPDF_LoadPage","_FPDF_RenderPageBitmap","_FPDF_PageToDevice","_FPDF_DeviceToPage","_FPDFPage_GetAnnotCount","_FPDFPage_GetAnnot","_FPDFPage_CreateAnnot","_FPDFPage_InsertObject","_FPDFPage_RemoveAnnot","_FPDFPage_GenerateContent","_FPDFPage_Flatten","_FPDF_ClosePage","_FPDFAnnot_GetSubtype","_FPDFAnnot_GetAP","_FPDFAnnot_GetObjectCount","_FPDFAnnot_GetObject","_FPDFAnnot_AppendObject","_FPDFAnnot_GetRect","_FPDFAnnot_SetRect","_FPDFAnnot_GetLink","_FPDFAnnot_GetFormFieldType","_FPDFAnnot_GetFormFieldFlags","_FPDFAnnot_GetFormFieldName","_FPDFAnnot_GetFormFieldAlternateName","_FPDFAnnot_GetFormFieldValue","_FPDFAnnot_GetOptionCount","_FPDFAnnot_GetOptionLabel","_FPDFAnnot_IsOptionSelected","_FPDFAnnot_IsChecked","_FPDFAnnot_GetStringValue","_FPDFAnnot_GetColor","_FPDFAnnot_GetLinkedAnnot","_FPDFAnnot_GetInkListCount","_FPDFAnnot_GetInkListPath","_FPDFAnnot_AddInkStroke","_FPDFAnnot_RemoveInkList","_FPDFAnnot_GetVertices","_FPDFAnnot_GetLine","_FPDFPageObj_GetType","_FPDFLink_GetDest","_FPDFLink_GetAction","_FPDFText_LoadPage","_FPDFText_CountChars","_FPDFText_CountRects","_FPDFText_GetRect","_FPDFText_GetCharIndexAtPos","_FPDFText_GetFontSize","_FPDFText_GetFontInfo","_FPDFText_GetBoundedText","_FPDFText_FindStart","_FPDFText_FindNext","_FPDFText_FindPrev","_FPDFText_GetSchResultIndex","_FPDFText_GetSchCount","_FPDFText_FindClose","_FPDFText_ClosePage","_FPDFText_GetText","_FPDFText_GetCharBox","_FPDFPage_CloseAnnot","_FPDFDoc_GetAttachmentCount","_FPDFDoc_GetAttachment","_FPDFAttachment_GetName","_FPDFAttachment_GetStringValue","_FPDFAttachment_GetFile","_FORM_OnAfterLoadPage","_FORM_OnBeforeClosePage","_FPDFAnnot_SetFocusableSubtypes","_FPDFAnnot_GetFocusableSubtypesCount","_FPDFAnnot_GetFocusableSubtypes","_FORM_SetFocusedAnnot","_FORM_SetIndexSelected","_FORM_OnKeyDown","_FORM_OnKeyUp","_FORM_OnChar","_FORM_SelectAllText","_FORM_ReplaceSelection","_FORM_ForceToKillFocus","_FPDF_GetSignatureCount","_FPDF_GetSignatureObject","_FPDFSignatureObj_GetContents","_FPDFSignatureObj_GetByteRange","_FPDFSignatureObj_GetSubFilter","_FPDFSignatureObj_GetReason","_FPDFSignatureObj_GetTime","_FPDFSignatureObj_GetDocMDPPermission","_FPDF_CreateNewDocument","_FPDF_ImportPagesByIndex","_FPDF_ImportPages","_memory","___indirect_function_table","onRuntimeInitialized"].forEach((prop) => {
+["_malloc","_free","_PDFiumExt_Init","_PDFiumExt_OpenFileWriter","_PDFiumExt_CloseFileWriter","_PDFiumExt_GetFileWriterSize","_PDFiumExt_GetFileWriterData","_PDFiumExt_OpenFormFillInfo","_PDFiumExt_CloseFormFillInfo","_PDFiumExt_InitFormFillEnvironment","_PDFiumExt_ExitFormFillEnvironment","_PDFiumExt_SaveAsCopy","_FPDF_LoadCustomDocument","_FPDF_LoadMemDocument","_FPDF_GetPageSizeByIndexF","_FPDF_GetLastError","_FPDF_GetPageCount","_FPDF_CloseDocument","_FPDF_GetDocPermissions","_FPDF_GetDocUserPermissions","_FPDF_DestroyLibrary","_FPDF_GetMetaText","_FPDFBitmap_FillRect","_FPDFBitmap_Create","_FPDFBitmap_CreateEx","_FPDFBitmap_GetBuffer","_FPDFBitmap_GetWidth","_FPDFBitmap_GetHeight","_FPDFBitmap_GetFormat","_FPDFBitmap_Destroy","_FPDFPageObj_Destroy","_FPDFPageObj_NewImageObj","_FPDFPageObj_GetMatrix","_FPDFPageObj_SetMatrix","_FPDFPageObj_GetBounds","_FPDFPageObj_Transform","_FPDFImageObj_SetBitmap","_FPDFImageObj_GetBitmap","_FPDFPath_CountSegments","_FPDFPath_GetPathSegment","_FPDFPathSegment_GetType","_FPDFPathSegment_GetPoint","_FPDFPathSegment_GetClose","_FPDFFormObj_CountObjects","_FPDFFormObj_GetObject","_FPDFBookmark_GetFirstChild","_FPDFBookmark_GetNextSibling","_FPDFBookmark_Find","_FPDFBookmark_GetTitle","_FPDFBookmark_GetAction","_FPDFBookmark_GetDest","_FPDFAction_GetType","_FPDFAction_GetFilePath","_FPDFAction_GetDest","_FPDFAction_GetURIPath","_FPDFDest_GetDestPageIndex","_FPDFDest_GetView","_FPDFDest_GetLocationInPage","_FPDF_LoadPage","_FPDF_RenderPageBitmap","_FPDF_PageToDevice","_FPDF_DeviceToPage","_FPDFPage_GetAnnotCount","_FPDFPage_GetAnnot","_FPDFPage_CreateAnnot","_FPDFPage_InsertObject","_FPDFPage_RemoveAnnot","_FPDFPage_GenerateContent","_FPDFPage_Flatten","_FPDF_ClosePage","_FPDFAnnot_GetSubtype","_FPDFAnnot_GetAP","_FPDFAnnot_GetObjectCount","_FPDFAnnot_GetObject","_FPDFAnnot_AppendObject","_FPDFAnnot_GetRect","_FPDFAnnot_SetRect","_FPDFAnnot_GetLink","_FPDFAnnot_GetFormFieldType","_FPDFAnnot_GetFormFieldFlags","_FPDFAnnot_GetFormFieldName","_FPDFAnnot_GetFormFieldAlternateName","_FPDFAnnot_GetFormFieldValue","_FPDFAnnot_GetOptionCount","_FPDFAnnot_GetOptionLabel","_FPDFAnnot_IsOptionSelected","_FPDFAnnot_IsChecked","_FPDFAnnot_GetStringValue","_FPDFAnnot_GetColor","_FPDFAnnot_GetLinkedAnnot","_FPDFAnnot_GetInkListCount","_FPDFAnnot_GetInkListPath","_FPDFAnnot_AddInkStroke","_FPDFAnnot_RemoveInkList","_FPDFAnnot_GetVertices","_FPDFAnnot_GetLine","_FPDFPageObj_GetType","_FPDFLink_GetDest","_FPDFLink_GetAction","_FPDFText_LoadPage","_FPDFText_CountChars","_FPDFText_CountRects","_FPDFText_GetRect","_FPDFText_GetCharIndexAtPos","_FPDFText_GetFontSize","_FPDFText_GetFontInfo","_FPDFText_GetBoundedText","_FPDFText_FindStart","_FPDFText_FindNext","_FPDFText_FindPrev","_FPDFText_GetSchResultIndex","_FPDFText_GetSchCount","_FPDFText_FindClose","_FPDFText_ClosePage","_FPDFText_GetText","_FPDFText_GetCharBox","_FPDFPage_CloseAnnot","_FPDFDoc_GetAttachmentCount","_FPDFDoc_GetAttachment","_FPDFAttachment_GetName","_FPDFAttachment_GetStringValue","_FPDFAttachment_GetFile","_FORM_OnAfterLoadPage","_FORM_OnBeforeClosePage","_FPDFAnnot_SetFocusableSubtypes","_FPDFAnnot_GetFocusableSubtypesCount","_FPDFAnnot_GetFocusableSubtypes","_FORM_SetFocusedAnnot","_FORM_SetIndexSelected","_FORM_OnKeyDown","_FORM_OnKeyUp","_FORM_OnChar","_FORM_SelectAllText","_FORM_ReplaceSelection","_FORM_ForceToKillFocus","_FPDF_GetSignatureCount","_FPDF_GetSignatureObject","_FPDFSignatureObj_GetContents","_FPDFSignatureObj_GetByteRange","_FPDFSignatureObj_GetSubFilter","_FPDFSignatureObj_GetReason","_FPDFSignatureObj_GetTime","_FPDFSignatureObj_GetDocMDPPermission","_FPDF_CreateNewDocument","_FPDF_ImportPagesByIndex","_FPDF_ImportPages","_memory","___indirect_function_table","onRuntimeInitialized"].forEach((prop) => {
   if (!Object.getOwnPropertyDescriptor(readyPromise, prop)) {
     Object.defineProperty(readyPromise, prop, {
       get: () => abort('You are getting ' + prop + ' on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js'),
@@ -4351,6 +4351,197 @@ function dbg(...args) {
       return (...args) => ccall(ident, returnType, argTypes, args, opts);
     };
 
+  var uleb128Encode = (n, target) => {
+      assert(n < 16384);
+      if (n < 128) {
+        target.push(n);
+      } else {
+        target.push((n % 128) | 128, n >> 7);
+      }
+    };
+  
+  var sigToWasmTypes = (sig) => {
+      assert(!sig.includes('j'), 'i64 not permitted in function signatures when WASM_BIGINT is disabled');
+      var typeNames = {
+        'i': 'i32',
+        'j': 'i64',
+        'f': 'f32',
+        'd': 'f64',
+        'e': 'externref',
+        'p': 'i32',
+      };
+      var type = {
+        parameters: [],
+        results: sig[0] == 'v' ? [] : [typeNames[sig[0]]]
+      };
+      for (var i = 1; i < sig.length; ++i) {
+        assert(sig[i] in typeNames, 'invalid signature char: ' + sig[i]);
+        type.parameters.push(typeNames[sig[i]]);
+      }
+      return type;
+    };
+  
+  var generateFuncType = (sig, target) => {
+      var sigRet = sig.slice(0, 1);
+      var sigParam = sig.slice(1);
+      var typeCodes = {
+        'i': 0x7f, // i32
+        'p': 0x7f, // i32
+        'j': 0x7e, // i64
+        'f': 0x7d, // f32
+        'd': 0x7c, // f64
+        'e': 0x6f, // externref
+      };
+  
+      // Parameters, length + signatures
+      target.push(0x60 /* form: func */);
+      uleb128Encode(sigParam.length, target);
+      for (var i = 0; i < sigParam.length; ++i) {
+        assert(sigParam[i] in typeCodes, 'invalid signature char: ' + sigParam[i]);
+        target.push(typeCodes[sigParam[i]]);
+      }
+  
+      // Return values, length + signatures
+      // With no multi-return in MVP, either 0 (void) or 1 (anything else)
+      if (sigRet == 'v') {
+        target.push(0x00);
+      } else {
+        target.push(0x01, typeCodes[sigRet]);
+      }
+    };
+  var convertJsFunctionToWasm = (func, sig) => {
+  
+      assert(!sig.includes('j'), 'i64 not permitted in function signatures when WASM_BIGINT is disabled');
+  
+      // If the type reflection proposal is available, use the new
+      // "WebAssembly.Function" constructor.
+      // Otherwise, construct a minimal wasm module importing the JS function and
+      // re-exporting it.
+      if (typeof WebAssembly.Function == "function") {
+        return new WebAssembly.Function(sigToWasmTypes(sig), func);
+      }
+  
+      // The module is static, with the exception of the type section, which is
+      // generated based on the signature passed in.
+      var typeSectionBody = [
+        0x01, // count: 1
+      ];
+      generateFuncType(sig, typeSectionBody);
+  
+      // Rest of the module is static
+      var bytes = [
+        0x00, 0x61, 0x73, 0x6d, // magic ("\0asm")
+        0x01, 0x00, 0x00, 0x00, // version: 1
+        0x01, // Type section code
+      ];
+      // Write the overall length of the type section followed by the body
+      uleb128Encode(typeSectionBody.length, bytes);
+      bytes.push(...typeSectionBody);
+  
+      // The rest of the module is static
+      bytes.push(
+        0x02, 0x07, // import section
+          // (import "e" "f" (func 0 (type 0)))
+          0x01, 0x01, 0x65, 0x01, 0x66, 0x00, 0x00,
+        0x07, 0x05, // export section
+          // (export "f" (func 0 (type 0)))
+          0x01, 0x01, 0x66, 0x00, 0x00,
+      );
+  
+      // We can compile this wasm module synchronously because it is very small.
+      // This accepts an import (at "e.f"), that it reroutes to an export (at "f")
+      var module = new WebAssembly.Module(new Uint8Array(bytes));
+      var instance = new WebAssembly.Instance(module, { 'e': { 'f': func } });
+      var wrappedFunc = instance.exports['f'];
+      return wrappedFunc;
+    };
+  
+  
+  var updateTableMap = (offset, count) => {
+      if (functionsInTableMap) {
+        for (var i = offset; i < offset + count; i++) {
+          var item = getWasmTableEntry(i);
+          // Ignore null values.
+          if (item) {
+            functionsInTableMap.set(item, i);
+          }
+        }
+      }
+    };
+  
+  var functionsInTableMap;
+  
+  var getFunctionAddress = (func) => {
+      // First, create the map if this is the first use.
+      if (!functionsInTableMap) {
+        functionsInTableMap = new WeakMap();
+        updateTableMap(0, wasmTable.length);
+      }
+      return functionsInTableMap.get(func) || 0;
+    };
+  
+  
+  var freeTableIndexes = [];
+  
+  var getEmptyTableSlot = () => {
+      // Reuse a free index if there is one, otherwise grow.
+      if (freeTableIndexes.length) {
+        return freeTableIndexes.pop();
+      }
+      // Grow the table
+      try {
+        wasmTable.grow(1);
+      } catch (err) {
+        if (!(err instanceof RangeError)) {
+          throw err;
+        }
+        throw 'Unable to grow wasm table. Set ALLOW_TABLE_GROWTH.';
+      }
+      return wasmTable.length - 1;
+    };
+  
+  
+  
+  var setWasmTableEntry = (idx, func) => {
+      wasmTable.set(idx, func);
+      // With ABORT_ON_WASM_EXCEPTIONS wasmTable.get is overridden to return wrapped
+      // functions so we need to call it here to retrieve the potential wrapper correctly
+      // instead of just storing 'func' directly into wasmTableMirror
+      wasmTableMirror[idx] = wasmTable.get(idx);
+    };
+  
+  /** @param {string=} sig */
+  var addFunction = (func, sig) => {
+      assert(typeof func != 'undefined');
+      // Check if the function is already in the table, to ensure each function
+      // gets a unique index.
+      var rtn = getFunctionAddress(func);
+      if (rtn) {
+        return rtn;
+      }
+  
+      // It's not in the table, add it now.
+  
+      var ret = getEmptyTableSlot();
+  
+      // Set the new value.
+      try {
+        // Attempting to call this with JS function will cause of table.set() to fail
+        setWasmTableEntry(ret, func);
+      } catch (err) {
+        if (!(err instanceof TypeError)) {
+          throw err;
+        }
+        assert(typeof sig != 'undefined', 'Missing signature argument to addFunction: ' + func);
+        var wrapped = convertJsFunctionToWasm(func, sig);
+        setWasmTableEntry(ret, wrapped);
+      }
+  
+      functionsInTableMap.set(func, ret);
+  
+      return ret;
+    };
+
 
 
 
@@ -4616,6 +4807,7 @@ var _FPDFText_GetSchCount = Module['_FPDFText_GetSchCount'] = createExportWrappe
 var _FPDFText_FindClose = Module['_FPDFText_FindClose'] = createExportWrapper('FPDFText_FindClose', 1);
 var _FPDF_DestroyLibrary = Module['_FPDF_DestroyLibrary'] = createExportWrapper('FPDF_DestroyLibrary', 0);
 var _FPDF_LoadMemDocument = Module['_FPDF_LoadMemDocument'] = createExportWrapper('FPDF_LoadMemDocument', 3);
+var _FPDF_LoadCustomDocument = Module['_FPDF_LoadCustomDocument'] = createExportWrapper('FPDF_LoadCustomDocument', 2);
 var _FPDF_GetDocPermissions = Module['_FPDF_GetDocPermissions'] = createExportWrapper('FPDF_GetDocPermissions', 1);
 var _FPDF_GetDocUserPermissions = Module['_FPDF_GetDocUserPermissions'] = createExportWrapper('FPDF_GetDocUserPermissions', 1);
 var _FPDF_GetPageCount = Module['_FPDF_GetPageCount'] = createExportWrapper('FPDF_GetPageCount', 1);
@@ -4753,6 +4945,7 @@ function invoke_v(index) {
 Module['wasmExports'] = wasmExports;
 Module['ccall'] = ccall;
 Module['cwrap'] = cwrap;
+Module['addFunction'] = addFunction;
 Module['setValue'] = setValue;
 Module['getValue'] = getValue;
 Module['UTF8ToString'] = UTF8ToString;
@@ -4799,14 +4992,6 @@ var missingLibrarySymbols = [
   'STACK_ALIGN',
   'POINTER_SIZE',
   'ASSERTIONS',
-  'uleb128Encode',
-  'sigToWasmTypes',
-  'generateFuncType',
-  'convertJsFunctionToWasm',
-  'getEmptyTableSlot',
-  'updateTableMap',
-  'getFunctionAddress',
-  'addFunction',
   'removeFunction',
   'reallyNegative',
   'unSign',
@@ -4965,8 +5150,15 @@ var unexportedSymbols = [
   'wasmTable',
   'noExitRuntime',
   'getCFunc',
+  'uleb128Encode',
+  'sigToWasmTypes',
+  'generateFuncType',
+  'convertJsFunctionToWasm',
   'freeTableIndexes',
   'functionsInTableMap',
+  'getEmptyTableSlot',
+  'updateTableMap',
+  'getFunctionAddress',
   'PATH',
   'PATH_FS',
   'UTF8Decoder',

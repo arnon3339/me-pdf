@@ -1,4 +1,4 @@
-exports.functions = {
+export const functions = {
   PDFiumExt_Init: [[], null],
   PDFiumExt_OpenFileWriter: [[], 'number'],
   PDFiumExt_CloseFileWriter: [['number'], null],
@@ -9,6 +9,7 @@ exports.functions = {
   PDFiumExt_InitFormFillEnvironment: [['number', 'number'], 'number'],
   PDFiumExt_ExitFormFillEnvironment: [['number'], null],
   PDFiumExt_SaveAsCopy: [['number', 'number'], null],
+  FPDF_LoadCustomDocument: [['number', 'number'], 'number'],
   FPDF_LoadMemDocument: [['number', 'number', 'number'], 'number'],
   FPDF_GetPageSizeByIndexF: [['number', 'number', 'number'], 'number'],
   FPDF_GetLastError: [[], 'number'],

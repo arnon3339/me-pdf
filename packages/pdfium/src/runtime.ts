@@ -1,3 +1,4 @@
+
 /// <reference types="emscripten" />
 
 export interface WasmExports {
@@ -8,6 +9,7 @@ export interface WasmExports {
 export interface PdfiumRuntimeMethods {
   wasmExports: WasmExports;
   cwrap: typeof cwrap;
+  addFunction: typeof addFunction;
   ccall: typeof ccall;
   setValue: typeof setValue;
   getValue: typeof getValue;

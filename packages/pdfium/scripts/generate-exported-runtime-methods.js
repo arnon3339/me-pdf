@@ -1,6 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const { methods, types } = require('./exported-runtime-methods');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { methods, types } from './exported-runtime-methods.js';
+
+// Get current directory name in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const names = methods.join(',');
 fs.writeFileSync(

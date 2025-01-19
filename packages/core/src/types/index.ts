@@ -1,2 +1,2 @@
-export * from './engine';
+export * from './core';
 export * from './plugin';

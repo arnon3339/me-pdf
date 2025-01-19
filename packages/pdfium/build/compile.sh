@@ -7,6 +7,7 @@ em++ $(ls *.cpp) \
   -sMODULARIZE=1 \
   -sWASM=1 \
   -sALLOW_MEMORY_GROWTH=1 \
+  -sALLOW_TABLE_GROWTH=1 \
   -sEXPORT_NAME=createPdfium \
   -sUSE_ZLIB=1 \
   -sUSE_LIBJPEG=1 \

@@ -1,6 +1,7 @@
-exports.methods = [
+export const methods = [
   'wasmExports',
   'cwrap',
+  'addFunction',
   'ccall',
   'setValue',
   'getValue',
@@ -10,6 +11,6 @@ exports.methods = [
   'stringToUTF16',
 ];
 
-exports.types = {
+export const types = {
   wasmExports: 'WasmExports',
 };

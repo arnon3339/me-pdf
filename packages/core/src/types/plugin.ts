@@ -1,4 +1,4 @@
-import { IPDFEngine } from "./engine";
+import { IPDFCore } from "./core";
 
 export interface PluginState {
   [key: string]: any;
@@ -11,7 +11,7 @@ export interface PluginOptions {
 export interface IPlugin {
   readonly name: string;
   readonly version: string;
-  initialize(engine: IPDFEngine): Promise<void>;
+  initialize(core: IPDFCore): Promise<void>;
   destroy(): Promise<void>;
   getState(): PluginState;
   setState(state: Partial<PluginState>): void;

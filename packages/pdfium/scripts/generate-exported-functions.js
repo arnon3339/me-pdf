@@ -1,9 +1,13 @@
-const fs = require('fs');
-const path = require('path');
-const { functions } = require('./exported-functions');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { functions } from './exported-functions.js';
+
+// Get current directory name in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const extraFunctions = ['malloc', 'free'];
-
 const funcNames = Object.keys(functions);
 
 const names = [...extraFunctions, ...funcNames]
@@ -11,6 +15,7 @@ const names = [...extraFunctions, ...funcNames]
     return '_' + funcName;
   })
   .join(',');
+
 fs.writeFileSync(
   path.join(__dirname, '../build/exported-functions.txt'),
   names,
