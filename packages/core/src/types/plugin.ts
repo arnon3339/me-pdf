@@ -20,3 +20,13 @@ export interface IPlugin {
 export interface PluginConstructor {
   new (options?: PluginOptions): IPlugin;
 }
+
+export interface IPluginManager {
+  registerPlugin(plugin: IPlugin): Promise<void>;
+  unregisterPlugin(pluginName: string): Promise<void>;
+  getPlugin<T extends IPlugin>(name: string): T | undefined;
+  getPluginState(name: string): PluginState | undefined;
+  getAllPlugins(): Map<string, IPlugin>;
+  on(event: string, callback: (data: any) => void): () => void;
+  emit(event: string, data: any): void;
+}
