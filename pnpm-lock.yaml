@@ -50,6 +50,9 @@ importers:
       '@cloudpdf/plugin-navigation':
         specifier: workspace:*
         version: link:../../packages/plugin-navigation
+      '@cloudpdf/plugin-renderer':
+        specifier: workspace:*
+        version: link:../../packages/plugin-renderer
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -143,6 +146,22 @@ importers:
       '@cloudpdf/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.3.5(typescript@5.7.3)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.7.3
+
+  packages/plugin-renderer:
+    dependencies:
+      '@cloudpdf/core':
+        specifier: workspace:*
+        version: link:../core
+      '@cloudpdf/models':
+        specifier: workspace:*
+        version: link:../models
     devDependencies:
       tsup:
         specifier: ^8.0.0

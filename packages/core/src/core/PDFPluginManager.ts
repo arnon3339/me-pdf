@@ -27,7 +27,7 @@ export class PDFPluginManager extends EventEmitter implements IPluginManager {
     this.emit('plugin:registered', { name: plugin.name });
   }
 
-  // Add protected method for child classes to override
+  // Protected method for child classes to override
   protected getPluginHost(): IPDFCore {
     throw new Error('getPluginHost must be implemented by child class');
   }

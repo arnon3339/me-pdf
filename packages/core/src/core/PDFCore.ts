@@ -4,7 +4,7 @@ import { PDFLoadingOptions, PDFDocumentLoader } from './loader';
 import { PDFPluginManager } from './PDFPluginManager';
 
 export class PDFCore extends PDFPluginManager implements IPDFCore {
-  private engine: PdfEngine;
+  public engine: PdfEngine;
   private documentLoader: PDFDocumentLoader;
 
   constructor(options: PDFCoreOptions) {
@@ -15,10 +15,13 @@ export class PDFCore extends PDFPluginManager implements IPDFCore {
   }
 
   async loadDocument(options: Omit<PDFLoadingOptions, 'engine'>): Promise<PdfDocumentObject> {
-    return this.documentLoader.loadDocument({
+    const document = await this.documentLoader.loadDocument({
       ...options,
       engine: this.engine,
     });
+
+    this.emit('document:loaded', document);
+    return document;
   }
 
   protected getPluginHost(): IPDFCore {

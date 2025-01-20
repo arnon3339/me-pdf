@@ -9,7 +9,7 @@ export class PDFDocumentLoader {
   constructor() {
     const bufferStrategy = new BufferStrategy();
     this.registerStrategy('range', new RangeRequestStrategy(bufferStrategy));
-    this.registerStrategy('buffer', new BufferStrategy());
+    this.registerStrategy('buffer', bufferStrategy);
   }
 
   private registerStrategy(name: string, strategy: PDFLoadingStrategy) {
