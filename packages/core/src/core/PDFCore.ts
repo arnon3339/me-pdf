@@ -8,26 +8,90 @@ export class PDFCore extends EventEmitter implements IPDFCore {
   private pluginStates: Map<string, PluginState> = new Map();
   private engine: PdfEngine; // We'll type this properly later
 
-  constructor(options?: PDFCoreOptions) {
+  constructor(options: PDFCoreOptions) {
     super();
-    this.engine = options?.engine;
+    this.engine = options.engine;
+    this.engine.initialize?.()
   }
 
-  async loadDocument(source: ArrayBuffer): Promise<void> {
-    // Load document using engine
-    const task = this.engine.openDocument({
-      id: '1',
-      name: 'test',
-      content: source
-    }, '');
-
-    task.wait((document) => {
-      this.emit('document:loaded', {
-        document: document
-      });
-    }, (error) => {
-      this.emit('document:error', error);
+  private async checkRangeSupport(url: string) {
+    // First try HEAD request
+    const headResponse = await fetch(url, {
+        method: 'HEAD'
     });
+    
+    const fileLength = headResponse.headers.get('Content-Length');
+    const acceptRanges = headResponse.headers.get('Accept-Ranges');
+    
+    // If header explicitly says 'bytes', we know it's supported
+    if (acceptRanges === 'bytes') {
+        return {
+            supportsRanges: true,
+            fileLength: parseInt(fileLength ?? '0')
+        };
+    }
+
+    // If header not present or not 'bytes', do a small range test
+    try {
+        const testResponse = await fetch(url, {
+            headers: {
+                'Range': 'bytes=0-1'
+            }
+        });
+
+        // If we get 206, ranges are supported regardless of Accept-Ranges header
+        return {
+            supportsRanges: testResponse.status === 206,
+            fileLength: parseInt(fileLength ?? '0')
+        };
+    } catch (error) {
+        // If range request fails, assume no range support
+        return {
+            supportsRanges: false,
+            fileLength: parseInt(fileLength ?? '0')
+        };
+    }
+  }
+
+  async loadDocumentByUrl(url: string): Promise<void> {
+    const { supportsRanges, fileLength } = await this.checkRangeSupport(url);
+    console.log('supportsRanges', supportsRanges);
+    console.log('fileLength', fileLength);
+
+    if (supportsRanges) {
+      const task = this.engine.openDocumentFromLoader({
+        id: Math.random().toString(),
+        name: url,
+        fileLength,
+        callback: (offset: number, length: number) => {
+          console.log('offset', offset);
+          console.log('length', length);
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', url, false); // false makes it synchronous
+          xhr.overrideMimeType('text/plain; charset=x-user-defined'); // Treat response as binary
+          xhr.setRequestHeader('Range', `bytes=${offset}-${offset + length - 1}`);
+          xhr.send(null);
+
+          if (xhr.status === 206) {
+            // Convert the binary string to Uint8Array
+            const text = xhr.responseText;
+            const length = text.length;
+            const array = new Uint8Array(length);
+            for (let i = 0; i < length; i++) {
+              array[i] = text.charCodeAt(i) & 0xff;
+            }
+            return array;
+          }
+          throw new Error(`Failed to load range: ${xhr.status}`);
+        }
+      }, '');
+      console.log('task', task);
+    }
+  }
+
+  async loadDocumentByBuffer(buffer: ArrayBuffer): Promise<void> {
+
+
   }
 
   async registerPlugin(plugin: IPlugin): Promise<void> {

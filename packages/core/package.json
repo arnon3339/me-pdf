@@ -25,7 +25,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@cloudpdf/models": "workspace:*"
+    "@cloudpdf/models": "workspace:*",
+    "@cloudpdf/engines": "workspace:*"
   },
   "files": [
     "dist",

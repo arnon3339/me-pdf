@@ -7,7 +7,9 @@
   },
   "dependencies": {
     "@cloudpdf/core": "workspace:*",
-    "@cloudpdf/plugin-navigation": "workspace:*"
+    "@cloudpdf/plugin-navigation": "workspace:*",
+    "@cloudpdf/models": "workspace:*",
+    "@cloudpdf/pdfium": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -1,9 +1,28 @@
-import { PDFEngine } from '@cloudpdf/core';
+import { PDFCore } from '@cloudpdf/core';
+import { ConsoleLogger } from '@cloudpdf/models';
 import { NavigationPlugin } from '@cloudpdf/plugin-navigation';
+import { PdfiumEngine } from '../../../packages/engines/src/pdfium/engine';
+import pdfiumWasm from '@cloudpdf/pdfium/pdfium.wasm?url';
+import { init } from '@cloudpdf/pdfium';
+
+async function loadWasmBinary() {
+  const response = await fetch(pdfiumWasm);
+  const wasmBinary = await response.arrayBuffer();
+  return wasmBinary;
+}
 
 async function initializePDFViewer() {
   // Initialize engine
-  const engine = new PDFEngine();
+
+  const wasmBinary = await loadWasmBinary();
+  const wasmModule = await init({ wasmBinary });
+  const engine = new PdfiumEngine(wasmModule, new ConsoleLogger()); 
+
+  const core = new PDFCore({
+    engine
+  });
+
+  await core.loadDocumentByUrl('/file/linearized.pdf');
   
   // Initialize and register navigation plugin
   const navigationPlugin = new NavigationPlugin({
@@ -11,22 +30,13 @@ async function initializePDFViewer() {
     defaultScrollMode: 'vertical'
   });
   
-  await engine.registerPlugin(navigationPlugin);
+  await core.registerPlugin(navigationPlugin);
 
   // Listen to navigation events
-  engine.on('navigation:pageChanged', ({ pageNumber }) => {
+  core.on('navigation:pageChanged', ({ pageNumber }) => {
     console.log(`Page changed to ${pageNumber}`);
     updatePageInfo(pageNumber, navigationPlugin.getState().totalPages);
   });
-
-  // Load sample PDF
-  try {
-    const response = await fetch('/sample.pdf');
-    const pdfBuffer = await response.arrayBuffer();
-    //await engine.loadDocument(pdfBuffer);
-  } catch (error) {
-    console.error('Error loading PDF:', error);
-  }
 
   // Set up UI controls
   setupUIControls(navigationPlugin);

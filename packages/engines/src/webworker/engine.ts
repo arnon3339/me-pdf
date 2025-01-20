@@ -25,6 +25,7 @@ import {
   PdfErrorReason,
   PdfPageFlattenFlag,
   PdfPageFlattenResult,
+  PdfFileLoader,
 } from '@cloudpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -232,6 +233,29 @@ export class WebWorkerEngine implements PdfEngine {
       type: 'ExecuteRequest',
       data: {
         name: 'openDocument',
+        args: [file, password],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @cloudpdf/models!PdfEngine.openDocumentFromLoader}
+   *
+   * @public
+   */
+  openDocumentFromLoader(file: PdfFileLoader, password: string) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromLoader', file, password);
+    const requestId = this.generateRequestId(file.id);
+    const task = new WorkerTask<PdfDocumentObject>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'openDocumentFromLoader',
         args: [file, password],
       },
     };

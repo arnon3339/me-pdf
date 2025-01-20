@@ -5,7 +5,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@cloudpdf/core': path.resolve(__dirname, '../../packages/core/src'),
-      '@cloudpdf/plugin-navigation': path.resolve(__dirname, '../../packages/plugin-navigation/src')
+      '@cloudpdf/plugin-navigation': path.resolve(__dirname, '../../packages/plugin-navigation/src'),
+      '@cloudpdf/pdfium': path.resolve(__dirname, '../../packages/pdfium/src'),
+      '@cloudpdf/models': path.resolve(__dirname, '../../packages/models/src')
     }
   },
   server: {

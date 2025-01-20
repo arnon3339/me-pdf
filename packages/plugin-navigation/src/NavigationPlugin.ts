@@ -1,4 +1,4 @@
-import { IPlugin, PDFEngine } from '@cloudpdf/core';
+import { IPlugin, IPDFCore } from '@cloudpdf/core';
 
 import { NavigationState } from "./types";
 
@@ -11,7 +11,7 @@ export class NavigationPlugin implements IPlugin {
   readonly name = 'navigation';
   readonly version = '1.0.0';
   
-  private engine?: PDFEngine;
+  private core?: IPDFCore;
   private state: NavigationState;
 
   constructor(options?: NavigationOptions) {
@@ -22,17 +22,17 @@ export class NavigationPlugin implements IPlugin {
     };
   }
 
-  async initialize(engine: PDFEngine): Promise<void> {
-    this.engine = engine;
+  async initialize(core: IPDFCore): Promise<void> {
+    this.core = core;
 
     // Set up event listeners
-    engine.on('document:loaded', ({ pageCount }) => {
+    core.on('document:loaded', ({ pageCount }) => {
       this.setState({ totalPages: pageCount });
     });
   }
 
   async destroy(): Promise<void> {
-    this.engine = undefined;
+    this.core = undefined;
   }
 
   getState(): NavigationState {
@@ -41,7 +41,7 @@ export class NavigationPlugin implements IPlugin {
 
   setState(newState: Partial<NavigationState>): void {
     this.state = { ...this.state, ...newState };
-    this.engine?.emit(`${this.name}:stateChange`, this.state);
+    this.core?.emit(`${this.name}:stateChange`, this.state);
   }
 
   async goToPage(pageNumber: number): Promise<void> {
@@ -50,11 +50,11 @@ export class NavigationPlugin implements IPlugin {
     }
 
     this.setState({ currentPage: pageNumber });
-    this.engine?.emit(`${this.name}:pageChanged`, { pageNumber });
+    this.core?.emit(`${this.name}:pageChanged`, { pageNumber });
   }
 
   setScrollMode(mode: 'vertical' | 'horizontal' | 'wrapped'): void {
     this.setState({ scrollMode: mode });
-    this.engine?.emit(`${this.name}:scrollModeChanged`, { mode });
+    this.core?.emit(`${this.name}:scrollModeChanged`, { mode });
   }
 }

@@ -24,6 +24,7 @@ import {
   PdfTaskHelper,
   PdfPageFlattenFlag,
   PdfPageFlattenResult,
+  PdfFileLoader,
 } from '@cloudpdf/models';
 
 /**
@@ -38,6 +39,9 @@ export function createMockPdfEngine(
 ): PdfEngine {
   const engine: PdfEngine = {
     openDocument: jest.fn((file: PdfFile, password: string) => {
+      return PdfTaskHelper.create();
+    }),
+    openDocumentFromLoader: jest.fn((file: PdfFileLoader, password: string) => {
       return PdfTaskHelper.create();
     }),
     getMetadata: () => {

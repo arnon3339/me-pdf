@@ -1207,11 +1207,11 @@ export enum PdfPageFlattenResult {
 }
 
 /**
- * Pdf File
+ * Pdf File without content
  *
  * @public
  */
-export interface PdfFile {
+export interface PdfFileWithoutContent {
   /**
    * id of file
    */
@@ -1220,6 +1220,28 @@ export interface PdfFile {
    * name of file
    */
   name: string;
+}
+
+export interface PdfFileLoader extends PdfFileWithoutContent {
+  /**
+   * length of file
+   */
+  fileLength: number;
+  /**
+   * read block of file
+   * @param offset - offset of file
+   * @param length - length of file
+   * @returns block of file
+   */
+  callback: (offset: number, length: number) => Uint8Array;
+}
+
+/**
+ * Pdf File
+ *
+ * @public
+ */
+export interface PdfFile extends PdfFileWithoutContent {
   /**
    * content of file
    */
@@ -1342,6 +1364,13 @@ export interface PdfEngine {
    * @returns task that contains the file or error
    */
   openDocument: (file: PdfFile, password: string) => PdfTask<PdfDocumentObject>;
+  /**
+   * Open pdf document from loader
+   * @param file - pdf file
+   * @param password - protected password for this file
+   * @returns task that contains the file or error
+   */
+  openDocumentFromLoader: (file: PdfFileLoader, password: string) => PdfTask<PdfDocumentObject>;
   /**
    * Get the metadata of the file
    * @param doc - pdf document

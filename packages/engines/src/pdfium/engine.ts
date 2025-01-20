@@ -65,6 +65,7 @@ import {
   PdfPageFlattenFlag,
   PdfPageFlattenResult,
   PdfTask,
+  PdfFileLoader,
 } from '@cloudpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@cloudpdf/pdfium';
@@ -304,6 +305,165 @@ export class PdfiumEngine implements PdfEngine {
     };
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocument`, 'End', file.id);
+
+    return PdfTaskHelper.resolve(pdfDoc);
+  }
+
+  /**
+   * {@inheritDoc @cloudpdf/models!PdfEngine.openDocumentFromLoader}
+   *
+   * @public
+   */
+  openDocumentFromLoader(
+    fileLoader: PdfFileLoader,
+    password: string
+  ) {
+    const { fileLength, callback, ...file} = fileLoader;
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromLoader', file, password);
+    this.logger.perf(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      `OpenDocumentFromLoader`,
+      'Begin',
+      file.id,
+    );
+
+    const readBlock = (
+      _pThis: number,     // Pointer to the FPDF_FILEACCESS structure
+      offset: number,      // Pointer to a buffer to receive the data
+      pBuf: number,    // Offset position from the beginning of the file
+      length: number     // Number of bytes to read
+    ): number => {
+      try {
+        this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'readBlock', offset, length, pBuf);
+
+        if (offset < 0 || offset >= fileLength) {
+          this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'Offset out of bounds:', offset);
+          return 0;
+        }
+    
+        // Get data chunk using the callback
+        const data = callback(offset, length);
+        
+
+        console.log('data', data);
+        // Copy the data to PDFium's buffer
+        const dest = new Uint8Array(this.pdfiumModule.pdfium.HEAPU8.buffer, pBuf, data.length);
+        dest.set(data);
+        
+        return data.length;
+      } catch (error) {
+        this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'ReadBlock error:', error);
+        return 0;
+      }
+    };
+
+    const callbackPtr = this.pdfiumModule.pdfium.addFunction(
+      readBlock,
+      'iiiii'
+    );
+
+    // Create FPDF_FILEACCESS struct
+    const structSize = 12;
+    const fileAccessPtr = this.malloc(structSize);
+
+    // Set up struct fields
+    this.pdfiumModule.pdfium.setValue(fileAccessPtr, fileLength, 'i32');
+    this.pdfiumModule.pdfium.setValue(fileAccessPtr + 4, callbackPtr, 'i32');
+    this.pdfiumModule.pdfium.setValue(fileAccessPtr + 8, 0, 'i32');
+
+    // Set up password
+    const passwordBytesSize = new TextEncoder().encode(password).length + 1;
+    const passwordPtr = this.malloc(passwordBytesSize);
+    this.pdfiumModule.pdfium.stringToUTF8(password, passwordPtr, passwordBytesSize);
+
+    // Load document
+    const docPtr = this.pdfiumModule.FPDF_LoadCustomDocument(fileAccessPtr, passwordPtr);
+    console.log('docPtr', docPtr);
+    this.free(passwordPtr);
+
+
+    if (!docPtr) {
+      const lastError = this.pdfiumModule.FPDF_GetLastError();
+      this.logger.error(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `FPDF_LoadCustomDocument failed with ${lastError}`,
+      );
+      this.free(fileAccessPtr);
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `OpenDocumentFromLoader`,
+        'End',
+        file.id,
+      );
+
+      return PdfTaskHelper.reject<PdfDocumentObject>({
+        code: lastError,
+        message: `FPDF_LoadCustomDocument failed`,
+      });
+    }
+
+    const pageCount = this.pdfiumModule.FPDF_GetPageCount(docPtr);
+
+    const pages: PdfPageObject[] = [];
+    const sizePtr = this.malloc(8);
+    for (let index = 0; index < pageCount; index++) {
+      const result = this.pdfiumModule.FPDF_GetPageSizeByIndexF(
+        docPtr,
+        index,
+        sizePtr,
+      );
+      if (result === 0) {
+        const lastError = this.pdfiumModule.FPDF_GetLastError();
+        this.logger.error(
+          LOG_SOURCE,
+          LOG_CATEGORY,
+          `FPDF_GetPageSizeByIndexF failed with ${lastError}`,
+        );
+        this.free(sizePtr);
+        this.pdfiumModule.FPDF_CloseDocument(docPtr);
+        this.free(passwordPtr);
+        this.free(fileAccessPtr);
+        this.logger.perf(
+          LOG_SOURCE,
+          LOG_CATEGORY,
+          `OpenDocumentFromLoader`,
+          'End',
+          file.id,
+        );
+        return PdfTaskHelper.reject<PdfDocumentObject>({
+          code: lastError,
+          message: `FPDF_GetPageSizeByIndexF failed`,
+        });
+      }
+
+      const page = {
+        index,
+        size: {
+          width: this.pdfiumModule.pdfium.getValue(sizePtr, 'float'),
+          height: this.pdfiumModule.pdfium.getValue(sizePtr + 4, 'float'),
+        },
+      };
+
+      pages.push(page);
+    }
+    this.free(sizePtr);
+
+    const pdfDoc = {
+      id: file.id,
+      name: file.name,
+      pageCount,
+      pages,
+    };
+    this.docs[file.id] = {
+      filePtr: fileAccessPtr,
+      docPtr,
+      searchContexts: new Map(),
+    };
+
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromLoader`, 'End', file.id);
 
     return PdfTaskHelper.resolve(pdfDoc);
   }

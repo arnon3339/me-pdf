@@ -41,6 +41,12 @@ importers:
       '@cloudpdf/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@cloudpdf/models':
+        specifier: workspace:*
+        version: link:../../packages/models
+      '@cloudpdf/pdfium':
+        specifier: workspace:*
+        version: link:../../packages/pdfium
       '@cloudpdf/plugin-navigation':
         specifier: workspace:*
         version: link:../../packages/plugin-navigation
@@ -57,6 +63,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@cloudpdf/engines':
+        specifier: workspace:*
+        version: link:../engines
       '@cloudpdf/models':
         specifier: workspace:*
         version: link:../models
