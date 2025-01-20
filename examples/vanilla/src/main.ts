@@ -22,8 +22,6 @@ async function initializePDFViewer() {
     engine
   });
 
-  await core.loadDocumentByUrl('/file/linearized.pdf');
-  
   // Initialize and register navigation plugin
   const navigationPlugin = new NavigationPlugin({
     initialPage: 1,
@@ -31,6 +29,17 @@ async function initializePDFViewer() {
   });
   
   await core.registerPlugin(navigationPlugin);
+
+  const document = await core.loadDocument({
+    file: {
+      id: '1',
+      name: 'linearized.pdf',
+    },
+    source: '/file/linearized.pdf',
+    password: ''
+  });
+
+  console.log(document);
 
   // Listen to navigation events
   core.on('navigation:pageChanged', ({ pageNumber }) => {
