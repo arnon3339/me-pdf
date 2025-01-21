@@ -37,4 +37,24 @@ export interface NavigationOptions {
   defaultPageLayout?: PageLayout;
   defaultOrientation?: PageOrientation;
   container?: HTMLElement;
+  minZoom?: number;
+  maxZoom?: number;
 }
+
+export interface ViewportMetrics {
+  scrollTop: number;
+  scrollLeft: number;
+  viewportHeight: number;
+  viewportWidth: number;
+  relativePosition: {
+    x: number;
+    y: number;
+  };
+}
+
+export interface ZoomChangeEvent {
+  oldZoom: number;
+  newZoom: number;
+  center?: { x: number; y: number };
+  metrics: ViewportMetrics;
+} 

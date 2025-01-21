@@ -26,4 +26,8 @@ export class EventEmitter {
       this.listeners.clear();
     }
   }
+
+  removeListener(event: string, callback: EventCallback): void {
+    this.listeners.get(event)?.delete(callback);
+  }
 }

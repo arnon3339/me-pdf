@@ -1,4 +1,4 @@
-import { NavigationState } from '../types';
+import { NavigationState, ZoomChangeEvent } from '../types';
 import { ScrollModeBase, ScrollModeBaseOptions } from './base';
 
 interface VisibleRange {
@@ -61,7 +61,29 @@ export class ContinuousScrollMode extends ScrollModeBase {
 
   initialize(): void {
     this.updateLayout();
+
+    this.core.on('zoom:change', this.zoomChangeHandler);
   }
+
+  private zoomChangeHandler = (zoomChange: ZoomChangeEvent) => {
+    const { metrics } = zoomChange;
+
+    // Update layout with new zoom level
+    this.updateLayout();
+    
+    // Calculate new scroll position based on relative position
+    const newTotalHeight = Array.from(this.pageHeights.values())
+      .reduce((sum, height) => sum + height + 20, 0);
+    
+    const newScrollTop = metrics.relativePosition.y * 
+      (newTotalHeight - metrics.viewportHeight);
+    
+    // Apply new scroll position
+    this.container.scrollTop = newScrollTop;
+    
+    // Update visible range
+    this.updateVisibleRange();
+  };
 
   private calculateVisibleRange(): VisibleRange {
     const scrollTop = this.container.scrollTop;
@@ -187,6 +209,7 @@ export class ContinuousScrollMode extends ScrollModeBase {
   }
 
   destroy(): void {
+    this.core.removeListener('zoom:change', this.zoomChangeHandler);
     this.intersectionObserver.disconnect();
     this.visiblePages.clear();
     this.pageHeights.clear();

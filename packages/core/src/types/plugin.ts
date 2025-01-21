@@ -1,3 +1,4 @@
+import { EventEmitter } from "../core";
 import { IPDFCore } from "./core";
 
 export interface PluginState {
@@ -21,7 +22,7 @@ export interface PluginConstructor {
   new (options?: PluginOptions): IPlugin;
 }
 
-export interface IPluginManager {
+export interface IPluginManager extends EventEmitter {
   registerPlugin(plugin: IPlugin): Promise<void>;
   unregisterPlugin(pluginName: string): Promise<void>;
   getPlugin<T extends IPlugin>(name: string): T | undefined;
