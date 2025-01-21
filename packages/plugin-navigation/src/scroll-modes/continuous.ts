@@ -1,5 +1,5 @@
 import { NavigationState } from '../types';
-import { ScrollModeBase } from './base';
+import { ScrollModeBase, ScrollModeBaseOptions } from './base';
 
 interface VisibleRange {
   startPage: number;
@@ -18,8 +18,8 @@ export class ContinuousScrollMode extends ScrollModeBase {
   private bufferPages = 2; // Number of pages to keep rendered above/below viewport
   private intersectionObserver: IntersectionObserver;
 
-  constructor(container: HTMLElement, state: NavigationState) {
-    super(container, state);
+  constructor(options: ScrollModeBaseOptions) {
+    super(options);
     
     // Create main structure
     this.topSpacer = document.createElement('div');
@@ -141,9 +141,8 @@ export class ContinuousScrollMode extends ScrollModeBase {
     
     // Update current page if changed
     if (range.mostVisiblePage !== this.state.currentPage) {
-      console.log('pageChange event', range.mostVisiblePage);
       this.state.currentPage = range.mostVisiblePage;
-      // Emit page change event
+      this.core.emit('navigation:pageChanged', this.state.currentPage);
     }
 
     // Update spacer heights

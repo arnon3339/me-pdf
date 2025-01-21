@@ -62,15 +62,17 @@ export class NavigationPlugin implements IPlugin {
 
   private initializeScrollMode(): void {
     if (!this.state.container) return;
+    if (!this.core) return;
 
     this.scrollModeHandler?.destroy();
 
     switch (this.state.scrollMode) {
       case 'continuous':
-        this.scrollModeHandler = new ContinuousScrollMode(
-          this.state.container.element,
-          this.state
-        );
+        this.scrollModeHandler = new ContinuousScrollMode({
+          core: this.core,
+          container: this.state.container.element,
+          state: this.state
+        });
         break;
     }
 
@@ -106,7 +108,6 @@ export class NavigationPlugin implements IPlugin {
     }
 
     this.scrollModeHandler?.goToPage(pageNumber);
-    this.core?.emit(`${this.name}:pageChanged`, { pageNumber });
   }
 
   async updateZoomLevel(zoomLevel: number): Promise<void> {
