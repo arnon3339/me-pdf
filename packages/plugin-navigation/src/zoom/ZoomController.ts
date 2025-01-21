@@ -112,16 +112,19 @@ export class ZoomController {
     const viewportHeight = this.container.clientHeight;
     const viewportWidth = this.container.clientWidth;
     const scrollLeft = this.container.scrollLeft;
+    const scrollWidth = this.container.scrollWidth;
+    const scrollHeight = this.container.scrollHeight;
     
     return {
+      scrollWidth,
+      scrollHeight,
       scrollTop,
       scrollLeft,
       viewportHeight,
       viewportWidth,
-      // Add relative position through document (0-1)
       relativePosition: {
-        x: scrollLeft / (this.container.scrollWidth - viewportWidth),
-        y: scrollTop / (this.container.scrollHeight - viewportHeight)
+        x: this.container.scrollWidth <= viewportWidth ? 0 : scrollLeft / (scrollWidth - viewportWidth),
+        y: this.container.scrollHeight <= viewportHeight ? 0 : scrollTop / (scrollHeight - viewportHeight)
       }
     };
   }

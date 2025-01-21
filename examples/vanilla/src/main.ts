@@ -17,7 +17,7 @@ async function initializePDFViewer() {
 
   const wasmBinary = await loadWasmBinary();
   const wasmModule = await init({ wasmBinary });
-  const engine = new PdfiumEngine(wasmModule, new ConsoleLogger()); 
+  const engine = new PdfiumEngine(wasmModule); 
 
   const core = new PDFCore({
     engine

@@ -46,6 +46,8 @@ export interface ViewportMetrics {
   scrollLeft: number;
   viewportHeight: number;
   viewportWidth: number;
+  scrollWidth: number;
+  scrollHeight: number;
   relativePosition: {
     x: number;
     y: number;

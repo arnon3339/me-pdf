@@ -74,12 +74,27 @@ export class ContinuousScrollMode extends ScrollModeBase {
     // Calculate new scroll position based on relative position
     const newTotalHeight = Array.from(this.pageHeights.values())
       .reduce((sum, height) => sum + height + 20, 0);
-    
+
     const newScrollTop = metrics.relativePosition.y * 
       (newTotalHeight - metrics.viewportHeight);
-    
+
+    const containerWidth = this.container.clientWidth;
+    const newContentWidth = this.container.scrollWidth;
+    const oldContentWidth = metrics.scrollWidth;
+
+    let newScrollLeft;
+    if (oldContentWidth <= containerWidth && newContentWidth > containerWidth) {
+      // if the content was smaller than the container and is now larger, center it
+      newScrollLeft = (newContentWidth - containerWidth) / 2;
+    } else {
+      // Otherwise maintain relative position
+      newScrollLeft = metrics.relativePosition.x * 
+        (newContentWidth - containerWidth);
+    }
+          
     // Apply new scroll position
     this.container.scrollTop = newScrollTop;
+    this.container.scrollLeft = newScrollLeft;
     
     // Update visible range
     this.updateVisibleRange();
