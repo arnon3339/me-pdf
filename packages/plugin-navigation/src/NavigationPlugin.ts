@@ -96,7 +96,7 @@ export class NavigationPlugin implements IPlugin {
   }
 
   setState(newState: Partial<NavigationState>): void {
-    this.state = { ...this.state, ...newState };
+    Object.assign(this.state, newState);
     this.core?.emit(`${this.name}:stateChange`, this.state);
   }
 
@@ -112,6 +112,6 @@ export class NavigationPlugin implements IPlugin {
   async updateZoomLevel(zoomLevel: number): Promise<void> {
     this.setState({ zoomLevel });
     this.state.container?.element.style.setProperty('--scale-factor', `${zoomLevel}`);
-    this.scrollModeHandler?.updateLayout(zoomLevel);
+    this.scrollModeHandler?.updateLayout();
   }
 }

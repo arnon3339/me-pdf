@@ -12,5 +12,5 @@ export abstract class ScrollModeBase {
   abstract initialize(): void;
   abstract destroy(): void;
   abstract goToPage(pageNumber: number): Promise<void>;
-  abstract updateLayout(zoomLevel: number): void;
+  abstract updateLayout(): void;
 }

@@ -1,5 +1,4 @@
-import { PdfPageObject } from '@cloudpdf/models';
-import { NavigationState, PageElement } from '../types';
+import { NavigationState } from '../types';
 import { ScrollModeBase } from './base';
 
 interface VisibleRange {
@@ -17,9 +16,7 @@ export class ContinuousScrollMode extends ScrollModeBase {
   private visiblePages: Map<number, HTMLElement> = new Map();
   private pageHeights: Map<number, number> = new Map();
   private bufferPages = 2; // Number of pages to keep rendered above/below viewport
-  private scrollTimeout: number | null = null; // Add debounce timeout
-  private lastScrollPosition = 0; // Track last scroll position
-  private scrollThreshold = 50; // Minimum scroll distance before updating
+  private intersectionObserver: IntersectionObserver;
 
   constructor(container: HTMLElement, state: NavigationState) {
     super(container, state);
@@ -31,8 +28,11 @@ export class ContinuousScrollMode extends ScrollModeBase {
     
     this.setupContainer();
 
-    // Listen for scroll events to update visible range
-    this.container.addEventListener('scroll', this.handleScroll.bind(this));
+    // Setup intersection observer
+    this.intersectionObserver = new IntersectionObserver(this.updateVisibleRange.bind(this), {
+      root: this.container,
+      threshold: [0.1, 0.5, 0.9]
+    });
   }
 
   private setupContainer(): void {
@@ -153,13 +153,13 @@ export class ContinuousScrollMode extends ScrollModeBase {
     // Remove pages that are no longer visible
     for (const [pageNum, element] of this.visiblePages.entries()) {
       if (pageNum < range.startPage || pageNum > range.endPage) {
+        this.intersectionObserver.unobserve(element);
         element.remove();
         this.visiblePages.delete(pageNum);
       }
     }
 
     // Add new pages that should be visible
-    // Keep track of where to insert new pages
     const pageNumbers = Array.from(
       { length: range.endPage - range.startPage + 1 }, 
       (_, i) => range.startPage + i
@@ -178,33 +178,17 @@ export class ContinuousScrollMode extends ScrollModeBase {
           const nextElement = this.visiblePages.get(nextPageNum)!;
           this.pagesContainer.insertBefore(pageElement, nextElement);
         } else {
-          // Append at the end if no next page exists
           this.pagesContainer.appendChild(pageElement);
         }
         
         this.visiblePages.set(pageNum, pageElement);
+        this.intersectionObserver.observe(pageElement);
       }
     }
   }
 
-  private handleScroll = (): void => {
-    // Cancel any pending scroll updates
-    if (this.scrollTimeout) {
-      cancelAnimationFrame(this.scrollTimeout);
-    }
-
-    // Check if we've scrolled enough to warrant an update
-    const currentScroll = this.container.scrollTop;
-    if (Math.abs(currentScroll - this.lastScrollPosition) < this.scrollThreshold) {
-      this.scrollTimeout = requestAnimationFrame(() => this.handleScroll());
-      return;
-    }
-
-    this.lastScrollPosition = currentScroll;
-    this.scrollTimeout = requestAnimationFrame(() => this.updateVisibleRange());
-  }
-
   destroy(): void {
+    this.intersectionObserver.disconnect();
     this.visiblePages.clear();
     this.pageHeights.clear();
     this.container.innerHTML = '';
