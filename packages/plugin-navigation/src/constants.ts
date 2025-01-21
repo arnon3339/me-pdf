@@ -1,4 +1,8 @@
-import { ScrollMode } from "./types";
+import { PageLayout, PageOrientation, ScrollMode, ZoomMode } from "./types";
 
-export const DEFAULT_SCROLL_MODE: ScrollMode = 'vertical';
+export const DEFAULT_SCROLL_MODE: ScrollMode = 'continuous';
 export const DEFAULT_INITIAL_PAGE = 1;
+export const DEFAULT_ZOOM_MODE: ZoomMode = 'automatic';
+export const DEFAULT_ZOOM_LEVEL = 1;
+export const DEFAULT_PAGE_LAYOUT: PageLayout = 'single';
+export const DEFAULT_ORIENTATION: PageOrientation = 0;

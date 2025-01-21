@@ -345,8 +345,6 @@ export class PdfiumEngine implements PdfEngine {
         // Get data chunk using the callback
         const data = callback(offset, length);
         
-
-        console.log('data', data);
         // Copy the data to PDFium's buffer
         const dest = new Uint8Array(this.pdfiumModule.pdfium.HEAPU8.buffer, pBuf, data.length);
         dest.set(data);
@@ -379,9 +377,7 @@ export class PdfiumEngine implements PdfEngine {
 
     // Load document
     const docPtr = this.pdfiumModule.FPDF_LoadCustomDocument(fileAccessPtr, passwordPtr);
-    console.log('docPtr', docPtr);
     this.free(passwordPtr);
-
 
     if (!docPtr) {
       const lastError = this.pdfiumModule.FPDF_GetLastError();

@@ -146,6 +146,9 @@ importers:
       '@cloudpdf/core':
         specifier: workspace:*
         version: link:../core
+      '@cloudpdf/models':
+        specifier: workspace:*
+        version: link:../models
     devDependencies:
       tsup:
         specifier: ^8.0.0

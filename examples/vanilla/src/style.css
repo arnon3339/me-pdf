@@ -26,4 +26,14 @@
   margin: 0 auto;
   padding: 2rem;
   max-width: 800px;
+  width: 100%;
+  background-color: #f0f0f0;
+  height: 500px;
+}
+
+#zoomLevel {
+  padding: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
 }

@@ -21,14 +21,16 @@
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
   "dependencies": {
-    "@cloudpdf/core": "workspace:*"
+    "@cloudpdf/core": "workspace:*",
+    "@cloudpdf/models": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "@cloudpdf/core": "^0.0.0"
+    "@cloudpdf/core": "^0.0.0",
+    "@cloudpdf/models": "^0.0.0"
   },
   "files": [
     "dist",

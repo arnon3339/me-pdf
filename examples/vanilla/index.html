@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Viewer - Vanilla Example</title>
-    <link rel="stylesheet" href="/src/styles.css">
+    <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
     <div class="pdf-viewer">
@@ -12,11 +12,21 @@
             <button id="prevPage">Previous</button>
             <span id="pageInfo">Page 1 of 1</span>
             <button id="nextPage">Next</button>
+            <select id="zoomLevel">
+                <option value="0.5">50%</option>
+                <option value="0.75">75%</option>
+                <option value="1">100%</option>
+                <option value="1.25">125%</option>
+                <option value="1.5">150%</option>
+                <option value="2">200%</option>
+            </select>
         </div>
         <div class="viewer-container">
             <div id="pageContainer" class="page-container">
-                <canvas id="pageCanvas"></canvas>
+                
             </div>
+
+            <canvas id="pageCanvas"></canvas>
         </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
