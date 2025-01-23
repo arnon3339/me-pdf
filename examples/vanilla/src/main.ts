@@ -5,6 +5,7 @@ import { PdfiumEngine } from '../../../packages/engines/src/pdfium/engine';
 import pdfiumWasm from '@cloudpdf/pdfium/pdfium.wasm?url';
 import { init } from '@cloudpdf/pdfium';
 import { RendererPlugin } from '@cloudpdf/plugin-renderer';
+import { LayerPlugin, TextLayer } from '@cloudpdf/plugin-layer';
 
 async function loadWasmBinary() {
   const response = await fetch(pdfiumWasm);
@@ -26,6 +27,13 @@ async function initializePDFViewer() {
   // Initialize and register renderer plugin
   const rendererPlugin = new RendererPlugin();
   await core.registerPlugin(rendererPlugin);
+
+  // Initialize layer plugin
+  const layerPlugin = new LayerPlugin();
+  await core.registerPlugin(layerPlugin);
+
+  // Register default layers
+  await layerPlugin.registerLayer(new TextLayer());
 
   // Initialize and register navigation plugin
   const navigationPlugin = new NavigationPlugin({

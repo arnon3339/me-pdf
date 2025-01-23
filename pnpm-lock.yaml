@@ -47,6 +47,9 @@ importers:
       '@cloudpdf/pdfium':
         specifier: workspace:*
         version: link:../../packages/pdfium
+      '@cloudpdf/plugin-layer':
+        specifier: workspace:*
+        version: link:../../packages/plugin-layer
       '@cloudpdf/plugin-navigation':
         specifier: workspace:*
         version: link:../../packages/plugin-navigation
@@ -141,6 +144,22 @@ importers:
         specifier: ^5.0.0
         version: 5.7.3
 
+  packages/plugin-layer:
+    dependencies:
+      '@cloudpdf/core':
+        specifier: workspace:*
+        version: link:../core
+      '@cloudpdf/models':
+        specifier: workspace:*
+        version: link:../models
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.3.5(typescript@5.7.3)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.7.3
+
   packages/plugin-navigation:
     dependencies:
       '@cloudpdf/core':
@@ -149,6 +168,9 @@ importers:
       '@cloudpdf/models':
         specifier: workspace:*
         version: link:../models
+      '@cloudpdf/plugin-layer':
+        specifier: workspace:*
+        version: link:../plugin-layer
     devDependencies:
       tsup:
         specifier: ^8.0.0

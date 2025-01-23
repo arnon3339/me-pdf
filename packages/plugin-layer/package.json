@@ -1,5 +1,5 @@
 {
-  "name": "@cloudpdf/plugin-navigation",
+  "name": "@cloudpdf/plugin-layer",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -22,17 +22,15 @@
   },
   "dependencies": {
     "@cloudpdf/core": "workspace:*",
-    "@cloudpdf/models": "workspace:*",
-    "@cloudpdf/plugin-layer": "workspace:*"
+    "@cloudpdf/models": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "@cloudpdf/core": "^0.0.0",
-    "@cloudpdf/models": "^0.0.0",
-    "@cloudpdf/plugin-layer": "^0.0.0"
+    "@cloudpdf/core": "workspace:*",
+    "@cloudpdf/models": "workspace:*"
   },
   "files": [
     "dist",

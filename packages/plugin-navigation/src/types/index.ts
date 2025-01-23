@@ -1,4 +1,4 @@
-import { PluginState } from '@cloudpdf/core';
+import { PageContainer, PluginState } from '@cloudpdf/core';
 import { PdfPageObject } from '@cloudpdf/models';
 
 export type ScrollMode = 'continuous' | 'page-by-page';
@@ -12,15 +12,10 @@ export interface ViewerContainer {
   height: number;
 }
 
-export interface PageElement {
-  element: HTMLElement;
-  page: PdfPageObject;
-}
-
 export interface NavigationState extends PluginState {
   currentPage: number;
   totalPages: number;
-  pages: PageElement[];
+  pages: PageContainer[];
   scrollMode: ScrollMode;
   zoomMode: ZoomMode;
   zoomLevel: number;

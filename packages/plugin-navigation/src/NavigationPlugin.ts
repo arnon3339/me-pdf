@@ -1,11 +1,12 @@
-import { IPlugin, IPDFCore } from '@cloudpdf/core';
+import { IPlugin, IPDFCore, PageContainer } from '@cloudpdf/core';
 import { PdfDocumentObject, PdfPageObject } from '@cloudpdf/models';
 
 import { DEFAULT_INITIAL_PAGE, DEFAULT_SCROLL_MODE, DEFAULT_ZOOM_MODE, DEFAULT_ZOOM_LEVEL, DEFAULT_PAGE_LAYOUT, DEFAULT_ORIENTATION, DEFAULT_MIN_ZOOM, DEFAULT_MAX_ZOOM } from "./constants";
-import { NavigationOptions, NavigationState, PageElement } from "./types";
+import { NavigationOptions, NavigationState } from "./types";
 import { ContinuousScrollMode } from './scroll-modes/continuous';
 import { ScrollModeBase } from './scroll-modes/base';
 import { ZoomController } from './zoom/ZoomController';
+import { LayerPlugin } from '@cloudpdf/plugin-layer';
 
 export class NavigationPlugin implements IPlugin {
   readonly name = 'navigation';
@@ -58,23 +59,14 @@ export class NavigationPlugin implements IPlugin {
     });
   }
 
-  private createPageElement(page: PdfPageObject): PageElement {
-    const element = document.createElement('div');
-    element.className = 'pdf-page';
-    element.setAttribute('data-page', String(page.index));
+  private createPageElement(page: PdfPageObject): PageContainer {
+    const layerPlugin = this.core?.getPlugin<LayerPlugin>('layers');
 
-    element.style.width = `round(down, var(--scale-factor) * ${page.size.width}px, 1px)`;
-    element.style.height = `round(down, var(--scale-factor) * ${page.size.height}px, 1px)`;
-    element.style.backgroundColor = 'white';
-    
-    // Remove position relative and left margin
-    // Use margin auto to center the page
-    element.style.margin = '0 auto';
-    
-    return {
-      page,
-      element
-    };
+    if(layerPlugin) {
+      return layerPlugin.renderPage(page);
+    } else {
+      return new PageContainer({ page });
+    }
   }
 
   private initializeScrollMode(): void {

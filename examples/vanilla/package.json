@@ -9,6 +9,7 @@
     "@cloudpdf/core": "workspace:*",
     "@cloudpdf/plugin-navigation": "workspace:*",
     "@cloudpdf/plugin-renderer": "workspace:*",
+    "@cloudpdf/plugin-layer": "workspace:*",
     "@cloudpdf/models": "workspace:*",
     "@cloudpdf/pdfium": "workspace:*"
   },
