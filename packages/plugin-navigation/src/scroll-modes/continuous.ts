@@ -16,7 +16,8 @@ export class ContinuousScrollMode extends ScrollModeBase {
   private visiblePages: Map<number, HTMLElement> = new Map();
   private pageHeights: Map<number, number> = new Map();
   private bufferPages = 2; // Number of pages to keep rendered above/below viewport
-  private intersectionObserver: IntersectionObserver;
+  private scrollDebounceTimeout: number | null = null;
+  private readonly SCROLL_DEBOUNCE_MS = 100; // Adjust this value as needed
 
   constructor(options: ScrollModeBaseOptions) {
     super(options);
@@ -27,12 +28,9 @@ export class ContinuousScrollMode extends ScrollModeBase {
     this.pagesContainer = document.createElement('div');
     
     this.setupContainer();
-
-    // Setup intersection observer
-    this.intersectionObserver = new IntersectionObserver(this.updateVisibleRange.bind(this), {
-      root: this.container,
-      threshold: [0.1, 0.5, 0.9]
-    });
+    
+    // Replace intersection observer with scroll listener
+    this.container.addEventListener('scroll', this.handleScroll.bind(this));
   }
 
   private setupContainer(): void {
@@ -100,50 +98,47 @@ export class ContinuousScrollMode extends ScrollModeBase {
     this.updateVisibleRange();
   };
 
+  private handleScroll = () => {
+    if (this.scrollDebounceTimeout) {
+      window.clearTimeout(this.scrollDebounceTimeout);
+    }
+
+    this.scrollDebounceTimeout = window.setTimeout(() => {
+      this.updateVisibleRange();
+    }, this.SCROLL_DEBOUNCE_MS);
+  };
+
   private calculateVisibleRange(): VisibleRange {
+    const { pagePositions, viewportRegions } = this.viewportTracker.getViewportState();
     const scrollTop = this.container.scrollTop;
     const viewportHeight = this.container.clientHeight;
     
-    // Calculate total height up to each page (memoize this if possible)
-    const heightsUpToPage: number[] = [];
-    let accHeight = 0;
+    // Binary search using cached positions - just use tops since they include accumulated heights
+    const heightsArray = Array.from(pagePositions.values())
+      .map(pos => pos.top);
     
-    for (let i = 1; i <= this.state.totalPages; i++) {
-      accHeight += (this.pageHeights.get(i) || 0) + 20;
-      heightsUpToPage[i] = accHeight;
-    }
-    
-    // Binary search for start page
-    let startPage = this.binarySearchPage(heightsUpToPage, scrollTop);
+    let startPage = this.binarySearchPage(heightsArray, scrollTop);
     startPage = Math.max(1, startPage - this.bufferPages);
     
-    // Binary search for end page
-    let endPage = this.binarySearchPage(heightsUpToPage, scrollTop + viewportHeight * 1.5);
+    let endPage = this.binarySearchPage(heightsArray, scrollTop + viewportHeight * 1.5);
     endPage = Math.min(this.state.totalPages, endPage + this.bufferPages);
 
-    // Calculate most visible page
-    let maxVisibleArea = 0;
-    let mostVisiblePage = this.state.currentPage;
+    // Use ViewportTracker's visible regions to determine most visible page
+    const mostVisiblePage = viewportRegions.length > 0 
+      ? viewportRegions.reduce((prev, current) => 
+          current.visiblePercentage > prev.visiblePercentage ? current : prev
+        ).pageNumber
+      : this.state.currentPage;
 
-    for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
-      const pageHeight = this.pageHeights.get(pageNum) || 0;
-      const pageTop = heightsUpToPage[pageNum - 1] || 0;
-      const pageBottom = pageTop + pageHeight;
-      
-      // Calculate intersection with viewport
-      const visibleTop = Math.max(scrollTop, pageTop);
-      const visibleBottom = Math.min(scrollTop + viewportHeight, pageBottom);
-      const visibleArea = Math.max(0, visibleBottom - visibleTop);
+    const topSpacerHeight = startPage > 1 
+    ? (pagePositions.get(startPage - 1)?.top ?? 0) + 
+      (pagePositions.get(startPage - 1)?.height ?? 0) + 20
+    : 0;
 
-      if (visibleArea > maxVisibleArea) {
-        maxVisibleArea = visibleArea;
-        mostVisiblePage = pageNum;
-      }
-    }
-
-    const topSpacerHeight = startPage > 1 ? heightsUpToPage[startPage - 1] : 0;
-    const bottomSpacerHeight = endPage < this.state.totalPages ? 
-      heightsUpToPage[this.state.totalPages] - heightsUpToPage[endPage] : 0;
+    const bottomSpacerHeight = endPage < this.state.totalPages 
+      ? pagePositions.get(this.state.totalPages)!.top - 
+        pagePositions.get(endPage)!.top
+      : 0;
 
     return { 
       startPage, 
@@ -189,7 +184,6 @@ export class ContinuousScrollMode extends ScrollModeBase {
     // Remove pages that are no longer visible
     for (const [pageNum, element] of this.visiblePages.entries()) {
       if (pageNum < range.startPage || pageNum > range.endPage) {
-        this.intersectionObserver.unobserve(element);
         element.remove();
         this.visiblePages.delete(pageNum);
       }
@@ -218,14 +212,19 @@ export class ContinuousScrollMode extends ScrollModeBase {
         }
         
         this.visiblePages.set(pageNum, pageElement);
-        this.intersectionObserver.observe(pageElement);
       }
     }
+
+    //const visibleRegions = this.viewportTracker.getVisibleRegions();
+    //console.log(visibleRegions);
   }
 
   destroy(): void {
     this.core.removeListener('zoom:change', this.zoomChangeHandler);
-    this.intersectionObserver.disconnect();
+    if (this.scrollDebounceTimeout) {
+      window.clearTimeout(this.scrollDebounceTimeout);
+    }
+    this.container.removeEventListener('scroll', this.handleScroll);
     this.visiblePages.clear();
     this.pageHeights.clear();
     this.container.innerHTML = '';

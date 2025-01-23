@@ -60,3 +60,28 @@ export interface ZoomChangeEvent {
   center?: { x: number; y: number };
   metrics: ViewportMetrics;
 } 
+
+export interface ViewportRegion {
+  // The page number
+  pageNumber: number;
+  
+  // Viewport coordinates (relative to viewport top-left)
+  viewportX: number;
+  viewportY: number;
+  
+  // Page coordinates (relative to page top-left, in PDF units)
+  pageX: number;
+  pageY: number;
+  
+  // Visible dimensions (in PDF units)
+  visibleWidth: number;
+  visibleHeight: number;
+  
+  // Percentage of page visible
+  visiblePercentage: number;
+}
+
+export interface ViewportState {
+  pagePositions: Map<number, {top: number, height: number}>;  
+  viewportRegions: ViewportRegion[];
+}

@@ -105,7 +105,12 @@ export class NavigationPlugin implements IPlugin {
 
     // Set up event listeners
     core.on('document:loaded', (doc: PdfDocumentObject) => {
-      this.setState({ totalPages: doc.pageCount, pages: doc.pages.map(page => this.createPageElement(page)) });
+      // Set total pages and pages
+      this.setState({ 
+        totalPages: doc.pageCount, 
+        pages: doc.pages.map(page => this.createPageElement(page)) 
+      });
+      // Initialize scroll mode
       this.initializeScrollMode();
     });
   }

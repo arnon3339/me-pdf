@@ -50,7 +50,7 @@ async function initializePDFViewer() {
 
   const canvas = document.getElementById('pageCanvas') as HTMLCanvasElement;
   await rendererPlugin.renderPage(pdfDocument.pages[0], canvas, {
-    scale: 0.5
+    scale: 1
   });
 
   // Listen to navigation events
