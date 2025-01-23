@@ -1,4 +1,4 @@
-import { NavigationState, ZoomChangeEvent } from '../types';
+import { ZoomChangeEvent } from '../types';
 import { ScrollModeBase, ScrollModeBaseOptions } from './base';
 
 interface VisibleRange {
@@ -14,7 +14,6 @@ export class ContinuousScrollMode extends ScrollModeBase {
   private bottomSpacer: HTMLElement;
   private pagesContainer: HTMLElement;
   private visiblePages: Map<number, HTMLElement> = new Map();
-  private pageHeights: Map<number, number> = new Map();
   private bufferPages = 2; // Number of pages to keep rendered above/below viewport
   private scrollDebounceTimeout: number | null = null;
   private readonly SCROLL_DEBOUNCE_MS = 100; // Adjust this value as needed
@@ -66,12 +65,10 @@ export class ContinuousScrollMode extends ScrollModeBase {
   private zoomChangeHandler = (zoomChange: ZoomChangeEvent) => {
     const { metrics } = zoomChange;
 
-    // Update layout with new zoom level
-    this.updateLayout();
-    
-    // Calculate new scroll position based on relative position
-    const newTotalHeight = Array.from(this.pageHeights.values())
-      .reduce((sum, height) => sum + height + 20, 0);
+    const pagePositions = this.viewportTracker.getPagePositions();
+    const lastPage = this.state.totalPages;
+    const lastPagePos = pagePositions.get(lastPage)!;
+    const newTotalHeight = lastPagePos.top + lastPagePos.height + 20;
 
     const newScrollTop = metrics.relativePosition.y * 
       (newTotalHeight - metrics.viewportHeight);
@@ -214,9 +211,6 @@ export class ContinuousScrollMode extends ScrollModeBase {
         this.visiblePages.set(pageNum, pageElement);
       }
     }
-
-    //const visibleRegions = this.viewportTracker.getVisibleRegions();
-    //console.log(visibleRegions);
   }
 
   destroy(): void {
@@ -226,29 +220,22 @@ export class ContinuousScrollMode extends ScrollModeBase {
     }
     this.container.removeEventListener('scroll', this.handleScroll);
     this.visiblePages.clear();
-    this.pageHeights.clear();
     this.container.innerHTML = '';
   }
 
   async goToPage(pageNumber: number): Promise<void> {
-    let accHeight = 0;
-  
-    for (let i = 1; i < pageNumber; i++) {
-      accHeight += (this.pageHeights.get(i) || 0) + 20;
+    const pagePositions = this.viewportTracker.getPagePositions();
+    const position = pagePositions.get(pageNumber);
+    
+    if (position) {
+        this.container.scrollTo({
+            top: position.top,
+            behavior: 'smooth'
+        });
     }
-    this.container.scrollTo({
-      top: accHeight,
-      behavior: 'smooth'
-    });
   }
 
   updateLayout(): void {
-    // Calculate initial page heights based on page dimensions and zoom
-    this.state.pages.forEach((page, index) => {
-      const height = page.page.size.height * this.state.zoomLevel;
-      this.pageHeights.set(index + 1, height);
-    });
-
     // Render initial visible range
     if(this.state.pages.length > 0) {
       this.updateVisibleRange();

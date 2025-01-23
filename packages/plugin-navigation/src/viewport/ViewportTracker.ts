@@ -29,11 +29,11 @@ export class ViewportTracker {
     return pagePositions;
   }
 
-  private getPagePositions(zoomLevel: number): Map<number, {top: number, height: number}> {
-    if (this.lastZoomLevel === zoomLevel && this.cachedPagePositions) {
+  public getPagePositions(): Map<number, {top: number, height: number}> {
+    if (this.lastZoomLevel === this.state.zoomLevel && this.cachedPagePositions) {
       return this.cachedPagePositions;
     }
-    return this.calculatePagePositions(zoomLevel);
+    return this.calculatePagePositions(this.state.zoomLevel);
   }
 
   public getViewportState(): ViewportState {
@@ -46,7 +46,7 @@ export class ViewportTracker {
     const zoomLevel = this.state.zoomLevel;
 
     // Use cached positions if zoom level hasn't changed
-    const pagePositions = this.getPagePositions(zoomLevel);
+    const pagePositions = this.getPagePositions();
 
     // For each page, calculate visibility
     this.state.pages.forEach((page, index) => {
