@@ -1,9 +1,10 @@
 import { ILayer } from '../types';
 import { PdfPageObject } from '@cloudpdf/models';
+import { BaseLayer } from './BaseLayer';
 
-export class TextLayer implements ILayer {
+export class TextLayer extends BaseLayer {
   id = 'text';
-  zIndex = 1;
+  zIndex = 2;
 
   async render(page: PdfPageObject, container: HTMLElement) {
     // Get text content from the page

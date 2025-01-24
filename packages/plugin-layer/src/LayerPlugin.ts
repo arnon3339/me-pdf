@@ -1,14 +1,14 @@
 import { IPlugin, IPDFCore } from '@cloudpdf/core';
 import { PdfPageObject } from '@cloudpdf/models';
 import { PageContainer } from '@cloudpdf/core';
-import { ILayer } from './types';
+import { BaseLayer } from './layers/BaseLayer';
 
 export class LayerPlugin implements IPlugin {
   readonly name = 'layers';
   readonly version = '1.0.0';
   
   private core?: IPDFCore;
-  private layers: Map<string, ILayer> = new Map();
+  private layers: Map<string, BaseLayer> = new Map();
   private pageContainers: Map<number, PageContainer> = new Map();
   private layerContainers: Map<number, Map<string, HTMLElement>> = new Map();
 
@@ -71,7 +71,12 @@ export class LayerPlugin implements IPlugin {
     }
   }
 
-  async registerLayer(layer: ILayer): Promise<void> {
+  async registerLayer(layer: BaseLayer): Promise<void> {
+    if (!this.core) throw new Error('Plugin not initialized');
+
+    // Initialize the layer with core
+    await layer.initialize(this.core);
+
     this.layers.set(layer.id, layer);
     
     // Re-render all existing pages with the new layer

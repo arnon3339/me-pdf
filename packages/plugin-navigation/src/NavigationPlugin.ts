@@ -2,7 +2,7 @@ import { IPlugin, IPDFCore, PageContainer } from '@cloudpdf/core';
 import { PdfDocumentObject, PdfPageObject } from '@cloudpdf/models';
 
 import { DEFAULT_INITIAL_PAGE, DEFAULT_SCROLL_MODE, DEFAULT_ZOOM_MODE, DEFAULT_ZOOM_LEVEL, DEFAULT_PAGE_LAYOUT, DEFAULT_ORIENTATION, DEFAULT_MIN_ZOOM, DEFAULT_MAX_ZOOM } from "./constants";
-import { NavigationOptions, NavigationState } from "./types";
+import { NavigationOptions, NavigationState, ViewportState } from "./types";
 import { ContinuousScrollMode } from './scroll-modes/continuous';
 import { ScrollModeBase } from './scroll-modes/base';
 import { ZoomController } from './zoom/ZoomController';
@@ -109,6 +109,12 @@ export class NavigationPlugin implements IPlugin {
 
   async destroy(): Promise<void> {
     this.core = undefined;
+  }
+
+  getViewportState(): ViewportState {
+    if(!this.scrollModeHandler) throw new Error('scroll mode not initialized')
+
+    return this.scrollModeHandler?.getViewportState();
   }
 
   getState(): NavigationState {

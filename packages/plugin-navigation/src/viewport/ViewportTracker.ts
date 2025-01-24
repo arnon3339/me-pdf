@@ -1,18 +1,38 @@
 import { NavigationState, ViewportRegion, ViewportState } from "../types";
 
+export interface ViewportTrackerOptions {
+  container: HTMLElement;
+  state: NavigationState;
+}
+
+const CONTAINER_PADDING = 32;
+const PAGE_GAP = 20;
+
+interface Rect {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
 export class ViewportTracker {
   private container: HTMLElement;
   private state: NavigationState;
   private cachedPagePositions: Map<number, {top: number, height: number}> | null = null;
   private lastZoomLevel: number | null = null;
   
-  constructor(container: HTMLElement, state: NavigationState) {
-    this.container = container;
-    this.state = state;
+  constructor(options: ViewportTrackerOptions) {
+    this.container = options.container;
+    this.state = options.state;
   }
 
   private calculatePagePositions(zoomLevel: number): Map<number, {top: number, height: number}> {
-    let accumulatedHeight = 0;
+    let accumulatedHeight = 0 // Start with top padding;
     const pagePositions = new Map<number, {top: number, height: number}>();
     
     this.state.pages.forEach((page, index) => {
@@ -21,7 +41,7 @@ export class ViewportTracker {
         top: accumulatedHeight,
         height: pageHeight
       });
-      accumulatedHeight += pageHeight + 20; // 20px gap
+      accumulatedHeight += pageHeight + PAGE_GAP; // 20px gap
     });
 
     this.cachedPagePositions = pagePositions;
@@ -55,8 +75,8 @@ export class ViewportTracker {
       
       // Calculate page rect in document coordinates
       const pageRect = {
-        top: pagePos.top - scrollTop,
-        left: -scrollLeft,
+        top: pagePos.top + CONTAINER_PADDING - scrollTop,
+        left: CONTAINER_PADDING - scrollLeft,
         width: page.page.size.width * zoomLevel,
         height: pagePos.height
       };
@@ -74,8 +94,8 @@ export class ViewportTracker {
       if (intersection) {
         // Convert intersection back to absolute coordinates
         const absoluteIntersection = {
-          left: intersection.left + scrollLeft,
-          top: intersection.top + scrollTop,
+          left: intersection.left + scrollLeft - CONTAINER_PADDING, // Subtract padding for correct absolute position
+          top: intersection.top + scrollTop - CONTAINER_PADDING,
           width: intersection.width,
           height: intersection.height
         };
@@ -108,16 +128,19 @@ export class ViewportTracker {
       }
     });
 
-    return {
-      pagePositions,
-      viewportRegions: regions
+    const viewportState = {
+      zoomLevel: this.state.zoomLevel,
+      pagePositions: pagePositions,
+      viewportRegions: regions,
     };
+
+    return viewportState;
   }
 
   private calculateIntersection(
-    rect1: { top: number; left: number; width: number; height: number },
-    rect2: { top: number; left: number; width: number; height: number }
-  ) {
+    rect1: Rect,
+    rect2: Rect
+  ): Rect | null {
     const left = Math.max(rect1.left, rect2.left);
     const top = Math.max(rect1.top, rect2.top);
     const right = Math.min(rect1.left + rect1.width, rect2.left + rect2.width);
@@ -137,10 +160,16 @@ export class ViewportTracker {
   private screenToPdfUnits(
     screen: { x: number; y: number },
     zoomLevel: number
-  ) {
+  ): Point {
     return {
       x: (screen.x / zoomLevel),
       y: (screen.y / zoomLevel)
     };
+  }
+
+  public dispose(): void {
+    this.cachedPagePositions?.clear();
+    this.cachedPagePositions = null;
+    this.lastZoomLevel = null;
   }
 } 

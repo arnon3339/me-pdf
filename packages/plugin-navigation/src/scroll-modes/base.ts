@@ -1,6 +1,7 @@
 import { IPDFCore } from "@cloudpdf/core";
-import { NavigationState } from "../types";
+import { NavigationState, ViewportState } from "../types";
 import { ViewportTracker } from "../viewport/ViewportTracker";
+import { NAVIGATION_EVENTS } from "../events";
 
 export interface ScrollModeBaseOptions {
   core: IPDFCore;
@@ -18,11 +19,22 @@ export abstract class ScrollModeBase {
     this.container = options.container;
     this.state = options.state;
     this.core = options.core;
-    this.viewportTracker = new ViewportTracker(options.container, options.state);
+    this.viewportTracker = new ViewportTracker({
+      container: options.container,
+      state: options.state
+    });
   }
 
   abstract initialize(): void;
   abstract destroy(): void;
   abstract goToPage(pageNumber: number): Promise<void>;
   abstract updateLayout(): void;
+
+  getViewportState(emit: boolean = false): ViewportState {
+    const viewportState = this.viewportTracker.getViewportState();
+
+    if(emit) this.core.emit(NAVIGATION_EVENTS.VIEWPORT_STATE_CHANGED, viewportState);
+
+    return viewportState;
+  }
 }

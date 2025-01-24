@@ -106,7 +106,7 @@ export class ContinuousScrollMode extends ScrollModeBase {
   };
 
   private calculateVisibleRange(): VisibleRange {
-    const { pagePositions, viewportRegions } = this.viewportTracker.getViewportState();
+    const { pagePositions, viewportRegions } = this.getViewportState(true);
     const scrollTop = this.container.scrollTop;
     const viewportHeight = this.container.clientHeight;
     

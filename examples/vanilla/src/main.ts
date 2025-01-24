@@ -1,6 +1,6 @@
 import { PDFCore } from '@cloudpdf/core';
 import { ConsoleLogger } from '@cloudpdf/models';
-import { NavigationPlugin } from '@cloudpdf/plugin-navigation';
+import { NavigationPlugin, RenderLayer } from '@cloudpdf/plugin-navigation';
 import { PdfiumEngine } from '../../../packages/engines/src/pdfium/engine';
 import pdfiumWasm from '@cloudpdf/pdfium/pdfium.wasm?url';
 import { init } from '@cloudpdf/pdfium';
@@ -34,6 +34,7 @@ async function initializePDFViewer() {
 
   // Register default layers
   await layerPlugin.registerLayer(new TextLayer());
+  await layerPlugin.registerLayer(new RenderLayer());
 
   // Initialize and register navigation plugin
   const navigationPlugin = new NavigationPlugin({

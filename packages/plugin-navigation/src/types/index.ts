@@ -79,4 +79,5 @@ export interface ViewportRegion {
 export interface ViewportState {
   pagePositions: Map<number, {top: number, height: number}>;  
   viewportRegions: ViewportRegion[];
+  zoomLevel: number;
 }
