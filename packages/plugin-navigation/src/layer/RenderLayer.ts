@@ -1,14 +1,14 @@
-import { PdfPageObject } from '@cloudpdf/models';
+import { ignore, PdfPageObject } from '@cloudpdf/models';
 import { BaseLayer } from '@cloudpdf/plugin-layer';
 import { NavigationPlugin } from '../NavigationPlugin';
-import { ViewportState } from '../types';
+import { ViewportRegion, ViewportState } from '../types';
 
 export class RenderLayer extends BaseLayer {
   readonly id = 'render';
   readonly zIndex = 1;
   private cleanupListeners: (() => void)[] = [];
-  private viewportState: ViewportState | null = null;
-  private pageOverlays: Map<number, HTMLDivElement> = new Map();
+  private pageCanvases: Map<number, HTMLCanvasElement> = new Map();
+  private lastRegions: Map<number, string> = new Map();
 
   async render(page: PdfPageObject, container: HTMLElement) {
     if(!this.core) throw new Error('Plugin not initialized');
@@ -24,45 +24,79 @@ export class RenderLayer extends BaseLayer {
     this.cleanupListeners.push(cleanup);
   }
 
-  private viewportStateHandler = (page: PdfPageObject, container: HTMLElement, viewportState: ViewportState) => {
-    this.viewportState = viewportState;
-  
-    // Find the viewport region for this page
+  private viewportStateHandler = async (page: PdfPageObject, container: HTMLElement, viewportState: ViewportState) => {
+    if(!this.core) return;
+
+    const pdfDocument = this.core?.getDocument();
+    if(!pdfDocument) return;
+
     const region = viewportState.viewportRegions.find(r => r.pageNumber === page.index + 1);
     
     if (region) {
-      // Page is visible - create or update overlay
-      let overlay = this.pageOverlays.get(page.index);
+      const regionKey = `${region.pageX},${region.pageY},${region.visibleWidth},${region.visibleHeight}`;
       
-      if (!overlay) {
-        // Create new overlay if it doesn't exist
-        overlay = document.createElement('div');
-        overlay.style.position = 'absolute';
-        overlay.style.pointerEvents = 'none';
-        overlay.style.backgroundColor = 'red';
-        container.appendChild(overlay);
-        this.pageOverlays.set(page.index, overlay);
+      if (this.lastRegions.get(page.index) === regionKey) {
+        return;
+      }
+      
+      let canvas = this.pageCanvases.get(page.index);
+      
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.style.position = 'absolute';
+        canvas.style.pointerEvents = 'none';
+        container.appendChild(canvas);
+        this.pageCanvases.set(page.index, canvas);
       }
 
-      // Update overlay position and dimensions
-      overlay.style.left = `round(down, var(--scale-factor) * ${region.pageX}px, 1px)`;
-      overlay.style.top = `round(down, var(--scale-factor) * ${region.pageY}px, 1px)`;
-      overlay.style.width = `round(down, var(--scale-factor) * ${region.visibleWidth}px, 1px)`;
-      overlay.style.height = `round(down, var(--scale-factor) * ${region.visibleHeight}px, 1px)`;
+      const rect = {
+        origin: { x: region.pageX, y: region.pageY },
+        size: { width: region.visibleWidth, height: region.visibleHeight }
+      };
+
+      console.log('rect', rect);
+
+      const pdfTask = await this.core.engine.renderPageRect(
+        pdfDocument,
+        page,
+        viewportState.zoomLevel,
+        0,
+        window.devicePixelRatio,
+        rect,
+        { withAnnotations: true }
+      );
+
+      pdfTask.wait((imageData) => this.renderToCanvas(canvas, imageData, region), ignore);
+
+      this.lastRegions.set(page.index, regionKey);
     } else {
-      // Page is not visible - remove overlay if it exists
-      const overlay = this.pageOverlays.get(page.index);
-      if (overlay) {
-        overlay.remove();
-        this.pageOverlays.delete(page.index);
+      const canvas = this.pageCanvases.get(page.index);
+      if (canvas) {
+        canvas.remove();
+        this.pageCanvases.delete(page.index);
       }
+      this.lastRegions.delete(page.index);
     }
   }
 
+  renderToCanvas(canvas: HTMLCanvasElement, imageData: ImageData, region: ViewportRegion) {
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    const ctx = canvas.getContext('2d');
+    ctx?.putImageData(imageData, 0, 0);
+    
+    canvas.style.left = `round(down, var(--scale-factor) * ${region.pageX}px, 1px)`;
+    canvas.style.top = `round(down, var(--scale-factor) * ${region.pageY}px, 1px)`;
+    canvas.style.width = `round(down, var(--scale-factor) * ${region.visibleWidth}px, 1px)`;
+    canvas.style.height = `round(down, var(--scale-factor) * ${region.visibleHeight}px, 1px)`;
+
+    return canvas;
+  }
+
   async destroy() {
-    // Clean up all overlays
-    this.pageOverlays.forEach(overlay => overlay.remove());
-    this.pageOverlays.clear();
+    this.pageCanvases.forEach(canvas => canvas.remove());
+    this.pageCanvases.clear();
+    this.lastRegions.clear();
     
     this.cleanupListeners.forEach(cleanup => cleanup());
     this.cleanupListeners = [];

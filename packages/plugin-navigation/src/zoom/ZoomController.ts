@@ -36,7 +36,7 @@ export class ZoomController {
     this.container = options.container;
     this.state = options.state;
     this.minZoom = options.options.minZoom ?? 0.25;
-    this.maxZoom = options.options.maxZoom ?? 5;
+    this.maxZoom = options.options.maxZoom ?? 10;
     this.zoomStep = options.options.zoomStep ?? 0.1;
 
     this.container.style.setProperty('--scale-factor', `${this.state.zoomLevel}`);

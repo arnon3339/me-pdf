@@ -66,6 +66,7 @@ import {
   PdfPageFlattenResult,
   PdfTask,
   PdfFileLoader,
+  transformRect,
 } from '@cloudpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@cloudpdf/pdfium';
@@ -1441,10 +1442,7 @@ export class PdfiumEngine implements PdfEngine {
 
     if (!this.docs[doc.id]) {
       this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
+      return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
     }
 
     const { keyword, flags } = target;
@@ -4627,40 +4625,48 @@ export class PdfiumEngine implements PdfEngine {
   ) {
     const format = BitmapFormat.Bitmap_BGRA;
     const bytesPerPixel = 4;
-    const bitmapSize = transformSize(rect.size, rotation, scaleFactor * dpr);
-    const bitmapHeapLength =
-      bitmapSize.width * bitmapSize.height * bytesPerPixel;
+
+    // Round the transformed dimensions to whole pixels
+    const rectSize = transformRect(page.size, rect, rotation, scaleFactor * dpr);
+    const pageSize = transformSize(page.size, rotation, scaleFactor * dpr);
+
+    const bitmapHeapLength = rectSize.size.width * rectSize.size.height * bytesPerPixel;
     const bitmapHeapPtr = this.malloc(bitmapHeapLength);
     const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
-      bitmapSize.width,
-      bitmapSize.height,
+      rectSize.size.width ,
+      rectSize.size.height,
       format,
       bitmapHeapPtr,
-      bitmapSize.width * bytesPerPixel,
+      rectSize.size.width * bytesPerPixel,
     );
+
     this.pdfiumModule.FPDFBitmap_FillRect(
       bitmapPtr,
       0,
       0,
-      bitmapSize.width,
-      bitmapSize.height,
+      rectSize.size.width,
+      rectSize.size.height,
       0xffffffff,
     );
+
     let flags = RenderFlag.REVERSE_BYTE_ORDER;
     if (options?.withAnnotations) {
       flags = flags | RenderFlag.ANNOT;
     }
+
     const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+
     this.pdfiumModule.FPDF_RenderPageBitmap(
       bitmapPtr,
       pagePtr,
-      rect.origin.x,
-      rect.origin.y,
-      bitmapSize.width,
-      bitmapSize.height,
+      -rectSize.origin.x,
+      -rectSize.origin.y,
+      pageSize.width,
+      pageSize.height,
       rotation,
       flags,
     );
+
     this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
     this.pdfiumModule.FPDF_ClosePage(pagePtr);
 
@@ -4668,11 +4674,13 @@ export class PdfiumEngine implements PdfEngine {
       bitmapHeapPtr,
       bitmapHeapPtr + bitmapHeapLength,
     );
+
     const imageData = new ImageData(
       new Uint8ClampedArray(data),
-      bitmapSize.width,
-      bitmapSize.height,
+      rectSize.size.width,
+      rectSize.size.height,
     );
+    
     this.free(bitmapHeapPtr);
 
     return imageData;

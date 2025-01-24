@@ -10,6 +10,16 @@ export enum Rotation {
 }
 
 /**
+ * Utility function to ensure integer coordinates
+ * @param value - number to be rounded
+ * @returns floored integer value
+ * @internal
+ */
+function ensureInteger(value: number): number {
+  return Math.floor(value);
+}
+
+/**
  * Calculate degree that match the rotation type
  * @param rotation - type of rotation
  * @returns rotated degree
@@ -68,8 +78,8 @@ export function swap(size: Size): Size {
   const { width, height } = size;
 
   return {
-    width: height,
-    height: width,
+    width: ensureInteger(height),
+    height: ensureInteger(width),
   };
 }
 
@@ -90,8 +100,8 @@ export function transformSize(
   size = rotation % 2 === 0 ? size : swap(size);
 
   return {
-    width: Math.ceil(size.width * scaleFactor),
-    height: Math.ceil(size.height * scaleFactor),
+    width: ensureInteger(size.width * scaleFactor),
+    height: ensureInteger(size.height * scaleFactor),
   };
 }
 
@@ -127,28 +137,32 @@ export function rotatePosition(
   position: Position,
   rotation: Rotation,
 ): Position {
+  let x = position.x;
+  let y = position.y;
+
   switch (rotation) {
     case Rotation.Degree0:
-      return {
-        x: position.x,
-        y: position.y,
-      };
+      x = position.x;
+      y = position.y;
+      break;
     case Rotation.Degree90:
-      return {
-        x: containerSize.height - position.y,
-        y: position.x,
-      };
+      x = containerSize.height - position.y;
+      y = position.x;
+      break;
     case Rotation.Degree180:
-      return {
-        x: containerSize.width - position.x,
-        y: containerSize.height - position.y,
-      };
+      x = containerSize.width - position.x;
+      y = containerSize.height - position.y;
+      break;
     case Rotation.Degree270:
-      return {
-        x: position.y,
-        y: containerSize.width - position.x,
-      };
+      x = position.y;
+      y = containerSize.width - position.x;
+      break;
   }
+
+  return {
+    x: ensureInteger(x),
+    y: ensureInteger(y),
+  };
 }
 
 /**
@@ -164,8 +178,8 @@ export function scalePosition(
   scaleFactor: number,
 ): Position {
   return {
-    x: position.x * scaleFactor,
-    y: position.y * scaleFactor,
+    x: ensureInteger(position.x * scaleFactor),
+    y: ensureInteger(position.y * scaleFactor),
   };
 }
 
@@ -244,34 +258,39 @@ export function rotateRect(
   rect: Rect,
   rotation: Rotation,
 ): Rect {
+  let x = rect.origin.x;
+  let y = rect.origin.y;
+  let size = rect.size;
+
   switch (rotation) {
     case Rotation.Degree0:
-      return rect;
+      break;
     case Rotation.Degree90:
-      return {
-        origin: {
-          x: containerSize.height - rect.origin.y - rect.size.height,
-          y: rect.origin.x,
-        },
-        size: swap(rect.size),
-      };
+      x = containerSize.height - rect.origin.y - rect.size.height;
+      y = rect.origin.x;
+      size = swap(rect.size);
+      break;
     case Rotation.Degree180:
-      return {
-        origin: {
-          x: containerSize.width - rect.origin.x - rect.size.width,
-          y: containerSize.height - rect.origin.y - rect.size.height,
-        },
-        size: rect.size,
-      };
+      x = containerSize.width - rect.origin.x - rect.size.width;
+      y = containerSize.height - rect.origin.y - rect.size.height;
+      break;
     case Rotation.Degree270:
-      return {
-        origin: {
-          x: rect.origin.y,
-          y: containerSize.width - rect.origin.x - rect.size.width,
-        },
-        size: swap(rect.size),
-      };
+      x = rect.origin.y;
+      y = containerSize.width - rect.origin.x - rect.size.width;
+      size = swap(rect.size);
+      break;
   }
+
+  return {
+    origin: {
+      x: ensureInteger(x),
+      y: ensureInteger(y),
+    },
+    size: {
+      width: ensureInteger(size.width),
+      height: ensureInteger(size.height),
+    },
+  };
 }
 
 /**
@@ -285,12 +304,12 @@ export function rotateRect(
 export function scaleRect(rect: Rect, scaleFactor: number) {
   return {
     origin: {
-      x: rect.origin.x * scaleFactor,
-      y: rect.origin.y * scaleFactor,
+      x: ensureInteger(rect.origin.x * scaleFactor),
+      y: ensureInteger(rect.origin.y * scaleFactor),
     },
     size: {
-      width: rect.size.width * scaleFactor,
-      height: rect.size.height * scaleFactor,
+      width: ensureInteger(rect.size.width * scaleFactor),
+      height: ensureInteger(rect.size.height * scaleFactor),
     },
   };
 }
@@ -372,7 +391,7 @@ export function restoreOffset(
   }
 
   return {
-    x: offsetX,
-    y: offsetY,
+    x: ensureInteger(offsetX),
+    y: ensureInteger(offsetY),
   };
 }

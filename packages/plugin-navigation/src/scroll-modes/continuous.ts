@@ -228,10 +228,10 @@ export class ContinuousScrollMode extends ScrollModeBase {
     const position = pagePositions.get(pageNumber);
     
     if (position) {
-        this.container.scrollTo({
-            top: position.top,
-            behavior: 'smooth'
-        });
+      this.container.scrollTo({
+        top: position.top,
+        behavior: 'smooth'
+      });
     }
   }
 

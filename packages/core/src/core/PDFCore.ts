@@ -6,6 +6,7 @@ import { PDFPluginManager } from './PDFPluginManager';
 export class PDFCore extends PDFPluginManager implements IPDFCore {
   public engine: PdfEngine;
   private documentLoader: PDFDocumentLoader;
+  private document: PdfDocumentObject | null = null;
 
   constructor(options: PDFCoreOptions) {
     super();
@@ -20,8 +21,14 @@ export class PDFCore extends PDFPluginManager implements IPDFCore {
       engine: this.engine,
     });
 
+    this.document = document;
+
     this.emit('document:loaded', document);
     return document;
+  }
+
+  getDocument(): PdfDocumentObject | null {
+    return this.document;
   }
 
   protected getPluginHost(): IPDFCore {

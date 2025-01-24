@@ -12,4 +12,5 @@ export type PDFCoreLoadDocumentOptions = Omit<PDFLoadingOptions, 'engine'>;
 export interface IPDFCore extends IPluginManager {
   engine: PdfEngine;
   loadDocument(options: PDFCoreLoadDocumentOptions): Promise<PdfDocumentObject>;
+  getDocument(): PdfDocumentObject | null;
 }

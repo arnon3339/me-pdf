@@ -57,11 +57,6 @@ async function initializePDFViewer() {
 
   updatePageInfo(1, pdfDocument.pageCount);
 
-  const canvas = document.getElementById('pageCanvas') as HTMLCanvasElement;
-  await rendererPlugin.renderPage(pdfDocument.pages[0], canvas, {
-    scale: 1
-  });
-
   // Listen to navigation events
   core.on('navigation:pageChanged', (pageNumber) => {
     console.log(`Page changed to ${pageNumber}`);
