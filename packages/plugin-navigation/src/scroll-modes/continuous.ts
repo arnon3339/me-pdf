@@ -68,7 +68,10 @@ export class ContinuousScrollMode extends ScrollModeBase {
     const pagePositions = this.viewportTracker.getPagePositions();
     const lastPage = this.state.totalPages;
     const lastPagePos = pagePositions.get(lastPage)!;
-    const newTotalHeight = lastPagePos.top + lastPagePos.height + 20;
+    const newTotalHeight = lastPagePos.top + lastPagePos.height;
+
+    // Update visible range
+    this.updateVisibleRange();
 
     const newScrollTop = metrics.relativePosition.y * 
       (newTotalHeight - metrics.viewportHeight);
@@ -90,9 +93,6 @@ export class ContinuousScrollMode extends ScrollModeBase {
     // Apply new scroll position
     this.container.scrollTop = newScrollTop;
     this.container.scrollLeft = newScrollLeft;
-    
-    // Update visible range
-    this.updateVisibleRange();
   };
 
   private handleScroll = () => {

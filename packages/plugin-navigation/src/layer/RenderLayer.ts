@@ -34,6 +34,7 @@ export class RenderLayer extends BaseLayer {
     
     if (region) {
       const regionKey = `${region.pageX},${region.pageY},${region.visibleWidth},${region.visibleHeight}`;
+      if(region.visibleHeight < 2) return;
       
       if (this.lastRegions.get(page.index) === regionKey) {
         return;
@@ -53,8 +54,6 @@ export class RenderLayer extends BaseLayer {
         origin: { x: region.pageX, y: region.pageY },
         size: { width: region.visibleWidth, height: region.visibleHeight }
       };
-
-      console.log('rect', rect);
 
       const pdfTask = await this.core.engine.renderPageRect(
         pdfDocument,
