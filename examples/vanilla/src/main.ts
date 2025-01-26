@@ -1,6 +1,6 @@
 import { PDFCore } from '@cloudpdf/core';
 import { ConsoleLogger } from '@cloudpdf/models';
-import { NavigationPlugin, RenderLayer } from '@cloudpdf/plugin-navigation';
+import { NavigationPlugin, RenderLayer, ZoomLevel } from '@cloudpdf/plugin-navigation';
 import { PdfiumEngine } from '../../../packages/engines/src/pdfium/engine';
 import pdfiumWasm from '@cloudpdf/pdfium/pdfium.wasm?url';
 import { init } from '@cloudpdf/pdfium';
@@ -91,8 +91,8 @@ function setupUIControls(navigationPlugin: NavigationPlugin) {
 
   // Add zoom level change handler
   zoomSelect.addEventListener('change', async () => {
-    const newZoom = parseFloat(zoomSelect.value);
-    await navigationPlugin.updateZoomLevel(newZoom);
+    const newZoom = isNaN(parseFloat(zoomSelect.value)) ? zoomSelect.value : parseFloat(zoomSelect.value);
+    await navigationPlugin.updateZoomLevel(newZoom as ZoomLevel);
   });
 }
 

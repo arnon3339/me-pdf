@@ -2,7 +2,7 @@ import { PageContainer, PluginState } from '@cloudpdf/core';
 import { PdfPageObject } from '@cloudpdf/models';
 
 export type ScrollMode = 'continuous' | 'page-by-page';
-export type ZoomMode = 'automatic' | 'fit-page' | 'fit-width' | 'custom';
+export type ZoomLevel = 'automatic' | 'fit-page' | 'fit-width' | number;
 export type PageLayout = 'single' | 'dual' | 'cover';
 export type PageOrientation = 0 | 90 | 180 | 270;
 
@@ -17,8 +17,8 @@ export interface NavigationState extends PluginState {
   totalPages: number;
   pages: PageContainer[];
   scrollMode: ScrollMode;
-  zoomMode: ZoomMode;
-  zoomLevel: number;
+  currentZoomLevel: number;
+  zoomLevel: ZoomLevel;
   pageLayout: PageLayout;
   orientation: PageOrientation;
   container?: ViewerContainer;
@@ -27,8 +27,7 @@ export interface NavigationState extends PluginState {
 export interface NavigationOptions {
   initialPage?: number;
   defaultScrollMode?: ScrollMode;
-  defaultZoomMode?: ZoomMode;
-  defaultZoomLevel?: number;
+  defaultZoomLevel?: ZoomLevel;
   defaultPageLayout?: PageLayout;
   defaultOrientation?: PageOrientation;
   container?: HTMLElement;

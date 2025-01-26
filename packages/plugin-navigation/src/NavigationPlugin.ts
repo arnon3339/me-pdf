@@ -1,8 +1,8 @@
 import { IPlugin, IPDFCore, PageContainer } from '@cloudpdf/core';
 import { PdfDocumentObject, PdfPageObject } from '@cloudpdf/models';
 
-import { DEFAULT_INITIAL_PAGE, DEFAULT_SCROLL_MODE, DEFAULT_ZOOM_MODE, DEFAULT_ZOOM_LEVEL, DEFAULT_PAGE_LAYOUT, DEFAULT_ORIENTATION, DEFAULT_MIN_ZOOM, DEFAULT_MAX_ZOOM } from "./constants";
-import { NavigationOptions, NavigationState, ViewportState } from "./types";
+import { DEFAULT_INITIAL_PAGE, DEFAULT_SCROLL_MODE, DEFAULT_PAGE_LAYOUT, DEFAULT_ORIENTATION, DEFAULT_MIN_ZOOM, DEFAULT_MAX_ZOOM, DEFAULT_ZOOM_LEVEL } from "./constants";
+import { NavigationOptions, NavigationState, ViewportState, ZoomLevel } from "./types";
 import { ContinuousScrollMode } from './scroll-modes/continuous';
 import { ScrollModeBase } from './scroll-modes/base';
 import { ZoomController } from './zoom/ZoomController';
@@ -24,8 +24,8 @@ export class NavigationPlugin implements IPlugin {
       currentPage: options?.initialPage ?? DEFAULT_INITIAL_PAGE,
       totalPages: 0,
       pages: [],
+      currentZoomLevel: 1,
       scrollMode: options?.defaultScrollMode ?? DEFAULT_SCROLL_MODE,
-      zoomMode: options?.defaultZoomMode ?? DEFAULT_ZOOM_MODE,
       zoomLevel: options?.defaultZoomLevel ?? DEFAULT_ZOOM_LEVEL,
       pageLayout: options?.defaultPageLayout ?? DEFAULT_PAGE_LAYOUT,
       orientation: options?.defaultOrientation ?? DEFAULT_ORIENTATION
@@ -54,7 +54,7 @@ export class NavigationPlugin implements IPlugin {
       options: {
         minZoom: this.options?.minZoom ?? DEFAULT_MIN_ZOOM,
         maxZoom: this.options?.maxZoom ?? DEFAULT_MAX_ZOOM,
-        defaultZoom: this.options?.defaultZoomLevel ?? DEFAULT_ZOOM_LEVEL
+        defaultZoomLevel: this.options?.defaultZoomLevel ?? DEFAULT_ZOOM_LEVEL
       }
     });
   }
@@ -104,6 +104,7 @@ export class NavigationPlugin implements IPlugin {
       });
       // Initialize scroll mode
       this.initializeScrollMode();
+      this.zoomController?.updateZoomLevel();
     });
   }
 
@@ -134,7 +135,8 @@ export class NavigationPlugin implements IPlugin {
     this.scrollModeHandler?.goToPage(pageNumber);
   }
 
-  async updateZoomLevel(zoomLevel: number): Promise<void> {
+  async updateZoomLevel(zoomLevel: ZoomLevel): Promise<void> {
+    this.state.zoomLevel = zoomLevel;
     this.zoomController?.zoomTo(zoomLevel);
   }
 }

@@ -18,6 +18,8 @@
   flex: 1;
   overflow: auto;
   padding: 2rem;
+  display: flex;
+  justify-content: center;
 }
 
 .page-container {
@@ -25,10 +27,9 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   margin: 0 auto;
   padding: 2rem;
-  max-width: 800px;
   width: 100%;
   background-color: #f0f0f0;
-  height: 500px;
+  height: 700px;
 }
 
 #zoomLevel {
