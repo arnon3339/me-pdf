@@ -28,7 +28,8 @@ export class NavigationPlugin implements IPlugin {
       scrollMode: options?.defaultScrollMode ?? DEFAULT_SCROLL_MODE,
       zoomLevel: options?.defaultZoomLevel ?? DEFAULT_ZOOM_LEVEL,
       pageLayout: options?.defaultPageLayout ?? DEFAULT_PAGE_LAYOUT,
-      orientation: options?.defaultOrientation ?? DEFAULT_ORIENTATION
+      orientation: options?.defaultOrientation ?? DEFAULT_ORIENTATION,
+      initialPage: options?.initialPage ?? DEFAULT_INITIAL_PAGE
     };
   }
 
@@ -105,6 +106,10 @@ export class NavigationPlugin implements IPlugin {
       // Initialize scroll mode
       this.initializeScrollMode();
       this.zoomController?.updateZoomLevel();
+
+      if(this.state.initialPage !== DEFAULT_INITIAL_PAGE) {
+        this.goToPage(this.state.initialPage);
+      }
     });
   }
 

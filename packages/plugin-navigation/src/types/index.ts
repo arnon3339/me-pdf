@@ -22,6 +22,7 @@ export interface NavigationState extends PluginState {
   pageLayout: PageLayout;
   orientation: PageOrientation;
   container?: ViewerContainer;
+  initialPage: number;
 }
 
 export interface NavigationOptions {

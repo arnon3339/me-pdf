@@ -38,7 +38,7 @@ async function initializePDFViewer() {
 
   // Initialize and register navigation plugin
   const navigationPlugin = new NavigationPlugin({
-    initialPage: 1,
+    initialPage: 4,
     defaultZoomLevel: 1,
     defaultScrollMode: 'continuous',
     container: document.getElementById('pageContainer') as HTMLElement
