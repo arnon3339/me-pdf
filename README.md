@@ -1,4 +1,4 @@
-# Open Source PDF Viewer
+# EmbedPDF - An Easy-to-Use Open-Source PDF Viewer
 
 A PDF viewer that seamlessly integrates with any JavaScript project. Whether you're building with React, Vue, Angular, Svelte, or vanilla JavaScript, this PDF viewer can be easily implemented into your application. We provide comprehensive examples and documentation for various frameworks to get you started quickly.
 
