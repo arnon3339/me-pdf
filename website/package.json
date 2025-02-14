@@ -12,6 +12,7 @@
     "@mdx-js/react": "^3.0.0",
     "@next/mdx": "^14.0.4",
     "@tailwindcss/postcss": "^4.0.6",
+    "@theguild/remark-npm2yarn": "^0.3.3",
     "autoprefixer": "^10.4.16",
     "clsx": "^2.1.1",
     "mdx-annotations": "^0.1.1",
@@ -29,6 +30,7 @@
     "@types/mdx": "^2.0.8",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "unified": "^11.0.5"
   }
 }

@@ -164,7 +164,9 @@ export const Tabs: FC<
           </HeadlessTab>
         ))}
       </TabList>
-      <TabPanels ref={tabPanelsRef}>{children}</TabPanels>
+      <TabPanels ref={tabPanelsRef}>
+        {children}
+      </TabPanels>
     </TabGroup>
   )
 }

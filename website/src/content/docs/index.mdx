@@ -1,6 +1,7 @@
 ---
 title: React Hooks for Data Fetching
-searchable: false
+description: A simple, lightweight React hook for data fetching.
+searchable: true
 ---
 
 import { Tabs } from '@/components/tabs'
@@ -8,7 +9,7 @@ import { Callout } from '@/components/callout'
 
 # SWR
 
-<Tabs items={['JavaScript', 'C++', {label:'C', disabled: true}, 'Python', 'TypeScript', 'GraphQL', 'Rust', 'C#', 'Go', 'HTML', 'CSS', 'plaintext', 'bash']} defaultIndex={1}>
+<Tabs items={['JavaScript', 'C++', 'Python']} defaultIndex={0}>
   <Tabs.Tab>
     ```js filename="hi.js"
     import { useState, useEffect } from 'react';
@@ -20,13 +21,8 @@ import { Callout } from '@/components/callout'
     ```
   </Tabs.Tab>
   <Tabs.Tab>
-    ```c filename="hi.c"
-    #include <stdio.h>
-    ```
-  </Tabs.Tab>
-  <Tabs.Tab>
-    ```c filename="hi.c"
-    #include <stdio.h>
+    ```python filename="hi.py"
+    print("Hello, world!")
     ```
   </Tabs.Tab>
 </Tabs>
@@ -84,7 +80,13 @@ request.
 
 ## Features
 
-With just one single line of code, you can simplify the logic of data fetching
+
+With just one single line of code, you can simplify the logic of data fetching.
+
+```sh npm2yarn
+npm i next react react-dom nextra nextra-theme-docs
+```
+
 in your project, and also have all these amazing features out-of-the-box:
 
 - **Fast**, **lightweight** and **reusable** data fetching

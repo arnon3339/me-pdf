@@ -20,12 +20,6 @@ export default function Navbar() {
               >
                 Documentation
               </Link>
-              <Link 
-                href="/examples"
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-primary"
-              >
-                Examples
-              </Link>
             </div>
           </div>
           {/* Right side buttons */}

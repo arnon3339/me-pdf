@@ -266,3 +266,24 @@ pre code.nextra-code:not([class*='twoslash-']) {
   background-color: rgba(var(--twoslash-tag-annotate-color), 0.13);
   color: rgb(var(--twoslash-tag-annotate-color));
 }
+
+.nextra-steps {
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    counter-increment: var(--counter-id);
+    /* Resets from nextra-theme-docs */
+    @apply border-0 pb-0 font-semibold tracking-tight mt-8 text-2xl;
+    /* https://github.com/tailwindlabs/tailwindcss/issues/15597#issuecomment-2582673546 */
+    @apply before:bg-gray-100 dark:before:bg-neutral-800;
+    &:before {
+      @apply absolute size-[33px];
+      @apply border-4;
+      @apply rounded-full text-neutral-400 text-base font-normal text-center -indent-px;
+      @apply ms-[-41px];
+      content: counter(var(--counter-id));
+    }
+  }
+}

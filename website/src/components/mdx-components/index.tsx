@@ -1,9 +1,5 @@
 import cn from 'clsx'
 import {
-  Details,
-  SkipNavContent,
-  Summary,
-  withGitHubAlert,
   withIcons
 } from 'nextra/components'
 import { useMDXComponents as getNextraMDXComponents } from 'nextra/mdx-components'
@@ -31,21 +27,8 @@ const Blockquote: FC<ComponentProps<'blockquote'>> = props => (
 
 const DEFAULT_COMPONENTS = getNextraMDXComponents({
   a: Link,
-  blockquote: withGitHubAlert(({ type, ...props }) => {
-    const calloutType = (
-      {
-        caution: 'error',
-        important: 'error', // TODO
-        note: 'info',
-        tip: 'default',
-        warning: 'warning'
-      } as const
-    )[type]
-
-    return <Callout type={calloutType} {...props} />
-  }, Blockquote),
   code: Code,
-  details: Details,
+  blockquote: Blockquote,
   h1: H1,
   h2: H2,
   h3: H3,
@@ -62,7 +45,6 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
   ),
   p: props => <p className="not-first:mt-6 leading-7" {...props} />,
   pre: withIcons(Pre),
-  summary: Summary,
   table: ({ className, ...props }) => (
     <Table
       className={cn('nextra-scrollbar not-first:mt-6 p-0', className)}
@@ -86,7 +68,7 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
     }))
     return (
       <div
-        className="mx-auto flex max-w-(--nextra-content-width)"
+        className="flex max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
         {...props}
       >
         <Sidebar toc={toc} />
@@ -96,7 +78,6 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
           metadata={metadata}
           bottomContent={bottomContent}
         >
-          <SkipNavContent />
           <main
             data-pagefind-body={
               (metadata as any).searchable !== false || undefined
