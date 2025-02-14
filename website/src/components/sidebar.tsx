@@ -133,8 +133,8 @@ const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
         href={isLink ? item.route : undefined}
         data-href={isLink ? undefined : item.route}
         className={cn(
-          'x:items-center x:justify-between x:gap-2',
-          !isLink && 'x:text-start x:w-full',
+          'items-center justify-between gap-2',
+          !isLink && 'text-start w-full',
           classes.link,
           active ? classes.active : classes.inactive
         )}
@@ -145,10 +145,10 @@ const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
         <ArrowRightIcon
           height="18"
           className={cn(
-            'x:shrink-0',
-            'x:rounded-sm x:p-0.5 x:hover:bg-gray-800/5 x:dark:hover:bg-gray-100/5',
-            'x:motion-reduce:*:transition-none x:*:origin-center x:*:transition-transform x:*:rtl:-rotate-180',
-            open && 'x:*:ltr:rotate-90 x:*:rtl:-rotate-270'
+            'shrink-0',
+            'rounded-sm p-0.5 hover:bg-gray-800/5 dark:hover:bg-gray-100/5',
+            'motion-reduce:*:transition-none origin-center transition-transform rtl:-rotate-180',
+            open && 'ltr:rotate-90 rtl:-rotate-270'
           )}
         />
       </ComponentToUse>
@@ -183,11 +183,11 @@ const Separator: FC<{ title: string }> = ({ title }) => {
       className={cn(
         '[word-break:break-word]',
         title
-          ? 'x:not-first:mt-5 x:mb-2 x:px-2 x:py-1.5 x:text-sm x:font-semibold x:text-gray-900 x:dark:text-gray-100'
-          : 'x:my-4'
+          ? 'not-first:mt-5 mb-2 px-2 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100'
+          : 'my-4'
       )}
     >
-      {title || <hr className="x:mx-2 x:border-t nextra-border" />}
+      {title || <hr className="mx-2 border-t nextra-border" />}
     </li>
   )
 }
@@ -227,7 +227,7 @@ const File: FC<{
                 href={`#${id}`}
                 className={cn(
                   classes.link,
-                  'x:focus-visible:nextra-focus x:flex x:gap-2 x:before:opacity-25 x:before:content-["#"]',
+                  'focus-visible:nextra-focus flex gap-2 before:opacity-25 before:content-["#"]',
                   id === activeSlug ? classes.active : classes.inactive
                 )}
                 onClick={handleClick}

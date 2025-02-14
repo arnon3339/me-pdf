@@ -71,7 +71,7 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
         className="flex max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
         {...props}
       >
-        <Sidebar toc={toc} />
+        <Sidebar toc={toc} floatTOC={true} />
 
         <ClientWrapper
           toc={toc}

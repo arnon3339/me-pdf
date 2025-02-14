@@ -5,6 +5,6 @@ export default {
   },
   docs: {
     title: 'Docs',
-    type: 'doc'
+    type: 'page'
   },
 }

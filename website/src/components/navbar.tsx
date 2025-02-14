@@ -3,7 +3,7 @@ import Logo from './logo'
 
 export default function Navbar() {
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="nextra-navbar bg-white shadow-sm sticky top-0 z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -15,7 +15,7 @@ export default function Navbar() {
             {/* Navigation Links */}
             <div className="hidden sm:ml-10 sm:flex sm:space-x-8">
               <Link 
-                href="/docs"
+                href="/docs/introduction"
                 className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-primary"
               >
                 Documentation
