@@ -4,6 +4,8 @@ import cn from 'clsx'
 import type { MDXWrapper } from 'nextra'
 import { useEffect } from 'react'
 import { setToc, useConfig } from '../stores';
+import { Pagination } from '../pagination';
+import { Breadcrumb } from '../breadcrumb';
 
 export const ClientWrapper: MDXWrapper = ({
   toc,
@@ -28,15 +30,24 @@ export const ClientWrapper: MDXWrapper = ({
     <>
       <article className={cn(
         'w-full min-w-0 break-words',
-        'max-w-full',
-        'mx-auto',
-        'px-4 sm:px-6 lg:px-8',
-        'w-full',
-        'max-w-full',
-        'mx-auto',
-        'px-4 sm:px-6 lg:px-8'
+        'text-slate-700 dark:text-slate-200 pb-8 px-4 pt-4 md:px-12',
       )}>
+        {themeContext.breadcrumb && activeType !== 'page' && (
+          <Breadcrumb activePath={activePath} />
+        )}
         {children}
+        {date ? (
+          <div className="mt-12 mb-8 text-xs text-gray-500 text-end dark:text-gray-400">
+            Last updated on {new Date(date).toLocaleDateString('en-US', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            })}
+          </div>
+        ) : (
+          <div className="x:mt-16" />
+        )}
+        {themeContext.pagination && activeType !== 'page' && <Pagination />}
       </article>
     </>
   )
