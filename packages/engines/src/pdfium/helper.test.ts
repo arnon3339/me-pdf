@@ -1,5 +1,5 @@
 import { readString } from './helper';
-import { WrappedPdfiumModule } from '@cloudpdf/pdfium';
+import { WrappedPdfiumModule } from '@embedpdf/pdfium';
 
 describe('readString', () => {
   it('should manage memory and call callback with buffer', () => {

@@ -1,5 +1,5 @@
 {
-  "name": "@cloudpdf/pdfium",
+  "name": "@embedpdf/pdfium",
   "version": "0.0.0",
   "private": false,
   "description": " PDFium webassembly for EmbedPDF viewer",
@@ -34,7 +34,7 @@
     "dist",
     "README.md"
   ],
-  "author": "CloudPDF, Ji Chang",
+  "author": "Bob Singor, Ji Chang",
   "license": "MIT",
   "devDependencies": {
     "tsup": "^8.0.0",

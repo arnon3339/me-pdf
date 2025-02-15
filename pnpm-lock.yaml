@@ -38,22 +38,22 @@ importers:
 
   examples/vanilla:
     dependencies:
-      '@cloudpdf/core':
+      '@embedpdf/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@cloudpdf/models':
+      '@embedpdf/models':
         specifier: workspace:*
         version: link:../../packages/models
-      '@cloudpdf/pdfium':
+      '@embedpdf/pdfium':
         specifier: workspace:*
         version: link:../../packages/pdfium
-      '@cloudpdf/plugin-layer':
+      '@embedpdf/plugin-layer':
         specifier: workspace:*
         version: link:../../packages/plugin-layer
-      '@cloudpdf/plugin-navigation':
+      '@embedpdf/plugin-navigation':
         specifier: workspace:*
         version: link:../../packages/plugin-navigation
-      '@cloudpdf/plugin-renderer':
+      '@embedpdf/plugin-renderer':
         specifier: workspace:*
         version: link:../../packages/plugin-renderer
     devDependencies:
@@ -69,13 +69,22 @@ importers:
 
   packages/core:
     dependencies:
-      '@cloudpdf/engines':
+      '@embedpdf/engines':
         specifier: workspace:*
         version: link:../engines
-      '@cloudpdf/models':
+      '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
+      react:
+        specifier: '>=18.0.0'
+        version: 18.3.1
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.18
       tsup:
         specifier: ^8.0.0
         version: 8.3.5(typescript@5.7.3)
@@ -85,10 +94,10 @@ importers:
 
   packages/engines:
     dependencies:
-      '@cloudpdf/models':
+      '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
-      '@cloudpdf/pdfium':
+      '@embedpdf/pdfium':
         specifier: workspace:*
         version: link:../pdfium
       buffer:
@@ -146,10 +155,10 @@ importers:
 
   packages/plugin-layer:
     dependencies:
-      '@cloudpdf/core':
+      '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
-      '@cloudpdf/models':
+      '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
     devDependencies:
@@ -162,16 +171,25 @@ importers:
 
   packages/plugin-navigation:
     dependencies:
-      '@cloudpdf/core':
+      '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
-      '@cloudpdf/models':
+      '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
-      '@cloudpdf/plugin-layer':
+      '@embedpdf/plugin-layer':
         specifier: workspace:*
         version: link:../plugin-layer
+      react:
+        specifier: '>=18.0.0'
+        version: 18.3.1
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.18
       tsup:
         specifier: ^8.0.0
         version: 8.3.5(typescript@5.7.3)
@@ -181,10 +199,10 @@ importers:
 
   packages/plugin-renderer:
     dependencies:
-      '@cloudpdf/core':
+      '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
-      '@cloudpdf/models':
+      '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
     devDependencies:

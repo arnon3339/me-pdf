@@ -1,5 +1,5 @@
 /**
- * Docs for `@cloudpdf/engines` module
+ * Docs for `@embedpdf/engines` module
  * @packageDocumentation
  */
 

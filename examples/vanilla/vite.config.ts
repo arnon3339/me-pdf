@@ -4,12 +4,12 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@cloudpdf/core': path.resolve(__dirname, '../../packages/core/src'),
-      '@cloudpdf/plugin-navigation': path.resolve(__dirname, '../../packages/plugin-navigation/src'),
-      '@cloudpdf/plugin-renderer': path.resolve(__dirname, '../../packages/plugin-renderer/src'),
-      '@cloudpdf/plugin-layer': path.resolve(__dirname, '../../packages/plugin-layer/src'),
-      '@cloudpdf/pdfium': path.resolve(__dirname, '../../packages/pdfium/src'),
-      '@cloudpdf/models': path.resolve(__dirname, '../../packages/models/src')
+      '@embedpdf/core': path.resolve(__dirname, '../../packages/core/src'),
+      '@embedpdf/plugin-navigation': path.resolve(__dirname, '../../packages/plugin-navigation/src'),
+      '@embedpdf/plugin-renderer': path.resolve(__dirname, '../../packages/plugin-renderer/src'),
+      '@embedpdf/plugin-layer': path.resolve(__dirname, '../../packages/plugin-layer/src'),
+      '@embedpdf/pdfium': path.resolve(__dirname, '../../packages/pdfium/src'),
+      '@embedpdf/models': path.resolve(__dirname, '../../packages/models/src')
     }
   },
   server: {

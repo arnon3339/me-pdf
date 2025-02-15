@@ -1,11 +1,11 @@
-import { PDFCore } from '@cloudpdf/core';
-import { ConsoleLogger } from '@cloudpdf/models';
-import { NavigationPlugin, RenderLayer, ZoomLevel } from '@cloudpdf/plugin-navigation';
+import { PDFCore } from '@embedpdf/core';
+import { ConsoleLogger } from '@embedpdf/models';
+import { NavigationPlugin, ViewportRenderLayer, ZoomLevel } from '@embedpdf/plugin-navigation';
 import { PdfiumEngine } from '../../../packages/engines/src/pdfium/engine';
-import pdfiumWasm from '@cloudpdf/pdfium/pdfium.wasm?url';
-import { init } from '@cloudpdf/pdfium';
-import { RendererPlugin } from '@cloudpdf/plugin-renderer';
-import { LayerPlugin, TextLayer } from '@cloudpdf/plugin-layer';
+import pdfiumWasm from '@embedpdf/pdfium/pdfium.wasm?url';
+import { init } from '@embedpdf/pdfium';
+import { RendererPlugin } from '@embedpdf/plugin-renderer';
+import { LayerPlugin, TextLayer } from '@embedpdf/plugin-layer';
 
 async function loadWasmBinary() {
   const response = await fetch(pdfiumWasm);
@@ -34,7 +34,7 @@ async function initializePDFViewer() {
 
   // Register default layers
   await layerPlugin.registerLayer(new TextLayer());
-  await layerPlugin.registerLayer(new RenderLayer());
+  await layerPlugin.registerLayer(new ViewportRenderLayer());
 
   // Initialize and register navigation plugin
   const navigationPlugin = new NavigationPlugin({

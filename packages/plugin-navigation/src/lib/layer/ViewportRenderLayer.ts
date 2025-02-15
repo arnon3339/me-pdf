@@ -1,9 +1,9 @@
-import { ignore, PdfPageObject } from '@cloudpdf/models';
-import { BaseLayer } from '@cloudpdf/plugin-layer';
+import { ignore, PdfPageObject } from '@embedpdf/models';
+import { BaseLayer } from '@embedpdf/plugin-layer';
 import { NavigationPlugin } from '../NavigationPlugin';
 import { ViewportRegion, ViewportState } from '../types';
 
-export class RenderLayer extends BaseLayer {
+export class ViewportRenderLayer extends BaseLayer {
   readonly id = 'render';
   readonly zIndex = 1;
   private cleanupListeners: (() => void)[] = [];

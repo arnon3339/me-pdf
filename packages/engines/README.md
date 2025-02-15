@@ -1,17 +1,17 @@
-### @cloudpdf/engines
+### @embedpdf/engines
 
 This package defines engines used for parsing PDF files. Right now, we only provide one PDF engine that is based on PDFium and a mock of engine for testing purpose.
 
 #### Install
 
 ```bash
-npm install @cloudpdf/engines
+npm install @embedpdf/engines
 ```
 
 #### Usage
 
 ```typescript
-import { createPdfiumModule, PdfiumEngine } from '@cloudpdf/engines';
+import { createPdfiumModule, PdfiumEngine } from '@embedpdf/engines';
 
 // implement loadWasmBinary to load pdifum wasm file
 const wasmBinary = await loadWasmBinary();

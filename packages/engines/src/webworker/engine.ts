@@ -26,7 +26,7 @@ import {
   PdfPageFlattenFlag,
   PdfPageFlattenResult,
   PdfFileLoader,
-} from '@cloudpdf/models';
+} from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
 const LOG_SOURCE = 'WebWorkerEngine';
@@ -51,7 +51,7 @@ export class WorkerTask<R> extends Task<R, PdfErrorReason> {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!Task.abort}
+   * {@inheritDoc @embedpdf/models!Task.abort}
    *
    * @override
    */
@@ -164,7 +164,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.initialize}
+   * {@inheritDoc @embedpdf/models!PdfEngine.initialize}
    *
    * @public
    */
@@ -187,7 +187,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.destroy}
+   * {@inheritDoc @embedpdf/models!PdfEngine.destroy}
    *
    * @public
    */
@@ -219,7 +219,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.openDocument}
+   * {@inheritDoc @embedpdf/models!PdfEngine.openDocument}
    *
    * @public
    */
@@ -242,7 +242,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.openDocumentFromLoader}
+   * {@inheritDoc @embedpdf/models!PdfEngine.openDocumentFromLoader}
    *
    * @public
    */
@@ -265,7 +265,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.getMetadata}
+   * {@inheritDoc @embedpdf/models!PdfEngine.getMetadata}
    *
    * @public
    */
@@ -288,7 +288,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.getDocPermissions}
+   * {@inheritDoc @embedpdf/models!PdfEngine.getDocPermissions}
    *
    * @public
    */
@@ -311,7 +311,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.getDocUserPermissions}
+   * {@inheritDoc @embedpdf/models!PdfEngine.getDocUserPermissions}
    *
    * @public
    */
@@ -334,7 +334,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.getBookmarks}
+   * {@inheritDoc @embedpdf/models!PdfEngine.getBookmarks}
    *
    * @public
    */
@@ -357,7 +357,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.getSignatures}
+   * {@inheritDoc @embedpdf/models!PdfEngine.getSignatures}
    *
    * @public
    */
@@ -380,7 +380,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.renderPage}
+   * {@inheritDoc @embedpdf/models!PdfEngine.renderPage}
    *
    * @public
    */
@@ -420,7 +420,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.renderPageRect}
+   * {@inheritDoc @embedpdf/models!PdfEngine.renderPageRect}
    *
    * @public
    */
@@ -462,7 +462,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.getPageAnnotations}
+   * {@inheritDoc @embedpdf/models!PdfEngine.getPageAnnotations}
    *
    * @public
    */
@@ -498,7 +498,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.createPageAnnotation}
+   * {@inheritDoc @embedpdf/models!PdfEngine.createPageAnnotation}
    *
    * @public
    */
@@ -532,7 +532,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.transformPageAnnotation}
+   * {@inheritDoc @embedpdf/models!PdfEngine.transformPageAnnotation}
    *
    * @public
    */
@@ -568,7 +568,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.removePageAnnotation}
+   * {@inheritDoc @embedpdf/models!PdfEngine.removePageAnnotation}
    *
    * @public
    */
@@ -602,7 +602,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.getPageTextRects}
+   * {@inheritDoc @embedpdf/models!PdfEngine.getPageTextRects}
    *
    * @public
    */
@@ -638,7 +638,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.renderThumbnail}
+   * {@inheritDoc @embedpdf/models!PdfEngine.renderThumbnail}
    *
    * @public
    */
@@ -676,7 +676,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.startSearch}
+   * {@inheritDoc @embedpdf/models!PdfEngine.startSearch}
    *
    * @public
    */
@@ -699,7 +699,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.searchNext}
+   * {@inheritDoc @embedpdf/models!PdfEngine.searchNext}
    *
    * @public
    */
@@ -732,7 +732,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.searchPrev}
+   * {@inheritDoc @embedpdf/models!PdfEngine.searchPrev}
    *
    * @public
    */
@@ -765,7 +765,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.stopSearch}
+   * {@inheritDoc @embedpdf/models!PdfEngine.stopSearch}
    *
    * @public
    */
@@ -788,7 +788,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.saveAsCopy}
+   * {@inheritDoc @embedpdf/models!PdfEngine.saveAsCopy}
    *
    * @public
    */
@@ -811,7 +811,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.getAttachments}
+   * {@inheritDoc @embedpdf/models!PdfEngine.getAttachments}
    *
    * @public
    */
@@ -834,7 +834,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.readAttachmentContent}
+   * {@inheritDoc @embedpdf/models!PdfEngine.readAttachmentContent}
    *
    * @public
    */
@@ -866,7 +866,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.setFormFieldValue}
+   * {@inheritDoc @embedpdf/models!PdfEngine.setFormFieldValue}
    *
    * @public
    */
@@ -901,7 +901,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.flattenPage}
+   * {@inheritDoc @embedpdf/models!PdfEngine.flattenPage}
    *
    * @public
    */
@@ -928,7 +928,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.extractPages}
+   * {@inheritDoc @embedpdf/models!PdfEngine.extractPages}
    *
    * @public
    */
@@ -951,7 +951,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.extractText}
+   * {@inheritDoc @embedpdf/models!PdfEngine.extractText}
    *
    * @public
    */
@@ -974,7 +974,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.merge}
+   * {@inheritDoc @embedpdf/models!PdfEngine.merge}
    *
    * @public
    */
@@ -998,7 +998,7 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @cloudpdf/models!PdfEngine.closeDocument}
+   * {@inheritDoc @embedpdf/models!PdfEngine.closeDocument}
    *
    * @public
    */

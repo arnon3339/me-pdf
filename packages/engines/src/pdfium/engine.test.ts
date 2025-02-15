@@ -1,4 +1,4 @@
-import { WrappedPdfiumModule } from '@cloudpdf/pdfium';
+import { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { PdfiumEngine } from './engine';
 
 describe('PdfiumEngine', () => {

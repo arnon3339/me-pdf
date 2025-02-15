@@ -9,13 +9,14 @@ export interface PluginOptions {
   [key: string]: any;
 }
 
-export interface IPlugin {
+export interface IPlugin<TState extends PluginState = PluginState> {
   readonly name: string;
   readonly version: string;
   initialize(core: IPDFCore): Promise<void>;
   destroy(): Promise<void>;
-  getState(): PluginState;
-  setState(state: Partial<PluginState>): void;
+  getState(): TState;
+  setState(state: Partial<TState>): void;
+  subscribe(callback: (state: TState) => void): () => void;
 }
 
 export interface PluginConstructor {

@@ -1,5 +1,5 @@
 import { ILayer } from '../types';
-import { PdfPageObject } from '@cloudpdf/models';
+import { PdfPageObject } from '@embedpdf/models';
 import { BaseLayer } from './BaseLayer';
 
 export class TextLayer extends BaseLayer {

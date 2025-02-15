@@ -1,10 +1,19 @@
-import { PageContainer, PluginState } from '@cloudpdf/core';
-import { PdfPageObject } from '@cloudpdf/models';
+import { IPlugin, PageContainer, PluginState } from '@embedpdf/core';
 
 export type ScrollMode = 'continuous' | 'page-by-page';
 export type ZoomLevel = 'automatic' | 'fit-page' | 'fit-width' | number;
 export type PageLayout = 'single' | 'dual' | 'cover';
 export type PageOrientation = 0 | 90 | 180 | 270;
+
+export interface INavigationPlugin extends IPlugin<NavigationState> {
+  readonly name: 'navigation';
+  readonly version: string;
+  
+  setContainer(element: HTMLElement): void;
+  getViewportState(): ViewportState;
+  goToPage(pageNumber: number): Promise<void>;
+  updateZoomLevel(zoomLevel: ZoomLevel): Promise<void>;
+}
 
 export interface ViewerContainer {
   element: HTMLElement;

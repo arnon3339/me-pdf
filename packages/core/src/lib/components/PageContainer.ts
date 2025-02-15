@@ -1,4 +1,4 @@
-import { PdfPageObject } from '@cloudpdf/models';
+import { PdfPageObject } from '@embedpdf/models';
 
 export interface PageContainerOptions {
   page: PdfPageObject;

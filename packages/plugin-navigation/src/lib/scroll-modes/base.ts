@@ -1,4 +1,4 @@
-import { IPDFCore } from "@cloudpdf/core";
+import { IPDFCore } from "@embedpdf/core";
 import { NavigationState, ViewportState } from "../types";
 import { ViewportTracker } from "../viewport/ViewportTracker";
 import { NAVIGATION_EVENTS } from "../events";

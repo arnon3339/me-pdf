@@ -4,9 +4,9 @@ import {
   PdfDocumentObject,
   PdfEngineError,
   PdfTaskHelper,
-} from '@cloudpdf/models';
+} from '@embedpdf/models';
 import { WebWorkerEngine } from '../src/index';
-import pdfiumWasm from 'url:@cloudpdf/pdfium/pdfium.wasm';
+import pdfiumWasm from 'url:@embedpdf/pdfium/pdfium.wasm';
 
 async function loadWasmBinary() {
   const response = await fetch(pdfiumWasm);

@@ -1,5 +1,5 @@
-import { IPlugin, IPDFCore } from "@cloudpdf/core";
-import { PdfDocumentObject, PdfEngine, PdfErrorCode, PdfPageObject, PdfTask, Rotation } from "@cloudpdf/models";
+import { IPDFCore, BasePlugin } from "@embedpdf/core";
+import { PdfDocumentObject, PdfEngine, PdfErrorCode, PdfPageObject, PdfTask, Rotation } from "@embedpdf/models";
 
 interface RenderOptions {
   withAnnotations?: boolean;
@@ -12,19 +12,17 @@ interface RendererState {
   activeRenderTasks: Map<PdfPageObject, PdfTask<ImageData>>;
 }
 
-export class RendererPlugin implements IPlugin {
+export class RendererPlugin extends BasePlugin<RendererState> {
   readonly name = 'renderer';
   readonly version = '1.0.0';
 
-  private core?: IPDFCore;
   private engine?: PdfEngine;
   private document?: PdfDocumentObject;
-  private state: RendererState;
 
   constructor() {
-    this.state = {
+    super({
       activeRenderTasks: new Map()
-    };
+    });
   }
 
   async initialize(core: IPDFCore): Promise<void> {

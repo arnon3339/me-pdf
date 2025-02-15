@@ -2,7 +2,7 @@
  * Library contains the common definitions of data types and logic
  *
  * @remarks
- * The `@cloudpdf/models` defines the interface and classes which are used to
+ * The `@embedpdf/models` defines the interface and classes which are used to
  * handling PDF files.
  *
  * @packageDocumentation

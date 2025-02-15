@@ -1,17 +1,17 @@
 {
-  "name": "@cloudpdf/example-vanilla",
+  "name": "@embedpdf/example-vanilla",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build"
   },
   "dependencies": {
-    "@cloudpdf/core": "workspace:*",
-    "@cloudpdf/plugin-navigation": "workspace:*",
-    "@cloudpdf/plugin-renderer": "workspace:*",
-    "@cloudpdf/plugin-layer": "workspace:*",
-    "@cloudpdf/models": "workspace:*",
-    "@cloudpdf/pdfium": "workspace:*"
+    "@embedpdf/core": "workspace:*",
+    "@embedpdf/plugin-navigation": "workspace:*",
+    "@embedpdf/plugin-renderer": "workspace:*",
+    "@embedpdf/plugin-layer": "workspace:*",
+    "@embedpdf/models": "workspace:*",
+    "@embedpdf/pdfium": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

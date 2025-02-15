@@ -1,5 +1,5 @@
 {
-  "name": "@cloudpdf/plugin-navigation",
+  "name": "@embedpdf/plugin-navigation",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -21,18 +21,21 @@
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
   "dependencies": {
-    "@cloudpdf/core": "workspace:*",
-    "@cloudpdf/models": "workspace:*",
-    "@cloudpdf/plugin-layer": "workspace:*"
+    "@embedpdf/core": "workspace:*",
+    "@embedpdf/models": "workspace:*",
+    "@embedpdf/plugin-layer": "workspace:*"
   },
   "devDependencies": {
+    "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "@cloudpdf/core": "^0.0.0",
-    "@cloudpdf/models": "^0.0.0",
-    "@cloudpdf/plugin-layer": "^0.0.0"
+    "@embedpdf/core": "^0.0.0",
+    "@embedpdf/models": "^0.0.0",
+    "@embedpdf/plugin-layer": "^0.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "files": [
     "dist",

@@ -1,7 +1,7 @@
 import { PDFLoadingOptions, PDFLoadingStrategy } from './strategies/PDFLoadingStrategy';
 import { RangeRequestStrategy } from './strategies/RangeRequestStrategy';
 import { BufferStrategy } from './strategies/BufferStrategy';
-import { PdfDocumentObject } from '@cloudpdf/models';
+import { PdfDocumentObject } from '@embedpdf/models';
 
 export class PDFDocumentLoader {
   private strategies: Map<string, PDFLoadingStrategy> = new Map();

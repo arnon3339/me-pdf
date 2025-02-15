@@ -1,7 +1,7 @@
 {
-  "name": "@cloudpdf/engines",
+  "name": "@embedpdf/engines",
   "version": "0.0.0",
-  "description": "core components of cloudpdf",
+  "description": "core components of embedpdf",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -29,7 +29,7 @@
     "dist",
     "README.md"
   ],
-  "author": "CloudPDF, Ji Chang",
+  "author": "Bob Singor, Ji Chang",
   "license": "MIT",
   "devDependencies": {
     "tsup": "^8.0.0",
@@ -39,8 +39,8 @@
     "ts-jest": "^29.2.5"
   },
   "dependencies": {
-    "@cloudpdf/models": "workspace:*",
-    "@cloudpdf/pdfium": "workspace:*",
+    "@embedpdf/models": "workspace:*",
+    "@embedpdf/pdfium": "workspace:*",
     "buffer": "^6.0.3",
     "process": "^0.11.10"
   },

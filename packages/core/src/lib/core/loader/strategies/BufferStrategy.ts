@@ -1,4 +1,4 @@
-import { PdfDocumentObject } from '@cloudpdf/models';
+import { PdfDocumentObject } from '@embedpdf/models';
 import { PDFLoadingOptions, PDFLoadingStrategy } from './PDFLoadingStrategy';
 
 export class BufferStrategy implements PDFLoadingStrategy {

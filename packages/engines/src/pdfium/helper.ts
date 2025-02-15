@@ -1,4 +1,4 @@
-import { PdfiumRuntimeMethods, PdfiumModule } from '@cloudpdf/pdfium';
+import { PdfiumRuntimeMethods, PdfiumModule } from '@embedpdf/pdfium';
 
 /**
  * Read string from WASM heap

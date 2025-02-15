@@ -1,4 +1,4 @@
-import { PdfDocumentObject, PdfEngine } from '@cloudpdf/models';
+import { PdfDocumentObject, PdfEngine } from '@embedpdf/models';
 import { IPlugin, IPluginManager } from "./plugin";
 import { PDFLoadingOptions } from '../core/loader/strategies/PDFLoadingStrategy';
 

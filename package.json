@@ -1,5 +1,5 @@
 {
-  "name": "cloudpdf",
+  "name": "embedpdf",
   "private": false,
   "version": "0.0.0",
   "packageManager": "pnpm@8.15.1",
@@ -15,7 +15,7 @@
     "p:lint:fix": "cd $PROJECT_CWD && eslint src --color --fix",
     "p:typecheck": "cd $PROJECT_CWD && tsc -p tsconfig.json",
     "dev": "turbo run dev --parallel",
-    "dev:vanilla": "pnpm --filter @cloudpdf/example-vanilla run dev",
+    "dev:vanilla": "pnpm --filter @embedpdf/example-vanilla run dev",
     "build": "turbo run build",
     "build:watch": "ROARR_LOG=true turbowatch ./config/turbowatch.config.ts | roarr"
   },

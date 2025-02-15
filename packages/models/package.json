@@ -1,8 +1,8 @@
 {
-  "name": "@cloudpdf/models",
+  "name": "@embedpdf/models",
   "version": "0.0.0",
   "private": false,
-  "description": "core models of cloudpdf",
+  "description": "core models of embedpdf",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -27,7 +27,7 @@
     "dist",
     "README.md"
   ],
-  "author": "CloudPDF, Ji Chang",
+  "author": "Bob Singor, Ji Chang",
   "license": "MIT",
   "devDependencies": {
     "tsup": "^8.0.0",

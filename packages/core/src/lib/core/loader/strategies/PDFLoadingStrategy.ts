@@ -1,4 +1,4 @@
-import { PdfDocumentObject, PdfEngine, PdfFileWithoutContent } from '@cloudpdf/models';
+import { PdfDocumentObject, PdfEngine, PdfFileWithoutContent } from '@embedpdf/models';
 
 export interface PDFLoadingOptions {
   file: PdfFileWithoutContent;

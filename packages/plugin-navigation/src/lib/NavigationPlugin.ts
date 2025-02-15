@@ -1,26 +1,22 @@
-import { IPlugin, IPDFCore, PageContainer } from '@cloudpdf/core';
-import { PdfDocumentObject, PdfPageObject } from '@cloudpdf/models';
-
+import { IPDFCore, PageContainer, BasePlugin } from '@embedpdf/core';
+import { PdfDocumentObject, PdfPageObject } from '@embedpdf/models';
 import { DEFAULT_INITIAL_PAGE, DEFAULT_SCROLL_MODE, DEFAULT_PAGE_LAYOUT, DEFAULT_ORIENTATION, DEFAULT_MIN_ZOOM, DEFAULT_MAX_ZOOM, DEFAULT_ZOOM_LEVEL } from "./constants";
-import { NavigationOptions, NavigationState, ViewportState, ZoomLevel } from "./types";
+import { NavigationOptions, NavigationState, ViewportState, ZoomLevel, INavigationPlugin } from "./types";
 import { ContinuousScrollMode } from './scroll-modes/continuous';
 import { ScrollModeBase } from './scroll-modes/base';
 import { ZoomController } from './zoom/ZoomController';
-import { LayerPlugin } from '@cloudpdf/plugin-layer';
+import { LayerPlugin } from '@embedpdf/plugin-layer';
 
-export class NavigationPlugin implements IPlugin {
+export class NavigationPlugin extends BasePlugin<NavigationState> implements INavigationPlugin {
   readonly name = 'navigation';
   readonly version = '1.0.0';
   
-  private core?: IPDFCore;
-  private state: NavigationState;
   private scrollModeHandler?: ScrollModeBase;
   private zoomController?: ZoomController;
   private options?: NavigationOptions;
 
   constructor(options?: NavigationOptions) {
-    this.options = options;
-    this.state = {
+    super({
       currentPage: options?.initialPage ?? DEFAULT_INITIAL_PAGE,
       totalPages: 0,
       pages: [],
@@ -30,7 +26,9 @@ export class NavigationPlugin implements IPlugin {
       pageLayout: options?.defaultPageLayout ?? DEFAULT_PAGE_LAYOUT,
       orientation: options?.defaultOrientation ?? DEFAULT_ORIENTATION,
       initialPage: options?.initialPage ?? DEFAULT_INITIAL_PAGE
-    };
+    });
+
+    this.options = options;
   }
 
   setContainer(element: HTMLElement): void {
@@ -113,23 +111,10 @@ export class NavigationPlugin implements IPlugin {
     });
   }
 
-  async destroy(): Promise<void> {
-    this.core = undefined;
-  }
-
   getViewportState(): ViewportState {
     if(!this.scrollModeHandler) throw new Error('scroll mode not initialized')
 
     return this.scrollModeHandler?.getViewportState();
-  }
-
-  getState(): NavigationState {
-    return { ...this.state };
-  }
-
-  setState(newState: Partial<NavigationState>): void {
-    Object.assign(this.state, newState);
-    this.core?.emit(`${this.name}:stateChange`, this.state);
   }
 
   async goToPage(pageNumber: number): Promise<void> {

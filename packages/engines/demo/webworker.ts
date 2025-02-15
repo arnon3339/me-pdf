@@ -1,5 +1,5 @@
 import { PdfiumEngineRunner } from '../src/index';
-import pdfiumWasm from 'url:@cloudpdf/pdfium/pdfium.wasm';
+import pdfiumWasm from 'url:@embedpdf/pdfium/pdfium.wasm';
 
 async function init() {
   const response = await fetch(pdfiumWasm);

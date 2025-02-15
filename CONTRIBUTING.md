@@ -50,7 +50,7 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 1. Clone the repository
 2. Install dependencies: `pnpm install`
 3. Watch for changes and build: `pnpm build:watch`
-4. Run an example for example the vanilla example: `pnpm dev --filter @cloudpdf/example-vanilla`
+4. Run an example for example the vanilla example: `pnpm dev --filter @embedpdf/example-vanilla`
 
 ## License
 

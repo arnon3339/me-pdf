@@ -1,19 +1,19 @@
-# @cloudpdf/core
+# @embedpdf/core
 
 Core package for CloudPDF.
 
 ## Installation
 
 ```bash
-npm install @cloudpdf/core
+npm install @embedpdf/core
 ```
 
 ## Usage
 
 ```typescript
-import { PDFCore } from '@cloudpdf/core';
-import { createPdfiumModule, PdfiumEngine } from '@cloudpdf/engines';
-import { NavigationPlugin } from '@cloudpdf/plugin-navigation';
+import { PDFCore } from '@embedpdf/core';
+import { createPdfiumModule, PdfiumEngine } from '@embedpdf/engines';
+import { NavigationPlugin } from '@embedpdf/plugin-navigation';
 
 const wasmBinary = await loadWasmBinary();
 const wasmModule = await createPdfiumModule({ wasmBinary });

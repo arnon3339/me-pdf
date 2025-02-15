@@ -1,19 +1,19 @@
-# @cloudpdf/plugin-renderer
+# @embedpdf/plugin-renderer
 
 Plugin for rendering PDF documents
 
 ## Installation
 
 ```bash
-npm install @cloudpdf/plugin-renderer
+npm install @embedpdf/plugin-renderer
 ```
 
 ## Usage
 
 ```typescript
-import { PDFCore } from '@cloudpdf/core';
-import { createPdfiumModule, PdfiumEngine } from '@cloudpdf/engines';
-import { RendererPlugin } from '@cloudpdf/plugin-renderer';
+import { PDFCore } from '@embedpdf/core';
+import { createPdfiumModule, PdfiumEngine } from '@embedpdf/engines';
+import { RendererPlugin } from '@embedpdf/plugin-renderer';
 
 const wasmBinary = await loadWasmBinary();
 const wasmModule = await createPdfiumModule({ wasmBinary });

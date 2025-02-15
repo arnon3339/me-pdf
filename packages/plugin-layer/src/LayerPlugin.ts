@@ -1,18 +1,15 @@
-import { IPlugin, IPDFCore } from '@cloudpdf/core';
-import { PdfPageObject } from '@cloudpdf/models';
-import { PageContainer } from '@cloudpdf/core';
+import { IPlugin, IPDFCore, BasePlugin } from '@embedpdf/core';
+import { PdfPageObject } from '@embedpdf/models';
+import { PageContainer } from '@embedpdf/core';
 import { BaseLayer } from './layers/BaseLayer';
 
-export class LayerPlugin implements IPlugin {
+export class LayerPlugin extends BasePlugin {
   readonly name = 'layers';
   readonly version = '1.0.0';
   
-  private core?: IPDFCore;
   private layers: Map<string, BaseLayer> = new Map();
   private pageContainers: Map<number, PageContainer> = new Map();
   private layerContainers: Map<number, Map<string, HTMLElement>> = new Map();
-
-  constructor() {}
 
   async initialize(core: IPDFCore): Promise<void> {
     this.core = core;
@@ -93,13 +90,5 @@ export class LayerPlugin implements IPlugin {
     this.layers.clear();
     this.pageContainers.clear();
     this.layerContainers.clear();
-  }
-
-  getState() {
-    return {};
-  }
-
-  setState() {
-    // State updates would go here
   }
 }

@@ -1,4 +1,4 @@
-import { init } from '@cloudpdf/pdfium';
+import { init } from '@embedpdf/pdfium';
 import { EngineRunner } from '../webworker';
 import { PdfiumEngine } from './engine';
 

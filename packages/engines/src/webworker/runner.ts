@@ -8,7 +8,7 @@ import {
   PdfEngineMethodReturnType,
   PdfErrorCode,
   TaskReturn,
-} from '@cloudpdf/models';
+} from '@embedpdf/models';
 
 /**
  * Request body that represent method calls of PdfEngine, it contains the

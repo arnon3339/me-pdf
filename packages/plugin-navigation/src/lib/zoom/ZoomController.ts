@@ -1,4 +1,4 @@
-import { IPDFCore } from '@cloudpdf/core';
+import { IPDFCore } from '@embedpdf/core';
 import { NavigationState, ViewportMetrics, ZoomLevel } from '../types';
 
 interface ZoomOptions {

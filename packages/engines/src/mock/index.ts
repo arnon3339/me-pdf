@@ -25,7 +25,7 @@ import {
   PdfPageFlattenFlag,
   PdfPageFlattenResult,
   PdfFileLoader,
-} from '@cloudpdf/models';
+} from '@embedpdf/models';
 
 /**
  * Create mock of pdf engine
