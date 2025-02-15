@@ -1,5 +1,4 @@
 import { PDFCore } from '@embedpdf/core';
-import { ConsoleLogger } from '@embedpdf/models';
 import { NavigationPlugin, ViewportRenderLayer, ZoomLevel } from '@embedpdf/plugin-navigation';
 import { PdfiumEngine } from '../../../packages/engines/src/pdfium/engine';
 import pdfiumWasm from '@embedpdf/pdfium/pdfium.wasm?url';

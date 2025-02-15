@@ -41,6 +41,9 @@ importers:
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@embedpdf/engines':
+        specifier: workspace:*
+        version: link:../../packages/engines
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../../packages/models
@@ -215,6 +218,18 @@ importers:
 
   website:
     dependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@embedpdf/engines':
+        specifier: workspace:*
+        version: link:../packages/engines
+      '@embedpdf/pdfium':
+        specifier: workspace:*
+        version: link:../packages/pdfium
+      '@embedpdf/plugin-navigation':
+        specifier: workspace:*
+        version: link:../packages/plugin-navigation
       '@headlessui/react':
         specifier: ^2.2.0
         version: 2.2.0(react-dom@18.3.1)(react@18.3.1)

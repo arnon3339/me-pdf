@@ -9,7 +9,8 @@ export default defineConfig({
       '@embedpdf/plugin-renderer': path.resolve(__dirname, '../../packages/plugin-renderer/src'),
       '@embedpdf/plugin-layer': path.resolve(__dirname, '../../packages/plugin-layer/src'),
       '@embedpdf/pdfium': path.resolve(__dirname, '../../packages/pdfium/src'),
-      '@embedpdf/models': path.resolve(__dirname, '../../packages/models/src')
+      '@embedpdf/models': path.resolve(__dirname, '../../packages/models/src'),
+      '@embedpdf/engines': path.resolve(__dirname, '../../packages/engines/src')
     }
   },
   server: {

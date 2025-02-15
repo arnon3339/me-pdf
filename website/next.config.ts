@@ -20,7 +20,12 @@ const withNextra = nextra({
 })
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: [
+    '@embedpdf/pdfium',
+    '@embedpdf/engines',
+    '@embedpdf/core',
+    '@embedpdf/plugin-navigation'
+  ]
 }
  
 export default withNextra(nextConfig)

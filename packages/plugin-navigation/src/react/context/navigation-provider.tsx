@@ -14,7 +14,7 @@ interface NavigationProviderProps {
   children: ReactNode;
 }
 
-export function PDFNavigationProvider({
+export function NavigationProvider({
   navigationPlugin: navigationPluginProp,
   children
 }: NavigationProviderProps) {

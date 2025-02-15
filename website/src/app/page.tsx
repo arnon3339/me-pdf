@@ -1,3 +1,4 @@
+import PDFViewer from '@/components/pdf-viewer'
 import Link from 'next/link'
 
 export default function Home() {
@@ -29,6 +30,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+        <PDFViewer />
       </main>
     </div>
   ) 
