@@ -1,22 +1,19 @@
 {
   "name": "@embedpdf/pdfium",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": false,
   "description": " PDFium webassembly for EmbedPDF viewer",
   "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
-    "./pdfium.wasm": {
-      "import": "./dist/esm/pdfium.a0e42955.wasm",
-      "require": "./dist/cjs/pdfium.a0e42955.wasm"
-    }
+    "./pdfium.wasm": "./dist/pdfium.wasm"
   },
   "scripts": {
     "build": "PROJECT_CWD=$(pwd) pnpm -w p:build",

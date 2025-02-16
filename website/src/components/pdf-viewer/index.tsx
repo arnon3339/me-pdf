@@ -1,25 +1,26 @@
 'use client'
 
+import React, { useMemo, useState, useEffect } from "react";
 import { PDFCore } from "@embedpdf/core";
 import { PDFCoreProvider } from "@embedpdf/core/react";
 import { NavigationPlugin } from "@embedpdf/plugin-navigation";
 import { NavigationProvider } from '@embedpdf/plugin-navigation/react';
 import { PdfiumEngine } from "@embedpdf/engines";
-import pdfiumWasm from "@embedpdf/pdfium/pdfium.wasm?url";
 import { init } from "@embedpdf/pdfium";
-import { useMemo, useState, useEffect } from "react";
 
 // Move WASM initialization to a singleton
 let engineInstance: PdfiumEngine | null = null;
 
 async function initializeEngine() {
   if (engineInstance) return engineInstance;
-  
-  const response = await fetch(pdfiumWasm);
+
+  const response = await fetch('/wasm/pdfium.wasm');
   const wasmBinary = await response.arrayBuffer();
+
   const wasmModule = await init({ wasmBinary });
-  engineInstance = new PdfiumEngine(wasmModule);
-  return engineInstance;
+  const engine = new PdfiumEngine(wasmModule);
+
+  return engine;
 }
 
 export default function PDFViewer() {

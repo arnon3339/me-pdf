@@ -1,20 +1,20 @@
 {
   "name": "@embedpdf/core",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./react": {
       "types": "./dist/react/index.d.ts",
-      "import": "./dist/react/index.mjs",
-      "require": "./dist/react/index.js"
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs"
     }
   },
   "scripts": {
@@ -35,8 +35,8 @@
     "@embedpdf/engines": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "files": [
     "dist",

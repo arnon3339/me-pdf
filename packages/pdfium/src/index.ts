@@ -1,7 +1,7 @@
 import { functions } from './functions';
 import createPdfium from './pdfium';
-import { PdfiumModule } from './pdfium';
-import { PdfiumRuntimeMethods } from './runtime';
+import type { PdfiumModule } from './pdfium';
+import type { PdfiumRuntimeMethods } from './runtime';
 
 export type { PdfiumModule } from './pdfium';
 export type { PdfiumRuntimeMethods } from './runtime';

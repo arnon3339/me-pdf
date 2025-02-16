@@ -36,6 +36,13 @@ export default defineConfig((opts) => {
     splitting: false,
     outDir: 'dist',
     tsconfig: path.join(PACKAGE_ROOT_PATH, 'tsconfig.json'),
+    async onSuccess() {
+      // Copy WASM files if they exist
+      const wasmFile = path.join(SRC_PATH, 'pdfium.wasm');
+      if (fs.existsSync(wasmFile)) {
+        await fs.promises.copyFile(wasmFile, path.join(PACKAGE_ROOT_PATH, 'dist', 'pdfium.wasm'));
+      }
+    }
   };
 
   return [

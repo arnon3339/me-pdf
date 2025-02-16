@@ -19,6 +19,7 @@ export function NavigationProvider({
   children
 }: NavigationProviderProps) {
   const core = usePDFCore();
+
   const [navigationPlugin, setNavigationPlugin] = useState<INavigationPlugin | null>(null);
   const [state, setState] = useState<NavigationState>(navigationPluginProp.getState());
 
@@ -57,7 +58,7 @@ export function NavigationProvider({
 export function useNavigation() {
   const context = useContext(NavigationContext);
   if (!context) {
-    throw new Error('useNavigation must be used within a PDFNavigationProvider');
+    throw new Error('useNavigation must be used within a NavigationProvider');
   }
   return context;
 }

@@ -1,6 +1,6 @@
 import { PDFCore } from '@embedpdf/core';
 import { NavigationPlugin, ViewportRenderLayer, ZoomLevel } from '@embedpdf/plugin-navigation';
-import { PdfiumEngine } from '../../../packages/engines/src/pdfium/engine';
+import { PdfiumEngine } from '@embedpdf/engines';
 import pdfiumWasm from '@embedpdf/pdfium/pdfium.wasm?url';
 import { init } from '@embedpdf/pdfium';
 import { RendererPlugin } from '@embedpdf/plugin-renderer';
@@ -37,7 +37,6 @@ async function initializePDFViewer() {
 
   // Initialize and register navigation plugin
   const navigationPlugin = new NavigationPlugin({
-    initialPage: 4,
     defaultZoomLevel: 1,
     defaultScrollMode: 'continuous',
     container: document.getElementById('pageContainer') as HTMLElement

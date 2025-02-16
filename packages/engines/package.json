@@ -1,16 +1,16 @@
 {
   "name": "@embedpdf/engines",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "core components of embedpdf",
   "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./wasm/*": {
       "import": "./dist/wasm/*",

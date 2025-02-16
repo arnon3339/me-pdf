@@ -1,4 +1,4 @@
-declare module '*?url' {
+declare module '*.wasm' {
   const content: string;
   export default content;
-} 
+}
