@@ -32,7 +32,7 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
     this.loader = this.registry.getPlugin<LoaderPlugin>('loader').provides();
     this.spread = this.registry.getPlugin<SpreadPlugin>('spread').provides();
     
-    this.strategy = new HorizontalScrollStrategy(this.viewport);
+    this.strategy = new VerticalScrollStrategy(this.viewport);
     
     this.loader.onDocumentLoaded(this.handleDocumentLoad.bind(this));
     this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'throttle', wait: 250 });

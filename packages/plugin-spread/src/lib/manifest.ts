@@ -11,6 +11,6 @@ export const manifest: PluginManifest<SpreadPluginConfig> = {
   consumes: [],
   defaultConfig: {
     enabled: true,
-    defaultSpreadMode: 'none'
+    defaultSpreadMode: 'even'
   }
 }; 
