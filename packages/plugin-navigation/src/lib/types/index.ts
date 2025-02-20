@@ -1,7 +1,6 @@
 import { IPlugin, PageContainer, PluginState } from '@embedpdf/core';
 
 export type ScrollMode = 'continuous' | 'page-by-page';
-export type ZoomLevel = 'automatic' | 'fit-page' | 'fit-width' | number;
 export type PageLayout = 'single' | 'dual' | 'cover';
 export type PageOrientation = 0 | 90 | 180 | 270;
 
@@ -12,7 +11,6 @@ export interface INavigationPlugin extends IPlugin<NavigationState> {
   setContainer(element: HTMLElement): void;
   getViewportState(): ViewportState;
   goToPage(pageNumber: number): Promise<void>;
-  updateZoomLevel(zoomLevel: ZoomLevel): Promise<void>;
 }
 
 export interface ViewerContainer {
@@ -26,8 +24,6 @@ export interface NavigationState extends PluginState {
   totalPages: number;
   pages: PageContainer[];
   scrollMode: ScrollMode;
-  currentZoomLevel: number;
-  zoomLevel: ZoomLevel;
   pageLayout: PageLayout;
   orientation: PageOrientation;
   container?: ViewerContainer;
@@ -37,12 +33,9 @@ export interface NavigationState extends PluginState {
 export interface NavigationOptions {
   initialPage?: number;
   defaultScrollMode?: ScrollMode;
-  defaultZoomLevel?: ZoomLevel;
   defaultPageLayout?: PageLayout;
   defaultOrientation?: PageOrientation;
   container?: HTMLElement;
-  minZoom?: number;
-  maxZoom?: number;
 }
 
 export interface ViewportMetrics {

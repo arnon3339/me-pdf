@@ -1,5 +1,5 @@
 import { IPDFCore } from '@embedpdf/core';
-import { NavigationState, ViewportMetrics, ZoomLevel } from '../types';
+import { ZoomState, ViewportMetrics, ZoomLevel, ZoomChangeEvent } from '../types';
 
 interface ZoomOptions {
   minZoom?: number;
@@ -10,7 +10,7 @@ interface ZoomOptions {
 
 interface IZoomControllerOptions {
   container: HTMLElement;
-  state: NavigationState;
+  state: ZoomState;
   core: IPDFCore;
   options: ZoomOptions;
 }
@@ -21,7 +21,7 @@ export class ZoomController {
   private readonly zoomStep: number;
   
   private container: HTMLElement;
-  private state: NavigationState;
+  private state: ZoomState;
   private core: IPDFCore;
   private lastZoomCenter?: { x: number; y: number };
   private pinchStartDistance?: number;
@@ -67,10 +67,16 @@ export class ZoomController {
     const containerWidth = this.container.clientWidth - 64;
     const containerHeight = this.container.clientHeight - 64;
 
+    const document = this.core.getDocument();
+
+    if (!document) {
+      return 1;
+    }
+
     // Find the widest and tallest page
-    let maxDimensions = this.state.pages.reduce((max, page) => ({
-      width: Math.max(max.width, page.page.size.width),
-      height: Math.max(max.height, page.page.size.height)
+    let maxDimensions = document.pages.reduce((max, page) => ({
+      width: Math.max(max.width, page.size.width),
+      height: Math.max(max.height, page.size.height)
     }), { width: 0, height: 0 });
 
     let zoom: number;
@@ -180,7 +186,7 @@ export class ZoomController {
     };
   }
 
-  public zoomTo(newZoomLevel: ZoomLevel, center?: { x: number; y: number }): void {
+  public zoomTo(newZoomLevel: ZoomLevel, center?: { x: number; y: number }): ZoomChangeEvent {
     const oldZoom = this.state.currentZoomLevel;
   
     // Store metrics before zoom
@@ -198,7 +204,7 @@ export class ZoomController {
     };
 
     // Let subscribers handle their own zoom adjustments
-    this.core.emit('zoom:change', zoomData);
+    return zoomData;
   }
 
   public zoomBy(delta: number, center?: { x: number; y: number }): void {

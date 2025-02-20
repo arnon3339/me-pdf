@@ -7,9 +7,14 @@
   },
   "dependencies": {
     "@embedpdf/core": "workspace:*",
+    "@embedpdf/plugin-loader": "workspace:*",
+    "@embedpdf/plugin-viewport": "workspace:*",
+    "@embedpdf/plugin-spread": "workspace:*",
+    "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-navigation": "workspace:*",
     "@embedpdf/plugin-renderer": "workspace:*",
     "@embedpdf/plugin-layer": "workspace:*",
+    "@embedpdf/plugin-zoom": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/engines": "workspace:*"

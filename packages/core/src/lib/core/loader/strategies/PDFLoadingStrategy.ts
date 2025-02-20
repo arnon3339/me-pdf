@@ -1,9 +1,9 @@
 import { PdfDocumentObject, PdfEngine, PdfFileWithoutContent } from '@embedpdf/models';
 
 export interface PDFLoadingOptions {
-  file: PdfFileWithoutContent;
+  id: string;
   source: any;
-  password: string;
+  password?: string;
   engine: PdfEngine;
 }
 

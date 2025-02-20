@@ -43,7 +43,7 @@ export class RangeRequestStrategy implements PDFLoadingStrategy {
   }
 
   async load(options: PDFLoadingOptions): Promise<PdfDocumentObject> {
-    const { file, source, password, engine } = options;
+    const { id, source, password, engine } = options;
     const { supportsRanges, fileLength, content } = await this.checkRangeSupport(source);
     
 
@@ -57,11 +57,10 @@ export class RangeRequestStrategy implements PDFLoadingStrategy {
     }
 
     const task = engine.openDocumentFromLoader({
-      id: file.id,
-      name: file.name,
+      id,
       fileLength,
       callback: this.createRangeCallback(source)
-    }, password);
+    }, password || '');
 
     return new Promise<PdfDocumentObject>((resolve, reject) => {
       task.wait((result) => resolve(result), (error) => reject(error));

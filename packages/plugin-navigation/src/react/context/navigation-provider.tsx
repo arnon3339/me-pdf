@@ -4,7 +4,6 @@ import { NavigationState, INavigationPlugin } from '../../lib/types';
 
 interface NavigationContextValue extends NavigationState {
   goToPage: (page: number) => Promise<void>;
-  updateZoomLevel: (zoom: number) => Promise<void>;
 }
 
 const NavigationContext = createContext<NavigationContextValue | null>(null);
@@ -41,7 +40,6 @@ export function NavigationProvider({
   const value = navigationPlugin ? {
     ...state,
     goToPage: navigationPlugin.goToPage.bind(navigationPlugin),
-    updateZoomLevel: navigationPlugin.updateZoomLevel.bind(navigationPlugin),
   } : null;
 
   if (!value) {

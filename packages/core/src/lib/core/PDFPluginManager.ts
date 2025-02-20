@@ -49,8 +49,8 @@ export class PDFPluginManager extends EventEmitter implements IPluginManager {
     return this.plugins.get(name) as T;
   }
 
-  getPluginState(name: string): PluginState | undefined {
-    return this.pluginStates.get(name);
+  getPluginState<T extends PluginState>(name: string): T | undefined {
+    return this.pluginStates.get(name) as T;
   }
 
   getAllPlugins(): Map<string, IPlugin> {

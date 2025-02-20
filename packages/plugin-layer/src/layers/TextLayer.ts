@@ -7,7 +7,13 @@ export class TextLayer extends BaseLayer {
   zIndex = 2;
 
   async render(page: PdfPageObject, container: HTMLElement) {
-    // Get text content from the page
+    if(!this.core) throw new Error('Plugin not initialized');
+
+    const document = this.core.getDocument();
+    if(!document) return;
+
+    //const textRects = await this.core.engine.getPageTextRects(document, page, 1, 0);
+    //console.log(textRects);
   }
 
   async destroy() {

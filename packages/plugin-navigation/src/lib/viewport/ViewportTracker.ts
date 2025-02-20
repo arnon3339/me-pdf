@@ -49,11 +49,16 @@ export class ViewportTracker {
     return pagePositions;
   }
 
+  private getZoomLevel(): number {
+    return parseFloat(this.container.style.getPropertyValue('--scale-factor'));
+  }
+
   public getPagePositions(): Map<number, {top: number, height: number}> {
-    if (this.lastZoomLevel === this.state.zoomLevel && this.cachedPagePositions) {
+    const zoomLevel = this.getZoomLevel();
+    if (this.lastZoomLevel === zoomLevel && this.cachedPagePositions) {
       return this.cachedPagePositions;
     }
-    return this.calculatePagePositions(this.state.currentZoomLevel);
+    return this.calculatePagePositions(zoomLevel);
   }
 
   public getViewportState(): ViewportState {
@@ -63,7 +68,7 @@ export class ViewportTracker {
     const scrollLeft = this.container.scrollLeft;
     const viewportWidth = this.container.clientWidth;
     const viewportHeight = this.container.clientHeight;
-    const zoomLevel = this.state.currentZoomLevel;
+    const zoomLevel = this.getZoomLevel();
 
     // Use cached positions if zoom level hasn't changed
     const pagePositions = this.getPagePositions();
@@ -129,7 +134,7 @@ export class ViewportTracker {
     });
 
     const viewportState = {
-      zoomLevel: this.state.currentZoomLevel,
+      zoomLevel,
       pagePositions: pagePositions,
       viewportRegions: regions,
     };

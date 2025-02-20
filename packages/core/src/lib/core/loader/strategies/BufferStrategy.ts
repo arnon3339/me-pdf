@@ -3,13 +3,12 @@ import { PDFLoadingOptions, PDFLoadingStrategy } from './PDFLoadingStrategy';
 
 export class BufferStrategy implements PDFLoadingStrategy {
   async load(options: PDFLoadingOptions): Promise<PdfDocumentObject> {
-    const { file, source, password, engine } = options;
+    const { id, source, password, engine } = options;
 
     const task = engine.openDocument({
-      id: file.id,
-      name: file.name,
+      id,
       content: source,
-    }, password);
+    }, password || '');
 
     return new Promise<PdfDocumentObject>((resolve, reject) => {
       task.wait(
