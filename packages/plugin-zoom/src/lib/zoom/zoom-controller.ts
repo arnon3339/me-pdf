@@ -1,5 +1,5 @@
 import { IPDFCore } from '@embedpdf/core';
-import { ZoomState, ViewportMetrics, ZoomLevel, ZoomChangeEvent } from '../types';
+import { ZoomLevel, ZoomChangeEvent } from '../types';
 
 interface ZoomOptions {
   minZoom?: number;
@@ -164,43 +164,24 @@ export class ZoomController {
     };
   }
 
-  public getViewportMetrics(): ViewportMetrics {
-    const scrollTop = this.container.scrollTop;
-    const viewportHeight = this.container.clientHeight;
-    const viewportWidth = this.container.clientWidth;
-    const scrollLeft = this.container.scrollLeft;
-    const scrollWidth = this.container.scrollWidth;
-    const scrollHeight = this.container.scrollHeight;
-    
-    return {
-      scrollWidth,
-      scrollHeight,
-      scrollTop,
-      scrollLeft,
-      viewportHeight,
-      viewportWidth,
-      relativePosition: {
-        x: this.container.scrollWidth <= viewportWidth ? 0 : scrollLeft / (scrollWidth - viewportWidth),
-        y: this.container.scrollHeight <= viewportHeight ? 0 : scrollTop / (scrollHeight - viewportHeight)
-      }
-    };
-  }
-
   public zoomTo(newZoomLevel: ZoomLevel, center?: { x: number; y: number }): ZoomChangeEvent {
     const oldZoom = this.state.currentZoomLevel;
   
     // Store metrics before zoom
-    const metrics = this.getViewportMetrics();
+    const oldMetrics = this.getViewportMetrics();
     this.lastZoomCenter = center;
 
     const newZoom = this.updateZoomLevel(newZoomLevel);
 
+    const newMetrics = this.getViewportMetrics();
+
     // Emit zoom change event with all relevant data
     const zoomData = {
       oldZoom,
+      oldMetrics,
       newZoom,
+      newMetrics,
       center,
-      metrics
     };
 
     // Let subscribers handle their own zoom adjustments

@@ -3,19 +3,9 @@ import { PdfDocumentObject } from "@embedpdf/models";
 import { LoaderCapability, LoaderPlugin } from "@embedpdf/plugin-loader";
 import { SpreadCapability, SpreadMetrics, SpreadPlugin } from "@embedpdf/plugin-spread";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
-import { ScrollMetrics, ScrollStrategy } from "./types";
+import { ScrollCapability, ScrollMetrics, ScrollPluginConfig, ScrollStrategy } from "./types";
 import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
 import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
-
-export interface ScrollPluginConfig extends BasePluginConfig {
-  strategy?: ScrollStrategy;
-}
-
-export interface ScrollCapability {
-  onScroll(handler: (metrics: ScrollMetrics) => void): void;
-  scrollToPage(pageNumber: number): void;
-  //getCurrentMetrics(): ScrollMetrics;
-}
 
 export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
   private viewport: ViewportCapability;

@@ -4,7 +4,7 @@ import { SpreadCapability, SpreadMetrics, SpreadMode, SpreadPluginConfig } from 
 
 export class SpreadPlugin implements IPlugin<SpreadPluginConfig> {
   private spreadHandlers: ((metrics: SpreadMetrics) => void)[] = [];
-  private spreadMode: SpreadMode = 'none';
+  private spreadMode: SpreadMode = SpreadMode.None;
   private totalPages: number = 0;
   private spreads: number[][] = [];
 
@@ -14,7 +14,7 @@ export class SpreadPlugin implements IPlugin<SpreadPluginConfig> {
   ) {}
 
   async initialize(config: SpreadPluginConfig): Promise<void> {
-    this.spreadMode = config.defaultSpreadMode || 'none';
+    this.spreadMode = config.defaultSpreadMode || SpreadMode.None;
     
     const loader = this.registry.getPlugin<LoaderPlugin>('loader').provides();
     loader.onDocumentLoaded(doc => {

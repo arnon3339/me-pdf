@@ -104,6 +104,13 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
         this.renderedItems.delete(index);
       }
     }
+  } 
+
+  private removeAllRenderedItems(): void {  
+    for (const [index, element] of this.renderedItems) {
+      element.remove();
+      this.renderedItems.delete(index);
+    }
   }
 
   private addVisibleItems(range: { start: number; end: number }): void {
@@ -151,7 +158,9 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
 
   updateLayout(spreadMetrics: SpreadMetrics): void {
     if (!this.pages || this.pages.length === 0) return;
+
     this.calculateDimensions(spreadMetrics);
+    this.removeAllRenderedItems();
     this.updateVirtualScroller(this.viewport.getMetrics());
   }
 

@@ -1,4 +1,4 @@
-import { PdfPageObject } from "@embedpdf/models";
+import { BasePluginConfig } from "@embedpdf/core";
 import { SpreadMetrics } from "@embedpdf/plugin-spread";
 import { ViewportMetrics } from "@embedpdf/plugin-viewport";
 
@@ -28,3 +28,13 @@ export interface ScrollStrategyInterface {
   scrollToPage(pageNumber: number): void;
   calculateDimensions(spreadMetrics: SpreadMetrics): void;
 } 
+
+export interface ScrollPluginConfig extends BasePluginConfig {
+  strategy?: ScrollStrategy;
+}
+
+export interface ScrollCapability {
+  onScroll(handler: (metrics: ScrollMetrics) => void): void;
+  scrollToPage(pageNumber: number): void;
+  //getCurrentMetrics(): ScrollMetrics;
+}

@@ -108,12 +108,4 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
 
     return wrapper;
   }
-
-  updateLayout(spreadMetrics: SpreadMetrics): void {
-    if(this.pages && this.pages.length === 0) return;
-
-    this.calculateDimensions(spreadMetrics);
-    // Update virtual scroller with current viewport
-    this.updateVirtualScroller(this.viewport.getMetrics());
-  }
 } 

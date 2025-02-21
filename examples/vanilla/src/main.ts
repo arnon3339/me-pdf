@@ -10,7 +10,7 @@ import { PluginRegistry } from '@embedpdf/core';
 import { LoaderPlugin, LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { ViewportPlugin, ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { ScrollPluginPackage } from '@embedpdf/plugin-scroll';
-import { SpreadPluginPackage } from '@embedpdf/plugin-spread';
+import { SpreadCapability, SpreadMode, SpreadPlugin, SpreadPluginPackage } from '@embedpdf/plugin-spread';
 
 async function loadWasmBinary() {
   const response = await fetch(pdfiumWasm);
@@ -26,7 +26,7 @@ async function initializePDFViewer() {
   const engine = new PdfiumEngine(wasmModule); 
 
   const registry = new PluginRegistry(engine);
-  
+
   registry.registerPlugin(LoaderPluginPackage);
   registry.registerPlugin(ViewportPluginPackage, {
     container: document.getElementById('pageContainer') as HTMLElement
@@ -34,12 +34,15 @@ async function initializePDFViewer() {
   registry.registerPlugin(ZoomPluginPackage, {
     defaultZoomLevel: 1
   });
-  registry.registerPlugin(SpreadPluginPackage);
+  registry.registerPlugin(SpreadPluginPackage, {
+    defaultSpreadMode: SpreadMode.None
+  });
   registry.registerPlugin(ScrollPluginPackage);
 
   await registry.initialize();
 
   const loader = registry.getPlugin<LoaderPlugin>('loader').provides();
+  const spread = registry.getPlugin<SpreadPlugin>('spread').provides();
 
   const pdfDocument = await loader.loadDocument({
     id: '1',
@@ -47,6 +50,8 @@ async function initializePDFViewer() {
   });
   
   console.log(pdfDocument);
+
+  setupUIControls(spread);
 
   /*
   const wasmBinary = await loadWasmBinary();
@@ -143,4 +148,14 @@ function updatePageInfo(currentPage: number, totalPages: number) {
   }
 }
 */
+
+function setupUIControls(spread: SpreadCapability) {
+  const spreadSelect = document.getElementById('spreadMode') as HTMLSelectElement;
+
+  spreadSelect.addEventListener('change', async () => {
+    const newSpreadMode = spreadSelect.value as SpreadMode;
+    spread.setSpreadMode(newSpreadMode);
+  });
+}
+
 initializePDFViewer();

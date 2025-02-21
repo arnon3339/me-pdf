@@ -1,6 +1,7 @@
 import { PluginPackage } from "@embedpdf/core";
-import { ScrollPlugin, ScrollPluginConfig } from "./scroll-plugin";
+import { ScrollPlugin } from "./scroll-plugin";
 import { manifest, SCROLL_PLUGIN_ID } from "./manifest";
+import { ScrollPluginConfig } from "./types";
 
 export const ScrollPluginPackage: PluginPackage<ScrollPlugin, ScrollPluginConfig> = {
   manifest,

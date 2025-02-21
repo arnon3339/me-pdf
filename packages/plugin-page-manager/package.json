@@ -1,0 +1,43 @@
+{
+  "name": "@embedpdf/plugin-page-manager",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "PROJECT_CWD=$(pwd) pnpm -w p:build",
+    "build:watch": "PROJECT_CWD=$(pwd) pnpm -w p:build:watch",
+    "clean": "PROJECT_CWD=$(pwd) pnpm -w p:clean",
+    "lint": "PROJECT_CWD=$(pwd) pnpm -w p:lint",
+    "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
+    "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
+  },
+  "dependencies": {
+    "@embedpdf/models": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@embedpdf/core": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

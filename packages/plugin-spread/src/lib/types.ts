@@ -4,7 +4,11 @@ export interface SpreadPluginConfig extends BasePluginConfig {
   defaultSpreadMode?: SpreadMode;
 }
 
-export type SpreadMode = 'none' | 'odd' | 'even';
+export enum SpreadMode {
+  None = 'none',
+  Odd = 'odd',
+  Even = 'even'
+}
 
 export interface SpreadMetrics {
   // How pages are grouped
