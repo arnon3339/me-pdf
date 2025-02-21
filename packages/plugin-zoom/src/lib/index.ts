@@ -1,6 +1,7 @@
 import { PluginPackage } from "@embedpdf/core";
-import { ZoomPlugin, ZoomPluginConfig } from "./zoom-plugin";
+import { ZoomPlugin } from "./zoom-plugin";
 import { manifest, ZOOM_PLUGIN_ID } from "./manifest";
+import { ZoomPluginConfig } from "./types";
 
 export const ZoomPluginPackage: PluginPackage<ZoomPlugin, ZoomPluginConfig> = {
   manifest,

@@ -26,7 +26,8 @@
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
   "dependencies": {
-    "@embedpdf/models": "workspace:*"
+    "@embedpdf/models": "workspace:*",
+    "@embedpdf/plugin-viewport": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

@@ -98,7 +98,13 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
       scrollTop: this.container.scrollTop,
       scrollLeft: this.container.scrollLeft,
       clientWidth: this.container.clientWidth,
-      clientHeight: this.container.clientHeight
+      clientHeight: this.container.clientHeight,
+      scrollWidth: this.container.scrollWidth,
+      scrollHeight: this.container.scrollHeight,
+      relativePosition: {
+        x: this.container.scrollWidth <= this.container.clientWidth ? 0 : this.container.scrollLeft / (this.container.scrollWidth - this.container.clientWidth),
+        y: this.container.scrollHeight <= this.container.clientHeight ? 0 : this.container.scrollTop / (this.container.scrollHeight - this.container.clientHeight)
+      }
     };
   }
 

@@ -13,6 +13,12 @@ export interface ViewportMetrics {
   scrollLeft: number;
   clientWidth: number;
   clientHeight: number;
+  scrollWidth: number;
+  scrollHeight: number;
+  relativePosition: {
+    x: number;
+    y: number;
+  };
 }
 
 export interface ScrollControlOptions {

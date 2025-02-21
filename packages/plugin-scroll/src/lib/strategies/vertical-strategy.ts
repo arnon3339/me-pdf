@@ -109,24 +109,6 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
     return wrapper;
   }
 
-  handleScroll(viewport: ViewportMetrics): void {
-    this.updateVirtualScroller(viewport);
-
-    // Update metrics
-    const visibleItems = this.virtualItems.filter(item => {
-      const itemBottom = item.offset + item.size;
-      const itemTop = item.offset;
-      return itemBottom >= viewport.scrollTop && 
-             itemTop <= viewport.scrollTop + viewport.clientHeight;
-    });
-
-    this.metrics.visiblePages = visibleItems.flatMap(item => item.pageNumbers);
-    this.metrics.currentPage = this.metrics.visiblePages[0] || 1;
-    this.metrics.scrollOffset = { x: viewport.scrollLeft, y: viewport.scrollTop };
-
-    console.log('metrics', this.metrics);
-  }
-
   updateLayout(spreadMetrics: SpreadMetrics): void {
     if(this.pages && this.pages.length === 0) return;
 

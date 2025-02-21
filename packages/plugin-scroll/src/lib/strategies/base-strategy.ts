@@ -196,6 +196,8 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     
     const pageNumberElement = document.createElement('span');
     pageNumberElement.textContent = `Page ${pageNum}`;
+    pageNumberElement.style.fontSize = '30px';
+    pageNumberElement.style.color = 'white';
     pageElement.appendChild(pageNumberElement);
     
     return pageElement;

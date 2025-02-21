@@ -1,27 +1,20 @@
 import { 
-  BasePluginConfig, 
   IPlugin,
   PluginRegistry 
 } from "@embedpdf/core";
-import { ZoomChangeEvent, ZoomLevel } from "./types";
-
-export interface ZoomPluginConfig extends BasePluginConfig {
-  defaultZoomLevel: ZoomLevel
-}
-
-interface ZoomCapability {
-  onZoom(handler: (zoomEvent: ZoomChangeEvent) => void): void;
-  updateZoomLevel(zoomLevel: ZoomLevel): Promise<void>;
-}
+import { ViewportCapability, ViewportPlugin } from "@embedpdf/plugin-viewport";
+import { ZoomCapability, ZoomChangeEvent, ZoomLevel, ZoomPluginConfig } from "./types";
 
 export class ZoomPlugin implements IPlugin<ZoomPluginConfig> {
   private zoomHandlers: ((zoomEvent: ZoomChangeEvent) => void)[] = [];
+  private viewport: ViewportCapability;
 
   constructor(
     public readonly id: string,
     private registry: PluginRegistry,
   ) {
-    
+    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport').provides();
+    console.log('ZoomPlugin initialized with viewport:', this.viewport);
   }
 
   provides(): ZoomCapability {
