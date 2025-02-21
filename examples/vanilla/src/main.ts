@@ -27,29 +27,17 @@ async function initializePDFViewer() {
 
   const registry = new PluginRegistry(engine);
   
-  await registry.registerPluginBatch([
-    {
-      package: LoaderPluginPackage,
-    },
-    {
-      package: ViewportPluginPackage,
-      config: {
-        container: document.getElementById('pageContainer') as HTMLElement
-      }
-    },
-    {
-      package: ZoomPluginPackage,
-      config: {
-        defaultZoomLevel: 1
-      }
-    },
-    {
-      package: SpreadPluginPackage,
-    },
-    {
-      package: ScrollPluginPackage,
-    }
-  ]);
+  registry.registerPlugin(LoaderPluginPackage);
+  registry.registerPlugin(ViewportPluginPackage, {
+    container: document.getElementById('pageContainer') as HTMLElement
+  });
+  registry.registerPlugin(ZoomPluginPackage, {
+    defaultZoomLevel: 1
+  });
+  registry.registerPlugin(SpreadPluginPackage);
+  registry.registerPlugin(ScrollPluginPackage);
+
+  await registry.initialize();
 
   const loader = registry.getPlugin<LoaderPlugin>('loader').provides();
 

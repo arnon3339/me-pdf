@@ -23,6 +23,13 @@ export class PluginRegistry {
   private configurations: Map<string, unknown> = new Map();
   private engine: PdfEngine;
 
+  private pendingRegistrations: Array<{
+    manifest: PluginManifest<unknown>;
+    packageCreator: (registry: PluginRegistry, engine: PdfEngine) => IPlugin;
+    config?: unknown;
+  }> = [];
+  private initialized = false;
+
   constructor(engine: PdfEngine) {
     this.resolver = new DependencyResolver();
     this.engine = engine;
@@ -30,75 +37,136 @@ export class PluginRegistry {
   }
 
   /**
-   * Register a single plugin
+   * Register a plugin without initializing it
    */
-  async registerPlugin<T extends IPlugin<TConfig>, TConfig>(
-    manifest: PluginManifest<TConfig>,
-    plugin: T,
+  registerPlugin<T extends IPlugin<TConfig>, TConfig>(
+    pluginPackage: { manifest: PluginManifest<TConfig>; create: (registry: PluginRegistry, engine: PdfEngine) => T },
     config?: Partial<TConfig>
-  ): Promise<void> {
-    try {
-      const finalConfig = {
-        ...manifest.defaultConfig,
-        ...config
-      };
-      // Validate plugin and manifest
-      this.validatePlugin(plugin);
-      this.validateManifest(manifest);
-      this.validateConfig(manifest.id, finalConfig, manifest.defaultConfig);
+  ): void {
+    if (this.initialized) {
+      throw new PluginRegistrationError('Cannot register plugins after initialization');
+    }
 
-      // Check if plugin is already registered
-      if (this.plugins.has(manifest.id)) {
-        throw new PluginRegistrationError(
-          `Plugin ${manifest.id} is already registered`
+    this.validateManifest(pluginPackage.manifest);
+
+    // Store the creator function instead of creating the plugin immediately
+    this.pendingRegistrations.push({
+      manifest: pluginPackage.manifest,
+      packageCreator: pluginPackage.create,
+      config
+    });
+  }
+
+  /**
+   * Initialize all registered plugins in correct dependency order
+   */
+  async initialize(): Promise<void> {
+    if (this.initialized) {
+      throw new PluginRegistrationError('Registry is already initialized');
+    }
+
+    // Build dependency graph
+    for (const reg of this.pendingRegistrations) {
+      const dependsOn = new Set<string>();
+
+      // Find plugins that provide required capabilities
+      for (const capability of reg.manifest.consumes) {
+        const provider = this.pendingRegistrations.find(r =>
+          r.manifest.provides.includes(capability)
         );
+        if (provider) {
+          dependsOn.add(provider.manifest.id);
+        }
       }
 
-      // Verify all required capabilities are available
-      for (const capability of manifest.consumes) {
-        if (!this.capabilities.has(capability)) {
-          throw new PluginRegistrationError(
-            `Missing required capability: ${capability} for plugin ${manifest.id}`
+      this.resolver.addNode(reg.manifest.id, Array.from(dependsOn));
+    }
+
+    try {
+      // Get load order
+      const loadOrder = this.resolver.resolveLoadOrder();
+
+      // Initialize plugins in correct order
+      for (const pluginId of loadOrder) {
+        const registration = this.pendingRegistrations.find(
+          r => r.manifest.id === pluginId
+        );
+
+        if (registration) {
+          await this.initializePlugin(
+            registration.manifest,
+            registration.packageCreator,
+            registration.config as Partial<unknown>
           );
         }
       }
 
-      // Register provided capabilities
-      for (const capability of manifest.provides) {
-        if (this.capabilities.has(capability)) {
-          throw new PluginRegistrationError(
-            `Capability ${capability} is already provided by plugin ${this.capabilities.get(capability)
-            }`
-          );
-        }
-        this.capabilities.set(capability, manifest.id);
-      }
-
-      // Store plugin and manifest
-      this.plugins.set(manifest.id, plugin);
-      this.manifests.set(manifest.id, manifest);
-      this.status.set(manifest.id, 'registered');
-      this.configurations.set(manifest.id, finalConfig);
-
-      // Initialize plugin
-      try {
-        if (plugin.initialize) {
-          await plugin.initialize(finalConfig);
-        }
-        this.status.set(manifest.id, 'active');
-      } catch (error) {
-        // Cleanup on initialization failure
-        this.plugins.delete(manifest.id);
-        this.manifests.delete(manifest.id);
-        manifest.provides.forEach(cap => this.capabilities.delete(cap));
-        throw error;
-      }
+      this.initialized = true;
+      this.pendingRegistrations = []; // Clear pending registrations
     } catch (error) {
       if (error instanceof Error) {
-        throw new PluginRegistrationError(
-          `Failed to register plugin ${manifest.id}: ${error.message}`
+        throw new CircularDependencyError(
+          `Failed to resolve plugin dependencies: ${error.message}`
         );
       }
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize a single plugin with all necessary checks
+   */
+  private async initializePlugin<TConfig>(
+    manifest: PluginManifest<TConfig>,
+    packageCreator: (registry: PluginRegistry, engine: PdfEngine) => IPlugin<TConfig>,
+    config?: Partial<TConfig>
+  ): Promise<void> {
+    // Create plugin instance during initialization
+    const plugin = packageCreator(this, this.engine);
+    this.validatePlugin(plugin);
+
+    const finalConfig = {
+      ...manifest.defaultConfig,
+      ...config
+    };
+
+    this.validateConfig(manifest.id, finalConfig, manifest.defaultConfig);
+
+    // Verify all required capabilities are available
+    for (const capability of manifest.consumes) {
+      if (!this.capabilities.has(capability)) {
+        throw new PluginRegistrationError(
+          `Missing required capability: ${capability} for plugin ${manifest.id}`
+        );
+      }
+    }
+
+    // Register provided capabilities
+    for (const capability of manifest.provides) {
+      if (this.capabilities.has(capability)) {
+        throw new PluginRegistrationError(
+          `Capability ${capability} is already provided by plugin ${this.capabilities.get(capability)}`
+        );
+      }
+      this.capabilities.set(capability, manifest.id);
+    }
+
+    // Store plugin and manifest
+    this.plugins.set(manifest.id, plugin);
+    this.manifests.set(manifest.id, manifest);
+    this.status.set(manifest.id, 'registered');
+    this.configurations.set(manifest.id, finalConfig);
+
+    try {
+      if (plugin.initialize) {
+        await plugin.initialize(finalConfig);
+      }
+      this.status.set(manifest.id, 'active');
+    } catch (error) {
+      // Cleanup on initialization failure
+      this.plugins.delete(manifest.id);
+      this.manifests.delete(manifest.id);
+      manifest.provides.forEach(cap => this.capabilities.delete(cap));
       throw error;
     }
   }
@@ -167,54 +235,11 @@ export class PluginRegistry {
   }
 
   /**
-   * Register multiple plugins with dependency resolution
+   * Register multiple plugins at once
    */
-  async registerPluginBatch(
-    registrations: PluginBatchRegistration<IPlugin, unknown>[]
-  ): Promise<void> {
-    // Build dependency graph
+  registerPluginBatch(registrations: PluginBatchRegistration<IPlugin, unknown>[]): void {
     for (const reg of registrations) {
-      const dependsOn = new Set<string>();
-
-      // Find plugins that provide required capabilities
-      for (const capability of reg.package.manifest.consumes) {
-        const provider = registrations.find(r =>
-          r.package.manifest.provides.includes(capability)
-        );
-        if (provider) {
-          dependsOn.add(provider.package.manifest.id);
-        }
-      }
-
-      this.resolver.addNode(reg.package.manifest.id, Array.from(dependsOn));
-    }
-
-    try {
-      // Get load order
-      const loadOrder = this.resolver.resolveLoadOrder();
-
-      // Register plugins in correct order
-      for (const pluginId of loadOrder) {
-        const registration = registrations.find(
-          r => r.package.manifest.id === pluginId
-        );
-
-        if (registration) {
-          const { package: pkg, config } = registration;
-          await this.registerPlugin(
-            pkg.manifest,
-            pkg.create(this, this.engine),
-            config
-          );
-        }
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new CircularDependencyError(
-          `Failed to resolve plugin dependencies: ${error.message}`
-        );
-      }
-      throw error;
+      this.registerPlugin(reg.package, reg.config);
     }
   }
 
