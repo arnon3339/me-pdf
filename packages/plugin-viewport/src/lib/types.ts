@@ -1,4 +1,5 @@
 import { BasePluginConfig } from "@embedpdf/core";
+import { EventControlOptions } from "./utils/event-control";
 
 export interface ViewportPluginConfig extends BasePluginConfig {
   container?: HTMLElement; 
@@ -32,7 +33,8 @@ export interface ViewportCapability {
   setContainer: (container: HTMLElement) => void;
   onViewportChange: (
     handler: (metrics: ViewportMetrics) => void,
-    options?: ScrollControlOptions
+    options?: EventControlOptions
   ) => (metrics: ViewportMetrics) => void;
+  onResize: (handler: (metrics: ViewportMetrics) => void, options?: EventControlOptions) => (metrics: ViewportMetrics) => void;
   onContainerChange: (handler: (container: HTMLElement) => void) => void;
 }

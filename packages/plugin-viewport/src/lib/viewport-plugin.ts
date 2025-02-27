@@ -1,12 +1,13 @@
 import { IPlugin, PluginRegistry } from "@embedpdf/core";
 import { ViewportCapability, ViewportMetrics, ViewportPluginConfig } from "./types";
-import { ScrollControl, ScrollControlOptions } from "./utils/scroll-control";
+import { EventControl, EventControlOptions } from "./utils/event-control";
 
 export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
   private container?: HTMLElement;
   private observer?: ResizeObserver;
   private mutationObserver?: MutationObserver;
   private viewportHandlers: ((metrics: ViewportMetrics) => void)[] = [];
+  private resizeHandlers: ((metrics: ViewportMetrics) => void)[] = [];
   private containerChangeHandlers: ((element: HTMLElement) => void)[] = [];
   private config!: ViewportPluginConfig;
 
@@ -25,13 +26,22 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
       },
       getMetrics: () => this.getViewportMetrics(),
       setContainer: (container) => this.setContainer(container),
-      onViewportChange: (handler, options?: ScrollControlOptions) => {
+      onViewportChange: (handler, options?: EventControlOptions) => {
         if (options) {
-          const controlledHandler = new ScrollControl(handler, options).handle;
+          const controlledHandler = new EventControl(handler, options).handle;
           this.viewportHandlers.push(controlledHandler);
           return controlledHandler;
         }
         this.viewportHandlers.push(handler);
+        return handler;
+      },
+      onResize: (handler, options?: EventControlOptions) => {
+        if (options) {
+          const controlledHandler = new EventControl(handler, options).handle;
+          this.resizeHandlers.push(controlledHandler);
+          return controlledHandler;
+        }
+        this.resizeHandlers.push(handler);
         return handler;
       },
       onContainerChange: (handler) => {
@@ -86,7 +96,7 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
 
   private setupContainerObserver(): void {
     this.observer = new ResizeObserver(() => {
-      this.notifyViewportChange();
+      this.notifyResize();
     });
 
     if (this.container) {
@@ -137,6 +147,13 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
     };
   }
 
+  private notifyResize(): void {
+    const metrics = this.getViewportMetrics();
+    this.resizeHandlers.forEach(handler => handler(metrics));
+    // Also notify general viewport change handlers
+    this.viewportHandlers.forEach(handler => handler(metrics));
+  }
+
   private notifyViewportChange(): void {
     const metrics = this.getViewportMetrics();
     this.viewportHandlers.forEach(handler => handler(metrics));
@@ -159,6 +176,7 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
     }
     // Clean up handlers
     this.viewportHandlers = [];
+    this.resizeHandlers = [];
     this.containerChangeHandlers = [];
   }
 }

@@ -1,19 +1,19 @@
 import { ViewportMetrics } from "../types";
 
-export type ScrollHandler = (viewport: ViewportMetrics) => void;
+export type EventHandler = (viewport: ViewportMetrics) => void;
 
-export interface ScrollControlOptions {
+export interface EventControlOptions {
   mode: 'debounce' | 'throttle';
   wait: number;
 }
 
-export class ScrollControl {
+export class EventControl {
   private timeoutId?: number;
   private lastRun: number = 0;
 
   constructor(
-    private handler: ScrollHandler,
-    private options: ScrollControlOptions
+    private handler: EventHandler,
+    private options: EventControlOptions
   ) {}
 
   handle = (viewport: ViewportMetrics): void => {
