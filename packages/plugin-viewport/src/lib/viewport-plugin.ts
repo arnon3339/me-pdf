@@ -5,7 +5,9 @@ import { ScrollControl, ScrollControlOptions } from "./utils/scroll-control";
 export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
   private container?: HTMLElement;
   private observer?: ResizeObserver;
+  private mutationObserver?: MutationObserver;
   private viewportHandlers: ((metrics: ViewportMetrics) => void)[] = [];
+  private containerChangeHandlers: ((element: HTMLElement) => void)[] = [];
   private config!: ViewportPluginConfig;
 
   constructor(
@@ -30,6 +32,10 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
           return controlledHandler;
         }
         this.viewportHandlers.push(handler);
+        return handler;
+      },
+      onContainerChange: (handler) => {
+        this.containerChangeHandlers.push(handler);
         return handler;
       }
     };
@@ -61,16 +67,21 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
     if (this.container && this.observer) {
       this.observer.disconnect();
       this.container.removeEventListener('scroll', this.handleScroll);
+      this.mutationObserver?.disconnect();
     }
 
     this.container = container;
 
     // Setup new container
     this.setupContainerObserver();
+    this.setupMutationObserver();
     this.container.addEventListener('scroll', this.handleScroll);
     
     // Notify initial metrics
     this.notifyViewportChange();
+    
+    // Notify container change handlers
+    this.notifyContainerChange();
   }
 
   private setupContainerObserver(): void {
@@ -81,6 +92,24 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
     if (this.container) {
       this.observer.observe(this.container);
     }
+  }
+
+  private setupMutationObserver(): void {
+    // Disconnect existing observer if any
+    this.mutationObserver?.disconnect();
+    
+    if (!this.container) return;
+    
+    const config = {
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    };
+    
+    this.mutationObserver = new MutationObserver(() => {
+      this.notifyContainerChange();
+    });
+
+    this.mutationObserver.observe(this.container, config);
   }
 
   private handleScroll = (): void => {
@@ -113,12 +142,23 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
     this.viewportHandlers.forEach(handler => handler(metrics));
   }
 
+  private notifyContainerChange(): void {
+    if (!this.container) return;
+    
+    this.containerChangeHandlers.forEach(handler => handler(this.container!));
+    
+    // Also notify viewport change since container properties might affect metrics
+    this.notifyViewportChange();
+  }
+
   async destroy(): Promise<void> {
     if (this.container && this.observer) {
       this.observer.disconnect();
+      this.mutationObserver?.disconnect();
       this.container.removeEventListener('scroll', this.handleScroll);
     }
-    // Clean up any controlled handlers
+    // Clean up handlers
     this.viewportHandlers = [];
+    this.containerChangeHandlers = [];
   }
 }

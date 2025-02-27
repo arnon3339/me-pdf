@@ -1,12 +1,10 @@
-import { BasePluginConfig, IPlugin, PluginRegistry } from "@embedpdf/core";
-import { LoaderPlugin } from "@embedpdf/plugin-loader";
-import { SpreadCapability, SpreadMetrics, SpreadMode, SpreadPluginConfig } from "./types";
+import { IPlugin, PluginRegistry } from "@embedpdf/core";
+import { PdfPageObject } from "@embedpdf/models";
+import { SpreadMode, SpreadPluginConfig, SpreadCapability } from "./types";
 
 export class SpreadPlugin implements IPlugin<SpreadPluginConfig> {
-  private spreadHandlers: ((metrics: SpreadMetrics) => void)[] = [];
   private spreadMode: SpreadMode = SpreadMode.None;
-  private totalPages: number = 0;
-  private spreads: number[][] = [];
+  private spreadHandlers: ((spreadMode: SpreadMode) => void)[] = [];
 
   constructor(
     public readonly id: string,
@@ -15,80 +13,54 @@ export class SpreadPlugin implements IPlugin<SpreadPluginConfig> {
 
   async initialize(config: SpreadPluginConfig): Promise<void> {
     this.spreadMode = config.defaultSpreadMode || SpreadMode.None;
-    
-    const loader = this.registry.getPlugin<LoaderPlugin>('loader').provides();
-    loader.onDocumentLoaded(doc => {
-      this.totalPages = doc.pageCount;
-      this.calculateSpreads();
-      this.notifySpreadChange();
-    });
   }
 
-  private calculateSpreads(): void {
-    this.spreads = [];
-    const pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-
+  getSpreadPagesObjects(pages: PdfPageObject[]): PdfPageObject[][] {
+    if (!pages.length) return [];
+    
     switch (this.spreadMode) {
-      case 'none':
-        this.spreads = pages.map(page => [page]);
-        break;
-
-      case 'odd':
-        // First create pairs
-        for (let i = 0; i < pages.length; i += 2) {
-          const spread = pages.slice(i, i + 2);
-          this.spreads.push(spread);
-        }
-        break;
-
-      case 'even':
-        // First page alone, then pairs
-        if (pages.length > 0) {
-          this.spreads.push([1]);
-          for (let i = 1; i < pages.length; i += 2) {
-            const spread = pages.slice(i, i + 2);
-            this.spreads.push(spread);
-          }
-        }
-        break;
+      case SpreadMode.None:
+        return pages.map(page => [page]);
+        
+      case SpreadMode.Odd:
+        return Array.from({ length: Math.ceil(pages.length / 2) }, (_, i) => 
+          pages.slice(i * 2, (i * 2) + 2)
+        );
+        
+      case SpreadMode.Even:
+        return [
+          [pages[0]],
+          ...Array.from({ length: Math.ceil((pages.length - 1) / 2) }, (_, i) => 
+            pages.slice(1 + (i * 2), 1 + (i * 2) + 2)
+          )
+        ];
+        
+      default:
+        return pages.map(page => [page]);
     }
   }
 
+  setSpreadMode(mode: SpreadMode): void {
+    if (this.spreadMode !== mode) {
+      this.spreadMode = mode;
+      this.notifySpreadChange(mode);
+    }
+  }
+
+  private notifySpreadChange(spreadMode: SpreadMode): void {
+    this.spreadHandlers.forEach(handler => handler(spreadMode));
+  }
+ 
   provides(): SpreadCapability {
     return {
       onSpreadChange: (handler) => this.spreadHandlers.push(handler),
-      getCurrentMetrics: () => this.createSpreadMetrics(),
       setSpreadMode: (mode) => this.setSpreadMode(mode),
-      getSpreadMode: () => this.spreadMode
-    };
-  }
-
-  private setSpreadMode(mode: SpreadMode): void {
-    if (this.spreadMode !== mode) {
-      this.spreadMode = mode;
-      this.calculateSpreads();
-      this.notifySpreadChange();
-    }
-  }
-
-  private notifySpreadChange(): void {
-    const metrics = this.createSpreadMetrics();
-    this.spreadHandlers.forEach(handler => handler(metrics));
-  }
-
-  private createSpreadMetrics(): SpreadMetrics {
-    return {
-      getSpreadForPage: (pageNumber: number) => {
-        // Find the spread that contains this page
-        const spread = this.spreads.find(spread => spread.includes(pageNumber));
-        return spread || [pageNumber];
-      },
-      getAllSpreads: () => [...this.spreads]
+      getSpreadMode: () => this.spreadMode,
+      getSpreadPagesObjects: (pages) => this.getSpreadPagesObjects(pages),
     };
   }
 
   async destroy(): Promise<void> {
     this.spreadHandlers = [];
-    this.spreads = [];
   }
 }

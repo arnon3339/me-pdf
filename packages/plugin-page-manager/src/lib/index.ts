@@ -9,3 +9,4 @@ export const PageManagerPluginPackage: PluginPackage<PageManagerPlugin, PageMana
 };
 
 export * from "./page-manager-plugin";
+export * from "./types";

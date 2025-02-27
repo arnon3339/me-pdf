@@ -27,7 +27,8 @@
   },
   "dependencies": {
     "@embedpdf/models": "workspace:*",
-    "@embedpdf/plugin-viewport": "workspace:*"
+    "@embedpdf/plugin-viewport": "workspace:*",
+    "@embedpdf/plugin-page-manager": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

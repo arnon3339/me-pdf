@@ -1,16 +1,16 @@
-//import { PDFCore } from '@embedpdf/core';
-import { NavigationPlugin, ViewportRenderLayer } from '@embedpdf/plugin-navigation';
 import { PdfiumEngine } from '@embedpdf/engines';
 import pdfiumWasm from '@embedpdf/pdfium/pdfium.wasm?url';
 import { init } from '@embedpdf/pdfium';
-import { RendererPlugin } from '@embedpdf/plugin-renderer';
-import { LayerPlugin, TextLayer } from '@embedpdf/plugin-layer';
-import { ZoomPlugin, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
+import { LayerPlugin, LayerPluginPackage } from '@embedpdf/plugin-layer';
+import { ZoomCapability, ZoomLevel, ZoomPlugin, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
 import { PluginRegistry } from '@embedpdf/core';
 import { LoaderPlugin, LoaderPluginPackage } from '@embedpdf/plugin-loader';
-import { ViewportPlugin, ViewportPluginPackage } from '@embedpdf/plugin-viewport';
+import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { ScrollPluginPackage } from '@embedpdf/plugin-scroll';
 import { SpreadCapability, SpreadMode, SpreadPlugin, SpreadPluginPackage } from '@embedpdf/plugin-spread';
+import { TextLayerPackage } from '@embedpdf/layer-text';
+import { RenderLayerPackage } from '@embedpdf/layer-render';
+import { PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
 
 async function loadWasmBinary() {
   const response = await fetch(pdfiumWasm);
@@ -31,6 +31,9 @@ async function initializePDFViewer() {
   registry.registerPlugin(ViewportPluginPackage, {
     container: document.getElementById('pageContainer') as HTMLElement
   });
+  registry.registerPlugin(PageManagerPluginPackage, {
+    pageGap: 10
+  });
   registry.registerPlugin(ZoomPluginPackage, {
     defaultZoomLevel: 1
   });
@@ -38,20 +41,33 @@ async function initializePDFViewer() {
     defaultSpreadMode: SpreadMode.None
   });
   registry.registerPlugin(ScrollPluginPackage);
+  registry.registerPlugin(LayerPluginPackage, {
+    layers: [
+      { package: TextLayerPackage },
+      { package: RenderLayerPackage, config: { maxScale: 2 } }
+    ]
+  });
 
   await registry.initialize();
 
   const loader = registry.getPlugin<LoaderPlugin>('loader').provides();
   const spread = registry.getPlugin<SpreadPlugin>('spread').provides();
+  const layer = registry.getPlugin<LayerPlugin>('layer').provides();
+  const zoom = registry.getPlugin<ZoomPlugin>('zoom').provides();
 
   const pdfDocument = await loader.loadDocument({
     id: '1',
     source: '/file/compressed.tracemonkey-pldi-09.pdf'
   });
+
+  await layer.render(pdfDocument, 0, document.getElementById('renderContainer') as HTMLElement, {
+    scale: 1,
+    rotation: 0
+  });
   
   console.log(pdfDocument);
 
-  setupUIControls(spread);
+  setupUIControls(spread, zoom);
 
   /*
   const wasmBinary = await loadWasmBinary();
@@ -149,12 +165,22 @@ function updatePageInfo(currentPage: number, totalPages: number) {
 }
 */
 
-function setupUIControls(spread: SpreadCapability) {
+function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability) {
   const spreadSelect = document.getElementById('spreadMode') as HTMLSelectElement;
 
   spreadSelect.addEventListener('change', async () => {
     const newSpreadMode = spreadSelect.value as SpreadMode;
     spread.setSpreadMode(newSpreadMode);
+  });
+
+  const zoomSelect = document.getElementById('zoomLevel') as HTMLSelectElement;
+
+  // Set initial zoom level
+  zoomSelect.value = zoom.getState().zoomLevel.toString();
+
+  zoomSelect.addEventListener('change', async () => {
+    const newZoom = isNaN(parseFloat(zoomSelect.value)) ? zoomSelect.value : parseFloat(zoomSelect.value);
+    await zoom.updateZoomLevel(newZoom as ZoomLevel);
   });
 }
 

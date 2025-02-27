@@ -8,7 +8,7 @@ export const manifest: PluginManifest<ScrollPluginConfig> = {
   name: 'Scroll Plugin',
   version: '1.0.0',
   provides: [],
-  consumes: ['viewport', 'loader', 'spread'],
+  consumes: ['viewport', 'page-manager'],
   defaultConfig: {
     enabled: true
   }

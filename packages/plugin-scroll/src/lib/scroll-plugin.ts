@@ -1,55 +1,69 @@
-import { BasePluginConfig, IPlugin, PluginRegistry } from "@embedpdf/core";
-import { PdfDocumentObject } from "@embedpdf/models";
-import { LoaderCapability, LoaderPlugin } from "@embedpdf/plugin-loader";
-import { SpreadCapability, SpreadMetrics, SpreadPlugin } from "@embedpdf/plugin-spread";
+import { IPlugin, PluginRegistry } from "@embedpdf/core";
+import { PdfPageObject } from "@embedpdf/models";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
 import { ScrollCapability, ScrollMetrics, ScrollPluginConfig, ScrollStrategy } from "./types";
 import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
 import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
+import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
 
 export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
   private viewport: ViewportCapability;
-  private loader: LoaderCapability;
-  private spread: SpreadCapability;
+  private pageManager: PageManagerCapability;
   private strategy: VerticalScrollStrategy | HorizontalScrollStrategy;
   private scrollHandlers: ((metrics: ScrollMetrics) => void)[] = [];
+  private currentZoom: number = 1;
 
   constructor(
     public readonly id: string,
     private registry: PluginRegistry,
   ) {
     this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport').provides();
-    this.loader = this.registry.getPlugin<LoaderPlugin>('loader').provides();
-    this.spread = this.registry.getPlugin<SpreadPlugin>('spread').provides();
+    this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager').provides();
     
-    this.strategy = new VerticalScrollStrategy(this.viewport);
+    this.currentZoom = parseFloat(this.viewport.getContainer().style.getPropertyValue('--scale-factor') || '1');
+
+    this.strategy = new VerticalScrollStrategy({
+      createPageElement: (page, pageNum) => this.pageManager.createPageElement(page, pageNum),
+      getScaleFactor: () => this.currentZoom,
+      pageGap: this.pageManager.getPageGap(),
+    });
     
-    this.loader.onDocumentLoaded(this.handleDocumentLoad.bind(this));
     this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'throttle', wait: 250 });
-    this.spread.onSpreadChange(this.handleSpreadChange.bind(this));
+    this.viewport.onContainerChange(this.handleContainerChange.bind(this));
+    this.pageManager.onPagesChange(this.handlePageSpreadChange.bind(this));
+    this.pageManager.onPageManagerInitialized(this.handlePageManagerInitialized.bind(this));
   }
 
-  private handleDocumentLoad(doc: PdfDocumentObject): void {
-    this.strategy.setPages(doc.pages);
-    this.strategy.calculateDimensions(this.spread.getCurrentMetrics());
+  private handlePageManagerInitialized(pdfPageObject: PdfPageObject[][] ): void {
+    this.strategy.calculateDimensions(pdfPageObject);
 
     // Trigger initial viewport update to render virtual items
     this.strategy.handleScroll(this.viewport.getMetrics());
+  }
+
+  private handleContainerChange(container: HTMLElement): void {
+    const newZoom = parseFloat(container.style.getPropertyValue('--scale-factor') || '1');
+    if (newZoom !== this.currentZoom) {
+      this.currentZoom = newZoom;
+
+      const metrics = this.viewport.getMetrics();
+      this.strategy.handleScroll(metrics);
+    }
   }
 
   private handleViewportChange(metrics: ViewportMetrics): void {
     this.strategy.handleScroll(metrics);
   }
 
-  private handleSpreadChange(spreadMetrics: SpreadMetrics): void {
-    this.strategy.updateLayout(spreadMetrics);
+  private handlePageSpreadChange(pdfPageObject: PdfPageObject[][]): void {
+    const metrics = this.viewport.getMetrics();
+    this.strategy.updateLayout(metrics, pdfPageObject);
   }
 
   provides(): ScrollCapability {
     return {
       onScroll: (handler) => this.scrollHandlers.push(handler),
-      scrollToPage: (pageNumber) => this.strategy.scrollToPage(pageNumber),
-      //getCurrentMetrics: () => this.strategy.getVirtualItems()[0]
+      scrollToPage: (pageNumber) => this.strategy.scrollToPage(pageNumber)
     };
   }
 

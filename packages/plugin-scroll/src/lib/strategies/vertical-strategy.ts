@@ -1,14 +1,11 @@
 import { PdfPageObject } from "@embedpdf/models";
-import { SpreadMetrics } from "@embedpdf/plugin-spread";
-import { ViewportCapability, ViewportMetrics } from "@embedpdf/plugin-viewport";
-import { VirtualItem } from "../types";
-import { BaseScrollStrategy } from "./base-strategy";
+import { ViewportMetrics } from "@embedpdf/plugin-viewport";
+import { VirtualItem } from "../types/virtual-item";
+import { BaseScrollStrategy, ScrollStrategyConfig } from "./base-strategy";
 
 export class VerticalScrollStrategy extends BaseScrollStrategy {
-  protected pages: PdfPageObject[] = [];
-
-  constructor(viewport: ViewportCapability) {
-    super(viewport);
+  constructor(config?: ScrollStrategyConfig) {
+    super(config);
   }
 
   protected setupContainer(): void {
@@ -23,57 +20,44 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
     this.contentContainer.style.position = 'relative';
     this.contentContainer.style.minWidth = 'fit-content';
     this.contentContainer.style.boxSizing = 'border-box';
-    this.contentContainer.style.gap = `${this.PAGE_GAP}px`;
+    this.contentContainer.style.gap = `round(down, var(--scale-factor) * ${this.pageGap}px, 1px)`;
   }
 
-  protected createVirtualItems(spreadMetrics: SpreadMetrics): VirtualItem[] {
+  protected createVirtualItems(spreadPages: PdfPageObject[][]): VirtualItem[] {
     let offset = 0;
-    const items: VirtualItem[] = [];
-    
-    spreadMetrics.getAllSpreads().forEach((pagesInSpread, index) => {
-      const spreadPages = pagesInSpread.map(pageNum => this.pages[pageNum - 1]);
+
+    return spreadPages.map((pagesInSpread, index) => {
       // Use the maximum height of pages in the spread
-      const size = Math.max(...spreadPages.map(p => p.size.height));
+      const size = Math.max(...pagesInSpread.map(p => p.size.height));
       
-      items.push({
-        pageNumbers: pagesInSpread,
+      // Create the virtual item
+      const item = new VirtualItem(
+        pagesInSpread.map(page => page.index + 1),
+        pagesInSpread,
         index,
         size,
-        offset
-      });
+        offset,
+        this.getScaleFactorFn
+      );
       
-      offset += size + this.PAGE_GAP;
+      // Update offset for the next item
+      offset += size + this.pageGap;
+      return item;
     });
-
-    return items;
-  }
-
-  protected updateMetrics(): void {
-    if (this.virtualItems.length === 0) return;
-    
-    const lastItem = this.virtualItems[this.virtualItems.length - 1];
-    this.metrics.totalHeight = lastItem.offset + lastItem.size;
-    this.metrics.totalWidth = Math.max(
-      ...this.virtualItems.map(item => 
-        Math.max(...item.pageNumbers.map(pageNum => 
-          this.pages[pageNum - 1].size.width
-        ))
-      )
-    );
   }
 
   protected updateSpacers(beforeSize: number, afterSize: number): void {
-    this.topSpacer.style.height = `${beforeSize}px`;
+    this.topSpacer.style.height = `round(down, var(--scale-factor) * ${beforeSize}px, 1px)`;
     this.topSpacer.style.width = '100%';
     
-    this.bottomSpacer.style.height = `${Math.max(0, afterSize)}px`;
+    this.bottomSpacer.style.height = `round(down, var(--scale-factor) * ${Math.max(0, afterSize)}px, 1px)`;
     this.bottomSpacer.style.width = '100%';
   }
 
   protected getVisibleItems(viewport: ViewportMetrics): VirtualItem[] {
     return this.virtualItems.filter(item => {
-      const itemBottom = item.offset + item.size;
-      const itemTop = item.offset;
+      const itemBottom = item.scaledOffset + item.scaledSize;
+      const itemTop = item.scaledOffset;
       return itemBottom >= viewport.scrollTop && 
              itemTop <= viewport.scrollTop + viewport.clientHeight;
     });
@@ -97,13 +81,12 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
   protected renderItem(item: VirtualItem): HTMLElement {
     const wrapper = document.createElement('div');
     wrapper.style.display = 'flex';
-    wrapper.style.height = `${item.size}px`;
-    wrapper.style.gap = `${this.PAGE_GAP}px`;
     wrapper.style.justifyContent = 'center';
-    
-    item.pageNumbers.forEach(pageNum => {
-      const page = this.pages[pageNum - 1];
-      wrapper.appendChild(this.createPageElement(page, pageNum));
+    wrapper.style.height = `round(down, var(--scale-factor) * ${item.size}px, 1px)`;
+    wrapper.style.gap = `round(down, var(--scale-factor) * ${this.pageGap}px, 1px)`;
+
+    item.pages.forEach(page => {
+      wrapper.appendChild(this.createPageElement(page, page.index + 1));
     });
 
     return wrapper;

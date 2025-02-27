@@ -1,14 +1,11 @@
 import { PdfPageObject } from "@embedpdf/models";
-import { SpreadMetrics } from "@embedpdf/plugin-spread";
-import { ViewportCapability, ViewportMetrics } from "@embedpdf/plugin-viewport";
-import { VirtualItem } from "../types";
-import { BaseScrollStrategy } from "./base-strategy";
+import { ViewportMetrics } from "@embedpdf/plugin-viewport";
+import { BaseScrollStrategy, ScrollStrategyConfig } from "./base-strategy";
+import { VirtualItem } from "../types/virtual-item";
 
 export class HorizontalScrollStrategy extends BaseScrollStrategy {
-  protected pages: PdfPageObject[] = [];
-
-  constructor(viewport: ViewportCapability) {
-    super(viewport);
+  constructor(config?: ScrollStrategyConfig) {
+    super(config);
   }
 
   /** Set up the container for horizontal scrolling */
@@ -26,36 +23,40 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     this.contentContainer.style.position = 'relative';
     this.contentContainer.style.minHeight = '100%';
     this.contentContainer.style.boxSizing = 'border-box';
-    this.contentContainer.style.gap = `${this.PAGE_GAP}px`;
+    this.contentContainer.style.gap = `round(down, var(--scale-factor) * ${this.pageGap}px, 1px)`;
   }
 
-  /** Create virtual items based on spread widths */
-  protected createVirtualItems(spreadMetrics: SpreadMetrics): VirtualItem[] {
+  protected createVirtualItems(pdfPageObject: PdfPageObject[][]): VirtualItem[] {
     let offset = 0;
-    return spreadMetrics.getAllSpreads().map((pagesInSpread, index) => {
-      const spreadPages = pagesInSpread.map(pageNum => this.pages[pageNum - 1]);
-      const size = spreadPages.reduce((sum, page) => sum + page.size.width, 0) + 
-                  ((spreadPages.length - 1) * this.PAGE_GAP);
+    
+    return pdfPageObject.map((pagesInSpread, index) => {
+      // Calculate size based on orientation
+      const size = this.calculateItemSize(pagesInSpread);
       
-      const item = { pageNumbers: pagesInSpread, index, size, offset };
-      offset += size + this.PAGE_GAP;
+      // Create the virtual item
+      const item = new VirtualItem(
+        pagesInSpread.map(page => page.index + 1),
+        pagesInSpread,
+        index,
+        size,
+        offset,
+        this.getScaleFactorFn
+      );
+      
+      // Update offset for the next item
+      offset += size + this.pageGap;
       return item;
     });
   }
 
-  /** Update scroll metrics with total width and height */
-  protected updateMetrics(): void {
-    if (this.virtualItems.length === 0) return;
-    
-    const lastItem = this.virtualItems[this.virtualItems.length - 1];
-    this.metrics.totalWidth = lastItem.offset + lastItem.size;
-    this.metrics.totalHeight = Math.max(
-      ...this.virtualItems.map(item => 
-        Math.max(...item.pageNumbers.map(pageNum => 
-          this.pages[pageNum - 1].size.height
-        ))
-      )
-    );
+  protected calculateItemSize(pagesInSpread: PdfPageObject[]): number {
+    return pagesInSpread.reduce((sum, page, i) => {
+      // Add page width
+      const width = page.size.width;
+      // Add gap between pages (except after the last page in spread)
+      const gap = i < pagesInSpread.length - 1 ? this.pageGap : 0;
+      return sum + width + gap;
+    }, 0);
   }
 
   /** Render a spread as a horizontal flex container */
@@ -63,17 +64,16 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     const wrapper = document.createElement('div');
     wrapper.style.display = 'flex';
     wrapper.style.flexDirection = 'row';
-    wrapper.style.gap = `${this.PAGE_GAP}px`;
+    wrapper.style.gap = `round(down, var(--scale-factor) * ${this.pageGap}px, 1px)`;
     wrapper.style.alignItems = 'center';
     
     const maxHeight = Math.max(
-      ...item.pageNumbers.map(pageNum => this.pages[pageNum - 1].size.height)
+      ...item.pages.map(page => page.size.height)
     );
-    wrapper.style.height = `${maxHeight}px`;
+    wrapper.style.height = `round(down, var(--scale-factor) * ${maxHeight}px, 1px)`;
 
-    item.pageNumbers.forEach(pageNum => {
-      const page = this.pages[pageNum - 1];
-      wrapper.appendChild(this.createPageElement(page, pageNum));
+    item.pages.forEach(page => {
+      wrapper.appendChild(this.createPageElement(page, page.index + 1));
     });
 
     return wrapper;
@@ -81,19 +81,19 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
 
   protected updateSpacers(beforeSize: number, afterSize: number): void {
     // Use topSpacer as leftSpacer and bottomSpacer as rightSpacer
-    this.topSpacer.style.width = `${beforeSize}px`;
+    this.topSpacer.style.width = `round(down, var(--scale-factor) * ${beforeSize}px, 1px)`;
     this.topSpacer.style.height = '100%';
     this.topSpacer.style.flexShrink = '0';
     
-    this.bottomSpacer.style.width = `${Math.max(0, afterSize)}px`;
+    this.bottomSpacer.style.width = `round(down, var(--scale-factor) * ${Math.max(0, afterSize)}px, 1px)`;
     this.bottomSpacer.style.height = '100%';
     this.bottomSpacer.style.flexShrink = '0';
   }
 
   protected getVisibleItems(viewport: ViewportMetrics): VirtualItem[] {
     return this.virtualItems.filter(item => {
-      const itemRight = item.offset + item.size;
-      const itemLeft = item.offset;
+      const itemRight = item.scaledOffset + item.scaledSize;
+      const itemLeft = item.scaledOffset;
       return itemRight >= viewport.scrollLeft && 
              itemLeft <= viewport.scrollLeft + viewport.clientWidth;
     });

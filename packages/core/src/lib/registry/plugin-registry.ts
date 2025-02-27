@@ -3,7 +3,8 @@ import {
   IPlugin,
   PluginBatchRegistration,
   PluginManifest,
-  PluginStatus
+  PluginStatus,
+  PluginPackage
 } from '../plugin-types/plugin';
 import {
   PluginRegistrationError,
@@ -28,7 +29,13 @@ export class PluginRegistry {
     packageCreator: (registry: PluginRegistry, engine: PdfEngine) => IPlugin;
     config?: unknown;
   }> = [];
+  private processingRegistrations: Array<{
+    manifest: PluginManifest<unknown>;
+    packageCreator: (registry: PluginRegistry, engine: PdfEngine) => IPlugin;
+    config?: unknown;
+  }> = [];
   private initialized = false;
+  private isInitializing = false;
 
   constructor(engine: PdfEngine) {
     this.resolver = new DependencyResolver();
@@ -40,16 +47,15 @@ export class PluginRegistry {
    * Register a plugin without initializing it
    */
   registerPlugin<T extends IPlugin<TConfig>, TConfig>(
-    pluginPackage: { manifest: PluginManifest<TConfig>; create: (registry: PluginRegistry, engine: PdfEngine) => T },
+    pluginPackage: PluginPackage<T, TConfig>,
     config?: Partial<TConfig>
   ): void {
-    if (this.initialized) {
+    if (this.initialized && !this.isInitializing) {
       throw new PluginRegistrationError('Cannot register plugins after initialization');
     }
 
     this.validateManifest(pluginPackage.manifest);
 
-    // Store the creator function instead of creating the plugin immediately
     this.pendingRegistrations.push({
       manifest: pluginPackage.manifest,
       packageCreator: pluginPackage.create,
@@ -65,44 +71,50 @@ export class PluginRegistry {
       throw new PluginRegistrationError('Registry is already initialized');
     }
 
-    // Build dependency graph
-    for (const reg of this.pendingRegistrations) {
-      const dependsOn = new Set<string>();
-
-      // Find plugins that provide required capabilities
-      for (const capability of reg.manifest.consumes) {
-        const provider = this.pendingRegistrations.find(r =>
-          r.manifest.provides.includes(capability)
-        );
-        if (provider) {
-          dependsOn.add(provider.manifest.id);
-        }
-      }
-
-      this.resolver.addNode(reg.manifest.id, Array.from(dependsOn));
-    }
+    this.isInitializing = true;
 
     try {
-      // Get load order
-      const loadOrder = this.resolver.resolveLoadOrder();
+      // Process registrations until no new ones are added
+      while (this.pendingRegistrations.length > 0) {
+        // Move current pending registrations to processing
+        this.processingRegistrations = [...this.pendingRegistrations];
+        this.pendingRegistrations = [];
 
-      // Initialize plugins in correct order
-      for (const pluginId of loadOrder) {
-        const registration = this.pendingRegistrations.find(
-          r => r.manifest.id === pluginId
-        );
-
-        if (registration) {
-          await this.initializePlugin(
-            registration.manifest,
-            registration.packageCreator,
-            registration.config as Partial<unknown>
-          );
+        // Build dependency graph for current batch
+        for (const reg of this.processingRegistrations) {
+          const dependsOn = new Set<string>();
+          for (const capability of reg.manifest.consumes) {
+            const provider = this.processingRegistrations.find(r =>
+              r.manifest.provides.includes(capability)
+            );
+            if (provider) {
+              dependsOn.add(provider.manifest.id);
+            }
+          }
+          this.resolver.addNode(reg.manifest.id, Array.from(dependsOn));
         }
+
+        // Get load order and initialize current batch
+        const loadOrder = this.resolver.resolveLoadOrder();
+        for (const pluginId of loadOrder) {
+          const registration = this.processingRegistrations.find(
+            r => r.manifest.id === pluginId
+          );
+          if (registration) {
+            await this.initializePlugin(
+              registration.manifest,
+              registration.packageCreator,
+              registration.config as Partial<unknown>
+            );
+          }
+        }
+
+        // Clear processed registrations
+        this.processingRegistrations = [];
+        this.resolver = new DependencyResolver();
       }
 
       this.initialized = true;
-      this.pendingRegistrations = []; // Clear pending registrations
     } catch (error) {
       if (error instanceof Error) {
         throw new CircularDependencyError(
@@ -110,6 +122,8 @@ export class PluginRegistry {
         );
       }
       throw error;
+    } finally {
+      this.isInitializing = false;
     }
   }
 

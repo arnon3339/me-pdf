@@ -23,8 +23,7 @@
   "dependencies": {
     "@embedpdf/models": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
-    "@embedpdf/plugin-loader": "workspace:*",
-    "@embedpdf/plugin-spread": "workspace:*"
+    "@embedpdf/plugin-page-manager": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

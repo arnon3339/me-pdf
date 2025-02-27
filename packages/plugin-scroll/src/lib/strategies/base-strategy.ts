@@ -1,7 +1,14 @@
 import { PdfPageObject } from "@embedpdf/models";
-import { SpreadMetrics } from "@embedpdf/plugin-spread";
-import { ViewportCapability, ViewportMetrics } from "@embedpdf/plugin-viewport";
-import { ScrollMetrics, ScrollStrategyInterface, VirtualItem } from "../types";
+import { ViewportMetrics } from "@embedpdf/plugin-viewport";
+import { PageVisibilityMetrics, ScrollMetrics, ScrollStrategyInterface } from "../types";
+import { VirtualItem } from "../types/virtual-item";
+
+export interface ScrollStrategyConfig {
+  pageGap?: number;
+  bufferSize?: number;
+  createPageElement?: (page: PdfPageObject, pageNum: number) => HTMLElement;
+  getScaleFactor?: () => number;
+}
 
 export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   protected container!: HTMLElement;
@@ -10,22 +17,37 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   protected topSpacer!: HTMLElement;
   protected bottomSpacer!: HTMLElement;
   protected contentContainer!: HTMLElement;
-  protected pages: PdfPageObject[] = [];
-  protected viewport: ViewportCapability;
   
   protected metrics: ScrollMetrics = {
     currentPage: 1,
     visiblePages: [],
+    pageVisibilityMetrics: [],
     scrollOffset: { x: 0, y: 0 },
     totalHeight: 0,
     totalWidth: 0
   };
 
-  protected readonly PAGE_GAP = 20;
-  protected readonly BUFFER_SIZE = 2;
+  protected pageGap: number;
+  protected bufferSize: number;
+  protected scaleFactor: number = 1;
 
-  constructor(viewport: ViewportCapability) {
-    this.viewport = viewport;
+  protected createPageElementFn: (page: PdfPageObject, pageNum: number) => HTMLElement;
+  protected getScaleFactorFn?: () => number;
+
+  constructor(config?: ScrollStrategyConfig) {
+    // Use provided values or defaults
+    this.pageGap = config?.pageGap ?? 20;
+    this.bufferSize = config?.bufferSize ?? 2;
+    this.getScaleFactorFn = config?.getScaleFactor;
+
+    // Store the page element creation function
+    if (config?.createPageElement) {
+      this.createPageElementFn = config.createPageElement;
+    } else {
+      this.createPageElementFn = () => {
+        throw new Error('createPageElement function not provided to ScrollStrategy');
+      };
+    }
   }
 
   initialize(container: HTMLElement): void {
@@ -57,16 +79,61 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     this.addVisibleItems(range);
   }
 
-  private getTotalSize(): number {
-    return this.virtualItems.reduce((acc, item) => acc + item.size, 0) + 
-           (this.PAGE_GAP * (this.virtualItems.length - 1));
+  protected getTotalSize(): number {
+    if (this.virtualItems.length === 0) return 0;
+    
+    const lastItem = this.virtualItems[this.virtualItems.length - 1];
+    return lastItem.offset + lastItem.size;
   }
 
   private getVisibleSize(range: { start: number; end: number }): number {
-    return this.virtualItems
-      .slice(range.start, range.end + 1)
-      .reduce((acc, item) => acc + item.size, 0) +
-      (this.PAGE_GAP * (range.end - range.start));
+    if (range.start >= this.virtualItems.length || range.end < range.start) {
+      return 0;
+    }
+    
+    const firstItem = this.virtualItems[range.start];
+    const lastItem = this.virtualItems[range.end];
+    
+    // The visible size is the distance from the start of the first visible item
+    // to the end of the last visible item
+    return (lastItem.offset + lastItem.size) - firstItem.offset;
+  }
+
+  protected calculatePageVisibility(
+    pageElement: HTMLElement, 
+    viewport: ViewportMetrics
+  ): PageVisibilityMetrics | null {
+    const pageRect = pageElement.getBoundingClientRect();
+    const containerRect = this.container.getBoundingClientRect();
+    
+    // Calculate intersection
+    const intersection = {
+      left: Math.max(pageRect.left, containerRect.left),
+      top: Math.max(pageRect.top, containerRect.top),
+      right: Math.min(pageRect.right, containerRect.right),
+      bottom: Math.min(pageRect.bottom, containerRect.bottom)
+    };
+  
+    // If there's no intersection, return null
+    if (intersection.left >= intersection.right || intersection.top >= intersection.bottom) {
+      return null;
+    }
+  
+    const visibleWidth = intersection.right - intersection.left;
+    const visibleHeight = intersection.bottom - intersection.top;
+    const totalArea = pageRect.width * pageRect.height;
+    const visibleArea = visibleWidth * visibleHeight;
+    
+    return {
+      pageNumber: parseInt(pageElement.dataset.pageNumber || '0'),
+      viewportX: intersection.left - containerRect.left,
+      viewportY: intersection.top - containerRect.top,
+      pageX: intersection.left - pageRect.left,
+      pageY: intersection.top - pageRect.top,
+      visibleWidth,
+      visibleHeight,
+      visiblePercentage: (visibleArea / totalArea) * 100
+    };
   }
 
   protected getVisibleRange(viewport: ViewportMetrics): { start: number; end: number } {
@@ -78,7 +145,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     let startIndex = 0;
     while (
       startIndex < this.virtualItems.length && 
-      (this.virtualItems[startIndex].offset + this.virtualItems[startIndex].size + this.PAGE_GAP) <= viewportStart
+      (this.virtualItems[startIndex].scaledOffset + this.virtualItems[startIndex].scaledSize) <= viewportStart
     ) {
       startIndex++;
     }
@@ -86,14 +153,14 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     let endIndex = startIndex;
     while (
       endIndex < this.virtualItems.length && 
-      this.virtualItems[endIndex].offset <= viewportEnd
+      this.virtualItems[endIndex].scaledOffset <= viewportEnd
     ) {
       endIndex++;
     }
 
     return {
-      start: Math.max(0, startIndex - this.BUFFER_SIZE),
-      end: Math.min(this.virtualItems.length - 1, endIndex + this.BUFFER_SIZE - 1)
+      start: Math.max(0, startIndex - this.bufferSize),
+      end: Math.min(this.virtualItems.length - 1, endIndex + this.bufferSize - 1)
     };
   }
 
@@ -156,21 +223,14 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     };
   }
 
-  updateLayout(spreadMetrics: SpreadMetrics): void {
-    if (!this.pages || this.pages.length === 0) return;
-
-    this.calculateDimensions(spreadMetrics);
+  updateLayout(viewport: ViewportMetrics, pdfPageObject: PdfPageObject[][]): void {
+    this.calculateDimensions(pdfPageObject);
     this.removeAllRenderedItems();
-    this.updateVirtualScroller(this.viewport.getMetrics());
+    this.handleScroll(viewport);
   }
 
-  calculateDimensions(spreadMetrics: SpreadMetrics): void {
-    this.virtualItems = this.createVirtualItems(spreadMetrics);
-    this.updateMetrics();
-  }
-
-  setPages(pages: PdfPageObject[]): void {
-    this.pages = pages;
+  calculateDimensions(pdfPageObject: PdfPageObject[][]): void {
+    this.virtualItems = this.createVirtualItems(pdfPageObject);
   }
 
   scrollToPage(pageNumber: number): void {
@@ -179,7 +239,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     );
     
     if (item) {
-      this.setScrollPosition(this.container, item.offset);
+      this.setScrollPosition(this.container, item.scaledOffset);
     }
   }
 
@@ -193,23 +253,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   }
 
   protected createPageElement(page: PdfPageObject, pageNum: number): HTMLElement {
-    const pageElement = document.createElement('div');
-    
-    pageElement.dataset.pageNumber = pageNum.toString();
-    pageElement.style.width = `${page.size.width}px`;
-    pageElement.style.height = `${page.size.height}px`;
-    pageElement.style.backgroundColor = 'red';
-    pageElement.style.display = 'flex';
-    pageElement.style.alignItems = 'center';
-    pageElement.style.justifyContent = 'center';
-    
-    const pageNumberElement = document.createElement('span');
-    pageNumberElement.textContent = `Page ${pageNum}`;
-    pageNumberElement.style.fontSize = '30px';
-    pageNumberElement.style.color = 'white';
-    pageElement.appendChild(pageNumberElement);
-    
-    return pageElement;
+    return this.createPageElementFn(page, pageNum);
   }
 
   // Abstract methods that define orientation-specific behavior
@@ -219,7 +263,6 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   protected abstract getScrollOffset(viewport: ViewportMetrics): number;
   protected abstract getClientSize(viewport: ViewportMetrics): number;
   protected abstract setScrollPosition(element: HTMLElement, position: number): void;
-  protected abstract createVirtualItems(spreadMetrics: SpreadMetrics): VirtualItem[];
-  protected abstract updateMetrics(): void;
+  protected abstract createVirtualItems(pdfPageObject: PdfPageObject[][]): VirtualItem[];
   protected abstract renderItem(item: VirtualItem): HTMLElement;
 } 

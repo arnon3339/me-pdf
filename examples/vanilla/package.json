@@ -15,9 +15,12 @@
     "@embedpdf/plugin-renderer": "workspace:*",
     "@embedpdf/plugin-layer": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
+    "@embedpdf/plugin-page-manager": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
-    "@embedpdf/engines": "workspace:*"
+    "@embedpdf/engines": "workspace:*",
+    "@embedpdf/layer-text": "workspace:*",
+    "@embedpdf/layer-render": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -1,4 +1,5 @@
 import { BasePluginConfig } from "@embedpdf/core";
+import { PdfPageObject } from "@embedpdf/models";
 
 export interface SpreadPluginConfig extends BasePluginConfig {
   defaultSpreadMode?: SpreadMode;
@@ -10,15 +11,9 @@ export enum SpreadMode {
   Even = 'even'
 }
 
-export interface SpreadMetrics {
-  // How pages are grouped
-  getSpreadForPage(pageIndex: number): number[];
-  getAllSpreads(): number[][];
-}
-
 export interface SpreadCapability {
-  onSpreadChange(handler: (metrics: SpreadMetrics) => void): void;
-  getCurrentMetrics(): SpreadMetrics;
+  onSpreadChange(handler: (spreadMode: SpreadMode) => void): void;
   setSpreadMode(mode: SpreadMode): void;
   getSpreadMode(): SpreadMode;
+  getSpreadPagesObjects(pages: PdfPageObject[]): PdfPageObject[][];
 }

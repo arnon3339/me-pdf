@@ -34,4 +34,5 @@ export interface ViewportCapability {
     handler: (metrics: ViewportMetrics) => void,
     options?: ScrollControlOptions
   ) => (metrics: ViewportMetrics) => void;
+  onContainerChange: (handler: (container: HTMLElement) => void) => void;
 }
