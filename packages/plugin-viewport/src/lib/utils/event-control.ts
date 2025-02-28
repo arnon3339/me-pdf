@@ -41,6 +41,21 @@ export class EventControl {
     if (now - this.lastRun >= this.options.wait) {
       this.handler(viewport);
       this.lastRun = now;
+      
+      if (this.timeoutId) {
+        window.clearTimeout(this.timeoutId);
+        this.timeoutId = undefined;
+      }
+    } else {
+      if (this.timeoutId) {
+        window.clearTimeout(this.timeoutId);
+      }
+      
+      this.timeoutId = window.setTimeout(() => {
+        this.handler(viewport);
+        this.lastRun = Date.now();
+        this.timeoutId = undefined;
+      }, this.options.wait - (now - this.lastRun));
     }
   }
 

@@ -12,8 +12,8 @@ export interface ScrollStrategyConfig {
 
 export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   protected container!: HTMLElement;
-  protected virtualItems: VirtualItem[] = [];
   protected renderedItems: Map<number, HTMLElement> = new Map();
+  protected virtualItems: VirtualItem[] = [];
   protected topSpacer!: HTMLElement;
   protected bottomSpacer!: HTMLElement;
   protected contentContainer!: HTMLElement;
@@ -101,7 +101,6 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
 
   protected calculatePageVisibility(
     pageElement: HTMLElement, 
-    viewport: ViewportMetrics
   ): PageVisibilityMetrics | null {
     const pageRect = pageElement.getBoundingClientRect();
     const containerRect = this.container.getBoundingClientRect();
@@ -169,6 +168,10 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
       if (index < range.start || index > range.end) {
         element.remove();
         this.renderedItems.delete(index);
+        // Also clear the element reference in the virtual item
+        if (this.virtualItems[index]) {
+          this.virtualItems[index].clearElements();
+        }
       }
     }
   } 
@@ -177,6 +180,10 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     for (const [index, element] of this.renderedItems) {
       element.remove();
       this.renderedItems.delete(index);
+      // Also clear the element reference in the virtual item
+      if (this.virtualItems[index]) {
+        this.virtualItems[index].clearElements();
+      }
     }
   }
 
@@ -211,22 +218,81 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     }
   }
 
-  handleScroll(viewport: ViewportMetrics): void {
+  handleScroll(viewport: ViewportMetrics): ScrollMetrics {
     this.updateVirtualScroller(viewport);
     const visibleItems = this.getVisibleItems(viewport);
     
+    this.metrics.pageVisibilityMetrics = visibleItems
+      .flatMap(item => item.pageElements.map(pageElement => 
+        this.calculatePageVisibility(pageElement)
+      ).filter((metrics): metrics is PageVisibilityMetrics => 
+        metrics !== null
+      ));
     this.metrics.visiblePages = visibleItems.flatMap(item => item.pageNumbers);
-    this.metrics.currentPage = this.metrics.visiblePages[0] || 1;
+    
+    // Set current page using the dedicated function
+    this.metrics.currentPage = this.determineCurrentPage(this.metrics.pageVisibilityMetrics, viewport);
+    
     this.metrics.scrollOffset = { 
       x: viewport.scrollLeft, 
       y: viewport.scrollTop 
     };
+
+    return this.metrics;
   }
 
-  updateLayout(viewport: ViewportMetrics, pdfPageObject: PdfPageObject[][]): void {
+  /**
+   * Determine the most appropriate current page based on visibility and position
+   * @param visibilityMetrics - Array of page visibility metrics
+   * @param viewport - Current viewport metrics
+   * @returns The page number that should be considered current
+   */
+  protected determineCurrentPage(visibilityMetrics: PageVisibilityMetrics[], viewport: ViewportMetrics): number {
+    if (visibilityMetrics.length === 0) {
+      return 1; // Default to page 1 if no pages are visible
+    }
+    
+    // Find the highest visibility percentage
+    const maxVisibility = Math.max(
+      ...visibilityMetrics.map(m => m.visiblePercentage)
+    );
+    
+    // Filter to get all pages with that max visibility
+    const mostVisiblePages = visibilityMetrics.filter(
+      m => m.visiblePercentage === maxVisibility
+    );
+    
+    if (mostVisiblePages.length === 1) {
+      // If there's only one page with max visibility, use it
+      return mostVisiblePages[0].pageNumber;
+    } 
+    
+    // If multiple pages have the same visibility, find the most centered one
+    const viewportCenterX = viewport.clientWidth / 2;
+    const viewportCenterY = viewport.clientHeight / 2;
+    
+    // Calculate distances to center for each page
+    const pagesWithDistances = mostVisiblePages.map(page => {
+      const pageCenterX = page.viewportX + (page.visibleWidth / 2);
+      const pageCenterY = page.viewportY + (page.visibleHeight / 2);
+      
+      const distance = Math.sqrt(
+        Math.pow(pageCenterX - viewportCenterX, 2) + 
+        Math.pow(pageCenterY - viewportCenterY, 2)
+      );
+      
+      return { page, distance };
+    });
+    
+    // Sort by distance (closest first) and take the first one
+    pagesWithDistances.sort((a, b) => a.distance - b.distance);
+    return pagesWithDistances[0].page.pageNumber;
+  }
+
+  updateLayout(viewport: ViewportMetrics, pdfPageObject: PdfPageObject[][]): ScrollMetrics {
     this.calculateDimensions(pdfPageObject);
     this.removeAllRenderedItems();
-    this.handleScroll(viewport);
+    return this.handleScroll(viewport);
   }
 
   calculateDimensions(pdfPageObject: PdfPageObject[][]): void {
@@ -240,6 +306,36 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     
     if (item) {
       this.setScrollPosition(this.container, item.scaledOffset);
+    }
+  }
+
+  scrollToNextPage(): void {
+    const currentPage = this.metrics.currentPage;
+    
+    // Find the current virtual item index
+    const currentItemIndex = this.virtualItems.findIndex(item => 
+      item.pageNumbers.includes(currentPage)
+    );
+    
+    // Move to the next virtual item if available
+    if (currentItemIndex >= 0 && currentItemIndex < this.virtualItems.length - 1) {
+      const nextItem = this.virtualItems[currentItemIndex + 1];
+      this.setScrollPosition(this.container, nextItem.scaledOffset);
+    }
+  }
+
+  scrollToPreviousPage(): void {
+    const currentPage = this.metrics.currentPage;
+    
+    // Find the current virtual item index
+    const currentItemIndex = this.virtualItems.findIndex(item => 
+      item.pageNumbers.includes(currentPage)
+    );
+    
+    // Move to the previous virtual item if available
+    if (currentItemIndex > 0) {
+      const prevItem = this.virtualItems[currentItemIndex - 1];
+      this.setScrollPosition(this.container, prevItem.scaledOffset);
     }
   }
 

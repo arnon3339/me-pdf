@@ -73,8 +73,12 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     wrapper.style.height = `round(down, var(--scale-factor) * ${maxHeight}px, 1px)`;
 
     item.pages.forEach(page => {
-      wrapper.appendChild(this.createPageElement(page, page.index + 1));
+      const pageElement = this.createPageElement(page, page.index + 1);
+      wrapper.appendChild(pageElement);
+      item.addPageElement(pageElement);
     });
+
+    item.setElement(wrapper);
 
     return wrapper;
   }

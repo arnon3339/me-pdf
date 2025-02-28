@@ -1,7 +1,7 @@
 import { IPlugin, PluginRegistry } from "@embedpdf/core";
 import { PdfPageObject } from "@embedpdf/models";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
-import { ScrollCapability, ScrollMetrics, ScrollPluginConfig, ScrollStrategy } from "./types";
+import { ScrollCapability, ScrollMetrics, ScrollPluginConfig } from "./types";
 import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
 import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
 import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
@@ -11,7 +11,9 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
   private pageManager: PageManagerCapability;
   private strategy: VerticalScrollStrategy | HorizontalScrollStrategy;
   private scrollHandlers: ((metrics: ScrollMetrics) => void)[] = [];
+  private pageChangeHandlers: ((pageNumber: number) => void)[] = [];
   private currentZoom: number = 1;
+  private currentPage: number = 1;
 
   constructor(
     public readonly id: string,
@@ -52,18 +54,45 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
   }
 
   private handleViewportChange(metrics: ViewportMetrics): void {
-    this.strategy.handleScroll(metrics);
+    const scrollMetrics = this.strategy.handleScroll(metrics);
+    this.handleScrollMetricsChange(scrollMetrics);
   }
 
   private handlePageSpreadChange(pdfPageObject: PdfPageObject[][]): void {
     const metrics = this.viewport.getMetrics();
-    this.strategy.updateLayout(metrics, pdfPageObject);
+    const scrollMetrics = this.strategy.updateLayout(metrics, pdfPageObject);
+    this.handleScrollMetricsChange(scrollMetrics);
+  }
+
+  private getMetrics(viewport?: ViewportMetrics): ScrollMetrics {
+    if (!viewport) {
+      viewport = this.viewport.getMetrics();
+    }
+
+    return this.strategy.handleScroll(viewport);
+  }
+
+  private handleScrollMetricsChange(scrollMetrics: ScrollMetrics): void {
+    this.scrollHandlers.forEach(handler => handler(scrollMetrics));
+
+    this.handlePageChange(scrollMetrics);
+  }
+
+  private handlePageChange(scrollMetrics: ScrollMetrics): void {
+    if (this.currentPage !== scrollMetrics.currentPage) {
+      this.pageChangeHandlers.forEach(handler => handler(scrollMetrics.currentPage));
+      this.currentPage = scrollMetrics.currentPage;
+    }
   }
 
   provides(): ScrollCapability {
     return {
       onScroll: (handler) => this.scrollHandlers.push(handler),
-      scrollToPage: (pageNumber) => this.strategy.scrollToPage(pageNumber)
+      onPageChange: (handler) => this.pageChangeHandlers.push(handler),
+      scrollToPage: (pageNumber) => this.strategy.scrollToPage(pageNumber),
+      scrollToNextPage: () => this.strategy.scrollToNextPage(),
+      scrollToPreviousPage: () => this.strategy.scrollToPreviousPage(),
+      getMetrics: (viewport?: ViewportMetrics) => this.getMetrics(viewport)
     };
   }
 

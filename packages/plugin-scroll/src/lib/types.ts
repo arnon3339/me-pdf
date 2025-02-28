@@ -48,6 +48,9 @@ export interface ScrollPluginConfig extends BasePluginConfig {
 
 export interface ScrollCapability {
   onScroll(handler: (metrics: ScrollMetrics) => void): void;
+  onPageChange(handler: (pageNumber: number) => void): void;
   scrollToPage(pageNumber: number): void;
-  //getCurrentMetrics(): ScrollMetrics;
+  scrollToNextPage(): void;
+  scrollToPreviousPage(): void;
+  getMetrics(viewport: ViewportMetrics): ScrollMetrics;
 }

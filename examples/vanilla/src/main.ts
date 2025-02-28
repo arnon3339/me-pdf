@@ -6,7 +6,7 @@ import { ZoomCapability, ZoomLevel, ZoomPlugin, ZoomPluginPackage } from '@embed
 import { PluginRegistry } from '@embedpdf/core';
 import { LoaderPlugin, LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
-import { ScrollPluginPackage } from '@embedpdf/plugin-scroll';
+import { ScrollPluginPackage, ScrollCapability, ScrollPlugin } from '@embedpdf/plugin-scroll';
 import { SpreadCapability, SpreadMode, SpreadPlugin, SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { TextLayerPackage } from '@embedpdf/layer-text';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
@@ -54,6 +54,7 @@ async function initializePDFViewer() {
   const spread = registry.getPlugin<SpreadPlugin>('spread').provides();
   const layer = registry.getPlugin<LayerPlugin>('layer').provides();
   const zoom = registry.getPlugin<ZoomPlugin>('zoom').provides();
+  const scroll = registry.getPlugin<ScrollPlugin>('scroll').provides();
 
   const pdfDocument = await loader.loadDocument({
     id: '1',
@@ -65,9 +66,14 @@ async function initializePDFViewer() {
     rotation: 0
   });
   
-  console.log(pdfDocument);
+  const totalPages = pdfDocument.pageCount;
+  updatePageInfo(1, totalPages);
 
-  setupUIControls(spread, zoom);
+  scroll.onPageChange((pageNumber) => {
+    updatePageInfo(pageNumber, totalPages);
+  });
+
+  setupUIControls(spread, zoom, scroll);
 
   /*
   const wasmBinary = await loadWasmBinary();
@@ -165,7 +171,10 @@ function updatePageInfo(currentPage: number, totalPages: number) {
 }
 */
 
-function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability) {
+function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll: ScrollCapability) {
+  const prevButton = document.getElementById('prevPage') as HTMLButtonElement;
+  const nextButton = document.getElementById('nextPage') as HTMLButtonElement;
+  const zoomSelect = document.getElementById('zoomLevel') as HTMLSelectElement;
   const spreadSelect = document.getElementById('spreadMode') as HTMLSelectElement;
 
   spreadSelect.addEventListener('change', async () => {
@@ -173,7 +182,13 @@ function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability) {
     spread.setSpreadMode(newSpreadMode);
   });
 
-  const zoomSelect = document.getElementById('zoomLevel') as HTMLSelectElement;
+  prevButton.addEventListener('click', async () => {
+    await scroll.scrollToPreviousPage();
+  });
+
+  nextButton.addEventListener('click', async () => {
+    await scroll.scrollToNextPage();
+  });
 
   // Set initial zoom level
   zoomSelect.value = zoom.getState().zoomLevel.toString();
@@ -182,6 +197,13 @@ function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability) {
     const newZoom = isNaN(parseFloat(zoomSelect.value)) ? zoomSelect.value : parseFloat(zoomSelect.value);
     await zoom.updateZoomLevel(newZoom as ZoomLevel);
   });
+}
+
+function updatePageInfo(currentPage: number, totalPages: number) {
+  const pageInfo = document.getElementById('pageInfo');
+  if (pageInfo) {
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+  }
 }
 
 initializePDFViewer();

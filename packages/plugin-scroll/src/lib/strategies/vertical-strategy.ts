@@ -86,8 +86,12 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
     wrapper.style.gap = `round(down, var(--scale-factor) * ${this.pageGap}px, 1px)`;
 
     item.pages.forEach(page => {
-      wrapper.appendChild(this.createPageElement(page, page.index + 1));
+      const pageElement = this.createPageElement(page, page.index + 1);
+      wrapper.appendChild(pageElement);
+      item.addPageElement(pageElement);    
     });
+
+    item.setElement(wrapper);
 
     return wrapper;
   }

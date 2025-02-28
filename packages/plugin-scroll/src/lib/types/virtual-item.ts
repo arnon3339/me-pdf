@@ -1,6 +1,9 @@
 import { PdfPageObject } from "@embedpdf/models";
 
 export class VirtualItem {
+  public element: HTMLElement | null = null;
+  public pageElements: HTMLElement[] = [];
+
   constructor(
     public readonly pageNumbers: number[],
     public readonly pages: PdfPageObject[],
@@ -16,5 +19,25 @@ export class VirtualItem {
 
   get scaledOffset(): number {
     return this.offset * this.getScaleFactor();
+  }
+
+  setElement(element: HTMLElement): void {
+    this.element = element;
+  }
+
+  addPageElement(pageElement: HTMLElement): void {
+    this.pageElements.push(pageElement);
+  }
+
+  clearElements(): void {
+    if (this.element && this.element.parentNode) {
+      this.element.remove();
+    }
+    this.element = null;
+    this.pageElements = [];
+  }
+
+  isRendered(): boolean {
+    return this.element !== null;
   }
 } 

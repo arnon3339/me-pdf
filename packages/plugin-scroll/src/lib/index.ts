@@ -9,3 +9,4 @@ export const ScrollPluginPackage: PluginPackage<ScrollPlugin, ScrollPluginConfig
 };
 
 export * from "./scroll-plugin";
+export * from "./types"; 
