@@ -71,10 +71,10 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
     return viewport.clientHeight;
   }
 
-  protected setScrollPosition(element: HTMLElement, position: number): void {
+  protected setScrollPosition(element: HTMLElement, position: number, behavior: ScrollBehavior = 'smooth'): void {
     element.scrollTo({
       top: position,
-      behavior: 'smooth'
+      behavior
     });
   }
 

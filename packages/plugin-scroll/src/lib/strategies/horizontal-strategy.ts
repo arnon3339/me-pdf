@@ -111,10 +111,10 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     return viewport.clientWidth;
   }
 
-  protected setScrollPosition(element: HTMLElement, position: number): void {
+  protected setScrollPosition(element: HTMLElement, position: number, behavior: ScrollBehavior = 'smooth'): void {
     element.scrollTo({
       left: position,
-      behavior: 'smooth'
+      behavior
     });
   }
 }

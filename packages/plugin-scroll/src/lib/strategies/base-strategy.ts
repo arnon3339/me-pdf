@@ -290,22 +290,30 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   }
 
   updateLayout(viewport: ViewportMetrics, pdfPageObject: PdfPageObject[][]): ScrollMetrics {
+    const currentPage = this.metrics.currentPage;
     this.calculateDimensions(pdfPageObject);
     this.removeAllRenderedItems();
-    return this.handleScroll(viewport);
+    
+    const newScrollMetrics = this.handleScroll(viewport);
+
+    if(newScrollMetrics.currentPage !== currentPage) {
+      this.scrollToPage(currentPage, 'instant');
+    }
+
+    return newScrollMetrics;
   }
 
   calculateDimensions(pdfPageObject: PdfPageObject[][]): void {
     this.virtualItems = this.createVirtualItems(pdfPageObject);
   }
 
-  scrollToPage(pageNumber: number): void {
+  scrollToPage(pageNumber: number, behavior?: ScrollBehavior): void {
     const item = this.virtualItems.find(item => 
       item.pageNumbers.includes(pageNumber)
     );
     
     if (item) {
-      this.setScrollPosition(this.container, item.scaledOffset);
+      this.setScrollPosition(this.container, item.scaledOffset, behavior);
     }
   }
 
@@ -343,6 +351,10 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     return this.virtualItems;
   }
 
+  getMetrics(): ScrollMetrics {
+    return this.metrics;
+  }
+
   destroy(): void {
     this.virtualItems = [];
     this.container.innerHTML = '';
@@ -358,7 +370,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   protected abstract getVisibleItems(viewport: ViewportMetrics): VirtualItem[];
   protected abstract getScrollOffset(viewport: ViewportMetrics): number;
   protected abstract getClientSize(viewport: ViewportMetrics): number;
-  protected abstract setScrollPosition(element: HTMLElement, position: number): void;
+  protected abstract setScrollPosition(element: HTMLElement, position: number, behavior?: ScrollBehavior): void;
   protected abstract createVirtualItems(pdfPageObject: PdfPageObject[][]): VirtualItem[];
   protected abstract renderItem(item: VirtualItem): HTMLElement;
 } 
