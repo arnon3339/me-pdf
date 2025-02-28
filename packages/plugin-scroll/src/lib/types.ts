@@ -19,9 +19,8 @@ export interface ScrollMetrics {
   currentPage: number;
   visiblePages: number[];
   pageVisibilityMetrics: PageVisibilityMetrics[];
+  renderedPageIndexes: number[];
   scrollOffset: { x: number; y: number };
-  totalHeight: number;
-  totalWidth: number;
 }
 
 export interface VirtualItem {

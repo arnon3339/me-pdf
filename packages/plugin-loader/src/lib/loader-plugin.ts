@@ -43,6 +43,7 @@ export class LoaderPlugin implements IPlugin<LoaderPluginConfig> {
       this.notifyHandlers({ type: 'start', documentId: options.id });
       
       const document = await this.documentLoader.loadDocument({...options, engine: this.engine});
+
       this.loadedDocument = document;
       
       this.notifyHandlers({ type: 'complete', documentId: options.id });

@@ -22,9 +22,8 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     currentPage: 1,
     visiblePages: [],
     pageVisibilityMetrics: [],
+    renderedPageIndexes: [],
     scrollOffset: { x: 0, y: 0 },
-    totalHeight: 0,
-    totalWidth: 0
   };
 
   protected pageGap: number;
@@ -229,7 +228,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
         metrics !== null
       ));
     this.metrics.visiblePages = visibleItems.flatMap(item => item.pageNumbers);
-    
+    this.metrics.renderedPageIndexes = Array.from(this.renderedItems.keys()).sort((a, b) => a - b);
     // Set current page using the dedicated function
     this.metrics.currentPage = this.determineCurrentPage(this.metrics.pageVisibilityMetrics, viewport);
     

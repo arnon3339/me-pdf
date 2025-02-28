@@ -1,4 +1,4 @@
-import { PdfiumEngine } from '@embedpdf/engines';
+import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import pdfiumWasm from '@embedpdf/pdfium/pdfium.wasm?url';
 import { init } from '@embedpdf/pdfium';
 import { LayerPlugin, LayerPluginPackage } from '@embedpdf/plugin-layer';
@@ -11,6 +11,12 @@ import { SpreadCapability, SpreadMode, SpreadPlugin, SpreadPluginPackage } from 
 import { TextLayerPackage } from '@embedpdf/layer-text';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
 import { PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
+import {
+  AllLogger,
+  ConsoleLogger,
+  Logger,
+  PerfLogger
+} from '@embedpdf/models';
 
 async function loadWasmBinary() {
   const response = await fetch(pdfiumWasm);
@@ -21,9 +27,14 @@ async function loadWasmBinary() {
 async function initializePDFViewer() {
   // Initialize engine
 
-  const wasmBinary = await loadWasmBinary();
-  const wasmModule = await init({ wasmBinary });
-  const engine = new PdfiumEngine(wasmModule); 
+  const consoleLogger = new ConsoleLogger();
+  const perfLogger = new PerfLogger();
+  const logger = new AllLogger([consoleLogger, perfLogger]);
+  
+  const worker = new Worker(new URL('./webworker.ts', import.meta.url), {
+    type: 'module',
+  });
+  const engine = new WebWorkerEngine(worker, logger);
 
   const registry = new PluginRegistry(engine);
 
@@ -56,16 +67,14 @@ async function initializePDFViewer() {
   const zoom = registry.getPlugin<ZoomPlugin>('zoom').provides();
   const scroll = registry.getPlugin<ScrollPlugin>('scroll').provides();
 
+  const pdf = await fetch('/file/compressed.tracemonkey-pldi-09.pdf');
+  const source = await pdf.arrayBuffer();
+
   const pdfDocument = await loader.loadDocument({
     id: '1',
-    source: '/file/compressed.tracemonkey-pldi-09.pdf'
+    source
   });
 
-  await layer.render(pdfDocument, 0, document.getElementById('renderContainer') as HTMLElement, {
-    scale: 1,
-    rotation: 0
-  });
-  
   const totalPages = pdfDocument.pageCount;
   updatePageInfo(1, totalPages);
 

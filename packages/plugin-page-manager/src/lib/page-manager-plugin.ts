@@ -14,6 +14,7 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
   private pagesChangeHandlers: ((pages: PdfPageObject[][]) => void)[] = [];
   private pageManagerInitializedHandlers: ((pages: PdfPageObject[][]) => void)[] = [];
 
+  private pdfDocument: PdfDocumentObject | null = null;
   private pages: PdfPageObject[] = [];
   private spreadPages: PdfPageObject[][] = [];
   private pageGap: number = 20;
@@ -54,24 +55,21 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
     if (this.pageElements.has(pageNum)) {
       return this.pageElements.get(pageNum)!;
     }
-
-    console.log('createPageElement', page, pageNum);
     
     const pageElement = document.createElement('div');
     
     pageElement.dataset.pageNumber = pageNum.toString();
     pageElement.style.width = `round(down, var(--scale-factor) * ${page.size.width}px, 1px)`;
     pageElement.style.height = `round(down, var(--scale-factor) * ${page.size.height}px, 1px)`;
-    pageElement.style.backgroundColor = 'red';
+    pageElement.style.backgroundColor = '#ffffff';
     pageElement.style.display = 'flex';
     pageElement.style.alignItems = 'center';
     pageElement.style.justifyContent = 'center';
     
-    const pageNumberElement = document.createElement('span');
-    pageNumberElement.textContent = `Page ${pageNum}`;
-    pageNumberElement.style.fontSize = '30px';
-    pageNumberElement.style.color = 'white';
-    pageElement.appendChild(pageNumberElement);
+    this.layer.render(this.pdfDocument!, pageNum - 1, pageElement, {
+      scale: 1,
+      rotation: 0
+    });
     
     // Cache the element for future use
     this.pageElements.set(pageNum, pageElement);
@@ -80,6 +78,7 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
   }
 
   private handleDocumentLoaded(document: PdfDocumentObject): void {
+    this.pdfDocument = document;
     this.pages = document.pages;
     this.spreadPages = this.spread.getSpreadPagesObjects(this.pages);
     this.notifyPageManagerInitialized();

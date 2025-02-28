@@ -23,6 +23,7 @@ export class PluginRegistry {
   private resolver: DependencyResolver;
   private configurations: Map<string, unknown> = new Map();
   private engine: PdfEngine;
+  private engineInitialized = false;
 
   private pendingRegistrations: Array<{
     manifest: PluginManifest<unknown>;
@@ -40,7 +41,34 @@ export class PluginRegistry {
   constructor(engine: PdfEngine) {
     this.resolver = new DependencyResolver();
     this.engine = engine;
-    this.engine.initialize?.();
+  }
+
+  /**
+   * Ensure engine is initialized before proceeding
+   */
+  private async ensureEngineInitialized(): Promise<void> {
+    if (this.engineInitialized) {
+      return;
+    }
+
+    if (this.engine.initialize) {
+      const task = this.engine.initialize();
+      await new Promise<void>((resolve, reject) => {
+        task.wait(
+          (success) => {
+            if (success) {
+              this.engineInitialized = true;
+              resolve();
+            } else {
+              reject(new Error('Engine initialization failed'));
+            }
+          },
+          (error) => reject(new Error(`Engine initialization error: ${error.reason.message}`))
+        );
+      });
+    } else {
+      this.engineInitialized = true;
+    }
   }
 
   /**
@@ -74,6 +102,9 @@ export class PluginRegistry {
     this.isInitializing = true;
 
     try {
+      // Ensure engine is initialized first
+      await this.ensureEngineInitialized();
+
       // Process registrations until no new ones are added
       while (this.pendingRegistrations.length > 0) {
         // Move current pending registrations to processing
