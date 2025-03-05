@@ -33,7 +33,7 @@ export const ConfigProvider: FC<{
 
   const normalizedPages = normalizePages({
     list: pageMap,
-    route: pathname,
+    route: pathname
   })
   const { activeThemeContext } = normalizedPages
 
