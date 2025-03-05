@@ -1,6 +1,15 @@
 'use client'
 
 import React, { useMemo, useState, useEffect } from "react";
+
+export default function PDFViewer() {
+
+  return (
+    <div>PDF Viewer</div>
+  )
+}
+
+/*
 import { PDFCore } from "@embedpdf/core";
 import { PDFCoreProvider } from "@embedpdf/core/react";
 import { NavigationPlugin } from "@embedpdf/plugin-navigation";
@@ -49,3 +58,4 @@ export default function PDFViewer() {
     </PDFCoreProvider>
   );
 }
+*/

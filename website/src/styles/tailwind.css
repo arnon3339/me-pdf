@@ -304,3 +304,95 @@ pre code.nextra-code:not([class*='twoslash-']) {
     }
   }
 }
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) rotate(var(--rotate, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--rotate, 0deg)); }
+  100% { transform: translateY(0px) rotate(var(--rotate, 0deg)); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite alternate;
+}
+
+.animate-float {
+  animation: float 6s infinite ease-in-out;
+  --rotate: 0deg;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(127, 127, 127, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(127, 127, 127, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.text-stroke {
+  -webkit-text-stroke: 1px rgba(107, 33, 168, 0.2);
+}
+
+.custom-gradient-text {
+  background: linear-gradient(135deg, #ef3d55 0%, #765ba7 25%, #8caedc 50%, #f79151 75%, #ef3d55 100%);
+  background-size: 200% auto;
+  animation: gradient 5s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.pseudo-terminal:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: #343a40;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.pseudo-terminal:after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 16px 0 0 #ffbd2e, 32px 0 0 #27c93f;
+}
+
+.mesh-gradient {
+  background-color: hsla(259, 84%, 78%, 1);
+  background-image:
+    radial-gradient(at 54% 71%, hsla(209, 100%, 78%, 0.7) 0px, transparent 50%),
+    radial-gradient(at 20% 25%, hsla(256, 96%, 77%, 0.5) 0px, transparent 50%),
+    radial-gradient(at 73% 24%, hsla(268, 87%, 32%, 0.4) 0px, transparent 50%),
+    radial-gradient(at 47% 95%, hsla(15, 96%, 77%, 0.3) 0px, transparent 50%),
+    radial-gradient(at 83% 87%, hsla(276, 97%, 36%, 0.3) 0px, transparent 50%);
+}
