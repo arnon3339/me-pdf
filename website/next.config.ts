@@ -5,12 +5,11 @@ import { remarkNpm2Yarn } from '@theguild/remark-npm2yarn'
 import { globSync } from 'glob';
 import { visit } from 'unist-util-visit';
 import { Plugin } from 'unified';
-import { Node } from 'unist';
 
 const overrideNpm2YarnImports: Plugin = () => {
   return (tree) => {
     // Find and modify the import statements added by remarkNpm2Yarn
-    visit(tree, 'mdxjsEsm', (node: Node) => {
+    visit(tree, 'mdxjsEsm', (node: any) => {
       if (node.data?.estree?.body) {
         for (const statement of node.data.estree.body) {
           // Look for import declarations from 'nextra/components'
