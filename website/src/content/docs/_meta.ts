@@ -9,6 +9,9 @@ export default {
   }, 
   index: {
     title: 'Introduction',
-    type: 'page'
+    type: 'page',
+    theme: {
+      timestamp: false
+    }
   }
 }

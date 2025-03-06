@@ -6,6 +6,11 @@ import { globSync } from 'glob';
 import { visit } from 'unist-util-visit';
 import { Plugin } from 'unified';
 
+/**
+ * This plugin overrides the import source for the Tabs component to use the custom component
+ * @param tree - The markdown AST
+ * @returns The modified markdown AST
+ */
 const overrideNpm2YarnImports: Plugin = () => {
   return (tree) => {
     // Find and modify the import statements added by remarkNpm2Yarn
