@@ -3,6 +3,29 @@ import nextra from 'nextra'
 import type { Pluggable } from 'unified'
 import { remarkNpm2Yarn } from '@theguild/remark-npm2yarn'
 import { globSync } from 'glob';
+import { visit } from 'unist-util-visit';
+import { Plugin } from 'unified';
+import { Node } from 'unist';
+
+const overrideNpm2YarnImports: Plugin = () => {
+  return (tree) => {
+    // Find and modify the import statements added by remarkNpm2Yarn
+    visit(tree, 'mdxjsEsm', (node: Node) => {
+      if (node.data?.estree?.body) {
+        for (const statement of node.data.estree.body) {
+          // Look for import declarations from 'nextra/components'
+          if (statement.type === 'ImportDeclaration' && 
+              statement.source.value === 'nextra/components') {
+            // Change the import source to your component
+            statement.source.value = '@/components/tabs';
+          }
+        }
+      }
+    });
+    
+    return tree;
+  };
+};
 
 const withNextra = nextra({
   // ... Other Nextra config options,
@@ -11,12 +34,13 @@ const withNextra = nextra({
       [
         remarkNpm2Yarn, // should be before remarkRemoveImports because contains `import { Tabs as $Tabs, Tab as $Tab } from ...`
         {
-          packageName: '@/components/tabs123',
+          packageName: '@/components/tabs',
           tabNamesProp: 'items',
           storageKey: 'selectedPackageManager'
         }
-      ] satisfies Pluggable
-    ]
+      ] satisfies Pluggable,
+      overrideNpm2YarnImports
+    ],
   }
 })
 
