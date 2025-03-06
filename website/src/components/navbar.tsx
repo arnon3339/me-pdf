@@ -37,7 +37,7 @@ export default function Navbar() {
               <span className="relative z-10">Features</span>
               <span className="absolute inset-0 bg-purple-100 rounded-full scale-0 group-hover:scale-100 transition-transform"></span>
             </a> */}
-            <Link href="/docs/introduction" className="group text-gray-600 transition-colors relative py-2 px-4">
+            <Link href="/docs/pdfium/introduction" className="group text-gray-600 transition-colors relative py-2 px-4">
               <span className="relative z-10">Documentation</span>
               <span className="absolute inset-0 bg-blue-100 rounded-full scale-0 group-hover:scale-100 transition-transform"></span>
             </Link>

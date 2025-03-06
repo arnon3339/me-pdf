@@ -1,0 +1,83 @@
+---
+title: PDFium JavaScript API
+description: Learn how to use the @embedpdf/pdfium library for PDF rendering in web applications
+searchable: true
+---
+
+# PDFium JavaScript API
+
+The `@embedpdf/pdfium` library provides a JavaScript interface to PDFium, a powerful PDF rendering engine. This documentation will help you understand how to use the library effectively, even if you have no prior experience with C++ or WebAssembly.
+
+## Installation
+
+```sh npm2yarn
+npm i @embedpdf/pdfium
+```
+
+## Basic Usage
+
+```typescript
+import { init } from '@embedpdf/pdfium';
+
+const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
+
+async function initializePdfium() {
+  const response = await fetch(pdfiumWasm);
+  const wasmBinary = await response.arrayBuffer();
+  const pdfium = await init({ wasmBinary });
+  return pdfium;
+}
+
+const pdfium = await initializePdfium();
+```
+
+## Understanding WebAssembly and Memory Management
+
+PDFium is a C++ library compiled to WebAssembly (WASM), which allows it to run in web browsers. When you use `@embedpdf/pdfium`, you're interacting with this compiled code through JavaScript.
+
+### Memory Management Basics
+
+When working with PDFium, you need to understand a few key concepts:
+
+1. **Memory Allocation**: You need to allocate memory for data you want to pass to PDFium.
+2. **Pointers**: These are references to locations in memory.
+3. **Memory Cleanup**: You must free allocated memory when you're done to prevent memory leaks.
+
+```typescript
+// Allocate memory
+const ptr = pdfium.pdfium.wasmExports.malloc(size);
+
+// Use the memory...
+
+// Free memory when done
+pdfium.pdfium.wasmExports.free(ptr);
+```
+
+## Core Concepts
+
+### Document Handling
+
+PDFium operations typically follow this workflow:
+
+1. Load a document
+2. Perform operations (render pages, extract text, etc.)
+3. Close the document and free resources
+
+### Function Categories
+
+The PDFium API consists of functions with different purposes:
+
+- **Document functions**: Open, close, and manage PDF documents
+- **Page functions**: Load, render, and manipulate pages
+- **Text functions**: Extract and search text
+- **Annotation functions**: Work with PDF annotations
+- **Form functions**: Interact with PDF forms
+- **Bookmark functions**: Work with PDF bookmarks
+
+## Best Practices
+
+1. **Always free memory**: Use `pdfium.pdfium.wasmExports.free()` to release memory allocated with `malloc`.
+2. **Close resources**: Always close pages, text pages, and documents when you're done with them.
+3. **Use try/finally blocks**: Ensure resources are properly cleaned up even if errors occur.
+4. **Check return values**: Many PDFium functions return 0 or null on failure.
+5. **Handle errors gracefully**: Use `FPDF_GetLastError()` to get more information about failures.

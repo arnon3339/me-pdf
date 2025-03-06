@@ -1,0 +1,149 @@
+---
+title: Getting Started with PDFium
+description: Learn the basics of using the @embedpdf/pdfium library
+searchable: true
+---
+
+# Getting Started with PDFium
+
+This guide will walk you through the basics of using the `@embedpdf/pdfium` library to work with PDF documents in your web application.
+
+## Installation
+
+First, install the library using npm, pnpm, yarn or bun:
+
+```sh npm2yarn
+npm i @embedpdf/pdfium
+```
+
+## Initializing PDFium
+
+Before you can use any PDFium functions, you need to initialize the library:
+
+```typescript
+import { init } from '@embedpdf/pdfium';
+
+const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
+
+async function initializePdfium() {
+  const response = await fetch(pdfiumWasm);
+  const wasmBinary = await response.arrayBuffer();
+  const pdfium = await init({ wasmBinary });
+  return pdfium;
+}
+
+const pdfium = await initializePdfium();
+```
+
+The `initializePdfium` function returns a promise that resolves to a PDFium module object. This object contains all the PDFium functions you can use.
+
+## Basic Workflow
+
+Working with PDFs in PDFium typically follows this pattern:
+
+1. Initialize PDFium
+2. Load a PDF document
+3. Perform operations on the document (render pages, extract text, etc.)
+4. Clean up resources
+
+Here's a simple example that loads a PDF and gets its page count:
+
+```typescript
+import { init } from '@embedpdf/pdfium';
+
+const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
+
+async function initializePdfium() {
+  const response = await fetch(pdfiumWasm);
+  const wasmBinary = await response.arrayBuffer();
+  const pdfium = await init({ wasmBinary });
+  return pdfium;
+}
+
+async function getPdfPageCount(pdfData) {
+  // Step 1: Initialize PDFium
+  const pdfium = await initializePdfium();
+
+  // Step 2: Load the PDF document
+  const filePtr = pdfium.pdfium.wasmExports.malloc(pdfData.length);
+  pdfium.pdfium.HEAPU8.set(pdfData, filePtr);
+  const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, 0);
+
+  if (!docPtr) {
+    const error = pdfium.FPDF_GetLastError();
+    pdfium.pdfium.wasmExports.free(filePtr);
+    throw new Error(Failed to load PDF: ${error});
+  }
+
+  try {
+    // Step 3: Get the page count
+    const pageCount = pdfium.FPDF_GetPageCount(docPtr);
+    return pageCount;
+  } finally {
+    // Step 4: Clean up
+    pdfium.FPDF_CloseDocument(docPtr);
+    pdfium.pdfium.wasmExports.free(filePtr);
+  }
+}
+
+// Usage
+fetch('sample.pdf')
+  .then(response => response.arrayBuffer())
+  .then(buffer => getPdfPageCount(new Uint8Array(buffer)))
+  .then(pageCount => {
+    console.log(The PDF has ${pageCount} pages);
+  })
+  .catch(error => console.error(error));
+```
+
+## Memory Management
+
+When working with PDFium, you need to manage memory manually. This is because PDFium is a WebAssembly module that uses a separate memory space.
+
+### Allocating Memory
+
+Use `pdfium.pdfium.wasmExports.malloc(size)` to allocate memory:
+
+```typescript
+const bufferSize = 1024;
+const bufferPtr = pdfium.pdfium.wasmExports.malloc(bufferSize);
+```
+
+### Freeing Memory
+
+Always free memory when you're done with it:
+
+```typescript
+pdfium.pdfium.wasmExports.free(bufferPtr);
+```
+
+### Using try/finally for Cleanup
+
+To ensure resources are properly cleaned up even if errors occur, use try/finally blocks:
+
+```typescript
+const filePtr = pdfium.pdfium.wasmExports.malloc(pdfData.length);
+pdfium.pdfium.HEAPU8.set(pdfData, filePtr);
+const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, 0);
+
+try {
+  // Use the document...
+} finally {
+  // Clean up
+  pdfium.FPDF_CloseDocument(docPtr);
+  pdfium.pdfium.wasmExports.free(filePtr);
+}
+```
+
+## Next Steps
+
+Now that you understand the basics, you can explore the various PDFium functions to work with PDF documents:
+
+- [Document Functions](/docs/pdfium/functions/document): Open, close, and manage PDF documents
+- [Page Functions](/docs/pdfium/functions/page): Load, render, and manipulate pages
+- [Text Functions](/docs/pdfium/functions/text): Extract and search text
+- [Annotation Functions](/docs/pdfium/functions/annotation): Work with PDF annotations
+- [Form Functions](/docs/pdfium/functions/form): Interact with PDF forms
+- [Bookmark Functions](/docs/pdfium/functions/bookmark): Work with PDF bookmarks
+
+Check out our [examples section](/docs/pdfium/examples) for complete, working examples of common PDF operations.
