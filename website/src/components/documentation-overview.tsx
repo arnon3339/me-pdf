@@ -319,7 +319,7 @@ const DocsOverview = () => {
       <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Documentation Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-24">
             <div className="inline-block px-6 py-2 border border-blue-200 rounded-full bg-blue-50 text-blue-800 text-sm font-medium mb-6">
               Documentation
             </div>
