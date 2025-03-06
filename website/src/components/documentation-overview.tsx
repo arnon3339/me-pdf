@@ -113,11 +113,11 @@ const packages = [
 // Animated background
 const AnimatedBackground = () => {
   return (
-    <div className="absolute inset-0 -z-10 overflow-hidden">
+    <div className="absolute inset-0 -z-10">
       {/* Gradient circles */}
-      <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500 opacity-5 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-      <div className="absolute top-40 right-10 w-72 h-72 bg-blue-500 opacity-5 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-      <div className="absolute bottom-32 left-20 w-80 h-80 bg-teal-500 opacity-5 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+      <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500 opacity-10 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+      <div className="absolute top-40 right-10 w-72 h-72 bg-blue-500 opacity-10 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+      <div className="absolute bottom-32 left-20 w-80 h-80 bg-teal-500 opacity-10 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
       
       {/* Documentation pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-3"></div>
