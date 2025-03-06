@@ -4,7 +4,7 @@ description: Learn the basics of using the @embedpdf/pdfium library
 searchable: true
 ---
 
-# Getting Started with PDFium
+# Getting Started with PDFium for JavaScript
 
 This guide will walk you through the basics of using the `@embedpdf/pdfium` library to work with PDF documents in your web application.
 
@@ -20,7 +20,7 @@ npm i @embedpdf/pdfium
 
 Before you can use any PDFium functions, you need to initialize the library:
 
-```typescript
+```typescript filename=" " copy
 import { init } from '@embedpdf/pdfium';
 
 const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
@@ -48,7 +48,7 @@ Working with PDFs in PDFium typically follows this pattern:
 
 Here's a simple example that loads a PDF and gets its page count:
 
-```typescript
+```typescript filename="get-pdf-page-count.ts" copy
 import { init } from '@embedpdf/pdfium';
 
 const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
