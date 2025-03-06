@@ -42,7 +42,7 @@ const HeaderAndHero = () => {
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-gray-900 tracking-tight leading-tight">
                 <span className="relative inline-block">
                   <span className="relative z-10">Embed PDF files</span>
-                  <div className="absolute bottom-1 left-0 right-0 h-4 -z-10 transform -rotate-1">
+                  <div className="absolute bottom-1 left-0 opacity-50 right-0 h-4 -z-10 transform -rotate-1">
                     <Scribble color="#765ba7" />
                   </div>
                 </span>
