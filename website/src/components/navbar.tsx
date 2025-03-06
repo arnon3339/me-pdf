@@ -88,7 +88,7 @@ export default function Navbar() {
               <span>Features</span>
             </a>*/}
             <Link 
-              href="/docs/introduction" 
+              href="/docs" 
               className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
               onClick={() => setIsMenuOpen(false)}
             >
