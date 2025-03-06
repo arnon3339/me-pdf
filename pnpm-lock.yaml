@@ -243,8 +243,8 @@ importers:
         specifier: ^3.0.0
         version: 3.1.0(@types/react@18.3.18)(react@18.3.1)
       '@next/mdx':
-        specifier: ^14.0.4
-        version: 14.2.24(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.98.0(esbuild@0.25.0)))(@mdx-js/react@3.1.0(@types/react@18.3.18)(react@18.3.1))
+        specifier: ^15.2.1
+        version: 15.2.1(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.98.0(esbuild@0.25.0)))(@mdx-js/react@3.1.0(@types/react@18.3.18)(react@18.3.1))
       '@tailwindcss/postcss':
         specifier: ^4.0.6
         version: 4.0.6
@@ -1374,8 +1374,8 @@ packages:
   '@next/env@15.1.7':
     resolution: {integrity: sha512-d9jnRrkuOH7Mhi+LHav2XW91HOgTAWHxjMPkXMGBc9B2b7614P7kjt8tAplRvJpbSt4nbO1lugcT/kAaWzjlLQ==}
 
-  '@next/mdx@14.2.24':
-    resolution: {integrity: sha512-OfupBYFZXdB+1CypVpRFpIb/V1PgGed20yUbkKTDdssLvlID/emqVfsZ7RVUhI1DGOQPcPwSAy92GHQlEwccdQ==}
+  '@next/mdx@15.2.1':
+    resolution: {integrity: sha512-C03Xzo05o0GxASwtFLKWBDZht0ez3C/fZATMfVIfEg/TcWqa/ND6UTgyor7LFdrNvvaGjCRCFnEwYzF/l6PuHA==}
     peerDependencies:
       '@mdx-js/loader': '>=0.15.0'
       '@mdx-js/react': '>=0.15.0'
@@ -6291,7 +6291,7 @@ snapshots:
 
   '@next/env@15.1.7': {}
 
-  '@next/mdx@14.2.24(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.98.0(esbuild@0.25.0)))(@mdx-js/react@3.1.0(@types/react@18.3.18)(react@18.3.1))':
+  '@next/mdx@15.2.1(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.98.0(esbuild@0.25.0)))(@mdx-js/react@3.1.0(@types/react@18.3.18)(react@18.3.1))':
     dependencies:
       source-map: 0.7.4
     optionalDependencies:
