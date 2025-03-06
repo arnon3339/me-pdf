@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowRight, Book, Code, Package, Search, Terminal, Zap, FileText, Settings, Menu, ChevronRight, ExternalLink } from 'lucide-react';
+import { ArrowRight, Book, Code, Package, Github, Search, Terminal, Zap, FileText, Settings, Menu, ChevronRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Scribble } from './icons/scribble';
 
@@ -188,7 +188,7 @@ const PackageCard = ({ pkg }: { pkg: {
           
           <Link 
             href={pkg.url}
-            className={`inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r ${pkg.color} text-white font-medium text-sm hover:shadow-md transition-shadow`}
+            className={`inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r ${pkg.color} text-white font-medium text-sm hover:shadow-md transition-shadow`}
           >
             View Full Documentation
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -516,9 +516,10 @@ function MyPDFViewer() {
                     href="https://github.com/embedpdf/embed-pdf-viewer/issues"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center px-5 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                    className="inline-flex space-x-2 items-center px-5 py-2 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
                   >
-                    GitHub Discussions
+                    <Github className="w-4 h-4" />
+                    <span>GitHub Discussions</span>
                   </a>
                   {/*<a 
                     href="https://discord.gg/embedpdf"
