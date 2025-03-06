@@ -11,7 +11,7 @@ const withNextra = nextra({
       [
         remarkNpm2Yarn, // should be before remarkRemoveImports because contains `import { Tabs as $Tabs, Tab as $Tab } from ...`
         {
-          packageName: '@/components/tabs',
+          packageName: '@/components/tabs123',
           tabNamesProp: 'items',
           storageKey: 'selectedPackageManager'
         }
