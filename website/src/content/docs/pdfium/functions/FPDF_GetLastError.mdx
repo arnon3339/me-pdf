@@ -1,0 +1,186 @@
+---
+title: FPDF_GetLastError
+description: Get the error code for the last failed PDFium operation
+searchable: true
+---
+
+# FPDF_GetLastError
+
+`FPDF_GetLastError()`
+
+## Description
+
+Retrieves the error code for the last failed PDFium operation. This function is particularly useful after PDF document loading functions (like `FPDF_LoadMemDocument`) return null, indicating a failure. The error code provides more information about what went wrong.
+
+## Parameters
+
+This function doesn't take any parameters.
+
+## Return Value
+
+Returns an integer error code indicating the cause of the last error. The meaning of each error code is as follows:
+
+| Code | Constant | Meaning |
+|------|----------|---------|
+| 0 | `FPDF_ERR_SUCCESS` | No error (success) |
+| 1 | `FPDF_ERR_UNKNOWN` | Unknown error |
+| 2 | `FPDF_ERR_FILE` | File not found or could not be opened |
+| 3 | `FPDF_ERR_FORMAT` | File not in PDF format or corrupted |
+| 4 | `FPDF_ERR_PASSWORD` | Password required or incorrect password |
+| 5 | `FPDF_ERR_SECURITY` | Unsupported security scheme |
+| 6 | `FPDF_ERR_PAGE` | Page not found or content error |
+| 7 | `FPDF_ERR_XFALOAD` | XFA load error |
+| 8 | `FPDF_ERR_XFALAYOUT` | XFA layout error |
+
+## Example
+
+```typescript
+import { init, WrappedPdfiumModule } from '@embedpdf/pdfium';
+
+// Singleton for PDFium instance
+let pdfiumInstance: WrappedPdfiumModule | null = null;
+
+async function getPdfiumInstance() {
+  if (pdfiumInstance) return pdfiumInstance;
+  
+  const response = await fetch('https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm');
+  const wasmBinary = await response.arrayBuffer();
+  pdfiumInstance = await init({ wasmBinary });
+  return pdfiumInstance;
+}
+
+async function openPdfWithErrorHandling(pdfData: Uint8Array) {
+  // Get PDFium instance
+  const pdfium = await getPdfiumInstance();
+  
+  // Allocate memory for the PDF data
+  const filePtr = pdfium.pdfium.wasmExports.malloc(pdfData.length);
+  pdfium.pdfium.HEAPU8.set(pdfData, filePtr);
+  
+  // Try to load the PDF document
+  const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, 0);
+  
+  if (!docPtr) {
+    // Get the error code
+    const errorCode = pdfium.FPDF_GetLastError();
+    
+    // Free the allocated memory before throwing
+    pdfium.pdfium.wasmExports.free(filePtr);
+    
+    // Convert error code to a more descriptive message
+    let errorMessage;
+    switch (errorCode) {
+      case 0: 
+        errorMessage = 'No error'; 
+        break;
+      case 1: 
+        errorMessage = 'Unknown error'; 
+        break;
+      case 2: 
+        errorMessage = 'File not found or could not be opened'; 
+        break;
+      case 3: 
+        errorMessage = 'File not in PDF format or corrupted'; 
+        break;
+      case 4: 
+        errorMessage = 'Password required or incorrect password'; 
+        break;
+      case 5: 
+        errorMessage = 'Unsupported security scheme'; 
+        break;
+      case 6: 
+        errorMessage = 'Page not found or content error'; 
+        break;
+      case 7: 
+        errorMessage = 'XFA load error'; 
+        break;
+      case 8: 
+        errorMessage = 'XFA layout error'; 
+        break;
+      default: 
+        errorMessage = `Unknown error code: ${errorCode}`; 
+        break;
+    }
+    
+    throw new Error(`Failed to load PDF: ${errorMessage} (code ${errorCode})`);
+  }
+  
+  try {
+    // Document loaded successfully - proceed with operations
+    const pageCount = pdfium.FPDF_GetPageCount(docPtr);
+    console.log(`PDF loaded successfully with ${pageCount} pages`);
+    
+    // Perform other operations...
+    
+    return {
+      success: true,
+      pageCount,
+      docPtr,
+      filePtr
+    };
+  } catch (error) {
+    // If an error occurs during document operations
+    pdfium.FPDF_CloseDocument(docPtr);
+    pdfium.pdfium.wasmExports.free(filePtr);
+    throw error;
+  }
+}
+
+// Usage
+async function handlePdfDocument(pdfUrl) {
+  try {
+    const response = await fetch(pdfUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const buffer = await response.arrayBuffer();
+    const result = await openPdfWithErrorHandling(new Uint8Array(buffer));
+    
+    console.log(`Successfully loaded PDF with ${result.pageCount} pages`);
+    
+    // Don't forget to close the document and free resources when done
+    const pdfium = await getPdfiumInstance();
+    pdfium.FPDF_CloseDocument(result.docPtr);
+    pdfium.pdfium.wasmExports.free(result.filePtr);
+    
+  } catch (error) {
+    // Handle specific types of errors
+    if (error.message.includes('Password required')) {
+      console.error('This PDF is password protected. Please provide a password.');
+      promptUserForPassword();
+    } else if (error.message.includes('not in PDF format')) {
+      console.error('The file is not a valid PDF document.');
+    } else {
+      console.error('Error processing PDF:', error.message);
+    }
+  }
+}
+```
+
+## Best Practices
+
+1. **Always check for errors**: After operations that might fail (especially document loading), check for errors using `FPDF_GetLastError` if the function returns an error indicator.
+
+2. **Provide meaningful error messages**: Map the error codes to descriptive error messages to help users understand what went wrong.
+
+3. **Handle specific error types**: Different error codes call for different responses. For example, a password error (code 4) might prompt the user for a password, while a format error (code 3) might indicate the file is corrupt.
+
+4. **Clean up resources**: Even when errors occur, make sure to free allocated memory and close any resources that were successfully opened.
+
+5. **Error context**: When throwing errors based on PDFium error codes, include additional context about the operation that failed to make debugging easier.
+
+## Error Handling Strategies
+
+1. **Password-protected PDFs**: If you get error code 4 (password required), you can prompt the user for a password and try loading the document again.
+
+2. **Corrupted files**: Error code 3 often indicates file corruption. Consider validating PDF files before attempting to open them.
+
+3. **Missing files**: Error code 2 suggests the file wasn't found. Check file paths and availability.
+
+4. **XFA forms**: Error codes 7 and 8 relate to XFA forms, which are a complex form technology in PDFs. PDFium has limited support for XFA forms.
+
+## Related Functions
+
+- [FPDF_LoadMemDocument](/docs/pdfium/functions/FPDF_LoadMemDocument) - Load a PDF document from memory
+- [FPDF_CloseDocument](/docs/pdfium/functions/FPDF_CloseDocument) - Close a loaded PDF document
