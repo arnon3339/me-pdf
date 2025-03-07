@@ -9,7 +9,7 @@ interface PreviewProps {
 
 export function Preview({ title, children }: PreviewProps) {
   return (
-    <div className="mt-2">
+    <div className="not-first:mt-6">
       <div
         className={cn(
           'px-4 text-xs text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-neutral-900 flex items-center h-12 gap-2 rounded-t-md border border-gray-300 dark:border-neutral-700 contrast-more:border-gray-900 contrast-more:dark:border-gray-50 border-b-0'

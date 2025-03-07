@@ -48,6 +48,10 @@ Working with PDFs in PDFium typically follows this pattern:
 
 Here's a simple example that loads a PDF and gets its page count:
 
+import GetPdfPageCountDemo from './examples/get-pdf-page-count.preview';
+
+<GetPdfPageCountDemo />
+
 ```typescript filename="get-pdf-page-count.ts" copy
 import { init } from '@embedpdf/pdfium';
 
@@ -95,11 +99,6 @@ fetch('sample.pdf')
   })
   .catch(error => console.error(error));
 ```
-
-import GetPdfPageCountDemo from './examples/get-pdf-page-count.preview';
-
-<GetPdfPageCountDemo />
-
 
 ## Memory Management
 
