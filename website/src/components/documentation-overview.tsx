@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, Book, Code, Package, Github, Search, Terminal, Zap, FileText, Settings, Menu, ChevronRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { Scribble } from './icons/scribble';
+import { Scribble3 } from './icons/scribble3';
 
 // Mock documentation packages data
 const packages = [
@@ -327,7 +327,7 @@ const DocsOverview = () => {
               <span className="relative inline-block">
                 <span className="relative z-10">Everything you need</span>
                 <div className="absolute bottom-1 left-0 right-0 h-4 opacity-50 -z-10 transform -rotate-1">
-                  <Scribble color="#bedbff" />
+                  <Scribble3 color="#bedbff" />
                 </div>
                 
               </span>

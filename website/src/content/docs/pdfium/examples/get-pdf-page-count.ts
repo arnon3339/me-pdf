@@ -1,13 +1,4 @@
-import { init } from '@embedpdf/pdfium';
- 
-const pdfiumWasm = '/wasm/pdfium.wasm';
- 
-async function initializePdfium() {
-  const response = await fetch(pdfiumWasm);
-  const wasmBinary = await response.arrayBuffer();
-  const pdfium = await init({ wasmBinary });
-  return pdfium;
-}
+import { initializePdfium } from './initialize-pdfium';
  
 async function getPdfPageCount(pdfData: Uint8Array) {
   // Step 1: Initialize PDFium

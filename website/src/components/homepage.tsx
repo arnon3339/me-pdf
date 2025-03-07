@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Menu, X, Code, ChevronDown, Download, ExternalLink, Github } from 'lucide-react';
 import { JavaScript } from '@/components/icons/javascript';
 import { Typescript } from '@/components/icons/typescript';
-import { Scribble } from '@/components/icons/scribble2';
+import { Scribble2 } from '@/components/icons/scribble2';
 import Link from 'next/link';
 
 // Animated blobs for the background
@@ -43,7 +43,7 @@ const HeaderAndHero = () => {
                 <span className="relative inline-block">
                   <span className="relative z-10">Embed PDF files</span>
                   <div className="absolute bottom-1 left-0 opacity-50 right-0 h-4 -z-10 transform -rotate-1">
-                    <Scribble color="#765ba7" />
+                    <Scribble2 color="#765ba7" />
                   </div>
                 </span>
                 <br />
