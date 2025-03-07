@@ -6,7 +6,42 @@ searchable: true
 
 # PDFium JavaScript API
 
-The `@embedpdf/pdfium` library provides a JavaScript interface to PDFium, a powerful PDF rendering engine. This documentation will help you understand how to use the library effectively, even if you have no prior experience with C++ or WebAssembly.
+## Introduction
+
+The `@embedpdf/pdfium` library provides a powerful JavaScript interface to PDFium, enabling high-quality PDF rendering and manipulation directly in web applications. This library brings native-quality PDF capabilities to the browser through WebAssembly, without requiring any server-side processing.
+
+### What is PDFium?
+
+PDFium is an open-source PDF rendering engine originally developed by Foxit Software and later released as open source by Google. Written in C++, it's the same engine that powers PDF viewing in Chrome and numerous other applications. PDFium offers comprehensive PDF capabilities including:
+
+- High-fidelity rendering of PDF pages
+- Text extraction and search
+- Form filling and manipulation
+- Annotation support
+- Digital signature verification
+- PDF modification and creation
+
+### Why PDFium?
+
+We chose PDFium as our engine for several compelling reasons:
+
+1. **Industry-proven reliability**: As the PDF engine behind Chrome and many commercial applications, PDFium has been battle-tested on billions of documents.
+2. **Comprehensive feature set**: PDFium supports the full PDF specification, including complex features like forms, annotations, and digital signatures.
+3. **Active development**: Being maintained by Google and the open-source community ensures ongoing improvements and security updates.
+4. **Performance**: PDFium is optimized for speed and memory efficiency, essential for web applications.
+
+### WebAssembly and Emscripten
+
+**WebAssembly (WASM)** is a binary instruction format that enables high-performance execution of code in web browsers. It serves as a portable compilation target for languages like C/C++, allowing them to run at near-native speed in the browser. WebAssembly code executes in a memory-safe, sandboxed environment and can seamlessly interoperate with JavaScript.
+
+**Emscripten** is a toolchain that compiles C and C++ code to WebAssembly. It provides the necessary infrastructure to port complex native applications to the web, including:
+
+1. A complete compiler toolchain based on LLVM
+2. Runtime environment that emulates key parts of a native system
+3. Glue code generation to bridge between JavaScript and compiled code
+4. Memory management utilities
+
+Through Emscripten, we've compiled the entire PDFium C++ codebase to WebAssembly, making it available for JavaScript developers while maintaining the performance benefits of the original native code.
 
 ## Installation
 
