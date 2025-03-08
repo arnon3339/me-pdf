@@ -32,128 +32,122 @@ Returns an integer error code indicating the cause of the last error. The meanin
 | 7 | `FPDF_ERR_XFALOAD` | XFA load error |
 | 8 | `FPDF_ERR_XFALAYOUT` | XFA layout error |
 
+## Interactive Example
+
+Try opening a password-protected PDF with and without a password. This example demonstrates how to handle the common error code 4 (password required):
+
+import GetLastErrorDemo from '../examples/get-last-error-example.preview';
+
+<GetLastErrorDemo />
+
 ## Example
 
 ```typescript
-import { init, WrappedPdfiumModule } from '@embedpdf/pdfium';
+import { initializePdfium } from './initialize-pdfium';
 
-// Singleton for PDFium instance
-let pdfiumInstance: WrappedPdfiumModule | null = null;
-
-async function getPdfiumInstance() {
-  if (pdfiumInstance) return pdfiumInstance;
+async function openProtectedPdf(pdfData: Uint8Array, password?: string) {
+  // Step 1: Initialize PDFium
+  const pdfium = await initializePdfium();
   
-  const response = await fetch('https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm');
-  const wasmBinary = await response.arrayBuffer();
-  pdfiumInstance = await init({ wasmBinary });
-  return pdfiumInstance;
-}
-
-async function openPdfWithErrorHandling(pdfData: Uint8Array) {
-  // Get PDFium instance
-  const pdfium = await getPdfiumInstance();
-  
-  // Allocate memory for the PDF data
+  // Step 2: Load the PDF document
   const filePtr = pdfium.pdfium.wasmExports.malloc(pdfData.length);
   pdfium.pdfium.HEAPU8.set(pdfData, filePtr);
   
-  // Try to load the PDF document
-  const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, 0);
+  // Convert password to null-terminated UTF-8 string pointer if provided
+  let passwordPtr = 0;
+  if (password) {
+    const encoder = new TextEncoder();
+    const passwordBytes = encoder.encode(password + '\0');
+    passwordPtr = pdfium.pdfium.wasmExports.malloc(passwordBytes.length);
+    pdfium.pdfium.HEAPU8.set(passwordBytes, passwordPtr);
+  }
   
+  // Try to load the PDF document with optional password
+  const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, passwordPtr);
+  
+  // Clean up password memory if allocated
+  if (passwordPtr) {
+    pdfium.pdfium.wasmExports.free(passwordPtr);
+  }
+  
+  // Check if document loaded successfully
   if (!docPtr) {
-    // Get the error code
     const errorCode = pdfium.FPDF_GetLastError();
-    
-    // Free the allocated memory before throwing
     pdfium.pdfium.wasmExports.free(filePtr);
     
-    // Convert error code to a more descriptive message
+    // Map error code to a message
     let errorMessage;
     switch (errorCode) {
-      case 0: 
-        errorMessage = 'No error'; 
-        break;
-      case 1: 
-        errorMessage = 'Unknown error'; 
-        break;
-      case 2: 
-        errorMessage = 'File not found or could not be opened'; 
-        break;
-      case 3: 
-        errorMessage = 'File not in PDF format or corrupted'; 
-        break;
-      case 4: 
-        errorMessage = 'Password required or incorrect password'; 
-        break;
-      case 5: 
-        errorMessage = 'Unsupported security scheme'; 
-        break;
-      case 6: 
-        errorMessage = 'Page not found or content error'; 
-        break;
-      case 7: 
-        errorMessage = 'XFA load error'; 
-        break;
-      case 8: 
-        errorMessage = 'XFA layout error'; 
-        break;
-      default: 
-        errorMessage = `Unknown error code: ${errorCode}`; 
-        break;
+      case 0: errorMessage = 'No error'; break;
+      case 1: errorMessage = 'Unknown error'; break;
+      case 2: errorMessage = 'File not found or could not be opened'; break;
+      case 3: errorMessage = 'File not in PDF format or corrupted'; break;
+      case 4: errorMessage = 'Password required or incorrect password'; break;
+      case 5: errorMessage = 'Unsupported security scheme'; break;
+      case 6: errorMessage = 'Page not found or content error'; break;
+      case 7: errorMessage = 'XFA load error'; break;
+      case 8: errorMessage = 'XFA layout error'; break;
+      default: errorMessage = `Unknown error code: ${errorCode}`; break;
     }
     
-    throw new Error(`Failed to load PDF: ${errorMessage} (code ${errorCode})`);
+    // Return error details
+    return {
+      success: false,
+      errorCode,
+      errorMessage
+    };
   }
   
   try {
-    // Document loaded successfully - proceed with operations
+    // Document loaded successfully - get basic info
     const pageCount = pdfium.FPDF_GetPageCount(docPtr);
-    console.log(`PDF loaded successfully with ${pageCount} pages`);
-    
-    // Perform other operations...
     
     return {
       success: true,
       pageCount,
-      docPtr,
-      filePtr
+      errorCode: 0,
+      errorMessage: 'PDF opened successfully'
     };
-  } catch (error) {
-    // If an error occurs during document operations
+  } finally {
+    // Clean up resources
     pdfium.FPDF_CloseDocument(docPtr);
     pdfium.pdfium.wasmExports.free(filePtr);
-    throw error;
   }
 }
 
-// Usage
-async function handlePdfDocument(pdfUrl) {
+// Usage example
+async function handlePdfWithPasswordCheck() {
   try {
-    const response = await fetch(pdfUrl);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
+    // First try without password
+    const response = await fetch('protected.pdf');
     const buffer = await response.arrayBuffer();
-    const result = await openPdfWithErrorHandling(new Uint8Array(buffer));
+    const pdfData = new Uint8Array(buffer);
     
-    console.log(`Successfully loaded PDF with ${result.pageCount} pages`);
+    let result = await openProtectedPdf(pdfData);
     
-    // Don't forget to close the document and free resources when done
-    const pdfium = await getPdfiumInstance();
-    pdfium.FPDF_CloseDocument(result.docPtr);
-    pdfium.pdfium.wasmExports.free(result.filePtr);
-    
-  } catch (error) {
-    // Handle specific types of errors
-    if (error.message.includes('Password required')) {
-      console.error('This PDF is password protected. Please provide a password.');
-      promptUserForPassword();
-    } else if (error.message.includes('not in PDF format')) {
-      console.error('The file is not a valid PDF document.');
+    if (!result.success && result.errorCode === 4) {
+      console.log('PDF requires a password');
+      
+      // Get password from user (simplified for example)
+      const password = prompt('Please enter the PDF password:');
+      
+      if (password) {
+        // Try again with password
+        result = await openProtectedPdf(pdfData, password);
+        
+        if (result.success) {
+          console.log(`Successfully opened PDF with ${result.pageCount} pages`);
+        } else {
+          console.error(`Failed to open PDF: ${result.errorMessage}`);
+        }
+      }
+    } else if (result.success) {
+      console.log(`Successfully opened PDF with ${result.pageCount} pages`);
     } else {
-      console.error('Error processing PDF:', error.message);
+      console.error(`Failed to open PDF: ${result.errorMessage}`);
     }
+  } catch (error) {
+    console.error('Error processing PDF:', error);
   }
 }
 ```

@@ -30,7 +30,7 @@ export default function GetPdfPageCountDemo() {
       <button
         onClick={handleClick}
         disabled={isLoading}
-        className="px-4 py-2 text-white bg-black rounded-full hover:bg-gray-800 disabled:bg-gray-400"
+        className="px-4 py-2 text-white bg-violet-800 rounded-md hover:bg-violet-900 disabled:bg-gray-400"
       >
         {isLoading ? 'Loading...' : 'Get PDF Page Count'}
       </button>
