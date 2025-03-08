@@ -21,15 +21,17 @@ npm i @embedpdf/pdfium
 Before you can use any PDFium functions, you need to initialize the library:
 
 ```typescript filename=" " copy
-import { init } from '@embedpdf/pdfium';
+import { init, WrappedPdfiumModule } from '@embedpdf/pdfium';
 
 const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
+
+let pdfiumInstance: WrappedPdfiumModule | null = null;
 
 async function initializePdfium() {
   const response = await fetch(pdfiumWasm);
   const wasmBinary = await response.arrayBuffer();
-  const pdfium = await init({ wasmBinary });
-  return pdfium;
+  pdfiumInstance = await init({ wasmBinary });
+  return pdfiumInstance;
 }
 
 const pdfium = await initializePdfium();
