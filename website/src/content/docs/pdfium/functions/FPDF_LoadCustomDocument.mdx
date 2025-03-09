@@ -19,6 +19,10 @@ Loads a PDF document from a custom access mechanism. This function is particular
 
 The custom access mechanism is defined by the caller through a structure containing a length field and a callback function to read blocks of data.
 
+## Prerequisites
+
+This example uses initialization approaches from our [Getting Started](/docs/pdfium/getting-started#initializing-pdfium) guide. Note that the implementation is currently limited by browser capabilities as explained in the "Implementation Status" section below.
+
 ## Parameters
 
 | Name | Type | Description |
@@ -84,11 +88,14 @@ Once JSPI is fully implemented in browsers, implementing efficient streaming PDF
 Until JSPI is widely available, here's a conceptual overview of how `FPDF_LoadCustomDocument` would be implemented:
 
 ```typescript
+// Note: This is a conceptual implementation that requires JSPI to work properly
+// For initialization details, see: /docs/pdfium/getting-started
 import { init } from '@embedpdf/pdfium';
 
 async function loadPdfWithCustomAccess(url: string) {
   // Initialize PDFium
   const pdfium = await init();
+  pdfium.PDFiumExt_Init();
   
   // 1. First load the file size with a HEAD request
   const response = await fetch(url, { method: 'HEAD' });
@@ -172,4 +179,4 @@ When JSPI becomes widely available, consider these approaches for implementing a
 
 - [FPDF_LoadMemDocument](/docs/pdfium/functions/FPDF_LoadMemDocument) - Load a PDF document from memory
 - [FPDF_GetLastError](/docs/pdfium/functions/FPDF_GetLastError) - Get the error code for the last failed operation
-- [FPDF_CloseDocument](/docs/pdfium/functions/FPDF_CloseDocument) - Close a loaded PDF document 
+- [FPDF_CloseDocument](/docs/pdfium/functions/FPDF_CloseDocument) - Close a loaded PDF document

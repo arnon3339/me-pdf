@@ -14,6 +14,10 @@ Closes a PDF document and releases all resources associated with it. This functi
 
 Failing to call this function will result in memory leaks in your application.
 
+## Prerequisites
+
+This example uses the `initializePdfium` helper function from our [Getting Started](/docs/pdfium/getting-started#initializing-pdfium) guide. Make sure to include this function in your code before trying the examples below.
+
 ## Parameters
 
 | Name | Type | Description |
@@ -27,6 +31,8 @@ This function does not return a value.
 ## Example
 
 ```typescript
+// Note: The initializePdfium function is a helper that initializes the PDFium library.
+// For the full implementation, see: /docs/pdfium/getting-started
 import { init, WrappedPdfiumModule } from '@embedpdf/pdfium';
 
 // Singleton for PDFium instance
@@ -38,6 +44,10 @@ async function getPdfiumInstance() {
   const response = await fetch('https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm');
   const wasmBinary = await response.arrayBuffer();
   pdfiumInstance = await init({ wasmBinary });
+  
+  // Initialize the PDFium extension library
+  pdfiumInstance.PDFiumExt_Init();
+  
   return pdfiumInstance;
 }
 

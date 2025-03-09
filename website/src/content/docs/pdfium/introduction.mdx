@@ -59,14 +59,33 @@ const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
 let pdfiumInstance: WrappedPdfiumModule | null = null;
 
 async function initializePdfium() {
+  if (pdfiumInstance) return pdfiumInstance;
+  
   const response = await fetch(pdfiumWasm);
   const wasmBinary = await response.arrayBuffer();
   pdfiumInstance = await init({ wasmBinary });
+  
+  // Initialize the PDFium extension library
+  // This is required before performing any PDF operations
+  pdfiumInstance.PDFiumExt_Init();
+  
   return pdfiumInstance;
 }
 
 const pdfium = await initializePdfium();
 ```
+
+### PDFiumExt_Init Initialization
+
+The `PDFiumExt_Init()` function call is a crucial step in the initialization process. This function sets up the PDFium extension library with the necessary configurations for proper operation in a WebAssembly environment. It must be called after the WebAssembly module is initialized but before any PDF operations are performed.
+
+PDFiumExt_Init handles:
+- Configuring memory allocators
+- Setting up error handling
+- Preparing rendering subsystems
+- Initializing font handling
+
+Omitting this call may cause operations to fail, produce incorrect results, or even crash the application.
 
 ## Understanding WebAssembly and Memory Management
 
@@ -96,9 +115,10 @@ pdfium.pdfium.wasmExports.free(ptr);
 
 PDFium operations typically follow this workflow:
 
-1. Load a document
-2. Perform operations (render pages, extract text, etc.)
-3. Close the document and free resources
+1. Initialize PDFium (with PDFiumExt_Init)
+2. Load a document
+3. Perform operations (render pages, extract text, etc.)
+4. Close the document and free resources
 
 ### Function Categories
 
@@ -113,8 +133,9 @@ The PDFium API consists of functions with different purposes:
 
 ## Best Practices
 
-1. **Always free memory**: Use `pdfium.pdfium.wasmExports.free()` to release memory allocated with `malloc`.
-2. **Close resources**: Always close pages, text pages, and documents when you're done with them.
-3. **Use try/finally blocks**: Ensure resources are properly cleaned up even if errors occur.
-4. **Check return values**: Many PDFium functions return 0 or null on failure.
-5. **Handle errors gracefully**: Use `FPDF_GetLastError()` to get more information about failures.
+1. **Always call PDFiumExt_Init**: Call this function once after initializing the WebAssembly module and before any PDF operations.
+2. **Always free memory**: Use `pdfium.pdfium.wasmExports.free()` to release memory allocated with `malloc`.
+3. **Close resources**: Always close pages, text pages, and documents when you're done with them.
+4. **Use try/finally blocks**: Ensure resources are properly cleaned up even if errors occur.
+5. **Check return values**: Many PDFium functions return 0 or null on failure.
+6. **Handle errors gracefully**: Use `FPDF_GetLastError()` to get more information about failures.

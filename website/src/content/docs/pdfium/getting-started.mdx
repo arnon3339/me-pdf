@@ -28,9 +28,16 @@ const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
 let pdfiumInstance: WrappedPdfiumModule | null = null;
 
 async function initializePdfium() {
+  if (pdfiumInstance) return pdfiumInstance;
+  
   const response = await fetch(pdfiumWasm);
   const wasmBinary = await response.arrayBuffer();
   pdfiumInstance = await init({ wasmBinary });
+  
+  // Initialize the PDFium extension library
+  // This is required before performing any PDF operations
+  pdfiumInstance.PDFiumExt_Init();
+  
   return pdfiumInstance;
 }
 
@@ -39,18 +46,22 @@ const pdfium = await initializePdfium();
 
 The `initializePdfium` function returns a promise that resolves to a PDFium module object. This object contains all the PDFium functions you can use.
 
+### Important: PDFiumExt_Init()
+
+The call to `PDFiumExt_Init()` is critical and must be done before performing any PDF operations. This function initializes the PDFium extension library with proper configurations and ensures that the subsequent PDFium calls work correctly. Failing to call this function may result in unexpected behavior or crashes.
+
 ## Basic Workflow
 
 Working with PDFs in PDFium typically follows this pattern:
 
-1. Initialize PDFium
+1. Initialize PDFium (including calling `PDFiumExt_Init()`)
 2. Load a PDF document
 3. Perform operations on the document (render pages, extract text, etc.)
 4. Clean up resources
 
 Here's a simple example that loads a PDF and gets its page count:
 
-import GetPdfPageCountDemo from './examples/get-pdf-page-count.preview';
+import GetPdfPageCountDemo from './code-examples/get-pdf-page-count.preview';
 
 <GetPdfPageCountDemo />
 
@@ -62,9 +73,15 @@ const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
 let pdfiumInstance: WrappedPdfiumModule | null = null;
 
 async function initializePdfium() {
+  if (pdfiumInstance) return pdfiumInstance;
+  
   const response = await fetch(pdfiumWasm);
   const wasmBinary = await response.arrayBuffer();
   pdfiumInstance = await init({ wasmBinary });
+  
+  // Initialize the PDFium extension library
+  pdfiumInstance.PDFiumExt_Init();
+  
   return pdfiumInstance;
 }
  
@@ -99,7 +116,7 @@ fetch('sample.pdf')
   .then(response => response.arrayBuffer())
   .then(buffer => getPdfPageCount(new Uint8Array(buffer)))
   .then(pageCount => {
-    console.log(The PDF has ${pageCount} pages);
+    console.log(`The PDF has ${pageCount} pages`);
   })
   .catch(error => console.error(error));
 ```

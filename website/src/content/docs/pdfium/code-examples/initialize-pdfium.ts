@@ -11,6 +11,8 @@ async function initializePdfium() {
   const wasmBinary = await response.arrayBuffer();
   pdfiumInstance = await init({ wasmBinary });
 
+  pdfiumInstance.PDFiumExt_Init();
+
   return pdfiumInstance;
 }
 

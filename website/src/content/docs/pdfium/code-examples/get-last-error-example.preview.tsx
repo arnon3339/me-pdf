@@ -60,7 +60,7 @@ export default function GetLastErrorDemo() {
           <button
             onClick={handleOpenWithoutPassword}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-violet-800 rounded-md hover:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+            className="px-4 py-2 text-sm font-medium text-white bg-violet-800 rounded-md hover:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:bg-gray-400"
           >
             Open Protected PDF (No Password)
           </button>
@@ -85,7 +85,7 @@ export default function GetLastErrorDemo() {
               <button
                 onClick={handleOpenWithPassword}
                 disabled={isLoading || !password}
-                className="px-4 py-2 text-sm font-medium text-white bg-violet-800 rounded-md hover:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400"
+                className="px-4 py-2 text-sm font-medium text-white bg-violet-800 rounded-md hover:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:bg-gray-400"
               >
                 Try with Password
               </button>

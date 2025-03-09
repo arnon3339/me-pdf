@@ -12,6 +12,10 @@ searchable: true
 
 Retrieves the error code for the last failed PDFium operation. This function is particularly useful after PDF document loading functions (like `FPDF_LoadMemDocument`) return null, indicating a failure. The error code provides more information about what went wrong.
 
+## Prerequisites
+
+This example uses the `initializePdfium` helper function from our [Getting Started](/docs/pdfium/getting-started#initializing-pdfium) guide. Make sure to include this function in your code before trying the examples below.
+
 ## Parameters
 
 This function doesn't take any parameters.
@@ -36,13 +40,15 @@ Returns an integer error code indicating the cause of the last error. The meanin
 
 Try opening a password-protected PDF with and without a password. This example demonstrates how to handle the common error code 4 (password required):
 
-import GetLastErrorDemo from '../examples/get-last-error-example.preview';
+import GetLastErrorDemo from '../code-examples/get-last-error-example.preview';
 
 <GetLastErrorDemo />
 
 ## Example
 
 ```typescript
+// Note: The initializePdfium function is a helper that initializes the PDFium library.
+// For the full implementation, see: /docs/pdfium/getting-started
 import { initializePdfium } from './initialize-pdfium';
 
 async function openProtectedPdf(pdfData: Uint8Array, password?: string) {
