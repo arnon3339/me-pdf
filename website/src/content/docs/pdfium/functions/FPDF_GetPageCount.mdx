@@ -26,6 +26,14 @@ This example uses the `initializePdfium` helper function from our [Getting Start
 
 Returns an integer representing the number of pages in the document. If the document handle is invalid, the function returns 0.
 
+## Interactive Example
+
+Here's a simple example that loads a PDF and displays its page count:
+
+import GetPdfPageCountDemo from '../code-examples/get-pdf-page-count.preview';
+
+<GetPdfPageCountDemo />
+
 ## Example
 
 ```typescript
@@ -33,15 +41,13 @@ Returns an integer representing the number of pages in the document. If the docu
 // For the full implementation, see: /docs/pdfium/getting-started
 import { initializePdfium } from './initialize-pdfium';
 
-async function getPdfInfo(pdfData: Uint8Array) {
-  // Initialize PDFium
+async function getPdfPageCount(pdfData: Uint8Array) {
+  // Step 1: Initialize PDFium
   const pdfium = await initializePdfium();
   
-  // Allocate memory for the PDF data
+  // Step 2: Load the PDF document
   const filePtr = pdfium.pdfium.wasmExports.malloc(pdfData.length);
   pdfium.pdfium.HEAPU8.set(pdfData, filePtr);
-  
-  // Load the PDF document
   const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, 0);
   
   if (!docPtr) {
@@ -51,32 +57,11 @@ async function getPdfInfo(pdfData: Uint8Array) {
   }
   
   try {
-    // Get the page count
+    // Step 3: Get the page count
     const pageCount = pdfium.FPDF_GetPageCount(docPtr);
-    
-    console.log(`The PDF has ${pageCount} pages`);
-    
-    // You can use the page count to iterate through all pages
-    for (let i = 0; i < pageCount; i++) {
-      const pagePtr = pdfium.FPDF_LoadPage(docPtr, i);
-      
-      if (!pagePtr) {
-        console.warn(`Could not load page ${i}`);
-        continue;
-      }
-      
-      try {
-        // Do something with each page...
-        console.log(`Processing page ${i + 1} of ${pageCount}`);
-      } finally {
-        // Always close the page when done
-        pdfium.FPDF_ClosePage(pagePtr);
-      }
-    }
-    
-    return { pageCount };
+    return pageCount;
   } finally {
-    // Clean up document resources
+    // Step 4: Clean up
     pdfium.FPDF_CloseDocument(docPtr);
     pdfium.pdfium.wasmExports.free(filePtr);
   }
@@ -85,9 +70,11 @@ async function getPdfInfo(pdfData: Uint8Array) {
 // Usage
 fetch('sample.pdf')
   .then(response => response.arrayBuffer())
-  .then(buffer => getPdfInfo(new Uint8Array(buffer)))
-  .then(info => console.log(`Document processed. It has ${info.pageCount} pages.`))
-  .catch(error => console.error('Error:', error));
+  .then(buffer => getPdfPageCount(new Uint8Array(buffer)))
+  .then(pageCount => {
+    console.log(`The PDF has ${pageCount} pages`);
+  })
+  .catch(error => console.error(error));
 ```
 
 ## Best Practices
