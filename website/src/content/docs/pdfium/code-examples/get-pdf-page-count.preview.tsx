@@ -36,9 +36,10 @@ export default function GetPdfPageCountDemo() {
       </button>
 
       {pageCount !== null && (
-        <p className="text-green-600">
-          The PDF has {pageCount} pages
-        </p>
+        <div className="mt-2 p-4 bg-green-50 text-green-700 rounded-md border border-green-500">
+          <p>PDF opened successfully!</p>
+          <p>Number of pages: {pageCount}</p>
+        </div>
       )}
 
       {error && (
