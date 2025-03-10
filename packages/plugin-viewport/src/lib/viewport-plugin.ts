@@ -10,6 +10,7 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
   private resizeHandlers: ((metrics: ViewportMetrics) => void)[] = [];
   private containerChangeHandlers: ((element: HTMLElement) => void)[] = [];
   private config!: ViewportPluginConfig;
+  private viewportGap: number = 0;
 
   constructor(
     public readonly id: string,
@@ -26,6 +27,7 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
       },
       getMetrics: () => this.getViewportMetrics(),
       setContainer: (container) => this.setContainer(container),
+      getViewportGap: () => this.viewportGap,
       onViewportChange: (handler, options?: EventControlOptions) => {
         if (options) {
           const controlledHandler = new EventControl(handler, options).handle;
@@ -53,6 +55,9 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
 
   async initialize(config: ViewportPluginConfig): Promise<void> {
     this.config = config;
+    
+    // Set viewport gap from config or default to 0
+    this.viewportGap = config.viewportGap ?? 0;
 
     // If container is provided in config, use it
     if (config.container) {
@@ -81,6 +86,12 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
     }
 
     this.container = container;
+    
+    // Apply viewport gap to container padding
+    if (this.viewportGap > 0) {
+      container.style.padding = `round(down, var(--scale-factor) * ${this.viewportGap}px, 1px)`;
+      container.style.boxSizing = 'border-box';
+    }
 
     // Setup new container
     this.setupContainerObserver();

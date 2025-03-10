@@ -71,6 +71,7 @@ export class ZoomController {
     // Get spread pages from page manager
     const spreadPages = this.pageManager.getSpreadPages();
     const pageGap = this.pageManager.getPageGap();
+    const viewportGap = this.viewport.getViewportGap();
 
     if (!spreadPages.length) {
       return 1;
@@ -83,9 +84,9 @@ export class ZoomController {
     spreadPages.forEach(spread => {
       const spreadWidth = spread.reduce((width, page, index) => {
         return width + page.size.width + (index > 0 ? pageGap : 0);
-      }, 0);
+      }, 0) + (2 * viewportGap);
       
-      const spreadHeight = Math.max(...spread.map(page => page.size.height));
+      const spreadHeight = Math.max(...spread.map(page => page.size.height)) + (2 * viewportGap);
       
       maxWidth = Math.max(maxWidth, spreadWidth);
       maxHeight = Math.max(maxHeight, spreadHeight);

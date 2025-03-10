@@ -28,6 +28,7 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
       createPageElement: (page, pageNum) => this.pageManager.createPageElement(page, pageNum),
       getScaleFactor: () => this.currentZoom,
       pageGap: this.pageManager.getPageGap(),
+      viewportGap: this.viewport.getViewportGap(),
     });
     
     this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'throttle', wait: 250 });

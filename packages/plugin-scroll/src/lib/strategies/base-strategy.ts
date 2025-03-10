@@ -5,6 +5,7 @@ import { VirtualItem } from "../types/virtual-item";
 
 export interface ScrollStrategyConfig {
   pageGap?: number;
+  viewportGap?: number;
   bufferSize?: number;
   createPageElement?: (page: PdfPageObject, pageNum: number) => HTMLElement;
   getScaleFactor?: () => number;
@@ -27,17 +28,19 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   };
 
   protected pageGap: number;
+  protected viewportGap: number;
   protected bufferSize: number;
   protected scaleFactor: number = 1;
 
   protected createPageElementFn: (page: PdfPageObject, pageNum: number) => HTMLElement;
-  protected getScaleFactorFn?: () => number;
+  protected getScaleFactorFn: () => number;
 
   constructor(config?: ScrollStrategyConfig) {
     // Use provided values or defaults
     this.pageGap = config?.pageGap ?? 20;
+    this.viewportGap = config?.viewportGap ?? 20;
     this.bufferSize = config?.bufferSize ?? 2;
-    this.getScaleFactorFn = config?.getScaleFactor;
+    this.getScaleFactorFn = config?.getScaleFactor ?? (() => 1);
 
     // Store the page element creation function
     if (config?.createPageElement) {
@@ -312,7 +315,11 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     );
     
     if (item) {
-      this.setScrollPosition(this.container, item.scaledOffset, behavior);
+      // Adjust scroll position by subtracting the viewportGap to position the page exactly at the edge
+      // This compensates for the padding added to the viewport container
+      const adjustedPosition = Math.max(0, item.scaledOffset + (this.viewportGap * this.getScaleFactorFn()));
+      
+      this.setScrollPosition(this.container, adjustedPosition, behavior);
     }
   }
 
@@ -327,7 +334,10 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     // Move to the next virtual item if available
     if (currentItemIndex >= 0 && currentItemIndex < this.virtualItems.length - 1) {
       const nextItem = this.virtualItems[currentItemIndex + 1];
-      this.setScrollPosition(this.container, nextItem.scaledOffset);
+      // Adjust scroll position by subtracting the viewportGap
+      const adjustedPosition = Math.max(0, nextItem.scaledOffset + (this.viewportGap * this.getScaleFactorFn()));
+      
+      this.setScrollPosition(this.container, adjustedPosition);
     }
   }
 
@@ -342,7 +352,10 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     // Move to the previous virtual item if available
     if (currentItemIndex > 0) {
       const prevItem = this.virtualItems[currentItemIndex - 1];
-      this.setScrollPosition(this.container, prevItem.scaledOffset);
+      // Adjust scroll position by subtracting the viewportGap
+      const adjustedPosition = Math.max(0, prevItem.scaledOffset + (this.viewportGap * this.getScaleFactorFn()));
+      
+      this.setScrollPosition(this.container, adjustedPosition);
     }
   }
 

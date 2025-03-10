@@ -5,6 +5,7 @@ export interface ViewportPluginConfig extends BasePluginConfig {
   container?: HTMLElement; 
   defaultWidth?: number;
   defaultHeight?: number;    
+  viewportGap?: number;
 }
 
 export interface ViewportMetrics {
@@ -31,6 +32,7 @@ export interface ViewportCapability {
   getContainer: () => HTMLElement;
   getMetrics: () => ViewportMetrics;
   setContainer: (container: HTMLElement) => void;
+  getViewportGap: () => number;
   onViewportChange: (
     handler: (metrics: ViewportMetrics) => void,
     options?: EventControlOptions
