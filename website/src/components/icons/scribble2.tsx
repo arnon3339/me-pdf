@@ -1,4 +1,4 @@
-export const Scribble = ({ width = "100%", height = "40px", color = "#000000" }) => {
+export const Scribble2 = ({ width = "100%", height = "40px", color = "#000000" }) => {
   return (
     <svg
       width={width}

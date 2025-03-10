@@ -2,6 +2,7 @@ export const methods = [
   'wasmExports',
   'cwrap',
   'addFunction',
+  'removeFunction',
   'ccall',
   'setValue',
   'getValue',

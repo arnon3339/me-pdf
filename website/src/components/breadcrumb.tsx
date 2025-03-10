@@ -13,15 +13,26 @@ export const Breadcrumb: FC<{
     <div className="nextra-breadcrumb mt-1.5 flex items-center gap-1 overflow-hidden text-sm text-gray-500 dark:text-gray-400 contrast-more:text-current">
       {activePath.map((item, index, arr) => {
         const nextItem = arr[index + 1]
-        const href = nextItem
-          ? 'frontMatter' in item
+        
+        // Check if this item has an index page
+        const hasIndexPage = item.children?.some(child => child.name === 'index')
+        
+        // Determine the href for this breadcrumb item
+        let href = ''
+        
+        if (hasIndexPage) {
+          // If it has an index page, use the item's own route
+          href = item.route
+        } else if (nextItem) {
+          // Otherwise use the original logic for non-index items
+          href = 'frontMatter' in item
             ? item.route
             : // @ts-expect-error -- fixme
-              item.children[0].route === nextItem.route
+              item.children?.[0]?.route === nextItem.route
               ? ''
               : // @ts-expect-error -- fixme
-                item.children[0].route
-          : ''
+                item.children?.[0]?.route || ''
+        }
 
         const ComponentToUse = href ? NextLink : 'span'
 

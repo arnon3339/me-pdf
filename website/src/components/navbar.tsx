@@ -37,10 +37,14 @@ export default function Navbar() {
               <span className="relative z-10">Features</span>
               <span className="absolute inset-0 bg-purple-100 rounded-full scale-0 group-hover:scale-100 transition-transform"></span>
             </a> */}
-            <Link href="/docs/introduction" className="group text-gray-600 transition-colors relative py-2 px-4">
+            <Link href="/docs" className="group text-gray-600 transition-colors relative py-2 px-4">
               <span className="relative z-10">Documentation</span>
               <span className="absolute inset-0 bg-blue-100 rounded-full scale-0 group-hover:scale-100 transition-transform"></span>
             </Link>
+            {/* <Link href="/blog" className="group text-gray-600 transition-colors relative py-2 px-4">
+              <span className="relative z-10">Blog</span>
+              <span className="absolute inset-0 bg-orange-100 rounded-full scale-0 group-hover:scale-100 transition-transform"></span>
+            </Link> */}
             {/* <a href="#examples" className="group text-gray-600 transition-colors relative py-2">
               <span className="relative z-10">Examples</span>
               <span className="absolute inset-0 bg-orange-100 rounded-full scale-0 group-hover:scale-100 transition-transform"></span>
@@ -84,7 +88,7 @@ export default function Navbar() {
               <span>Features</span>
             </a>*/}
             <Link 
-              href="/docs/introduction" 
+              href="/docs" 
               className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
               onClick={() => setIsMenuOpen(false)}
             >

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Menu, X, Code, ChevronDown, Download, ExternalLink, Github } from 'lucide-react';
 import { JavaScript } from '@/components/icons/javascript';
 import { Typescript } from '@/components/icons/typescript';
-import { Scribble } from '@/components/icons/scribble2';
+import { Scribble2 } from '@/components/icons/scribble2';
 import Link from 'next/link';
 
 // Animated blobs for the background
@@ -42,8 +42,8 @@ const HeaderAndHero = () => {
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-gray-900 tracking-tight leading-tight">
                 <span className="relative inline-block">
                   <span className="relative z-10">Embed PDF files</span>
-                  <div className="absolute bottom-1 left-0 right-0 h-4 -z-10 transform -rotate-1">
-                    <Scribble color="#765ba7" />
+                  <div className="absolute bottom-1 left-0 opacity-50 right-0 h-4 -z-10 transform -rotate-1">
+                    <Scribble2 color="#765ba7" />
                   </div>
                 </span>
                 <br />
@@ -58,7 +58,7 @@ const HeaderAndHero = () => {
               
               <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-5">
                 <Link 
-                  href="/docs/introduction"
+                  href="/docs"
                   className="group relative overflow-hidden inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-full bg-gray-900 text-white shadow-xl"
                 >
                   <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-purple-600 via-blue-500 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"></span>
@@ -154,7 +154,7 @@ const HeaderAndHero = () => {
                   <p className="text-gray-600 mb-8 max-w-xl mx-auto">Join thousands of developers who've simplified their PDF integration with EmbedPDF.</p>
                   <div className="flex flex-col sm:flex-row justify-center gap-4">
                     <Link 
-                      href="/docs/introduction"
+                      href="/docs"
                       className="inline-flex items-center justify-center px-6 py-3 bg-gray-900 text-white font-medium rounded-full shadow-lg hover:bg-gray-800 transition-colors"
                     >
                       Get Started Free

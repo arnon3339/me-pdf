@@ -10,6 +10,7 @@ export interface PdfiumRuntimeMethods {
   wasmExports: WasmExports;
   cwrap: typeof cwrap;
   addFunction: typeof addFunction;
+  removeFunction: typeof removeFunction;
   ccall: typeof ccall;
   setValue: typeof setValue;
   getValue: typeof getValue;

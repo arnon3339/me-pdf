@@ -14,6 +14,8 @@ export const functions = {
   FPDF_GetPageSizeByIndexF: [['number', 'number', 'number'], 'number'],
   FPDF_GetLastError: [[], 'number'],
   FPDF_GetPageCount: [['number'], 'number'],
+  FPDF_GetPageWidthF: [['number'], 'number'],
+  FPDF_GetPageHeightF: [['number'], 'number'],
   FPDF_CloseDocument: [['number'], null],
   FPDF_GetDocPermissions: [['number'], 'number'],
   FPDF_GetDocUserPermissions: [['number'], 'number'],
