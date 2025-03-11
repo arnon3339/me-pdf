@@ -20,4 +20,4 @@ export const manifest: PluginManifest<LayerPluginConfig> = {
     enabled: true,
     layers: []
   }
-}; 
+};

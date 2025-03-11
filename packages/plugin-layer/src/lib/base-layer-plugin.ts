@@ -7,11 +7,12 @@ interface LayerPageCache<T = void> {
   container: HTMLElement;
   options: LayerRenderOptions;
   data: T;
+  topic?: string; // Add topic for different rendering contexts
 }
 
 interface DocumentCache<T = void> {
   documentId: string;
-  pages: Map<number, LayerPageCache<T>>;
+  pages: Map<number, Map<string, LayerPageCache<T>>>; // Nested map for topic-specific caches
   lastAccessed: number;
 }
 
@@ -34,21 +35,56 @@ export abstract class BaseLayerPlugin<TConfig = unknown, TCacheData = void> impl
   ): Promise<void>;
 
   /**
+   * Update an existing render with new options
+   */
+  async updateRender(
+    document: PdfDocumentObject,
+    page: PdfPageObject,
+    container: HTMLElement,
+    options: LayerRenderOptions
+  ): Promise<void> {
+    // Default implementation just re-renders
+    await this.render(document, page, container, options);
+  }
+
+  /**
+   * Remove cache for a specific document, page, and topic
+   */
+  async removeCache(documentId: string, pageNumber: number, topic?: string, force?: boolean): Promise<void> {
+    // Default implementation - individual layers can override to decide if they want to honor non-forced removal
+    if (force !== false) {
+      this.clearCache(documentId, pageNumber, topic);
+    }
+  }
+
+  /**
    * Get complete cache entry for a specific page in a document
    */
-  protected getPageCache(documentId: string, pageNumber: number): LayerPageCache<TCacheData> | undefined {
+  protected getPageCache(
+    documentId: string, 
+    pageNumber: number, 
+    topic: string = 'default'
+  ): LayerPageCache<TCacheData> | undefined {
     const docCache = this.documentCache.get(documentId);
     if (!docCache) return undefined;
     
     docCache.lastAccessed = Date.now();
-    return docCache.pages.get(pageNumber);
+    const pageCache = docCache.pages.get(pageNumber);
+    
+    if (!pageCache) return undefined;
+    
+    return pageCache.get(topic);
   }
 
   /**
    * Get just the cached data for a specific page in a document
    */
-  protected getPageCacheData(documentId: string, pageNumber: number): TCacheData | undefined {
-    return this.getPageCache(documentId, pageNumber)?.data;
+  protected getPageCacheData(
+    documentId: string, 
+    pageNumber: number,
+    topic: string = 'default'
+  ): TCacheData | undefined {
+    return this.getPageCache(documentId, pageNumber, topic)?.data;
   }
 
   /**
@@ -63,6 +99,7 @@ export abstract class BaseLayerPlugin<TConfig = unknown, TCacheData = void> impl
     data: TCacheData
   ): void {
     let docCache = this.documentCache.get(documentId);
+    const topic = options.topic || 'default';
     
     if (!docCache) {
       this.ensureCacheCapacity();
@@ -75,11 +112,20 @@ export abstract class BaseLayerPlugin<TConfig = unknown, TCacheData = void> impl
     }
 
     docCache.lastAccessed = Date.now();
-    docCache.pages.set(pageNumber, {
+    
+    // Setup page map if it doesn't exist
+    if (!docCache.pages.has(pageNumber)) {
+      docCache.pages.set(pageNumber, new Map());
+    }
+    
+    // Set cache for this topic
+    const pageCache = docCache.pages.get(pageNumber)!;
+    pageCache.set(topic, {
       page,
       container,
       options,
       data,
+      topic
     });
   }
 
@@ -110,22 +156,37 @@ export abstract class BaseLayerPlugin<TConfig = unknown, TCacheData = void> impl
     container: HTMLElement,
     options: LayerRenderOptions
   ): boolean {
-    const cache = this.getPageCache(documentId, pageNumber);
+    const topic = options.topic || 'default';
+    const cache = this.getPageCache(documentId, pageNumber, topic);
     if (!cache) return false;
+
+    // Don't compare topic in options, as we've already used it to select the correct cache
+    const { topic: _, ...optionsWithoutTopic } = options;
+    const { topic: __, ...cacheOptionsWithoutTopic } = cache.options;
 
     return (
       cache.container === container &&
-      JSON.stringify(cache.options) === JSON.stringify(options)
+      JSON.stringify(optionsWithoutTopic) === JSON.stringify(cacheOptionsWithoutTopic)
     );
   }
 
   /**
-   * Clear cache for a specific document, page, or all documents
+   * Clear cache for a specific document, page, topic, or all documents
    */
-  protected clearCache(documentId?: string, pageNumber?: number): void {
+  protected clearCache(documentId?: string, pageNumber?: number, topic?: string): void {
     if (documentId) {
+      const docCache = this.documentCache.get(documentId);
+      if (!docCache) return;
+      
       if (pageNumber !== undefined) {
-        this.documentCache.get(documentId)?.pages.delete(pageNumber);
+        const pageCache = docCache.pages.get(pageNumber);
+        if (!pageCache) return;
+        
+        if (topic !== undefined) {
+          pageCache.delete(topic);
+        } else {
+          docCache.pages.delete(pageNumber);
+        }
       } else {
         this.documentCache.delete(documentId);
       }
