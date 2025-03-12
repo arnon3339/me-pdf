@@ -7,12 +7,19 @@
   },
   "dependencies": {
     "@embedpdf/core": "workspace:*",
-    "@embedpdf/plugin-navigation": "workspace:*",
-    "@embedpdf/plugin-renderer": "workspace:*",
+    "@embedpdf/plugin-loader": "workspace:*",
+    "@embedpdf/plugin-viewport": "workspace:*",
+    "@embedpdf/plugin-spread": "workspace:*",
+    "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-layer": "workspace:*",
+    "@embedpdf/plugin-zoom": "workspace:*",
+    "@embedpdf/plugin-page-manager": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
-    "@embedpdf/engines": "workspace:*"
+    "@embedpdf/engines": "workspace:*",
+    "@embedpdf/layer-text": "workspace:*",
+    "@embedpdf/layer-render": "workspace:*",
+    "@embedpdf/layer-render-partial": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

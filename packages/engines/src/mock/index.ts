@@ -300,7 +300,6 @@ export function createMockPdfEngine(
     merge: (files: PdfFile[]) => {
       return PdfTaskHelper.resolve({
         id: 'id',
-        name: 'name',
         content: new ArrayBuffer(0),
       });
     },
@@ -424,7 +423,6 @@ export function createMockPdfDocument(
 
   return {
     id: 'id',
-    name: 'name',
     pageCount: pageCount,
     pages: pages,
     ...doc,
@@ -441,7 +439,6 @@ export function createMockPdfDocument(
 export function createMockPdfFile(file?: Partial<PdfFile>): PdfFile {
   return {
     id: 'id',
-    name: 'name',
     content: new ArrayBuffer(0),
   };
 }

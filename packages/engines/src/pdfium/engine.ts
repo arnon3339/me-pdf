@@ -295,7 +295,6 @@ export class PdfiumEngine implements PdfEngine {
 
     const pdfDoc = {
       id: file.id,
-      name: file.name,
       pageCount,
       pages,
     };
@@ -450,7 +449,6 @@ export class PdfiumEngine implements PdfEngine {
 
     const pdfDoc = {
       id: file.id,
-      name: file.name,
       pageCount,
       pages,
     };
@@ -2177,7 +2175,6 @@ export class PdfiumEngine implements PdfEngine {
 
     const file: PdfFile = {
       id: `${Math.random()}`,
-      name: `merged.${Math.random()}.pdf`,
       content: buffer,
     };
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `Merge`, 'End', fileIds);

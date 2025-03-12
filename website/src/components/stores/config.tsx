@@ -1,7 +1,6 @@
 'use client'
 
 import type { PageMapItem } from 'nextra'
-import { useFSRoute } from 'nextra/hooks'
 import { normalizePages } from 'nextra/normalize-pages'
 import type { FC, ReactElement, ReactNode } from 'react'
 import { createContext, useContext } from 'react'

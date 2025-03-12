@@ -13,7 +13,6 @@
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/plugin-layer": "workspace:*",
-    "@embedpdf/plugin-navigation": "workspace:*",
     "@headlessui/react": "^2.2.0",
     "@mdx-js/loader": "^3.0.0",
     "@mdx-js/react": "^3.0.0",
