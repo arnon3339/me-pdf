@@ -11,6 +11,7 @@ interface RenderPartialCacheData {
   scale: number;
   rotation: number;
   regionKey: string;
+  needToAddCanvas: boolean;
 }
 
 interface PageContext {
@@ -206,7 +207,7 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
     }
 
     // Create a unique key for this region to detect changes
-    const regionKey = `${visibleRegion.pageX},${visibleRegion.pageY},${visibleRegion.visibleWidth},${visibleRegion.visibleHeight}`;
+    const regionKey = `${visibleRegion.pageX},${visibleRegion.pageY},${visibleRegion.visibleWidth},${visibleRegion.visibleHeight},${options.rotation}`;
 
     // If the visible region hasn't changed, no need to re-render
     if (this.pageVisibleRegions.get(page.index) === regionKey) {
@@ -217,7 +218,9 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
       }
       return;
     }
-    
+
+    let needToAddCanvas = false;
+
     // Cancel any existing render task
     const existingCache = this.getPageCache(pdfDocument.id, page.index, topic);
     if (existingCache?.data.renderTask) {
@@ -225,16 +228,24 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
         code: PdfErrorCode.Cancelled, 
         message: 'Render task cancelled due to region change' 
       });
+
+      needToAddCanvas = existingCache.data.needToAddCanvas;
     }
 
     // Create or reuse canvas
     let canvas: HTMLCanvasElement;
     if (existingCache) {
       canvas = existingCache.data.canvas;
+
+      if(existingCache.data.rotation !== options.rotation && canvas.parentNode === container) {
+        container.removeChild(canvas);
+        needToAddCanvas = true;
+      }
     } else {
       canvas = document.createElement('canvas');
       canvas.style.position = 'absolute';
       canvas.style.pointerEvents = 'none';
+      needToAddCanvas = true;
     }
 
     // Define the rectangle to render
@@ -244,7 +255,7 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
     };
 
     const rotatedRect = restoreRect(transformSize(page.size, options.rotation, 1), rect, options.rotation, 1);
-    
+
     // Render only the visible portion of the page
     const devicePixelRatio = window.devicePixelRatio || 1;
     const renderTask = await this.engine.renderPageRect(
@@ -269,20 +280,21 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
         renderTask,
         scale: options.scale,
         rotation: options.rotation,
-        regionKey
+        regionKey,
+        needToAddCanvas
       }
     );
-
-    // Add to container if not already there
-    if (container.contains(canvas) === false) {
-      container.appendChild(canvas);
-    }
 
     // Wait for the rendering to complete and then update the canvas
     renderTask.wait(
       (imageData) => {
         this.renderToCanvas(canvas, imageData, visibleRegion);
         this.pageVisibleRegions.set(page.index, regionKey);
+
+        // Add to container if not already there
+        if (needToAddCanvas) {
+          container.appendChild(canvas);
+        }
       },
       (error) => {
         console.error('Error rendering page rect:', error);

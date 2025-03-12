@@ -119,8 +119,6 @@ export class RenderLayer extends BaseLayerPlugin<RenderLayerConfig, RenderCacheD
   ): Promise<void> {
     const scale = this.maxScale !== undefined ? Math.min(options.scale || 1, this.maxScale) : (options.scale || 1);
 
-    console.log(scale, this.maxScale);
-
     const rotation = options.rotation || 0;
     const topic = options.topic || 'default';
     
