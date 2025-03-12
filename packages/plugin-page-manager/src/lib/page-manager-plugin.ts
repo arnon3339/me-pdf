@@ -211,8 +211,6 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
   }
 
   createPageElement(page: PdfPageObject, pageNum: number): HTMLElement {
-    console.log('createPageElement', pageNum);
-    
     // Check if we already have a cached element for this page
     const cached = this.pageCache.get(pageNum);
     

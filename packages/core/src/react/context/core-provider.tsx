@@ -1,29 +1,9 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { PDFCore } from '../../lib/core';
 
-interface PDFCoreContextValue {
-  core: PDFCore;
-}
-
-const PDFCoreContext = createContext<PDFCoreContextValue | null>(null);
-
-interface PDFCoreProviderProps {
-  core: PDFCore;
-  children: ReactNode;
-}
-
-export function PDFCoreProvider({ core, children }: PDFCoreProviderProps) {
+export function PDFCoreProvider({ children }: { children: ReactNode }) {
   return (
-    <PDFCoreContext.Provider value={{ core }}>
+    <div>
       {children}
-    </PDFCoreContext.Provider>
+    </div>
   );
-}
-
-export function usePDFCore() {
-  const context = useContext(PDFCoreContext);
-  if (!context) {
-    throw new Error('usePDFCore must be used within a PDFCoreProvider');
-  }
-  return context.core;
 }

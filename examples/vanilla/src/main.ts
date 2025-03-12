@@ -57,8 +57,8 @@ async function initializePDFViewer() {
   registry.registerPlugin(LayerPluginPackage, {
     layers: [
       { package: TextLayerPackage },
-      { package: RenderLayerPackage, config: { maxScale: 1 } },
-      { package: RenderPartialLayerPackage, config: { minScale: 1.01 } }
+      { package: RenderLayerPackage, config: { maxScale: 2 } },
+      { package: RenderPartialLayerPackage, config: { minScale: 2.01 } }
     ]
   });
 

@@ -5,14 +5,14 @@ import {
   PluginManifest,
   PluginStatus,
   PluginPackage
-} from '../plugin-types/plugin';
+} from '../types/plugin';
 import {
   PluginRegistrationError,
   PluginNotFoundError,
   CircularDependencyError,
   CapabilityNotFoundError,
   PluginConfigurationError
-} from '../plugin-types/errors';
+} from '../types/errors';
 import { PdfEngine } from '@embedpdf/models';
 
 export class PluginRegistry {

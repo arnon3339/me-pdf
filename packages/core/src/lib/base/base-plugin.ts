@@ -1,5 +1,6 @@
-import { IPlugin } from '../plugin-types/plugin';
+import { IPlugin } from '../types/plugin';
 import { PluginRegistry } from '../registry/plugin-registry';
+
 export interface StateChangeHandler<TState> {
   (state: TState): void;
 }
