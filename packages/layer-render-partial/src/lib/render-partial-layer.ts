@@ -1,4 +1,4 @@
-import { PdfPageObject, PdfDocumentObject, PdfEngine, PdfTask, PdfErrorCode } from "@embedpdf/models";
+import { PdfPageObject, PdfDocumentObject, PdfEngine, PdfTask, PdfErrorCode, transformRect, Rotation, restoreRect, transformSize } from "@embedpdf/models";
 import { RenderPartialLayerConfig } from "./types";
 import { BaseLayerPlugin, LayerRenderOptions } from "@embedpdf/plugin-layer";
 import { PluginRegistry } from "@embedpdf/core";
@@ -172,7 +172,7 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
       container,
       options
     });
-    
+
     // Get current scroll metrics
     const scrollMetrics = this.scroll.getMetrics(this.viewport.getMetrics());
     
@@ -207,7 +207,7 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
 
     // Create a unique key for this region to detect changes
     const regionKey = `${visibleRegion.pageX},${visibleRegion.pageY},${visibleRegion.visibleWidth},${visibleRegion.visibleHeight}`;
-    
+
     // If the visible region hasn't changed, no need to re-render
     if (this.pageVisibleRegions.get(page.index) === regionKey) {
       // Add existing canvas to container if available
@@ -243,6 +243,8 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
       size: { width: visibleRegion.visibleWidth, height: visibleRegion.visibleHeight }
     };
 
+    const rotatedRect = restoreRect(transformSize(page.size, options.rotation, 1), rect, options.rotation, 1);
+    
     // Render only the visible portion of the page
     const devicePixelRatio = window.devicePixelRatio || 1;
     const renderTask = await this.engine.renderPageRect(
@@ -251,7 +253,7 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
       options.scale,
       options.rotation,
       devicePixelRatio,
-      rect,
+      rotatedRect,
       { withAnnotations: true }
     );
 
