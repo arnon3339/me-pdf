@@ -75,6 +75,11 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
 
   private handleScrollMetricsChange(scrollMetrics: ScrollMetrics): void {
     this.scrollHandlers.forEach(handler => handler(scrollMetrics));
+    this.pageManager.updateVisiblePages({
+      visiblePages: scrollMetrics.visiblePages, 
+      currentPage: scrollMetrics.currentPage,
+      renderedPageIndexes: scrollMetrics.renderedPageIndexes
+    });
 
     this.handlePageChange(scrollMetrics);
   }

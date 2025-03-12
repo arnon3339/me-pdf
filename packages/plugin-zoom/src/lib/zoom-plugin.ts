@@ -74,7 +74,11 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
   async updateZoomLevel(zoomLevel: ZoomLevel): Promise<void> {
     this.updateState({ zoomLevel });
 
-    this.zoomController.zoomTo(zoomLevel);
+    const zoomEvent = this.zoomController.zoomTo(zoomLevel);
+
+    if(zoomEvent.newZoom !== zoomEvent.oldZoom) {
+      this.pageManager.updateScale(zoomEvent.newZoom);
+    }
   }
 
   async destroy(): Promise<void> {

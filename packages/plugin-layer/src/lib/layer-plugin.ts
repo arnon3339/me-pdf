@@ -116,7 +116,7 @@ export class LayerPlugin implements IPlugin<LayerPluginConfig> {
           this.addLayer(layerPlugin);
           return layerPlugin;
         }
-      });
+      }, layer.config);
     }
   }
 

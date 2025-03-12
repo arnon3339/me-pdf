@@ -124,15 +124,17 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     const visibleHeight = intersection.bottom - intersection.top;
     const totalArea = pageRect.width * pageRect.height;
     const visibleArea = visibleWidth * visibleHeight;
+
+    const scale = this.getScaleFactorFn();
     
     return {
       pageNumber: parseInt(pageElement.dataset.pageNumber || '0'),
       viewportX: intersection.left - containerRect.left,
       viewportY: intersection.top - containerRect.top,
-      pageX: intersection.left - pageRect.left,
-      pageY: intersection.top - pageRect.top,
-      visibleWidth,
-      visibleHeight,
+      pageX: (intersection.left - pageRect.left) / scale,
+      pageY: (intersection.top - pageRect.top) / scale,
+      visibleWidth: visibleWidth / scale,
+      visibleHeight: visibleHeight / scale,
       visiblePercentage: (visibleArea / totalArea) * 100
     };
   }
@@ -298,12 +300,10 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     
     const newScrollMetrics = this.handleScroll(viewport);
 
-    if(newScrollMetrics.currentPage !== currentPage) {
-      this.scrollToPage(currentPage, 'instant');
-    }
+    this.scrollToPage(currentPage, 'instant');
 
     return newScrollMetrics;
-  }
+  } 
 
   calculateDimensions(pdfPageObject: PdfPageObject[][]): void {
     this.virtualItems = this.createVirtualItems(pdfPageObject);

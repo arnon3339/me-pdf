@@ -1,5 +1,5 @@
 {
-  "name": "@embedpdf/plugin-renderer",
+  "name": "@embedpdf/layer-render-partial",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,8 +8,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.cjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "scripts": {
@@ -26,7 +26,10 @@
   },
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",
-    "@embedpdf/models": "workspace:*"
+    "@embedpdf/models": "workspace:*",
+    "@embedpdf/plugin-layer": "workspace:*",
+    "@embedpdf/plugin-scroll": "workspace:*",
+    "@embedpdf/plugin-viewport": "workspace:*"
   },
   "files": [
     "dist",

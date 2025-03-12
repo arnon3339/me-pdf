@@ -1,5 +1,6 @@
 import { PluginManifest } from "@embedpdf/core";
 import { PageManagerPluginConfig } from "./types";
+import { Rotation } from "@embedpdf/models";
 
 export const PAGE_MANAGER_PLUGIN_ID = 'page-manager';
 
@@ -11,6 +12,8 @@ export const manifest: PluginManifest<PageManagerPluginConfig> = {
   consumes: ['loader', 'spread', 'layer'],
   defaultConfig: {
     enabled: true,
-    pageGap: 20
+    pageGap: 20,
+    scale: 1,
+    rotation: Rotation.Degree0
   }
 };

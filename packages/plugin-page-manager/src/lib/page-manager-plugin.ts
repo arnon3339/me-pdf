@@ -1,10 +1,18 @@
 import { IPlugin, PluginRegistry } from "@embedpdf/core";
-import { PdfDocumentObject, PdfPageObject } from "@embedpdf/models";
+import { PdfDocumentObject, PdfPageObject, Rotation, transformSize } from "@embedpdf/models";
 import { LoaderCapability, LoaderPlugin } from "@embedpdf/plugin-loader";
 import { SpreadCapability, SpreadPlugin, SpreadMode } from "@embedpdf/plugin-spread";
-import { LayerCapability, LayerPlugin } from "@embedpdf/plugin-layer";
+import { LayerCapability, LayerController, LayerPlugin } from "@embedpdf/plugin-layer";
+import { PageManagerCapability, PageManagerPluginConfig, UpdateVisiblePages } from "./types";
 
-import { PageManagerCapability, PageManagerPluginConfig } from "./types";
+// Define a structure that combines page element, controller, and rendering properties
+interface PageElementCache {
+  element: HTMLElement;
+  controller: LayerController | null;
+  scale: number;
+  rotation: Rotation;
+  pageNum: number;
+}
 
 export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
   private loader: LoaderCapability;
@@ -18,7 +26,17 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
   private pages: PdfPageObject[] = [];
   private spreadPages: PdfPageObject[][] = [];
   private pageGap: number = 20;
-  private pageElements: Map<number, HTMLElement> = new Map();
+  
+  // Unified cache that contains both element and controller together with metadata
+  private pageCache: Map<number, PageElementCache> = new Map();
+  
+  private rotation: Rotation = Rotation.Degree0;
+  private scale: number = 1;
+  private visiblePages: number[] = [];
+  private currentPage: number = 0;
+  private renderedPageIndexes: number[] = [];
+  // Maximum number of canvas elements to keep in memory
+  private maxCanvasCache: number = 50; // This could be configurable
 
   constructor(
     public readonly id: string,
@@ -40,7 +58,12 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
       getPages: () => this.pages,
       getSpreadPages: () => this.spreadPages,
       getPageGap: () => this.pageGap,
-      createPageElement: this.createPageElement.bind(this)
+      createPageElement: this.createPageElement.bind(this),
+      getScale: () => this.scale,
+      updateScale: this.updateScale.bind(this),
+      getRotation: () => this.rotation,
+      updateRotation: this.updateRotation.bind(this),
+      updateVisiblePages: this.updateVisiblePages.bind(this)
     };
   }
 
@@ -48,44 +71,245 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
     if (config.pageGap !== undefined) {
       this.pageGap = config.pageGap;
     }
+
+    if (config.scale !== undefined) {
+      this.scale = config.scale;
+    }
+
+    if (config.rotation !== undefined) {
+      this.rotation = config.rotation;
+    }
+
+    if (config.maxCanvasCache !== undefined) {
+      this.maxCanvasCache = config.maxCanvasCache;
+    }
+  }
+
+  updateVisiblePages({ visiblePages, currentPage, renderedPageIndexes }: UpdateVisiblePages): void {
+    this.visiblePages = visiblePages;
+    this.currentPage = currentPage;
+    this.renderedPageIndexes = renderedPageIndexes;
+
+    // When visibility changes, check if we need to clear cache for non-visible pages
+    this.manageLayerCache();
+  }
+
+  updateScale(scale: number): void {
+    if (this.scale === scale) return;
+    
+    this.scale = scale;
+    
+    // Update all rendered pages in order of visibility
+    this.updateRenderedPages();
+  }
+
+  updateRotation(rotation: Rotation): void {
+    if (this.rotation === rotation) return;
+    
+    this.rotation = rotation;
+    
+    // Update the spreadPages as dimensions change with rotation
+    if (this.pdfDocument) {
+      // We need to recreate spreadPages with rotated dimensions
+      this.updateSpreadPages();
+      // Notify that pages have changed so scroller can rerender
+      this.notifyPagesChange();
+    }
+  }
+
+  /**
+   * Apply transformSize to each page and create spread pages with transformed dimensions
+   */
+  private updateSpreadPages(): void {
+    if (!this.pdfDocument || !this.pages.length) return;
+    
+    // Create transformed pages with proper dimensions based on rotation
+    const transformedPages = this.pages.map(page => {
+      // Create a copy of the page to avoid modifying original
+      const transformedPage = { ...page };
+      // Apply rotation to get correctly sized pages
+      const newSize = transformSize(page.size, this.rotation, 1);
+      transformedPage.size = newSize;
+      return transformedPage;
+    });
+    
+    // Create spread pages using the transformed pages
+    this.spreadPages = this.spread.getSpreadPagesObjects(transformedPages);
+  }
+
+  /**
+   * Updates all rendered pages with current scale/rotation,
+   * prioritizing the most visible page first
+   */
+  private updateRenderedPages(): void {
+    if (!this.renderedPageIndexes.length) return;
+    
+    // Sort rendered indexes by proximity to current page for priority updating
+    const sortedIndexes = [...this.renderedPageIndexes].sort((a, b) => {
+      const distA = Math.abs(a - this.currentPage);
+      const distB = Math.abs(b - this.currentPage);
+      return distA - distB;
+    });
+    
+    // Update each page's layer controller
+    for (const pageIndex of sortedIndexes) {
+      // We need to adjust for 1-indexed page numbers in the cache
+      const pageNum = pageIndex + 1;
+      const cached = this.pageCache.get(pageNum);
+      
+      if (cached?.controller) {
+        // Update cached metadata
+        cached.scale = this.scale;
+        cached.rotation = this.rotation;
+        
+        // Update controller with new properties
+        cached.controller.update({
+          scale: this.scale,
+          rotation: this.rotation
+        }).catch(error => {
+          console.error(`Error updating page ${pageIndex}:`, error);
+        });
+      }
+    }
+  }
+  
+  /**
+   * Manage the layer cache by removing cache for pages that are no longer needed
+   */
+  private manageLayerCache(): void {
+    if (this.renderedPageIndexes.length <= this.maxCanvasCache) {
+      return; // No need to clear cache if under limit
+    }
+    
+    // Get pages that are rendered but not currently visible
+    const nonVisibleRendered = this.renderedPageIndexes.filter(
+      pageIndex => !this.visiblePages.includes(pageIndex)
+    );
+    
+    // Sort by distance from current page (furthest first)
+    nonVisibleRendered.sort((a, b) => {
+      const distA = Math.abs(a - this.currentPage);
+      const distB = Math.abs(b - this.currentPage);
+      return distB - distA; // Descending order - furthest first
+    });
+    
+    // Calculate how many pages we need to clear
+    const pagesToClear = this.renderedPageIndexes.length - this.maxCanvasCache;
+    
+    // Clear cache for the furthest non-visible pages
+    for (let i = 0; i < Math.min(pagesToClear, nonVisibleRendered.length); i++) {
+      const pageIndex = nonVisibleRendered[i];
+      const pageNum = pageIndex + 1; // Adjust for 1-indexed page numbers
+      const cached = this.pageCache.get(pageNum);
+      
+      if (cached?.controller) {
+        cached.controller.removeCache().catch(error => {
+          console.error(`Error removing cache for page ${pageIndex}:`, error);
+        });
+      }
+    }
   }
 
   createPageElement(page: PdfPageObject, pageNum: number): HTMLElement {
+    console.log('createPageElement', pageNum);
+    
     // Check if we already have a cached element for this page
-    if (this.pageElements.has(pageNum)) {
-      return this.pageElements.get(pageNum)!;
+    const cached = this.pageCache.get(pageNum);
+    
+    // If we have a cached version with current scale and rotation, reuse it
+    if (cached && cached.scale === this.scale && cached.rotation === this.rotation) {
+      return cached.element;
     }
     
+    // If we have a cached version but with different scale/rotation, update it
+    if (cached) {
+      console.log(`Updating cached page ${pageNum} from scale=${cached.scale}/rotation=${cached.rotation} to scale=${this.scale}/rotation=${this.rotation}`);
+      
+      // If we have a controller, update it
+      if (cached.controller) {
+        cached.controller.update({
+          scale: this.scale,
+          rotation: this.rotation
+        }).catch(error => {
+          console.error(`Error updating page ${pageNum}:`, error);
+        });
+      } else {
+        // If controller is missing (should not happen normally), re-render
+        this.renderPage(page, pageNum, cached.element);
+      }
+      
+      // Update cached metadata
+      cached.scale = this.scale;
+      cached.rotation = this.rotation;
+      
+      return cached.element;
+    }
+    
+    // Otherwise, create a new element
     const pageElement = document.createElement('div');
     
     pageElement.dataset.pageNumber = pageNum.toString();
-    pageElement.style.width = `round(down, var(--scale-factor) * ${page.size.width}px, 1px)`;
-    pageElement.style.height = `round(down, var(--scale-factor) * ${page.size.height}px, 1px)`;
     pageElement.style.backgroundColor = '#ffffff';
     pageElement.style.display = 'flex';
     pageElement.style.alignItems = 'center';
     pageElement.style.justifyContent = 'center';
     
-    this.layer.render(this.pdfDocument!, pageNum - 1, pageElement, {
-      scale: 1,
-      rotation: 0
-    });
+    // Create new cache entry (controller will be set by renderPage)
+    const cacheEntry: PageElementCache = {
+      element: pageElement,
+      controller: null,
+      scale: this.scale,
+      rotation: this.rotation,
+      pageNum: pageNum
+    };
     
-    // Cache the element for future use
-    this.pageElements.set(pageNum, pageElement);
+    // Cache the element
+    this.pageCache.set(pageNum, cacheEntry);
+    
+    // Render the page and store the layer controller
+    this.renderPage(page, pageNum, pageElement);
     
     return pageElement;
+  }
+  
+  /**
+   * Helper method to render a page and update its controller in the cache
+   */
+  private renderPage(page: PdfPageObject, pageNum: number, element: HTMLElement): void {
+    if (!this.pdfDocument) {
+      console.error('Cannot render page: No PDF document loaded');
+      return;
+    }
+    
+    const pageIndex = pageNum - 1; // Convert to 0-indexed for the render method
+    
+    this.layer.render(this.pdfDocument, pageIndex, element, {
+      scale: this.scale,
+      rotation: this.rotation,
+      topic: 'page-manager'
+    }).then(controller => {
+      // Update the controller in the cache
+      const cached = this.pageCache.get(pageNum);
+      if (cached) {
+        cached.controller = controller;
+      }
+    }).catch(error => {
+      console.error(`Error rendering page ${pageNum}:`, error);
+    });
   }
 
   private handleDocumentLoaded(document: PdfDocumentObject): void {
     this.pdfDocument = document;
     this.pages = document.pages;
-    this.spreadPages = this.spread.getSpreadPagesObjects(this.pages);
+    
+    // Apply transformSize to pages before creating spread pages
+    this.updateSpreadPages();
     this.notifyPageManagerInitialized();
   }
 
   private handleSpreadChange(_spreadMode: SpreadMode): void {
-    this.spreadPages = this.spread.getSpreadPagesObjects(this.pages);
+    // Apply transformSize to pages again when spread mode changes
+    this.updateSpreadPages();
     this.notifyPagesChange();
   }
 
@@ -98,6 +322,17 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
   }
 
   async destroy(): Promise<void> {
-    this.pageElements.clear();
+    // Clean up all layer controllers
+    for (const [pageNum, cached] of this.pageCache.entries()) {
+      if (cached.controller) {
+        try {
+          await cached.controller.removeCache(true); // Force clear all cache
+        } catch (error) {
+          console.error(`Error cleaning up page ${pageNum}:`, error);
+        }
+      }
+    }
+    
+    this.pageCache.clear();
   }
 }

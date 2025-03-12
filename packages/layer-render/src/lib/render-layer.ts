@@ -12,6 +12,7 @@ interface RenderCacheData {
 
 export class RenderLayer extends BaseLayerPlugin<RenderLayerConfig, RenderCacheData> {
   public zIndex = 1000;
+  private maxScale: number | undefined = undefined;
 
   constructor(
     public readonly id: string,
@@ -21,13 +22,18 @@ export class RenderLayer extends BaseLayerPlugin<RenderLayerConfig, RenderCacheD
     super(id, registry, engine);
   }
 
+  async initialize(config: RenderLayerConfig): Promise<void> {
+    // Register each layer as a plugin
+    this.maxScale = config.maxScale;
+  }
+
   async render(
     pdfDocument: PdfDocumentObject, 
     page: PdfPageObject, 
     container: HTMLElement, 
     options: LayerRenderOptions
   ): Promise<void> {
-    const scale = options.scale || 1;
+    const scale = this.maxScale !== undefined ? Math.min(options.scale || 1, this.maxScale) : (options.scale || 1);
     const rotation = options.rotation || 0;
     const topic = options.topic || 'default';
 
@@ -111,7 +117,10 @@ export class RenderLayer extends BaseLayerPlugin<RenderLayerConfig, RenderCacheD
     container: HTMLElement,
     options: LayerRenderOptions
   ): Promise<void> {
-    const scale = options.scale || 1;
+    const scale = this.maxScale !== undefined ? Math.min(options.scale || 1, this.maxScale) : (options.scale || 1);
+
+    console.log(scale, this.maxScale);
+
     const rotation = options.rotation || 0;
     const topic = options.topic || 'default';
     
@@ -131,6 +140,8 @@ export class RenderLayer extends BaseLayerPlugin<RenderLayerConfig, RenderCacheD
           message: 'Render task cancelled due to update request',
         });
       }
+
+      const rotationChanged = existingCache.data.rotation !== rotation;
       
       // Remove existing canvas from container
       if (existingCanvas.parentNode === container) {
@@ -150,7 +161,9 @@ export class RenderLayer extends BaseLayerPlugin<RenderLayerConfig, RenderCacheD
       );
       
       // Reuse existing canvas
-      container.appendChild(existingCanvas);
+      if(!rotationChanged) {
+        container.appendChild(existingCanvas);
+      }
       
       // Update cache with new render task
       this.setPageCache(pdfDocument.id, page.index, page, container, options, {
@@ -166,6 +179,9 @@ export class RenderLayer extends BaseLayerPlugin<RenderLayerConfig, RenderCacheD
           renderTask.wait(
             (imageData) => {
               this.renderToCanvas(existingCanvas, imageData);
+              if(rotationChanged) {
+                container.appendChild(existingCanvas);
+              }
               resolve();
             },
             (error) => reject(error)

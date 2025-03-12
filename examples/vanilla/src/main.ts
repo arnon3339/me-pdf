@@ -10,12 +10,14 @@ import { ScrollPluginPackage, ScrollCapability, ScrollPlugin } from '@embedpdf/p
 import { SpreadCapability, SpreadMode, SpreadPlugin, SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { TextLayerPackage } from '@embedpdf/layer-text';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
-import { PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
+import { RenderPartialLayerPackage } from '@embedpdf/layer-render-partial';
+import { PageManagerCapability, PageManagerPlugin, PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
 import {
   AllLogger,
   ConsoleLogger,
   Logger,
-  PerfLogger
+  PerfLogger,
+  Rotation
 } from '@embedpdf/models';
 
 async function loadWasmBinary() {
@@ -55,7 +57,8 @@ async function initializePDFViewer() {
   registry.registerPlugin(LayerPluginPackage, {
     layers: [
       { package: TextLayerPackage },
-      { package: RenderLayerPackage, config: { maxScale: 2 } }
+      { package: RenderLayerPackage, config: { maxScale: 1 } },
+      { package: RenderPartialLayerPackage, config: { minScale: 1.01 } }
     ]
   });
 
@@ -66,6 +69,7 @@ async function initializePDFViewer() {
   const layer = registry.getPlugin<LayerPlugin>('layer').provides();
   const zoom = registry.getPlugin<ZoomPlugin>('zoom').provides();
   const scroll = registry.getPlugin<ScrollPlugin>('scroll').provides();
+  const pageManager = registry.getPlugin<PageManagerPlugin>('page-manager').provides();
 
   const pdf = await fetch('/file/compressed.tracemonkey-pldi-09.pdf');
   const source = await pdf.arrayBuffer();
@@ -82,14 +86,16 @@ async function initializePDFViewer() {
     updatePageInfo(pageNumber, totalPages);
   });
 
-  setupUIControls(spread, zoom, scroll);
+  setupUIControls(spread, zoom, scroll, pageManager);
 }
 
-function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll: ScrollCapability) {
+function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll: ScrollCapability, pageManager: PageManagerCapability) {
   const prevButton = document.getElementById('prevPage') as HTMLButtonElement;
   const nextButton = document.getElementById('nextPage') as HTMLButtonElement;
   const zoomSelect = document.getElementById('zoomLevel') as HTMLSelectElement;
   const spreadSelect = document.getElementById('spreadMode') as HTMLSelectElement;
+  const rotateForwardButton = document.getElementById('rotateForward') as HTMLButtonElement;
+  const rotateBackwardButton = document.getElementById('rotateBackward') as HTMLButtonElement;
 
   spreadSelect.addEventListener('change', async () => {
     const newSpreadMode = spreadSelect.value as SpreadMode;
@@ -102,6 +108,18 @@ function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll:
 
   nextButton.addEventListener('click', async () => {
     await scroll.scrollToNextPage();
+  });
+
+  rotateForwardButton.addEventListener('click', async () => {
+    const currentRotation = pageManager.getRotation();
+    const newRotation = getNextRotation(currentRotation);
+    await pageManager.updateRotation(newRotation);
+  });
+
+  rotateBackwardButton.addEventListener('click', async () => {
+    const currentRotation = pageManager.getRotation();
+    const newRotation = getPreviousRotation(currentRotation);
+    await pageManager.updateRotation(newRotation);
   });
 
   // Set initial zoom level
@@ -117,6 +135,37 @@ function updatePageInfo(currentPage: number, totalPages: number) {
   const pageInfo = document.getElementById('pageInfo');
   if (pageInfo) {
     pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+  }
+}
+
+// Helper functions for rotation
+function getNextRotation(currentRotation: Rotation): Rotation {
+  switch (currentRotation) {
+    case Rotation.Degree0:
+      return Rotation.Degree90;
+    case Rotation.Degree90:
+      return Rotation.Degree180;
+    case Rotation.Degree180:
+      return Rotation.Degree270;
+    case Rotation.Degree270:
+      return Rotation.Degree0;
+    default:
+      return Rotation.Degree0;
+  }
+}
+
+function getPreviousRotation(currentRotation: Rotation): Rotation {
+  switch (currentRotation) {
+    case Rotation.Degree0:
+      return Rotation.Degree270;
+    case Rotation.Degree90:
+      return Rotation.Degree0;
+    case Rotation.Degree180:
+      return Rotation.Degree90;
+    case Rotation.Degree270:
+      return Rotation.Degree180;
+    default:
+      return Rotation.Degree0;
   }
 }
 
