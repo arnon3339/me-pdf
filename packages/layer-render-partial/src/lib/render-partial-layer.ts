@@ -22,7 +22,7 @@ interface PageContext {
 }
 
 export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig, RenderPartialCacheData> {
-  public zIndex = 2000;
+  public zIndex = 1300;
   private scroll: ScrollCapability;
   private viewport: ViewportCapability;
   private minScale: number = 0;

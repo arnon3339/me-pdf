@@ -14,13 +14,14 @@
     "@embedpdf/plugin-layer": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
     "@embedpdf/plugin-page-manager": "workspace:*",
+    "@embedpdf/plugin-search": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/engines": "workspace:*",
     "@embedpdf/layer-text": "workspace:*",
+    "@embedpdf/layer-search": "workspace:*",
     "@embedpdf/layer-render": "workspace:*",
-    "@embedpdf/layer-render-partial": "workspace:*",
-    "@embedpdf/plugin-search": "workspace:*"
+    "@embedpdf/layer-render-partial": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

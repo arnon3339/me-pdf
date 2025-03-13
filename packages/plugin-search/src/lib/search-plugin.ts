@@ -9,6 +9,17 @@ import {
 import { SearchPluginConfig, SearchCapability, SearchState } from "./types";
 import { LoaderCapability, LoaderEvent, LoaderPlugin } from "@embedpdf/plugin-loader";
 
+export const DEFAULT_STATE: SearchState = {
+  flags: [],
+  results: [],
+  total: 0,
+  activeResultIndex: -1,
+  showAllResults: true,
+  query: '',
+  loading: false,
+  active: false
+}
+
 /**
  * Plugin that provides PDF search functionality
  */
@@ -26,16 +37,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
     registry: PluginRegistry,
     engine: PdfEngine,
   ) {
-    super(id, registry, {
-      flags: [],
-      results: [],
-      total: 0,
-      activeResultIndex: -1,
-      showAllResults: true,
-      query: '',
-      loading: false,
-      active: false
-    });
+    super(id, registry, DEFAULT_STATE);
 
     this.engine = engine;
     this.loader = this.registry.getPlugin<LoaderPlugin>('loader').provides();

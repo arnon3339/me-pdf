@@ -10,6 +10,7 @@ import { ScrollPluginPackage, ScrollCapability, ScrollPlugin } from '@embedpdf/p
 import { SpreadCapability, SpreadMode, SpreadPlugin, SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { TextLayerPackage } from '@embedpdf/layer-text';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
+import { SearchLayerPackage } from '@embedpdf/layer-search';
 import { RenderPartialLayerPackage } from '@embedpdf/layer-render-partial';
 import { PageManagerCapability, PageManagerPlugin, PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
 import { SearchPluginPackage, SearchPlugin, SearchCapability } from '@embedpdf/plugin-search';
@@ -61,7 +62,8 @@ async function initializePDFViewer() {
     layers: [
       { package: TextLayerPackage },
       { package: RenderLayerPackage, config: { maxScale: 2 } },
-      { package: RenderPartialLayerPackage, config: { minScale: 2.01 } }
+      { package: RenderPartialLayerPackage, config: { minScale: 2.01 } },
+      { package: SearchLayerPackage }
     ]
   }); 
   registry.registerPlugin(SearchPluginPackage);
