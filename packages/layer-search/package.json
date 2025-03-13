@@ -28,7 +28,8 @@
     "@embedpdf/core": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/plugin-layer": "workspace:*",
-    "@embedpdf/plugin-search": "workspace:*"
+    "@embedpdf/plugin-search": "workspace:*",
+    "@embedpdf/plugin-scroll": "workspace:*"
   },
   "files": [
     "dist",

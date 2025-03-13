@@ -208,6 +208,9 @@ importers:
       '@embedpdf/plugin-layer':
         specifier: workspace:*
         version: link:../plugin-layer
+      '@embedpdf/plugin-scroll':
+        specifier: workspace:*
+        version: link:../plugin-scroll
       '@embedpdf/plugin-search':
         specifier: workspace:*
         version: link:../plugin-search
