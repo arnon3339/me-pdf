@@ -118,10 +118,10 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
       result.rects.forEach((rect, rectIndex) => {
         const element = document.createElement("div");
         element.className = this.NORMAL_HIGHLIGHT_CLASS;
-        element.style.left = `${rect.origin.x}px`;
-        element.style.top = `${rect.origin.y}px`;
-        element.style.width = `${rect.size.width}px`;
-        element.style.height = `${rect.size.height}px`;
+        element.style.left = `round(down, var(--scale-factor) * ${rect.origin.x}px, 1px)`;
+        element.style.top = `round(down, var(--scale-factor) * ${rect.origin.y}px, 1px)`;
+        element.style.width = `round(down, var(--scale-factor) * ${rect.size.width}px, 1px)`;
+        element.style.height = `round(down, var(--scale-factor) * ${rect.size.height}px, 1px)`;
         element.dataset.resultIndex = resultIndex.toString();
         element.dataset.pageIndex = pageIndex.toString();
         element.dataset.rectIndex = rectIndex.toString();
@@ -251,6 +251,12 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
   ): Promise<void> {
     this.currentDocumentId = pdfDocument.id;
     this.topic = options.topic || "default";
+
+    const inCache = this.getPageCache(pdfDocument.id, page.index, this.topic);
+    
+    if (inCache) {
+      return;
+    }
 
     this.setPageCache(pdfDocument.id, page.index, page, container, options, { container });
 
