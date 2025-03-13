@@ -2,8 +2,7 @@ import { BasePlugin, PluginRegistry } from "@embedpdf/core";
 import { 
   MatchFlag, 
   PdfDocumentObject, 
-  SearchResult, 
-  SearchTarget,
+  SearchAllPagesResult,
   TaskError,
   PdfEngine
 } from "@embedpdf/models";
@@ -17,11 +16,10 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
   private loader: LoaderCapability;
   private currentDocument?: PdfDocumentObject;
   private engine: PdfEngine;
-  private searchContextId: number; 
-  private activeSearch: boolean = false;
-  private searchHandlers: ((searchResult: SearchResult) => void)[] = [];
+  private searchHandlers: ((searchResult: SearchAllPagesResult) => void)[] = [];
   private searchStartHandlers: (() => void)[] = [];
   private searchStopHandlers: (() => void)[] = [];
+  private activeResultChangeHandlers: ((index: number) => void)[] = [];
 
   constructor(
     public readonly id: string,
@@ -29,12 +27,18 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
     engine: PdfEngine,
   ) {
     super(id, registry, {
-      flags: []
+      flags: [],
+      results: [],
+      total: 0,
+      activeResultIndex: -1,
+      showAllResults: true,
+      query: '',
+      loading: false,
+      active: false
     });
 
     this.engine = engine;
     this.loader = this.registry.getPlugin<LoaderPlugin>('loader').provides();
-    this.searchContextId = Date.now(); // Create a unique context ID
 
     // Handle document lifecycle events
     this.loader.onDocumentLoaded(this.handleDocumentLoaded.bind(this));
@@ -47,7 +51,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
    */
   private handleDocumentLoaded(doc: PdfDocumentObject): void {
     this.currentDocument = doc;
-    if (this.activeSearch) {
+    if (this.state.active) {
       // Restart search session on new document
       this.startSearchSession();
     }
@@ -56,7 +60,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
   private handleLoaderEvent(event: LoaderEvent): void {
     // Handle document closing
     if (event.type === 'error' || (event.type === 'start' && this.currentDocument)) {
-      if (this.activeSearch) {
+      if (this.state.active) {
         this.stopSearchSession();
       }
       this.currentDocument = undefined;
@@ -68,7 +72,8 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
    */
   async initialize(config: SearchPluginConfig): Promise<void> {
     this.updateState({
-      flags: config.flags || []
+      flags: config.flags || [],
+      showAllResults: config.showAllResults !== undefined ? config.showAllResults : true
     });
   }
 
@@ -79,11 +84,17 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
     return {
       startSearch: this.startSearchSession.bind(this),
       stopSearch: this.stopSearchSession.bind(this),
-      searchNext: this.searchNext.bind(this),
-      searchPrev: this.searchPrev.bind(this),
+      searchAllPages: this.searchAllPages.bind(this),
+      nextResult: this.nextResult.bind(this),
+      previousResult: this.previousResult.bind(this),
+      goToResult: this.goToResult.bind(this),
+      setShowAllResults: this.setShowAllResults.bind(this),
+      getShowAllResults: this.getShowAllResults.bind(this),
       onSearchResult: this.addSearchResultHandler.bind(this),
       onSearchStart: this.addSearchStartHandler.bind(this),
       onSearchStop: this.addSearchStopHandler.bind(this),
+      onActiveResultChange: this.addActiveResultChangeHandler.bind(this),
+      onStateChange: this.onStateChange.bind(this),
       getFlags: this.getFlags.bind(this),
       setFlags: this.setFlags.bind(this)
     };
@@ -94,7 +105,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
    * @param handler - Function to call when search result is found
    * @returns Function to remove the handler
    */
-  private addSearchResultHandler(handler: (result: SearchResult) => void): () => void {
+  private addSearchResultHandler(handler: (result: SearchAllPagesResult) => void): () => void {
     this.searchHandlers.push(handler);
     return () => {
       this.searchHandlers = this.searchHandlers.filter(h => h !== handler);
@@ -126,6 +137,18 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
   }
 
   /**
+   * Add a handler for active result changes
+   * @param handler - Function to call when active result changes
+   * @returns Function to remove the handler
+   */
+  private addActiveResultChangeHandler(handler: (index: number) => void): () => void {
+    this.activeResultChangeHandlers.push(handler);
+    return () => {
+      this.activeResultChangeHandlers = this.activeResultChangeHandlers.filter(h => h !== handler);
+    };
+  }
+
+  /**
    * Notify all search start handlers
    */
   private notifySearchStart(): void {
@@ -137,6 +160,14 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
    */
   private notifySearchStop(): void {
     this.searchStopHandlers.forEach(handler => handler());
+  }
+
+  /**
+   * Notify all active result change handlers
+   * @param index - The new active result index
+   */
+  private notifyActiveResultChange(index: number): void {
+    this.activeResultChangeHandlers.forEach(handler => handler(index));
   }
 
   /**
@@ -156,6 +187,76 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
   }
 
   /**
+   * Navigate to the next search result
+   * @returns The new active result index
+   */
+  private nextResult(): number {
+    if (this.state.results.length === 0) {
+      return -1;
+    }
+
+    const nextIndex = this.state.activeResultIndex >= this.state.results.length - 1
+      ? 0  // Wrap around to the first result
+      : this.state.activeResultIndex + 1;
+    
+    return this.goToResult(nextIndex);
+  }
+
+  /**
+   * Navigate to the previous search result
+   * @returns The new active result index
+   */
+  private previousResult(): number {
+    if (this.state.results.length === 0) {
+      return -1;
+    }
+
+    const prevIndex = this.state.activeResultIndex <= 0
+      ? this.state.results.length - 1  // Wrap around to the last result
+      : this.state.activeResultIndex - 1;
+    
+    return this.goToResult(prevIndex);
+  }
+
+  /**
+   * Go to a specific search result by index
+   * @param index - The index of the result to navigate to
+   * @returns The new active result index
+   */
+  private goToResult(index: number): number {
+    if (this.state.results.length === 0 || index < 0 || index >= this.state.results.length) {
+      return -1;
+    }
+
+    this.updateState({
+      activeResultIndex: index
+    });
+
+    // Notify handlers of active result change
+    this.notifyActiveResultChange(index);
+    
+    return index;
+  }
+
+  /**
+   * Set whether to show all search results or only the active one
+   * @param showAll - Whether to show all search results
+   */
+  private setShowAllResults(showAll: boolean): void {
+    this.updateState({
+      showAllResults: showAll
+    });
+  }
+
+  /**
+   * Get the current setting for showing all results
+   * @returns Whether all results are visible
+   */
+  private getShowAllResults(): boolean {
+    return this.state.showAllResults;
+  }
+
+  /**
    * Start a search session
    */
   private startSearchSession(): void {
@@ -163,8 +264,9 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
       return;
     }
     
-    this.activeSearch = true;
-    this.engine.startSearch(this.currentDocument, this.searchContextId);
+    this.updateState({
+      active: true
+    });
     
     // Notify handlers that search has started
     this.notifySearchStart();
@@ -174,94 +276,90 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
    * Stop the current search session
    */
   private stopSearchSession(): void {
-    if (!this.currentDocument || !this.activeSearch) {
+    if (!this.currentDocument || !this.state.active) {
       return;
     }
     
-    this.engine.stopSearch(this.currentDocument, this.searchContextId);
-    this.activeSearch = false;
+    // Clear search results and reset state
+    this.updateState({
+      results: [],
+      total: 0,
+      activeResultIndex: -1,
+      query: '',
+      loading: false,
+      active: false
+    });
     
     // Notify handlers that search has stopped
     this.notifySearchStop();
   }
 
   /**
-   * Create a search target using the keyword and current flags
+   * Search for all occurrences of the keyword throughout the document
+   * @param keyword Text to search for
+   * @returns Promise resolving to all search results
    */
-  private createSearchTarget(keyword: string): SearchTarget {
-    return {
-      keyword,
-      flags: this.state.flags
-    };
-  }
+  private async searchAllPages(keyword: string): Promise<SearchAllPagesResult> {
+    const trimmedKeyword = keyword.trim();
+    // Validate that keyword is not empty
+    if (!trimmedKeyword || trimmedKeyword === '') {
+      console.warn('Empty search keyword is not allowed');
+      return Promise.resolve({ results: [], total: 0 });
+    }
 
-  /**
-   * Search for the next occurrence of the keyword
-   */
-  private async searchNext(keyword: string): Promise<SearchResult | undefined> {
-    if (!this.currentDocument || !this.activeSearch) {
-      if (!this.activeSearch && this.currentDocument) {
-        // Start search if not active yet
-        this.startSearchSession();
-      } else {
-        return Promise.resolve(undefined);
-      }
+    if (!this.currentDocument) {
+      return Promise.resolve({ results: [], total: 0 });
     }
     
-    return new Promise<SearchResult | undefined>((resolve, reject) => {
-      const target = this.createSearchTarget(keyword);
-      
-      this.engine.searchNext(
-        this.currentDocument!, 
-        this.searchContextId, 
-        target
-      ).wait(
-        (result) => {
-          if (result) {
-            // Notify search handlers about the result
-            this.searchHandlers.forEach(handler => handler(result));
-          }
-          resolve(result);
-        },
-        (error: TaskError<any>) => {
-          console.error('Error during search:', error);
-          resolve(undefined);
-        }
-      );
+    if (!this.state.active) {
+      // Start search session if not active
+      this.startSearchSession();
+    }
+
+    if(this.state.query === trimmedKeyword) {
+      return Promise.resolve({ results: this.state.results, total: this.state.total });
+    }
+
+    // Update state to indicate loading and set query
+    this.updateState({
+      loading: true,
+      query: trimmedKeyword
     });
-  }
-
-  /**
-   * Search for the previous occurrence of the keyword
-   */
-  private async searchPrev(keyword: string): Promise<SearchResult | undefined> {
-    if (!this.currentDocument || !this.activeSearch) {
-      if (!this.activeSearch && this.currentDocument) {
-        // Start search if not active yet
-        this.startSearchSession();
-      } else {
-        return Promise.resolve(undefined);
-      }
-    }
     
-    return new Promise<SearchResult | undefined>((resolve, reject) => {
-      const target = this.createSearchTarget(keyword);
-      
-      this.engine.searchPrev(
-        this.currentDocument!, 
-        this.searchContextId, 
-        target
+    return new Promise<SearchAllPagesResult>((resolve, reject) => {
+      this.engine.searchAllPages(
+        this.currentDocument!,
+        trimmedKeyword,
+        this.state.flags
       ).wait(
-        (result) => {
-          if (result) {
-            // Notify search handlers about the result
-            this.searchHandlers.forEach(handler => handler(result));
+        (results) => {
+          // Update state with search results
+          this.updateState({
+            results: results.results,
+            total: results.total,
+            loading: false,
+            activeResultIndex: results.total > 0 ? 0 : -1 // Select first result if available
+          });
+          
+          // Notify handlers of all search results
+          this.searchHandlers.forEach(handler => handler(results));
+          
+          // Notify about active result if we have results
+          if (results.total > 0) {
+            this.notifyActiveResultChange(0);
           }
-          resolve(result);
+          
+          resolve(results);
         },
         (error: TaskError<any>) => {
           console.error('Error during search:', error);
-          resolve(undefined);
+          
+          // Update state to indicate search is no longer loading
+          this.updateState({
+            loading: false
+          });
+          
+          resolve({ results: [], total: 0 });
         }
       );
     });
@@ -271,16 +369,13 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState> {
    * Clean up resources when plugin is destroyed
    */
   async destroy(): Promise<void> {
-    // Clean up search session
-    if (this.currentDocument && this.activeSearch) {
+    if (this.state.active && this.currentDocument) {
       this.stopSearchSession();
     }
+    
     this.searchHandlers = [];
     this.searchStartHandlers = [];
     this.searchStopHandlers = [];
-    this.currentDocument = undefined;
-    
-    // Call parent's destroy method
-    await super.destroy();
+    this.activeResultChangeHandlers = [];
   }
 }

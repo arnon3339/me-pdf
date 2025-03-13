@@ -1122,19 +1122,26 @@ export interface SearchResult {
    */
   charCount: number;
   /**
-   * region of the search result
+   * highlight rects
    */
-  region: {
-    /**
-     * the rect of the first character
-     */
-    start: Rect;
-    /**
-     * the rect of the end character
-     */
-    end: Rect;
-  };
+  rects: Rect[];
 }
+
+/**
+ * Results of searching through the entire document
+ */
+export interface SearchAllPagesResult {
+  /**
+   * Array of all search results across all pages
+   */
+  results: SearchResult[];
+  
+  /**
+   * Total number of results found
+   */
+  total: number;
+}
+
 /**
  * form field value
  * @public
@@ -1551,6 +1558,18 @@ export interface PdfEngine {
    * @returns Task contains whether search has stopped
    */
   stopSearch: (doc: PdfDocumentObject, contextId: number) => PdfTask<boolean>;
+  /**
+   * Search across all pages in the document
+   * @param doc - pdf document
+   * @param keyword - search keyword
+   * @param flags - match flags for search
+   * @returns Task contains all search results throughout the document
+   */
+  searchAllPages: (
+    doc: PdfDocumentObject, 
+    keyword: string, 
+    flags?: MatchFlag[]
+  ) => PdfTask<SearchAllPagesResult>;
   /**
    * Get all attachments in this file
    * @param doc - pdf document

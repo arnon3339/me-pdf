@@ -25,6 +25,17 @@ import {
   PdfPageFlattenFlag,
   PdfPageFlattenResult,
   PdfFileLoader,
+  SearchAllPagesResult,
+  MatchFlag,
+  Task,
+  Logger,
+  NoopLogger,
+  PdfAnnotationTransformation,
+  PdfEngineError,
+  PdfMetadataObject,
+  PdfErrorCode,
+  PdfErrorReason,
+  PdfBookmarksObject,
 } from '@embedpdf/models';
 
 /**
@@ -315,28 +326,16 @@ export function createMockPdfEngine(
         pageIndex: 0,
         charIndex: 0,
         charCount: 1,
-        region: {
-          start: {
-            origin: {
-              x: 0,
-              y: 0,
-            },
-            size: {
-              width: 0,
-              height: 0,
-            },
+        rects: [{
+          origin: {
+            x: 0,
+            y: 0,
           },
-          end: {
-            origin: {
-              x: 0,
-              y: 0,
-            },
-            size: {
-              width: 0,
-              height: 0,
-            },
+          size: {
+            width: 0,
+            height: 0,
           },
-        },
+        }],
       } as SearchResult | undefined);
     },
     searchPrev: (
@@ -348,32 +347,44 @@ export function createMockPdfEngine(
         pageIndex: 0,
         charIndex: 0,
         charCount: 1,
-        region: {
-          start: {
-            origin: {
-              x: 0,
-              y: 0,
-            },
-            size: {
-              width: 0,
-              height: 0,
-            },
+        rects: [{
+          origin: {
+            x: 0,
+            y: 0,
           },
-          end: {
-            origin: {
-              x: 0,
-              y: 0,
-            },
-            size: {
-              width: 0,
-              height: 0,
-            },
+          size: {
+            width: 0,
+            height: 0,
           },
-        },
+        }],
       } as SearchResult | undefined);
     },
     stopSearch: (doc: PdfDocumentObject, contextId: number) => {
       return PdfTaskHelper.resolve(true);
+    },
+    searchAllPages: (doc: PdfDocumentObject, keyword: string, flags?: MatchFlag[]) => {
+      // Create a mock search result
+      const mockResult: SearchResult = {
+        pageIndex: 0,
+        charIndex: 0,
+        charCount: keyword.length,
+        rects: [{
+          origin: {
+            x: 0,
+            y: 0,
+          },
+          size: {
+            width: 50,
+            height: 20,
+          },
+        }],
+      };
+      
+      // Return a mock SearchAllPagesResult with a single result
+      return PdfTaskHelper.resolve<SearchAllPagesResult>({
+        results: [mockResult],
+        total: 1
+      });
     },
     getAttachments: (doc: PdfDocumentObject) => {
       return PdfTaskHelper.resolve([] as PdfAttachmentObject[]);

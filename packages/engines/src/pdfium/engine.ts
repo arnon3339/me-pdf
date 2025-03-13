@@ -67,6 +67,7 @@ import {
   PdfTask,
   PdfFileLoader,
   transformRect,
+  SearchAllPagesResult,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -2627,22 +2628,19 @@ export class PdfiumEngine implements PdfEngine {
         this.pdfiumModule.FPDFText_GetSchResultIndex(searchHandle);
       const charCount = this.pdfiumModule.FPDFText_GetSchCount(searchHandle);
 
-      const start = this.readCharBox(page, pagePtr, textPagePtr, charIndex);
-      const end = this.readCharBox(
+      const rects = this.getHighlightRects(
         page,
         pagePtr,
         textPagePtr,
-        charIndex + charCount,
+        charIndex,
+        charCount,
       );
 
       result = {
         pageIndex,
         charIndex,
         charCount,
-        region: {
-          start,
-          end,
-        },
+        rects
       };
     }
 
@@ -5216,5 +5214,235 @@ export class PdfiumEngine implements PdfEngine {
     this.free(pageRectPtr);
 
     return pageRect;
+  }
+
+  /**
+   * Get highlight rects for a specific character range (for search highlighting)
+   * @param page - pdf page info
+   * @param pagePtr - pointer to pdf page
+   * @param textPagePtr - pointer to pdf text page
+   * @param startIndex - starting character index
+   * @param charCount - number of characters in the range
+   * @returns array of rectangles for highlighting the specified character range
+   * 
+   * @private
+   */
+  private getHighlightRects(
+    page: PdfPageObject,
+    pagePtr: number,
+    textPagePtr: number,
+    startIndex: number,
+    charCount: number,
+  ): Rect[] {
+    const rectsCount = this.pdfiumModule.FPDFText_CountRects(
+      textPagePtr,
+      startIndex,
+      charCount,
+    );
+
+    const highlightRects: Rect[] = [];
+    for (let i = 0; i < rectsCount; i++) {
+      const topPtr = this.malloc(8);
+      const leftPtr = this.malloc(8);
+      const rightPtr = this.malloc(8);
+      const bottomPtr = this.malloc(8);
+      const isSucceed = this.pdfiumModule.FPDFText_GetRect(
+        textPagePtr,
+        i,
+        leftPtr,
+        topPtr,
+        rightPtr,
+        bottomPtr,
+      );
+      if (!isSucceed) {
+        this.free(leftPtr);
+        this.free(topPtr);
+        this.free(rightPtr);
+        this.free(bottomPtr);
+        continue;
+      }
+
+      const left = this.pdfiumModule.pdfium.getValue(leftPtr, 'double');
+      const top = this.pdfiumModule.pdfium.getValue(topPtr, 'double');
+      const right = this.pdfiumModule.pdfium.getValue(rightPtr, 'double');
+      const bottom = this.pdfiumModule.pdfium.getValue(bottomPtr, 'double');
+
+      this.free(leftPtr);
+      this.free(topPtr);
+      this.free(rightPtr);
+      this.free(bottomPtr);
+
+      const deviceXPtr = this.malloc(4);
+      const deviceYPtr = this.malloc(4);
+      this.pdfiumModule.FPDF_PageToDevice(
+        pagePtr,
+        0,
+        0,
+        page.size.width,
+        page.size.height,
+        0,
+        left,
+        top,
+        deviceXPtr,
+        deviceYPtr,
+      );
+      const x = this.pdfiumModule.pdfium.getValue(deviceXPtr, 'i32');
+      const y = this.pdfiumModule.pdfium.getValue(deviceYPtr, 'i32');
+      this.free(deviceXPtr);
+      this.free(deviceYPtr);
+
+      // Convert the bottom-right coordinates to width/height
+      const width = Math.ceil(Math.abs(right - left));
+      const height = Math.ceil(Math.abs(top - bottom));
+
+      highlightRects.push({
+        origin: { x, y },
+        size: { width, height }
+      });
+    }
+
+    return highlightRects;
+  }
+
+  /**
+   * Search for a keyword across all pages in the document
+   * Returns all search results throughout the entire document
+   * 
+   * @param doc - Pdf document object
+   * @param keyword - Search keyword
+   * @param flags - Match flags for search
+   * @returns Promise of all search results in the document
+   * 
+   * @public
+   */
+  searchAllPages(doc: PdfDocumentObject, keyword: string, flags: MatchFlag[] = []) {
+    this.logger.debug(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'searchAllPages',
+      doc,
+      keyword,
+      flags,
+    );
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchAllPages`, 'Begin', doc.id);
+
+    if (!this.docs[doc.id]) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchAllPages`, 'End', doc.id);
+      return PdfTaskHelper.resolve<SearchAllPagesResult>({ results: [], total: 0 });
+    }
+
+    const { docPtr } = this.docs[doc.id];
+    const length = 2 * (keyword.length + 1);
+    const keywordPtr = this.malloc(length);
+    this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
+
+    const flag = flags.reduce((flag: MatchFlag, currFlag: MatchFlag) => {
+      return flag | currFlag;
+    }, MatchFlag.None);
+
+    const results: SearchResult[] = [];
+
+    // Search through all pages
+    const searchAllPagesTask = PdfTaskHelper.create<SearchAllPagesResult>();
+    
+    // Execute search in a separate function to avoid issues with resolve parameter
+    const executeSearch = async () => {
+      for (let pageIndex = 0; pageIndex < doc.pageCount; pageIndex++) {
+        // Get all results for the current page efficiently (load page only once)
+        const pageResults = this.searchAllInPage(
+          docPtr,
+          doc.pages[pageIndex],
+          keywordPtr,
+          flag
+        );
+        
+        results.push(...pageResults);
+      }
+      
+      this.free(keywordPtr);
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchAllPages`, 'End', doc.id);
+      
+      searchAllPagesTask.resolve({
+        results,
+        total: results.length
+      });
+    };
+    
+    // Start the search process
+    executeSearch().catch(error => {
+      this.free(keywordPtr);
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchAllPages`, 'End', doc.id);
+      searchAllPagesTask.reject({
+        code: PdfErrorCode.Unknown,
+        message: `Error searching document: ${error}`
+      });
+    });
+
+    return searchAllPagesTask;
+  }
+
+  /**
+   * Search for all occurrences of a keyword on a single page
+   * This method efficiently loads the page only once and finds all matches
+   * 
+   * @param docPtr - pointer to pdf document
+   * @param page - pdf page object
+   * @param pageIndex - index of the page
+   * @param keywordPtr - pointer to the search keyword
+   * @param flag - search flags
+   * @returns array of search results on this page
+   * 
+   * @private
+   */
+  private searchAllInPage(
+    docPtr: number,
+    page: PdfPageObject,
+    keywordPtr: number,
+    flag: number,
+  ): SearchResult[] {
+    const pageIndex = page.index;
+    // Load the page and text page only once
+    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, pageIndex);
+    const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
+    
+    const pageResults: SearchResult[] = [];
+    
+    // Initialize search handle once for the page
+    const searchHandle = this.pdfiumModule.FPDFText_FindStart(
+      textPagePtr,
+      keywordPtr,
+      flag,
+      0, // Start from the beginning of the page
+    );
+    
+    // Call FindNext repeatedly to get all matches on the page
+    while (this.pdfiumModule.FPDFText_FindNext(searchHandle)) {
+      const charIndex = this.pdfiumModule.FPDFText_GetSchResultIndex(searchHandle);
+      const charCount = this.pdfiumModule.FPDFText_GetSchCount(searchHandle);
+
+      const rects = this.getHighlightRects(
+        page,
+        pagePtr,
+        textPagePtr,
+        charIndex,
+        charCount,
+      );
+
+      pageResults.push({
+        pageIndex,
+        charIndex,
+        charCount,
+        rects
+      });
+    }
+    
+    // Close the search handle only once after finding all results
+    this.pdfiumModule.FPDFText_FindClose(searchHandle);
+    
+    // Close the text page and page only once
+    this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
+    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    
+    return pageResults;
   }
 }

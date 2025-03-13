@@ -286,6 +286,9 @@ export class EngineRunner {
       case 'stopSearch':
         task = this.engine[name]!(...args);
         break;
+      case 'searchAllPages':
+        task = this.engine[name]!(...args);
+        break;
       case 'closeDocument':
         task = this.engine[name]!(...args);
         break;

@@ -63,7 +63,7 @@ async function initializePDFViewer() {
       { package: RenderLayerPackage, config: { maxScale: 2 } },
       { package: RenderPartialLayerPackage, config: { minScale: 2.01 } }
     ]
-  });
+  }); 
   registry.registerPlugin(SearchPluginPackage);
 
   await registry.initialize();
@@ -148,9 +148,24 @@ function setupSearchUI(search: SearchCapability, scroll: ScrollCapability) {
   const matchCase = document.getElementById('matchCase') as HTMLInputElement;
   const matchWholeWord = document.getElementById('matchWholeWord') as HTMLInputElement;
   const matchConsecutive = document.getElementById('matchConsecutive') as HTMLInputElement;
+  const searchPerformButton = document.getElementById('searchPerformButton') as HTMLButtonElement;
   
   let currentSearchKeyword = '';
   let activeSearchResult: SearchResult | undefined;
+
+  // Listen for search start/stop events
+  search.onSearchStart(() => {
+    console.log('Search session started');
+  });
+  
+  search.onSearchStop(() => {
+    console.log('Search session stopped');
+  });
+  
+  // Listen for search results
+  search.onSearchResult((result) => {
+    console.log('Search result:', result);
+  });
   
   // Toggle search overlay visibility
   const toggleSearchOverlay = () => {
@@ -160,20 +175,6 @@ function setupSearchUI(search: SearchCapability, scroll: ScrollCapability) {
       // Start search session when overlay is opened
       search.startSearch();
       searchKeyword.focus();
-      
-      // Listen for search start/stop events
-      search.onSearchStart(() => {
-        console.log('Search session started');
-      });
-      
-      search.onSearchStop(() => {
-        console.log('Search session stopped');
-      });
-      
-      // Listen for search results
-      search.onSearchResult((result) => {
-        console.log('Search result:', result);
-      });
     } else {
       // Stop search session when overlay is closed
       search.stopSearch();
@@ -209,8 +210,8 @@ function setupSearchUI(search: SearchCapability, scroll: ScrollCapability) {
     if (!searchKeyword.value.trim()) return;
     
     currentSearchKeyword = searchKeyword.value.trim();
-    const result = await search.searchNext(currentSearchKeyword);
-    console.log('Search result:', result);
+    const searchIndex = search.nextResult();
+    console.log('Search index:', searchIndex);
   };
   
   // Search for previous occurrence
@@ -218,21 +219,28 @@ function setupSearchUI(search: SearchCapability, scroll: ScrollCapability) {
     if (!searchKeyword.value.trim()) return;
     
     currentSearchKeyword = searchKeyword.value.trim();
-    const result = await search.searchPrev(currentSearchKeyword);
-    console.log('Search result:', result);
+    const searchIndex = search.previousResult();
+    console.log('Search index:', searchIndex);
+  };
+
+  const performSearch = async () => {
+    if (!searchKeyword.value.trim()) return;
+    
+    currentSearchKeyword = searchKeyword.value.trim();
+    search.searchAllPages(currentSearchKeyword);
   };
   
   // Set up event listeners
   searchButton.addEventListener('click', toggleSearchOverlay);
   searchClose.addEventListener('click', toggleSearchOverlay);
-  
+  searchPerformButton.addEventListener('click', performSearch);
   searchNext.addEventListener('click', performSearchNext);
   searchPrevious.addEventListener('click', performSearchPrevious);
   
   // Search when Enter key is pressed in the keyword input
-  searchKeyword.addEventListener('keydown', (e) => {
+  searchKeyword.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
-      performSearchNext();
+      performSearch();
     }
   });
   

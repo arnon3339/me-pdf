@@ -26,6 +26,8 @@ import {
   PdfPageFlattenFlag,
   PdfPageFlattenResult,
   PdfFileLoader,
+  SearchAllPagesResult,
+  MatchFlag,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -780,6 +782,36 @@ export class WebWorkerEngine implements PdfEngine {
       data: {
         name: 'stopSearch',
         args: [doc, contextId],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.searchAllPages}
+   *
+   * @public
+   */
+  searchAllPages(doc: PdfDocumentObject, keyword: string, flags: MatchFlag[] = []) {
+    this.logger.debug(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'searchAllPages 123',
+      doc,
+      keyword,
+      flags
+    );
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<SearchAllPagesResult>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'searchAllPages',
+        args: [doc, keyword, flags],
       },
     };
     this.proxy(task, request);

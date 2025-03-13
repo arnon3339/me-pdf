@@ -1,12 +1,45 @@
 import { BasePluginConfig } from "@embedpdf/core";
-import { MatchFlag, SearchResult, SearchTarget } from "@embedpdf/models";
+import { MatchFlag, SearchResult, SearchTarget, SearchAllPagesResult } from "@embedpdf/models";
 
 export interface SearchPluginConfig extends BasePluginConfig {
   flags?: MatchFlag[];
+  /**
+   * Whether to show all search results or only the active one
+   * @default true
+   */
+  showAllResults?: boolean;
 }
 
 export interface SearchState {
   flags: MatchFlag[];
+  /**
+   * Current search results from last search operation
+   */
+  results: SearchResult[];
+  /**
+   * Total number of search results
+   */
+  total: number;
+  /**
+   * Current active result index (0-based)
+   */
+  activeResultIndex: number;
+  /**
+   * Whether to show all search results or only the active one
+   */
+  showAllResults: boolean;
+  /**
+   * Current search query
+   */
+  query: string;
+  /**
+   * Whether a search operation is in progress
+   */
+  loading: boolean;
+  /**
+   * Whether search is currently active
+   */
+  active: boolean;
 }
 
 export interface SearchCapability {
@@ -19,27 +52,51 @@ export interface SearchCapability {
    * Stop the active search session
    */
   stopSearch: () => void;
-  
+
   /**
-   * Search for the next occurrence of the keyword
+   * Search for all occurrences of the keyword throughout the document
    * @param keyword - Text to search for
-   * @returns Promise that resolves to search result or undefined if no result found
+   * @returns Promise that resolves to all search results or empty result if none found
    */
-  searchNext: (keyword: string) => Promise<SearchResult | undefined>;
-  
+  searchAllPages: (keyword: string) => Promise<SearchAllPagesResult>;
+
   /**
-   * Search for the previous occurrence of the keyword
-   * @param keyword - Text to search for
-   * @returns Promise that resolves to search result or undefined if no result found
+   * Navigate to the next search result
+   * @returns The new active result index
    */
-  searchPrev: (keyword: string) => Promise<SearchResult | undefined>;
+  nextResult: () => number;
+
+  /**
+   * Navigate to the previous search result
+   * @returns The new active result index
+   */
+  previousResult: () => number;
+
+  /**
+   * Go to a specific search result by index
+   * @param index - The index of the result to go to
+   * @returns The new active result index
+   */
+  goToResult: (index: number) => number;
+
+  /**
+   * Toggle visibility of all search results
+   * @param showAll - Whether to show all results or only the active one
+   */
+  setShowAllResults: (showAll: boolean) => void;
+
+  /**
+   * Get current state of search results visibility
+   * @returns Whether all results are visible
+   */
+  getShowAllResults: () => boolean;
 
   /**
    * Subscribe to search results
    * @param handler - Handler function to receive search results
    * @returns Function to unsubscribe the handler
    */
-  onSearchResult: (handler: (searchResult: SearchResult) => void) => () => void;
+  onSearchResult: (handler: (searchResult: SearchAllPagesResult) => void) => () => void;
 
   /**
    * Subscribe to search session start events
@@ -56,6 +113,13 @@ export interface SearchCapability {
   onSearchStop: (handler: () => void) => () => void;
 
   /**
+   * Subscribe to active result change events
+   * @param handler - Handler function called when active result changes
+   * @returns Function to unsubscribe the handler
+   */
+  onActiveResultChange: (handler: (index: number) => void) => () => void;
+
+  /**
    * Get the current search flags
    * @returns Array of active search flags
    */
@@ -66,4 +130,11 @@ export interface SearchCapability {
    * @param flags - Array of search flags to use
    */
   setFlags: (flags: MatchFlag[]) => void;
+
+  /**
+   * Subscribe to state change events
+   * @param handler - Handler function called when state changes
+   * @returns Function to unsubscribe the handler
+   */
+  onStateChange: (handler: (state: SearchState) => void) => () => void;
 }
