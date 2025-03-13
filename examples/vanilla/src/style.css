@@ -34,3 +34,74 @@
   border-radius: 4px;
   background-color: white;
 }
+
+ /* Search overlay styles */
+ .search-overlay {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  width: 300px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 15px;
+  z-index: 1000;
+  display: none;
+}
+
+.search-overlay.active {
+  display: block;
+}
+
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.search-title {
+  font-weight: bold;
+}
+
+.search-close {
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.search-input-container {
+  margin-bottom: 10px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.search-options {
+  margin-bottom: 10px;
+}
+
+.search-option {
+  margin-bottom: 5px;
+}
+
+.search-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.search-button {
+  padding: 5px 10px;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-button:hover {
+  background: #e0e0e0;
+}

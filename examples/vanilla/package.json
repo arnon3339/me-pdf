@@ -19,7 +19,8 @@
     "@embedpdf/engines": "workspace:*",
     "@embedpdf/layer-text": "workspace:*",
     "@embedpdf/layer-render": "workspace:*",
-    "@embedpdf/layer-render-partial": "workspace:*"
+    "@embedpdf/layer-render-partial": "workspace:*",
+    "@embedpdf/plugin-search": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

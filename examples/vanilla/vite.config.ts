@@ -18,7 +18,9 @@ export default defineConfig({
       '@embedpdf/models': path.resolve(__dirname, '../../packages/models/src'),
       '@embedpdf/engines': path.resolve(__dirname, '../../packages/engines/src'),
       '@embedpdf/layer-text': path.resolve(__dirname, '../../packages/layer-text/src'),
-      '@embedpdf/layer-render': path.resolve(__dirname, '../../packages/layer-render/src')
+      '@embedpdf/layer-render': path.resolve(__dirname, '../../packages/layer-render/src'),
+      '@embedpdf/layer-render-partial': path.resolve(__dirname, '../../packages/layer-render-partial/src'),
+      '@embedpdf/plugin-search': path.resolve(__dirname, '../../packages/plugin-search/src')
     }
   },
   server: {

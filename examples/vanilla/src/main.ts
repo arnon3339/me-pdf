@@ -12,12 +12,15 @@ import { TextLayerPackage } from '@embedpdf/layer-text';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
 import { RenderPartialLayerPackage } from '@embedpdf/layer-render-partial';
 import { PageManagerCapability, PageManagerPlugin, PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
+import { SearchPluginPackage, SearchPlugin, SearchCapability } from '@embedpdf/plugin-search';
 import {
   AllLogger,
   ConsoleLogger,
   Logger,
   PerfLogger,
-  Rotation
+  Rotation,
+  MatchFlag,
+  SearchResult
 } from '@embedpdf/models';
 
 async function loadWasmBinary() {
@@ -61,6 +64,7 @@ async function initializePDFViewer() {
       { package: RenderPartialLayerPackage, config: { minScale: 2.01 } }
     ]
   });
+  registry.registerPlugin(SearchPluginPackage);
 
   await registry.initialize();
 
@@ -70,7 +74,8 @@ async function initializePDFViewer() {
   const zoom = registry.getPlugin<ZoomPlugin>('zoom').provides();
   const scroll = registry.getPlugin<ScrollPlugin>('scroll').provides();
   const pageManager = registry.getPlugin<PageManagerPlugin>('page-manager').provides();
-
+  const search = registry.getPlugin<SearchPlugin>('search').provides();
+  
   const pdf = await fetch('/file/compressed.tracemonkey-pldi-09.pdf');
   const source = await pdf.arrayBuffer();
 
@@ -87,6 +92,7 @@ async function initializePDFViewer() {
   });
 
   setupUIControls(spread, zoom, scroll, pageManager);
+  setupSearchUI(search, scroll);
 }
 
 function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll: ScrollCapability, pageManager: PageManagerCapability) {
@@ -129,6 +135,111 @@ function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll:
     const newZoom = isNaN(parseFloat(zoomSelect.value)) ? zoomSelect.value : parseFloat(zoomSelect.value);
     await zoom.updateZoomLevel(newZoom as ZoomLevel);
   });
+}
+
+function setupSearchUI(search: SearchCapability, scroll: ScrollCapability) {
+  // Get search UI elements
+  const searchButton = document.getElementById('searchButton') as HTMLButtonElement;
+  const searchOverlay = document.getElementById('searchOverlay') as HTMLDivElement;
+  const searchClose = document.getElementById('searchClose') as HTMLDivElement;
+  const searchKeyword = document.getElementById('searchKeyword') as HTMLInputElement;
+  const searchNext = document.getElementById('searchNext') as HTMLButtonElement;
+  const searchPrevious = document.getElementById('searchPrevious') as HTMLButtonElement;
+  const matchCase = document.getElementById('matchCase') as HTMLInputElement;
+  const matchWholeWord = document.getElementById('matchWholeWord') as HTMLInputElement;
+  const matchConsecutive = document.getElementById('matchConsecutive') as HTMLInputElement;
+  
+  let currentSearchKeyword = '';
+  let activeSearchResult: SearchResult | undefined;
+  
+  // Toggle search overlay visibility
+  const toggleSearchOverlay = () => {
+    const isActive = searchOverlay.classList.toggle('active');
+    
+    if (isActive) {
+      // Start search session when overlay is opened
+      search.startSearch();
+      searchKeyword.focus();
+      
+      // Listen for search start/stop events
+      search.onSearchStart(() => {
+        console.log('Search session started');
+      });
+      
+      search.onSearchStop(() => {
+        console.log('Search session stopped');
+      });
+      
+      // Listen for search results
+      search.onSearchResult((result) => {
+        console.log('Search result:', result);
+      });
+    } else {
+      // Stop search session when overlay is closed
+      search.stopSearch();
+    }
+  };
+  
+  // Update search flags based on checkbox values
+  const updateSearchFlags = () => {
+    const flags: MatchFlag[] = [];
+    
+    if (matchCase.checked) {
+      flags.push(MatchFlag.MatchCase);
+    }
+    
+    if (matchWholeWord.checked) {
+      flags.push(MatchFlag.MatchWholeWord);
+    }
+    
+    if (matchConsecutive.checked) {
+      flags.push(MatchFlag.MatchConsecutive);
+    }
+    
+    search.setFlags(flags);
+    
+    // If we have an active search keyword, re-search with new flags
+    if (currentSearchKeyword) {
+      searchNext.click();
+    }
+  };
+  
+  // Search for next occurrence
+  const performSearchNext = async () => {
+    if (!searchKeyword.value.trim()) return;
+    
+    currentSearchKeyword = searchKeyword.value.trim();
+    const result = await search.searchNext(currentSearchKeyword);
+    console.log('Search result:', result);
+  };
+  
+  // Search for previous occurrence
+  const performSearchPrevious = async () => {
+    if (!searchKeyword.value.trim()) return;
+    
+    currentSearchKeyword = searchKeyword.value.trim();
+    const result = await search.searchPrev(currentSearchKeyword);
+    console.log('Search result:', result);
+  };
+  
+  // Set up event listeners
+  searchButton.addEventListener('click', toggleSearchOverlay);
+  searchClose.addEventListener('click', toggleSearchOverlay);
+  
+  searchNext.addEventListener('click', performSearchNext);
+  searchPrevious.addEventListener('click', performSearchPrevious);
+  
+  // Search when Enter key is pressed in the keyword input
+  searchKeyword.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      performSearchNext();
+    }
+  });
+  
+  // Update search flags when option checkboxes change
+  matchCase.addEventListener('change', updateSearchFlags);
+  matchWholeWord.addEventListener('change', updateSearchFlags);
+  matchConsecutive.addEventListener('change', updateSearchFlags);
 }
 
 function updatePageInfo(currentPage: number, totalPages: number) {

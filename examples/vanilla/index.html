@@ -38,10 +38,40 @@
                 <option value="9">900%</option>
                 <option value="10">1000%</option>
             </select>
+            <button id="searchButton">Search</button>
         </div>
         <div class="viewer-container">
             <div id="pageContainer" class="page-container" style="--scale-factor: 1;">
                 
+            </div>
+        </div>
+        
+        <!-- Search Overlay -->
+        <div id="searchOverlay" class="search-overlay">
+            <div class="search-header">
+                <div class="search-title">Search</div>
+                <div id="searchClose" class="search-close">×</div>
+            </div>
+            <div class="search-input-container">
+                <input type="text" id="searchKeyword" class="search-input" placeholder="Enter search term...">
+            </div>
+            <div class="search-options">
+                <div class="search-option">
+                    <input type="checkbox" id="matchCase">
+                    <label for="matchCase">Match case</label>
+                </div>
+                <div class="search-option">
+                    <input type="checkbox" id="matchWholeWord">
+                    <label for="matchWholeWord">Match whole word</label>
+                </div>
+                <div class="search-option">
+                    <input type="checkbox" id="matchConsecutive">
+                    <label for="matchConsecutive">Match consecutive</label>
+                </div>
+            </div>
+            <div class="search-actions">
+                <button id="searchPrevious" class="search-button">Previous</button>
+                <button id="searchNext" class="search-button">Next</button>
             </div>
         </div>
     </div>
