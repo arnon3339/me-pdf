@@ -1,7 +1,7 @@
 import { BaseLayerPlugin, LayerRenderOptions } from "@embedpdf/plugin-layer";
 import { SearchLayerConfig } from "./types";
 import { PluginRegistry } from "@embedpdf/core";
-import { PdfDocumentObject, PdfEngine, PdfPageObject, Rect, SearchResult } from "@embedpdf/models";
+import { PdfDocumentObject, PdfEngine, PdfPageObject, Rect, Rotation, SearchResult, transformRect } from "@embedpdf/models";
 import { SearchPlugin, SearchCapability, SearchState, DEFAULT_STATE } from "@embedpdf/plugin-search";
 import { ScrollPlugin, ScrollCapability } from "@embedpdf/plugin-scroll";
 
@@ -24,9 +24,10 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
 
   private search: SearchCapability;
   private scroll: ScrollCapability;
-  private currentDocumentId: string = "";
+  private currentDocument: PdfDocumentObject | null = null;
   private topic: string = "default";
   private currentState: SearchState = DEFAULT_STATE;
+  private rotation: Rotation = Rotation.Degree0;
 
   // Maps for managing highlights
   private preparedHighlights: Map<number, PreparedHighlight[]> = new Map(); // Prepared but not in DOM
@@ -36,7 +37,7 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
   private readonly NORMAL_HIGHLIGHT_CLASS = "search-highlight";
   private readonly ACTIVE_HIGHLIGHT_CLASS = "active-highlight";
 
-  // Tracks pending scroll to a result when its page isn’t loaded yet
+  // Tracks pending scroll to a result when its page isn't loaded yet
   private pendingScrollToResultIndex: number = -1;
 
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
@@ -63,9 +64,7 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
         this.preparedHighlights.clear();
       } else if (this.currentState.loading && state.results && state.results.length > 0) {
         // Search completed with results
-        this.prepareHighlightsForResults(state.results);
-        this.applyPreparedHighlightsForVisiblePages();
-        this.updateActiveHighlight(state.activeResultIndex);
+        this.refreshHighlights(state.results, state.activeResultIndex);
       } else if (this.currentState.activeResultIndex !== state.activeResultIndex) { 
         this.updateActiveHighlight(state.activeResultIndex);
       } else {
@@ -114,14 +113,17 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
     results.forEach((result, resultIndex) => {
       const pageIndex = result.pageIndex;
       const preparedForPage = this.preparedHighlights.get(pageIndex) || [];
+      const page = this.currentDocument?.pages[pageIndex];
+      if (!page) return;
 
       result.rects.forEach((rect, rectIndex) => {
+        const transformedRect = transformRect(page.size, rect, this.rotation, 1);
         const element = document.createElement("div");
         element.className = this.NORMAL_HIGHLIGHT_CLASS;
-        element.style.left = `round(down, var(--scale-factor) * ${rect.origin.x}px, 1px)`;
-        element.style.top = `round(down, var(--scale-factor) * ${rect.origin.y}px, 1px)`;
-        element.style.width = `round(down, var(--scale-factor) * ${rect.size.width}px, 1px)`;
-        element.style.height = `round(down, var(--scale-factor) * ${rect.size.height}px, 1px)`;
+        element.style.left = `round(down, var(--scale-factor) * ${transformedRect.origin.x}px, 1px)`;
+        element.style.top = `round(down, var(--scale-factor) * ${transformedRect.origin.y}px, 1px)`;
+        element.style.width = `round(down, var(--scale-factor) * ${transformedRect.size.width}px, 1px)`;
+        element.style.height = `round(down, var(--scale-factor) * ${transformedRect.size.height}px, 1px)`;
         element.dataset.resultIndex = resultIndex.toString();
         element.dataset.pageIndex = pageIndex.toString();
         element.dataset.rectIndex = rectIndex.toString();
@@ -158,7 +160,7 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
 
     this.highlightElements.set(pageIndex, appliedHighlights);
 
-    // Apply active styling if there’s an active result
+    // Apply active styling if there's an active result
     if (this.currentState.activeResultIndex >= 0) {
       this.applyActiveHighlightStyling(this.currentState.activeResultIndex);
     }
@@ -239,7 +241,7 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
 
   /** Retrieve the container for a page from cache */
   private getPageCacheContainer(pageIndex: number): HTMLElement | null {
-    return this.getPageCache(this.currentDocumentId, pageIndex, this.topic)?.container || null;
+    return this.getPageCache(this.currentDocument?.id || "", pageIndex, this.topic)?.container || null;
   }
 
   /** Render the layer for a page */
@@ -249,11 +251,18 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
     container: HTMLElement,
     options: LayerRenderOptions
   ): Promise<void> {
-    this.currentDocumentId = pdfDocument.id;
+    this.currentDocument = pdfDocument;
     this.topic = options.topic || "default";
 
+    if (options.rotation !== this.rotation) {
+      this.rotation = options.rotation || 0;
+
+      this.clearAllHighlights();
+      this.refreshHighlights(this.currentState.results, this.currentState.activeResultIndex);
+    }
+
     const inCache = this.getPageCache(pdfDocument.id, page.index, this.topic);
-    
+
     if (inCache) {
       return;
     }
@@ -263,6 +272,13 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
     if (this.currentState.active && this.preparedHighlights.has(page.index)) {
       this.applyPreparedHighlightsForPage(page.index);
     }
+  }
+
+  /** Refresh all highlights with current search results */
+  private refreshHighlights(results: SearchResult[], activeResultIndex: number): void {
+    this.prepareHighlightsForResults(results);
+    this.applyPreparedHighlightsForVisiblePages();
+    this.updateActiveHighlight(activeResultIndex);
   }
 
   /** Clean up on destruction */
