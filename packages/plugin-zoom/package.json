@@ -27,10 +27,12 @@
   },
   "dependencies": {
     "@embedpdf/models": "workspace:*",
+    "@embedpdf/plugin-page-manager": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
-    "@embedpdf/plugin-page-manager": "workspace:*"
+    "hammerjs": "^2.0.8"
   },
   "devDependencies": {
+    "@types/hammerjs": "^2.0.46",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"

@@ -6,12 +6,14 @@ import { ViewportCapability, ViewportPlugin } from "@embedpdf/plugin-viewport";
 import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
 import { ZoomCapability, ZoomChangeEvent, ZoomLevel, ZoomPluginConfig, ZoomState } from "./types";
 import { ZoomController } from "./zoom/zoom-controller";
+import { PinchController } from "./zoom/pinch-controller";
 
 export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
   private zoomHandlers: ((zoomEvent: ZoomChangeEvent) => void)[] = [];
   private viewport: ViewportCapability;
   private pageManager: PageManagerCapability;
   private zoomController!: ZoomController;
+  private pinchController!: PinchController;
 
   constructor(  
     public readonly id: string,
@@ -57,6 +59,22 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
       }
     });
 
+    // Initialize pinch controller
+    this.pinchController = new PinchController({
+      container: this.viewport.getContainer(),
+      state: this.state,
+      onZoomChange: (zoom: number, center?: { x: number; y: number }) => this.zoomController.zoomTo(zoom, center),
+      onPinchEnd: (zoom?: number) => {
+        if(!zoom) return;
+        const zoomEvent = this.zoomController.zoomTo(zoom);
+
+        this.updateState({ zoomLevel: zoomEvent.newZoom });
+
+        // Update scale at the end of the pinch gesture
+        this.pageManager.updateScale(zoomEvent.newZoom);
+      }
+    });
+
     // Initial zoom level setup
     await this.updateZoomLevel(config.defaultZoomLevel);
   }
@@ -85,6 +103,11 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
     if (this.zoomController) {
       this.zoomController.destroy();
     }
+    
+    if (this.pinchController) {
+      this.pinchController.destroy();
+    }
+    
     this.zoomHandlers = [];
     
     // Call parent destroy to clean up state handlers
