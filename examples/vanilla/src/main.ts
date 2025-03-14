@@ -46,13 +46,13 @@ async function initializePDFViewer() {
 
   registry.registerPlugin(LoaderPluginPackage);
   registry.registerPlugin(ViewportPluginPackage, {
-    container: document.getElementById('pageContainer') as HTMLElement
+    container: document.getElementById('viewer-container') as HTMLElement
   });
   registry.registerPlugin(PageManagerPluginPackage, {
     pageGap: 10
   });
   registry.registerPlugin(ZoomPluginPackage, {
-    defaultZoomLevel: 1
+    defaultZoomLevel: 'automatic'
   });
   registry.registerPlugin(SpreadPluginPackage, {
     defaultSpreadMode: SpreadMode.None
@@ -119,15 +119,11 @@ function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll:
   });
 
   rotateForwardButton.addEventListener('click', async () => {
-    const currentRotation = pageManager.getRotation();
-    const newRotation = getNextRotation(currentRotation);
-    await pageManager.updateRotation(newRotation);
+    await pageManager.rotateForward();
   });
 
   rotateBackwardButton.addEventListener('click', async () => {
-    const currentRotation = pageManager.getRotation();
-    const newRotation = getPreviousRotation(currentRotation);
-    await pageManager.updateRotation(newRotation);
+    await pageManager.rotateBackward();
   });
 
   // Set initial zoom level
@@ -256,37 +252,6 @@ function updatePageInfo(currentPage: number, totalPages: number) {
   const pageInfo = document.getElementById('pageInfo');
   if (pageInfo) {
     pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-  }
-}
-
-// Helper functions for rotation
-function getNextRotation(currentRotation: Rotation): Rotation {
-  switch (currentRotation) {
-    case Rotation.Degree0:
-      return Rotation.Degree90;
-    case Rotation.Degree90:
-      return Rotation.Degree180;
-    case Rotation.Degree180:
-      return Rotation.Degree270;
-    case Rotation.Degree270:
-      return Rotation.Degree0;
-    default:
-      return Rotation.Degree0;
-  }
-}
-
-function getPreviousRotation(currentRotation: Rotation): Rotation {
-  switch (currentRotation) {
-    case Rotation.Degree0:
-      return Rotation.Degree270;
-    case Rotation.Degree90:
-      return Rotation.Degree0;
-    case Rotation.Degree180:
-      return Rotation.Degree90;
-    case Rotation.Degree270:
-      return Rotation.Degree180;
-    default:
-      return Rotation.Degree0;
   }
 }
 

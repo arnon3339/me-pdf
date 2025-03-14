@@ -19,6 +19,8 @@ export interface PageManagerCapability {
   updateScale(scale: number): void;
   getRotation(): Rotation;
   updateRotation(rotation: Rotation): void;
+  rotateForward(): void;
+  rotateBackward(): void;
   updateVisiblePages(visiblePages: UpdateVisiblePages): void;
 }
 

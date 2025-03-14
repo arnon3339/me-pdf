@@ -14,6 +14,15 @@ interface PageElementCache {
   pageNum: number;
 }
 
+// Rotation helper functions - simplified with modular arithmetic
+function getNextRotation(current: Rotation): Rotation {
+  return ((current + 1) % 4) as Rotation;
+}
+
+function getPreviousRotation(current: Rotation): Rotation {
+  return ((current + 3) % 4) as Rotation; // +3 is equivalent to -1 in modulo 4
+}
+
 export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
   private loader: LoaderCapability;
   private spread: SpreadCapability;
@@ -63,6 +72,8 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
       updateScale: this.updateScale.bind(this),
       getRotation: () => this.rotation,
       updateRotation: this.updateRotation.bind(this),
+      rotateForward: this.rotateForward.bind(this),
+      rotateBackward: this.rotateBackward.bind(this),
       updateVisiblePages: this.updateVisiblePages.bind(this)
     };
   }
@@ -101,6 +112,14 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
     
     // Update all rendered pages in order of visibility
     this.updateRenderedPages();
+  }
+
+  rotateForward(): void {
+    this.updateRotation(getNextRotation(this.rotation));
+  }
+
+  rotateBackward(): void {
+    this.updateRotation(getPreviousRotation(this.rotation));
   }
 
   updateRotation(rotation: Rotation): void {
