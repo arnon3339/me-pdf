@@ -171,7 +171,7 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
       for (const element of highlights) {
         if (element.dataset.resultIndex === this.pendingScrollToResultIndex.toString()) {
           setTimeout(() => {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.scrollIntoView({ behavior: "smooth", block: "center", inline: 'center' });
             this.pendingScrollToResultIndex = -1;
           }, 100); // Delay to ensure rendering
           break;
@@ -214,7 +214,7 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
           element.dataset.resultIndex === resultIndex.toString() &&
           element.isConnected
         ) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.scrollIntoView({ behavior: "smooth", block: "center", inline: 'center' });
           this.pendingScrollToResultIndex = -1;
           return;
         }
