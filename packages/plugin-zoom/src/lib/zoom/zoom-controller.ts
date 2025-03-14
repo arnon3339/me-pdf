@@ -150,8 +150,24 @@ export class ZoomController {
    * @param delta The amount to adjust the zoom by.
    * @param center Optional center point for zoom.
    */
-  public zoomBy(delta: number, center?: { x: number; y: number }): void {
-    this.zoomTo(this.state.currentZoomLevel + delta, center);
+  public zoomBy(delta: number, center?: { x: number; y: number }): ZoomChangeEvent {
+    return this.zoomTo(this.state.currentZoomLevel + delta, center);
+  }
+
+  /**
+   * Zooms in by the zoom step.
+   * @returns ZoomChangeEvent with old and new zoom details.
+   */
+  public zoomIn(): ZoomChangeEvent {
+    return this.zoomBy(this.zoomStep);
+  }
+
+  /**
+   * Zooms out by the zoom step.
+   * @returns ZoomChangeEvent with old and new zoom details.
+   */
+  public zoomOut(): ZoomChangeEvent {
+    return this.zoomBy(-this.zoomStep);
   }
 
   /**

@@ -68,10 +68,7 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
         if(!zoom) return;
         const zoomEvent = this.zoomController.zoomTo(zoom);
 
-        this.updateState({ zoomLevel: zoomEvent.newZoom });
-
-        // Update scale at the end of the pinch gesture
-        this.pageManager.updateScale(zoomEvent.newZoom);
+        this.handleZoomChange(zoomEvent.newZoom, zoomEvent, true);
       }
     });
 
@@ -89,14 +86,34 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
     }
   }
 
-  async updateZoomLevel(zoomLevel: ZoomLevel): Promise<void> {
-    this.updateState({ zoomLevel });
+  private handleZoomChange(zoomLevel: ZoomLevel, zoomEvent: ZoomChangeEvent, force?: boolean): void {
+    this.updateState({ 
+      zoomLevel: zoomLevel, 
+      currentZoomLevel: zoomEvent.newZoom 
+    });
 
-    const zoomEvent = this.zoomController.zoomTo(zoomLevel);
-
-    if(zoomEvent.newZoom !== zoomEvent.oldZoom) {
+    // Update page scale if zoom level changed
+    if (zoomEvent.newZoom !== zoomEvent.oldZoom || force) {
       this.pageManager.updateScale(zoomEvent.newZoom);
     }
+
+    // Notify handlers about zoom change
+    this.zoomHandlers.forEach(handler => handler(zoomEvent));
+  }
+
+  async updateZoomLevel(zoomLevel: ZoomLevel): Promise<void> {
+    const zoomEvent = this.zoomController.zoomTo(zoomLevel);
+    this.handleZoomChange(zoomLevel, zoomEvent);
+  }
+
+  async zoomIn(): Promise<void> {
+    const zoomEvent = this.zoomController.zoomIn();
+    this.handleZoomChange(zoomEvent.newZoom, zoomEvent);
+  }
+
+  async zoomOut(): Promise<void> {
+    const zoomEvent = this.zoomController.zoomOut();
+    this.handleZoomChange(zoomEvent.newZoom, zoomEvent);
   }
 
   async destroy(): Promise<void> {
