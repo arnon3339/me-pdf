@@ -98,18 +98,70 @@ async function initializePDFViewer() {
 }
 
 function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll: ScrollCapability, pageManager: PageManagerCapability) {
+  // Main toolbar controls
   const prevButton = document.getElementById('prevPage') as HTMLButtonElement;
   const nextButton = document.getElementById('nextPage') as HTMLButtonElement;
+  const zoomInButton = document.getElementById('zoomIn') as HTMLButtonElement;
+  const zoomOutButton = document.getElementById('zoomOut') as HTMLButtonElement;
   const zoomSelect = document.getElementById('zoomLevel') as HTMLSelectElement;
   const spreadSelect = document.getElementById('spreadMode') as HTMLSelectElement;
   const rotateForwardButton = document.getElementById('rotateForward') as HTMLButtonElement;
   const rotateBackwardButton = document.getElementById('rotateBackward') as HTMLButtonElement;
+  
+  // Dropdown menu controls
+  const moreOptionsButton = document.getElementById('moreOptionsButton') as HTMLButtonElement;
+  const moreOptionsDropdown = document.getElementById('moreOptionsDropdown') as HTMLDivElement;
+  const rotateForwardDropdown = document.getElementById('rotateForwardDropdown') as HTMLButtonElement;
+  const rotateBackwardDropdown = document.getElementById('rotateBackwardDropdown') as HTMLButtonElement;
+  const spreadModeDropdown = document.getElementById('spreadModeDropdown')?.querySelectorAll('.dropdown-item') as NodeListOf<HTMLButtonElement>;
+  const fitOptionsDropdown = document.getElementById('fitOptionsDropdown')?.querySelectorAll('.dropdown-item') as NodeListOf<HTMLButtonElement>;
 
-  spreadSelect.addEventListener('change', async () => {
-    const newSpreadMode = spreadSelect.value as SpreadMode;
-    spread.setSpreadMode(newSpreadMode);
+  // Toggle dropdown menu
+  moreOptionsButton.addEventListener('click', () => {
+    moreOptionsDropdown.classList.toggle('active');
+    
+    // Update active states in the dropdown
+    updateActiveDropdownItems(spreadModeDropdown, spread.getSpreadMode());
+    updateActiveDropdownItems(fitOptionsDropdown, zoom.getState().zoomLevel);
   });
 
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (event) => {
+    if (!moreOptionsButton.contains(event.target as Node) && 
+        !moreOptionsDropdown.contains(event.target as Node)) {
+      moreOptionsDropdown.classList.remove('active');
+    }
+  });
+
+  // Spread mode controls
+  spreadSelect.addEventListener('change', async () => {
+    const newSpreadMode = spreadSelect.value as SpreadMode;
+    await spread.setSpreadMode(newSpreadMode);
+  });
+
+  // Spread mode dropdown controls
+  spreadModeDropdown.forEach(button => {
+    button.addEventListener('click', async () => {
+      const newSpreadMode = button.getAttribute('data-value') as SpreadMode;
+      await spread.setSpreadMode(newSpreadMode);
+      spreadSelect.value = newSpreadMode;
+      updateActiveDropdownItems(spreadModeDropdown, newSpreadMode);
+      moreOptionsDropdown.classList.remove('active');
+    });
+  });
+
+  // Fit options dropdown controls
+  fitOptionsDropdown.forEach(button => {
+    button.addEventListener('click', async () => {
+      const newZoom = button.getAttribute('data-value') as ZoomLevel;
+      const zoomEvent = zoom.updateZoomLevel(newZoom);
+      zoomSelect.value = zoomEvent.newZoom.toString();
+      updateActiveDropdownItems(fitOptionsDropdown, zoomEvent.newZoom);
+      moreOptionsDropdown.classList.remove('active');
+    });
+  });
+
+  // Navigation controls
   prevButton.addEventListener('click', async () => {
     await scroll.scrollToPreviousPage();
   });
@@ -118,6 +170,7 @@ function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll:
     await scroll.scrollToNextPage();
   });
 
+  // Rotation controls
   rotateForwardButton.addEventListener('click', async () => {
     await pageManager.rotateForward();
   });
@@ -126,13 +179,66 @@ function setupUIControls(spread: SpreadCapability, zoom: ZoomCapability, scroll:
     await pageManager.rotateBackward();
   });
 
-  // Set initial zoom level
-  zoomSelect.value = zoom.getState().zoomLevel.toString();
+  // Dropdown rotation controls
+  rotateForwardDropdown.addEventListener('click', async () => {
+    await pageManager.rotateForward();
+    moreOptionsDropdown.classList.remove('active');
+  });
 
+  rotateBackwardDropdown.addEventListener('click', async () => {
+    await pageManager.rotateBackward();
+    moreOptionsDropdown.classList.remove('active');
+  });
+
+  // Zoom controls
+  zoomInButton.addEventListener('click', async () => {
+    const zoomEvent = await zoom.zoomIn();
+    updateZoomSelectValue(zoomSelect, zoomEvent.newZoom);
+  });
+
+  zoomOutButton.addEventListener('click', async () => {
+    const zoomEvent = await zoom.zoomOut();
+    updateZoomSelectValue(zoomSelect, zoomEvent.newZoom);
+  });
+
+  // Zoom select control
   zoomSelect.addEventListener('change', async () => {
     const newZoom = isNaN(parseFloat(zoomSelect.value)) ? zoomSelect.value : parseFloat(zoomSelect.value);
     await zoom.updateZoomLevel(newZoom as ZoomLevel);
   });
+}
+
+// Helper function to update active dropdown items
+function updateActiveDropdownItems(items: NodeListOf<HTMLButtonElement>, activeValue: string | number) {
+  items.forEach(item => {
+    if (item.getAttribute('data-value') === activeValue.toString()) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+}
+
+// Helper function to update zoom select value
+function updateZoomSelectValue(zoomSelect: HTMLSelectElement, value: number | string) {
+  // If the value exists as an option, select it
+  const valueExists = Array.from(zoomSelect.options).some(option => option.value === value.toString());
+  
+  if (valueExists) {
+    zoomSelect.value = value.toString();
+  } else if (typeof value === 'number') {
+    // Find the closest numeric value
+    const numericOptions = Array.from(zoomSelect.options)
+      .filter(option => !isNaN(parseFloat(option.value)))
+      .map(option => parseFloat(option.value));
+    
+    if (numericOptions.length > 0) {
+      const closest = numericOptions.reduce((prev, curr) => 
+        Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+      );
+      zoomSelect.value = closest.toString();
+    }
+  }
 }
 
 function setupSearchUI(search: SearchCapability, scroll: ScrollCapability) {

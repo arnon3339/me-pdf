@@ -10,7 +10,9 @@ export interface ZoomPluginConfig extends BasePluginConfig {
 
 export interface ZoomCapability {
   onZoom(handler: (zoomEvent: ZoomChangeEvent) => void): void;
-  updateZoomLevel(zoomLevel: ZoomLevel): Promise<void>;
+  updateZoomLevel(zoomLevel: ZoomLevel): ZoomChangeEvent;
+  zoomIn(): ZoomChangeEvent;
+  zoomOut(): ZoomChangeEvent;
   getState(): ZoomState;
   onStateChange(handler: (state: ZoomState) => void): void;
 }

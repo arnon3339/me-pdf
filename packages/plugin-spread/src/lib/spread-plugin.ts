@@ -1,24 +1,29 @@
-import { IPlugin, PluginRegistry } from "@embedpdf/core";
+import { BasePlugin, PluginRegistry } from "@embedpdf/core";
 import { PdfPageObject } from "@embedpdf/models";
-import { SpreadMode, SpreadPluginConfig, SpreadCapability } from "./types";
+import { SpreadCapability, SpreadMode, SpreadPluginConfig, SpreadState } from "./types";
 
-export class SpreadPlugin implements IPlugin<SpreadPluginConfig> {
-  private spreadMode: SpreadMode = SpreadMode.None;
+export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadState> {
   private spreadHandlers: ((spreadMode: SpreadMode) => void)[] = [];
 
   constructor(
     public readonly id: string,
-    private registry: PluginRegistry,
-  ) {}
+    registry: PluginRegistry,
+  ) {
+    super(id, registry, {
+      spreadMode: SpreadMode.None
+    });
+  }
 
   async initialize(config: SpreadPluginConfig): Promise<void> {
-    this.spreadMode = config.defaultSpreadMode || SpreadMode.None;
+    this.updateState({
+      spreadMode: config.defaultSpreadMode || SpreadMode.None
+    });
   }
 
   getSpreadPagesObjects(pages: PdfPageObject[]): PdfPageObject[][] {
     if (!pages.length) return [];
     
-    switch (this.spreadMode) {
+    switch (this.state.spreadMode) {
       case SpreadMode.None:
         return pages.map(page => [page]);
         
@@ -41,8 +46,10 @@ export class SpreadPlugin implements IPlugin<SpreadPluginConfig> {
   }
 
   setSpreadMode(mode: SpreadMode): void {
-    if (this.spreadMode !== mode) {
-      this.spreadMode = mode;
+    if (this.state.spreadMode !== mode) {
+      this.updateState({
+        spreadMode: mode
+      });
       this.notifySpreadChange(mode);
     }
   }
@@ -55,7 +62,7 @@ export class SpreadPlugin implements IPlugin<SpreadPluginConfig> {
     return {
       onSpreadChange: (handler) => this.spreadHandlers.push(handler),
       setSpreadMode: (mode) => this.setSpreadMode(mode),
-      getSpreadMode: () => this.spreadMode,
+      getSpreadMode: () => this.state.spreadMode,
       getSpreadPagesObjects: (pages) => this.getSpreadPagesObjects(pages),
     };
   }

@@ -36,7 +36,9 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
       onZoom: (handler) => this.zoomHandlers.push(handler),
       updateZoomLevel: (zoomLevel) => this.updateZoomLevel(zoomLevel),
       getState: () => this.getState(),
-      onStateChange: (handler) => this.onStateChange(handler)
+      onStateChange: (handler) => this.onStateChange(handler),
+      zoomIn: () => this.zoomIn(),
+      zoomOut: () => this.zoomOut()
     };
   }
 
@@ -101,19 +103,25 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
     this.zoomHandlers.forEach(handler => handler(zoomEvent));
   }
 
-  async updateZoomLevel(zoomLevel: ZoomLevel): Promise<void> {
+  updateZoomLevel(zoomLevel: ZoomLevel): ZoomChangeEvent {
     const zoomEvent = this.zoomController.zoomTo(zoomLevel);
     this.handleZoomChange(zoomLevel, zoomEvent);
+    
+    return zoomEvent;
   }
 
-  async zoomIn(): Promise<void> {
+  zoomIn(): ZoomChangeEvent {
     const zoomEvent = this.zoomController.zoomIn();
     this.handleZoomChange(zoomEvent.newZoom, zoomEvent);
+
+    return zoomEvent;
   }
 
-  async zoomOut(): Promise<void> {
+  zoomOut(): ZoomChangeEvent {
     const zoomEvent = this.zoomController.zoomOut();
     this.handleZoomChange(zoomEvent.newZoom, zoomEvent);
+
+    return zoomEvent;
   }
 
   async destroy(): Promise<void> {

@@ -17,3 +17,7 @@ export interface SpreadCapability {
   getSpreadMode(): SpreadMode;
   getSpreadPagesObjects(pages: PdfPageObject[]): PdfPageObject[][];
 }
+
+export interface SpreadState {
+  spreadMode: SpreadMode;
+}
