@@ -37,19 +37,21 @@ export interface ScrollStrategyInterface {
   updateLayout(viewport: ViewportMetrics, pdfPageObject: PdfPageObject[][]): void;
   handleScroll(viewport: ViewportMetrics): void;
   getVirtualItems(): VirtualItem[];
-  scrollToPage(pageNumber: number): void;
+  scrollToPage(pageNumber: number, behavior?: ScrollBehavior): void;
   calculateDimensions(pdfPageObject: PdfPageObject[][]): void;
 } 
 
 export interface ScrollPluginConfig extends BasePluginConfig {
   strategy?: ScrollStrategy;
+  initialPage?: number;
 }
 
 export interface ScrollCapability {
   onScroll(handler: (metrics: ScrollMetrics) => void): void;
   onPageChange(handler: (pageNumber: number) => void): void;
-  scrollToPage(pageNumber: number): void;
-  scrollToNextPage(): void;
-  scrollToPreviousPage(): void;
-  getMetrics(viewport: ViewportMetrics): ScrollMetrics;
+  onScrollReady(handler: () => void): void;
+  scrollToPage(pageNumber: number, behavior?: ScrollBehavior): void;
+  scrollToNextPage(behavior?: ScrollBehavior): void;
+  scrollToPreviousPage(behavior?: ScrollBehavior): void;
+  getMetrics(viewport?: ViewportMetrics): ScrollMetrics;
 }

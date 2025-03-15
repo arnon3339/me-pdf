@@ -323,7 +323,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     }
   }
 
-  scrollToNextPage(): void {
+  scrollToNextPage(behavior?: ScrollBehavior): void {
     const currentPage = this.metrics.currentPage;
     
     // Find the current virtual item index
@@ -337,11 +337,11 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
       // Adjust scroll position by subtracting the viewportGap
       const adjustedPosition = Math.max(0, nextItem.scaledOffset + (this.viewportGap * this.getScaleFactorFn()));
       
-      this.setScrollPosition(this.container, adjustedPosition);
+      this.setScrollPosition(this.container, adjustedPosition, behavior);
     }
   }
 
-  scrollToPreviousPage(): void {
+  scrollToPreviousPage(behavior?: ScrollBehavior): void {
     const currentPage = this.metrics.currentPage;
     
     // Find the current virtual item index
@@ -355,7 +355,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
       // Adjust scroll position by subtracting the viewportGap
       const adjustedPosition = Math.max(0, prevItem.scaledOffset + (this.viewportGap * this.getScaleFactorFn()));
       
-      this.setScrollPosition(this.container, adjustedPosition);
+      this.setScrollPosition(this.container, adjustedPosition, behavior);
     }
   }
 

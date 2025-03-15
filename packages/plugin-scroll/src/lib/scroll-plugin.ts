@@ -11,9 +11,11 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
   private pageManager: PageManagerCapability;
   private strategy: VerticalScrollStrategy | HorizontalScrollStrategy;
   private scrollHandlers: ((metrics: ScrollMetrics) => void)[] = [];
+  private scrollReadyHandlers: (() => void)[] = [];
   private pageChangeHandlers: ((pageNumber: number) => void)[] = [];
   private currentZoom: number = 1;
   private currentPage: number = 1;
+  private initialPage: number | undefined;
 
   constructor(
     public readonly id: string,
@@ -42,6 +44,12 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
 
     // Trigger initial viewport update to render virtual items
     this.strategy.handleScroll(this.viewport.getMetrics());
+
+    if(this.initialPage) {
+      this.strategy.scrollToPage(this.initialPage, 'instant');
+    }
+
+    this.scrollReadyHandlers.forEach(handler => handler());
   }
 
   private handleContainerChange(container: HTMLElement): void {
@@ -95,20 +103,26 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
     return {
       onScroll: (handler) => this.scrollHandlers.push(handler),
       onPageChange: (handler) => this.pageChangeHandlers.push(handler),
-      scrollToPage: (pageNumber) => this.strategy.scrollToPage(pageNumber),
-      scrollToNextPage: () => this.strategy.scrollToNextPage(),
-      scrollToPreviousPage: () => this.strategy.scrollToPreviousPage(),
-      getMetrics: (viewport?: ViewportMetrics) => this.getMetrics(viewport)
+      scrollToPage: (pageNumber, behavior = 'smooth') => this.strategy.scrollToPage(pageNumber, behavior),
+      scrollToNextPage: (behavior = 'smooth') => this.strategy.scrollToNextPage(behavior),
+      scrollToPreviousPage: (behavior = 'smooth') => this.strategy.scrollToPreviousPage(behavior),
+      getMetrics: (viewport?: ViewportMetrics) => this.getMetrics(viewport),
+      onScrollReady: (handler) => this.scrollReadyHandlers.push(handler),
     };
   }
 
   async initialize(config: ScrollPluginConfig): Promise<void> {
     const container = this.viewport.getContainer();
     this.strategy.initialize(container);
+
+    if(config.initialPage) {
+      this.initialPage = config.initialPage;
+    }
   }
 
   async destroy(): Promise<void> {
     this.strategy.destroy();
     this.scrollHandlers = [];
+    this.scrollReadyHandlers = [];
   }
 }
