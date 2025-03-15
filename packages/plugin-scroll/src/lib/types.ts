@@ -32,7 +32,7 @@ export interface VirtualItem {
 }
 
 export interface ScrollStrategyInterface {
-  initialize(container: HTMLElement): void;
+  initialize(container: HTMLElement, innerDiv: HTMLElement): void;
   destroy(): void;
   updateLayout(viewport: ViewportMetrics, pdfPageObject: PdfPageObject[][]): void;
   handleScroll(viewport: ViewportMetrics): void;

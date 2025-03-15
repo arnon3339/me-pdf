@@ -113,7 +113,8 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
 
   async initialize(config: ScrollPluginConfig): Promise<void> {
     const container = this.viewport.getContainer();
-    this.strategy.initialize(container);
+    const innerDiv = this.viewport.getInnerDiv();
+    this.strategy.initialize(container, innerDiv);
 
     if(config.initialPage) {
       this.initialPage = config.initialPage;

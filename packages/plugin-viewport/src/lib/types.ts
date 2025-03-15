@@ -28,11 +28,25 @@ export interface ScrollControlOptions {
   wait: number;
 }
 
+export interface WrapperDivOptions {
+  id: string;
+  className?: string;
+  styles?: Partial<CSSStyleDeclaration>;
+  position?: number; // Optional position in the wrapper stack (0 is closest to container)
+}
+
 export interface ViewportCapability {
   getContainer: () => HTMLElement;
   getMetrics: () => ViewportMetrics;
   setContainer: (container: HTMLElement) => void;
   getViewportGap: () => number;
+  // Inner div methods
+  getInnerDiv: () => HTMLElement;
+  // Wrapper div methods
+  addWrapperDiv: (options: WrapperDivOptions) => HTMLElement;
+  getWrapperDiv: (id: string) => HTMLElement | null;
+  removeWrapperDiv: (id: string) => boolean;
+  // Event handlers
   onViewportChange: (
     handler: (metrics: ViewportMetrics) => void,
     options?: EventControlOptions

@@ -1,9 +1,12 @@
 import { IPlugin, PluginRegistry } from "@embedpdf/core";
-import { ViewportCapability, ViewportMetrics, ViewportPluginConfig } from "./types";
+import { ViewportCapability, ViewportMetrics, ViewportPluginConfig, WrapperDivOptions } from "./types";
 import { EventControl, EventControlOptions } from "./utils/event-control";
 
 export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
   private container?: HTMLElement;
+  private innerDiv?: HTMLElement;
+  private wrapperDivs: Map<string, HTMLElement> = new Map();
+  private wrapperDivPositions: Map<string, number> = new Map();
   private observer?: ResizeObserver;
   private mutationObserver?: MutationObserver;
   private viewportHandlers: ((metrics: ViewportMetrics) => void)[] = [];
@@ -28,6 +31,15 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
       getMetrics: () => this.getViewportMetrics(),
       setContainer: (container) => this.setContainer(container),
       getViewportGap: () => this.viewportGap,
+      getInnerDiv: () => {
+        if (!this.innerDiv) {
+          throw new Error('Inner div not initialized');
+        }
+        return this.innerDiv;
+      },
+      addWrapperDiv: (options) => this.addWrapperDiv(options),
+      getWrapperDiv: (id) => this.getWrapperDiv(id),
+      removeWrapperDiv: (id) => this.removeWrapperDiv(id),
       onViewportChange: (handler, options?: EventControlOptions) => {
         if (options) {
           const controlledHandler = new EventControl(handler, options).handle;
@@ -70,11 +82,120 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
 
   private createDefaultContainer(): void {
     const container = document.createElement('div');
-    container.style.width = `${this.config.defaultWidth}px`;
-    container.style.height = `${this.config.defaultHeight}px`;
+    container.style.width = `${this.config.defaultWidth ?? 800}px`;
+    container.style.height = `${this.config.defaultHeight ?? 600}px`;
     container.style.overflow = 'auto';
     container.style.position = 'relative';
     this.setContainer(container);
+  }
+
+  private setupInnerDiv(): void {
+    if (!this.container) return;
+    
+    // Create inner div if it doesn't exist
+    if (!this.innerDiv) {
+      this.innerDiv = document.createElement('div');
+      this.innerDiv.classList.add('pdf-viewport-inner');
+      this.innerDiv.style.position = 'relative';
+      this.innerDiv.style.width = '100%';
+      this.innerDiv.style.height = 'auto';
+      this.innerDiv.style.boxSizing = 'border-box';
+    }
+    
+    // Clear container before rebuilding the DOM structure
+    while (this.container.firstChild) {
+      this.container.removeChild(this.container.firstChild);
+    }
+    
+    // Build DOM structure with wrappers
+    this.rebuildDOMStructure();
+  }
+  
+  private rebuildDOMStructure(): void {
+    if (!this.container || !this.innerDiv) return;
+    
+    // Sort wrapper divs by position
+    const sortedWrappers = Array.from(this.wrapperDivPositions.entries())
+      .sort((a, b) => a[1] - b[1])
+      .map(([id]) => id);
+    
+    // Start with the innermost element (innerDiv)
+    let currentElement = this.innerDiv;
+    
+    // Wrap the current element with each wrapper, from innermost to outermost
+    for (const id of sortedWrappers) {
+      const wrapper = this.wrapperDivs.get(id);
+      if (wrapper) {
+        // Clear wrapper before adding the current element
+        while (wrapper.firstChild) {
+          wrapper.removeChild(wrapper.firstChild);
+        }
+        wrapper.appendChild(currentElement);
+        currentElement = wrapper;
+      }
+    }
+    
+    // Finally, add the outermost element to the container
+    this.container.appendChild(currentElement);
+  }
+  
+  public addWrapperDiv(options: WrapperDivOptions): HTMLElement {
+    if (!this.container) {
+      throw new Error('Container not initialized');
+    }
+    
+    // Check if wrapper with this ID already exists
+    if (this.wrapperDivs.has(options.id)) {
+      return this.wrapperDivs.get(options.id)!;
+    }
+    
+    // Create new wrapper div
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.id = options.id;
+    
+    // Apply optional class name
+    if (options.className) {
+      wrapperDiv.className = options.className;
+    }
+    
+    // Apply optional styles
+    if (options.styles) {
+      Object.assign(wrapperDiv.style, options.styles);
+    }
+    
+    // Set base styles for all wrappers
+    wrapperDiv.style.position = 'relative';
+    wrapperDiv.style.width = '100%';
+    wrapperDiv.style.height = 'auto';
+    wrapperDiv.style.boxSizing = 'border-box';
+    
+    // Store the wrapper and its position
+    this.wrapperDivs.set(options.id, wrapperDiv);
+    this.wrapperDivPositions.set(options.id, options.position ?? 1000); // Default to high position if not specified
+    
+    // Rebuild the DOM structure
+    this.rebuildDOMStructure();
+    
+    return wrapperDiv;
+  }
+  
+  public getWrapperDiv(id: string): HTMLElement | null {
+    return this.wrapperDivs.get(id) || null;
+  }
+  
+  public removeWrapperDiv(id: string): boolean {
+    const wrapper = this.wrapperDivs.get(id);
+    if (!wrapper) {
+      return false;
+    }
+    
+    this.wrapperDivs.delete(id);
+    this.wrapperDivPositions.delete(id);
+    
+    // Rebuild the DOM structure
+    this.rebuildDOMStructure();
+    
+    return true;
   }
 
   private setContainer(container: HTMLElement): void {
@@ -93,6 +214,9 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
       container.style.boxSizing = 'border-box';
     }
 
+    // Setup inner div
+    this.setupInnerDiv();
+    
     // Setup new container
     this.setupContainerObserver();
     this.setupMutationObserver();
@@ -185,9 +309,11 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
       this.mutationObserver?.disconnect();
       this.container.removeEventListener('scroll', this.handleScroll);
     }
-    // Clean up handlers
+    // Clean up handlers and references
     this.viewportHandlers = [];
     this.resizeHandlers = [];
     this.containerChangeHandlers = [];
+    this.wrapperDivs.clear();
+    this.wrapperDivPositions.clear();
   }
 }

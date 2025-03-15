@@ -13,6 +13,7 @@ export interface ScrollStrategyConfig {
 
 export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   protected container!: HTMLElement;
+  protected innerDiv!: HTMLElement;
   protected renderedItems: Map<number, HTMLElement> = new Map();
   protected virtualItems: VirtualItem[] = [];
   protected topSpacer!: HTMLElement;
@@ -52,8 +53,9 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     }
   }
 
-  initialize(container: HTMLElement): void {
+  initialize(container: HTMLElement, innerDiv: HTMLElement): void {
     this.container = container;
+    this.innerDiv = innerDiv;
     this.setupVirtualScroller();
     this.setupContainer();
   }
@@ -63,9 +65,9 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     this.bottomSpacer = document.createElement('div');
     this.contentContainer = document.createElement('div');
 
-    this.container.appendChild(this.topSpacer);
-    this.container.appendChild(this.contentContainer);
-    this.container.appendChild(this.bottomSpacer);
+    this.innerDiv.appendChild(this.topSpacer);
+    this.innerDiv.appendChild(this.contentContainer);
+    this.innerDiv.appendChild(this.bottomSpacer);
   }
 
   protected updateVirtualScroller(viewport: ViewportMetrics): void {
@@ -369,7 +371,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
 
   destroy(): void {
     this.virtualItems = [];
-    this.container.innerHTML = '';
+    this.innerDiv.innerHTML = '';
   }
 
   protected createPageElement(page: PdfPageObject, pageNum: number): HTMLElement {
