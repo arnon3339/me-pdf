@@ -194,9 +194,9 @@ export class RenderLayer extends BaseLayerPlugin<RenderLayerConfig, RenderCacheD
         });
       } catch (error) {
         // Clean up on error
-        existingCanvas.remove();
-        this.clearCache(pdfDocument.id, page.index, topic);
-        throw error;
+        //existingCanvas.remove();
+        //this.clearCache(pdfDocument.id, page.index, topic);
+        //throw error;
       }
     } else if (!existingCanvas) {
       // If no existing canvas, just do a normal render
