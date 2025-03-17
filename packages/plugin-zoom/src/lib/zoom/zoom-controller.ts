@@ -15,16 +15,22 @@ interface IZoomControllerOptions {
   state: ZoomState;
 }
 
+/**
+ * Manages zooming functionality within the PDF viewer
+ */
 export class ZoomController {
   private readonly minZoom: number;
   private readonly maxZoom: number;
   private readonly zoomStep: number;
-
   private container: HTMLElement;
   private state: ZoomState;
   private pageManager: PageManagerCapability;
   private viewport: ViewportCapability;
 
+  /**
+   * Creates a new zoom controller instance
+   * @param options Configuration options for the zoom controller
+   */
   constructor(options: IZoomControllerOptions) {
     this.viewport = options.viewport;
     this.pageManager = options.pageManager;
@@ -36,9 +42,89 @@ export class ZoomController {
   }
 
   /**
-   * Calculates the zoom level based on the specified mode.
-   * @param mode The zoom mode to compute.
-   * @returns The calculated zoom level, clamped between minZoom and maxZoom.
+   * Calculates the offset needed to center content within the viewport
+   * @param viewportSize Size of the viewport dimension
+   * @param contentSize Size of the content dimension
+   * @param scale Current zoom scale
+   * @returns The offset value to use for centering
+   */
+  private calculateOffset(viewportSize: number, contentSize: number, scale: number): number {
+    const scaledContentSize = contentSize * scale;
+    return scaledContentSize < viewportSize ? (viewportSize - scaledContentSize) / 2 : 0;
+  }
+
+  /**
+   * Converts viewport coordinates to content coordinates
+   * @param vx X-coordinate in viewport space
+   * @param vy Y-coordinate in viewport space
+   * @param scale Current zoom scale
+   * @param scrollLeft Current horizontal scroll position
+   * @param scrollTop Current vertical scroll position
+   * @returns Content coordinates corresponding to the given viewport coordinates
+   */
+  private getContentPoint(
+    vx: number,
+    vy: number,
+    scale: number,
+    scrollLeft: number,
+    scrollTop: number
+  ): { cx: number; cy: number } {
+    const { width: contentWidth, height: contentHeight } = this.getContentDimensions();
+    const viewportWidth = this.container.clientWidth;
+    const viewportHeight = this.container.clientHeight;
+    const offsetX = this.calculateOffset(viewportWidth, contentWidth, scale);
+    const offsetY = this.calculateOffset(viewportHeight, contentHeight, scale);
+    const cx = (vx - offsetX + scrollLeft) / scale;
+    const cy = (vy - offsetY + scrollTop) / scale;
+    return { cx, cy };
+  }
+
+  /**
+   * Calculates new scroll positions after zoom changes
+   * @param cx X-coordinate in content space
+   * @param cy Y-coordinate in content space
+   * @param newScale New zoom scale to apply
+   * @param targetVx Target X-coordinate in viewport to maintain
+   * @param targetVy Target Y-coordinate in viewport to maintain
+   * @returns New scroll positions to maintain the focal point
+   */
+  private calculateNewScroll(
+    cx: number,
+    cy: number,
+    newScale: number,
+    targetVx: number,
+    targetVy: number
+  ): { newScrollLeft: number; newScrollTop: number } {
+    const { width: contentWidth, height: contentHeight } = this.getContentDimensions();
+    const viewportWidth = this.container.clientWidth;
+    const viewportHeight = this.container.clientHeight;
+    const newOffsetX = this.calculateOffset(viewportWidth, contentWidth, newScale);
+    const newOffsetY = this.calculateOffset(viewportHeight, contentHeight, newScale);
+    const newScrollLeft = cx * newScale + newOffsetX - targetVx;
+    const newScrollTop = cy * newScale + newOffsetY - targetVy;
+    return { newScrollLeft, newScrollTop };
+  }
+
+  /**
+   * Gets the dimensions of the content at a 1:1 scale
+   * @returns The unscaled width and height of the content
+   */
+  private getContentDimensions(): { width: number; height: number } {
+    const innerDiv = this.viewport.getInnerDiv();
+    const viewportGap = this.viewport.getViewportGap();
+    const currentScale = this.state.currentZoomLevel;
+    const scaledWidth = innerDiv.clientWidth;
+    const scaledHeight = innerDiv.clientHeight;
+    return {
+      width: Math.ceil((scaledWidth / currentScale)) + 2 * viewportGap,
+      height: Math.ceil((scaledHeight / currentScale)) + 2 * viewportGap
+    };
+  }
+
+  /**
+   * Calculates the appropriate zoom level based on the specified mode
+   * @param mode The zoom mode to calculate ('automatic', 'fit-page', or 'fit-width')
+   * @returns The calculated zoom level that satisfies the mode's requirements
    */
   private calculateZoomLevel(mode: 'automatic' | 'fit-page' | 'fit-width'): number {
     const containerWidth = this.container.clientWidth;
@@ -73,107 +159,96 @@ export class ZoomController {
         zoom = Math.min(containerWidth / maxWidth, 1);
         break;
       default:
-        zoom = 1; // Fallback, though TypeScript ensures mode is valid
+        zoom = 1;
     }
     return Math.min(Math.max(zoom, this.minZoom), this.maxZoom);
   }
 
   /**
-   * Applies a new zoom level, updating the state and DOM, and adjusting scroll position.
-   * @param newZoomLevel The target zoom level (number or mode).
-   * @param center Optional center point for zoom (e.g., from pinch).
-   * @returns ZoomChangeEvent with old and new zoom details.
+   * Sets the zoom level to a specific value or mode
+   * @param newZoomLevel The target zoom level, either a specific scale or a zoom mode
+   * @param center Optional center point to maintain while zooming
+   * @returns Event object containing information about the zoom change
    */
   public zoomTo(newZoomLevel: ZoomLevel, center?: { x: number; y: number }): ZoomChangeEvent {
     const oldZoom = this.state.currentZoomLevel;
     const oldMetrics = this.viewport.getMetrics();
 
-    // Determine the new zoom level
     const newZoom = typeof newZoomLevel === 'number'
       ? Math.min(Math.max(newZoomLevel, this.minZoom), this.maxZoom)
       : this.calculateZoomLevel(newZoomLevel);
 
-    // Update state and apply zoom
     this.state.currentZoomLevel = newZoom;
     this.container.style.setProperty('--scale-factor', `${newZoom}`);
 
-    // Adjust scroll position after zoom
     const newMetrics = this.viewport.getMetrics();
-    this.adjustScrollPosition(oldMetrics, newMetrics, center);
+    this.adjustScrollPosition(oldMetrics, oldZoom, newMetrics, newZoom, center);
 
-    return {
-      oldZoom,
-      oldMetrics,
-      newZoom,
-      newMetrics,
-      center,
-    };
+    return { oldZoom, oldMetrics, newZoom, newMetrics, center };
   }
 
   /**
-   * Adjusts the scroll position after a zoom change.
-   * @param oldMetrics Metrics before zoom.
-   * @param newMetrics Metrics after zoom.
-   * @param center Optional center point for zoom adjustment.
+   * Adjusts the scroll position after a zoom change to maintain the focal point
+   * @param oldMetrics Previous viewport metrics
+   * @param oldZoom Previous zoom level
+   * @param newMetrics New viewport metrics
+   * @param newZoom New zoom level
+   * @param center Optional focal point to maintain during zoom
    */
   private adjustScrollPosition(
     oldMetrics: ViewportMetrics,
+    oldZoom: number,
     newMetrics: ViewportMetrics,
+    newZoom: number,
     center?: { x: number; y: number }
   ): void {
     const container = this.viewport.getContainer();
 
     if (center) {
-      const oldZoom = oldMetrics.scrollHeight / newMetrics.scrollHeight * this.state.currentZoomLevel;
-      const zoomRatio = this.state.currentZoomLevel / oldZoom;
-      const newScrollLeft = (center.x + oldMetrics.scrollLeft) * zoomRatio - center.x;
-      const newScrollTop = (center.y + oldMetrics.scrollTop) * zoomRatio - center.y;
-      container.scrollLeft = newScrollLeft;
-      container.scrollTop = newScrollTop;
+      const { cx, cy } = this.getContentPoint(center.x, center.y, oldZoom, oldMetrics.scrollLeft, oldMetrics.scrollTop);
+      const { newScrollLeft, newScrollTop } = this.calculateNewScroll(cx, cy, newZoom, center.x, center.y);
+      container.scrollLeft = Math.max(0, newScrollLeft);
+      container.scrollTop = Math.max(0, newScrollTop);
     } else {
-      let newScrollTop = oldMetrics.relativePosition.y * (newMetrics.scrollHeight - newMetrics.clientHeight);
-      let newScrollLeft;
-
-      if (oldMetrics.scrollWidth <= oldMetrics.clientWidth && newMetrics.scrollWidth > newMetrics.clientWidth) {
-        newScrollLeft = (newMetrics.scrollWidth - newMetrics.clientWidth) / 2;
-      } else {
-        newScrollLeft = oldMetrics.relativePosition.x * (newMetrics.scrollWidth - newMetrics.clientWidth);
-      }
-
-      container.scrollLeft = newScrollLeft;
-      container.scrollTop = newScrollTop;
+      const viewportCenterX = oldMetrics.clientWidth / 2;
+      const viewportCenterY = oldMetrics.clientHeight / 2;
+      const { cx, cy } = this.getContentPoint(viewportCenterX, viewportCenterY, oldZoom, oldMetrics.scrollLeft, oldMetrics.scrollTop);
+      const { newScrollLeft, newScrollTop } = this.calculateNewScroll(cx, cy, newZoom, viewportCenterX, viewportCenterY);
+      container.scrollLeft = Math.max(0, newScrollLeft);
+      container.scrollTop = Math.max(0, newScrollTop);
     }
   }
 
   /**
-   * Zooms by a delta value relative to the current zoom level.
-   * @param delta The amount to adjust the zoom by.
-   * @param center Optional center point for zoom.
+   * Adjusts the zoom level by a relative delta value
+   * @param delta The amount to adjust the zoom by (can be positive or negative)
+   * @param center Optional center point to maintain while zooming
+   * @returns Event object containing information about the zoom change
    */
   public zoomBy(delta: number, center?: { x: number; y: number }): ZoomChangeEvent {
     return this.zoomTo(this.state.currentZoomLevel + delta, center);
   }
 
   /**
-   * Zooms in by the zoom step.
-   * @returns ZoomChangeEvent with old and new zoom details.
+   * Increases the zoom level by the predefined zoom step
+   * @returns Event object containing information about the zoom change
    */
   public zoomIn(): ZoomChangeEvent {
     return this.zoomBy(this.zoomStep);
   }
 
   /**
-   * Zooms out by the zoom step.
-   * @returns ZoomChangeEvent with old and new zoom details.
+   * Decreases the zoom level by the predefined zoom step
+   * @returns Event object containing information about the zoom change
    */
   public zoomOut(): ZoomChangeEvent {
     return this.zoomBy(-this.zoomStep);
   }
 
   /**
-   * Cleans up resources. No resize observer to disconnect now.
+   * Cleans up resources used by the zoom controller
    */
   public destroy(): void {
-    // Nothing to clean up since resize handling is removed
+    // Nothing to clean up
   }
 }

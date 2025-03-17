@@ -63,6 +63,7 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
 
     // Initialize pinch controller
     this.pinchController = new PinchController({
+      innerDiv: this.viewport.getInnerDiv(),
       container: this.viewport.getContainer(),
       state: this.state,
       onZoomChange: (zoom: number, center?: { x: number; y: number }) => this.zoomController.zoomTo(zoom, center),

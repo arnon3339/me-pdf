@@ -16,6 +16,10 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     this.container.style.overflow = 'auto';
     this.container.style.position = 'relative';
 
+    this.innerDiv.style.display = 'flex';
+    this.innerDiv.style.flexDirection = 'row';
+    this.innerDiv.style.margin = 'auto 0px';
+
     // Setup content container
     this.contentContainer.style.display = 'flex';
     this.contentContainer.style.flexDirection = 'row';

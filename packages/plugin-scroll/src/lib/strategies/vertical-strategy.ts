@@ -12,6 +12,8 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
     // Setup main container
     this.container.style.overflow = 'auto';
     this.container.style.position = 'relative';
+
+    this.innerDiv.style.margin = '0px auto';
     
     // Setup content container
     this.contentContainer.style.display = 'flex';

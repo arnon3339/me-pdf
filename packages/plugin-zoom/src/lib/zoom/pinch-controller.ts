@@ -12,6 +12,7 @@ const SUPPORT_ONLY_TOUCH = SUPPORT_TOUCH &&
 
 /**
  * Get the appropriate Hammer input class based on device capabilities
+ * @returns The Hammer input class to use based on device support
  */
 const getHammerInputClass = () => {
   if (SUPPORT_ONLY_TOUCH) {
@@ -24,6 +25,7 @@ const getHammerInputClass = () => {
 };
 
 interface PinchControllerOptions {
+  innerDiv: HTMLElement;
   container: HTMLElement;
   state: ZoomState;
   onZoomChange: (zoom: number, center?: { x: number; y: number }) => void;
@@ -38,80 +40,97 @@ export class PinchController {
   private hammer!: HammerManager;
   private initialZoom?: number;
   private lastZoomCenter?: { x: number; y: number };
-  private latestZoom?: number; // Added to track the latest zoom level
-  
+  private innerDiv: HTMLElement; // pdf-viewport-inner
+  private scrollContainer: HTMLElement; // viewer-container
+
+  /**
+   * Creates a new pinch controller instance
+   * @param options Configuration options for the pinch controller
+   */
   constructor(private options: PinchControllerOptions) {
+    this.innerDiv = this.options.innerDiv; // pdf-viewport-inner
+    this.scrollContainer = this.options.container
+    if (!this.scrollContainer) {
+      throw new Error('PinchController requires a scroll container');
+    }
     this.setupEventListeners();
   }
 
   /**
-   * Set up Hammer.js event listeners for pinch gestures
+   * Updates the transform scale on the inner div during pinch operations
+   * @param scale The relative scale factor to apply during the pinch gesture
+   */
+  private updateTransform(scale: number) {
+    requestAnimationFrame(() => {
+      if (!this.initialZoom) return;
+      // Apply relative scale from 1, since --scale-factor already scales the content
+      const relativeScale = scale; // Hammer.js scale is relative to pinch start
+      this.innerDiv.style.transform = `scale(${relativeScale})`;
+    });
+  }
+
+  /**
+   * Sets up Hammer.js event listeners for pinch gestures
+   * This configures pinch recognition and handlers for pinch events
    */
   private setupEventListeners(): void {
     const inputClass = getHammerInputClass();
-    const { container } = this.options;
+    const { innerDiv } = this.options;
 
-    // Initialize Hammer.js on the container
-    this.hammer = new Hammer(container, {
-      touchAction: 'pan-x pan-y',  // Allow normal scrolling by default
-      inputClass     // Use the appropriate input class for the device
+    this.hammer = new Hammer(innerDiv, {
+      touchAction: 'pan-x pan-y',
+      inputClass,
     });
-  
-    // Enable pinch gesture and require 2 fingers
-    this.hammer.get('pinch').set({ 
-      enable: true, 
+
+    this.hammer.get('pinch').set({
+      enable: true,
       pointers: 2,
-      threshold: 0.1  // Make pinch detection more sensitive
+      threshold: 0.1,
     });
-  
-    // Pinch start: Store initial zoom and block default behavior
+
     this.hammer.on('pinchstart', (e) => {
       this.initialZoom = this.options.state.currentZoomLevel;
-      
-      // Get the center of the pinch in container coordinates
-      const rect = container.getBoundingClientRect();
-      this.lastZoomCenter = {
-        x: e.center.x - rect.left,
-        y: e.center.y - rect.top
-      };
-      
-      // Prevent default behavior only when pinching
+      const scrollRect = this.scrollContainer.getBoundingClientRect();
+      const centerX = e.center.x - scrollRect.left; // Relative to container
+      const centerY = e.center.y - scrollRect.top;
+      this.lastZoomCenter = { x: centerX, y: centerY };
+    
+      const innerRect = this.innerDiv.getBoundingClientRect();
+      const innerCenterX = e.center.x - innerRect.left;
+      const innerCenterY = e.center.y - innerRect.top;
+      this.innerDiv.style.transformOrigin = `${innerCenterX}px ${innerCenterY}px`;
       if (e.srcEvent && e.srcEvent.cancelable) {
         e.srcEvent.preventDefault();
         e.srcEvent.stopPropagation();
       }
     });
-  
-    // Pinch move: Update zoom level without scrolling
+    
     this.hammer.on('pinchmove', (e) => {
       if (this.initialZoom !== undefined) {
-        const newZoom = this.initialZoom * e.scale;
-        // Store the latest zoom value
-        this.latestZoom = newZoom;
-        // Use the callback to handle zoom changes during pinch
-        this.options.onZoomChange(newZoom, this.lastZoomCenter);
-        
+        this.updateTransform(e.scale);
         if (e.srcEvent && e.srcEvent.cancelable) {
           e.srcEvent.preventDefault();
           e.srcEvent.stopPropagation();
         }
       }
     });
-  
-    // Pinch end: Notify plugin and restore default behavior
-    this.hammer.on('pinchend', () => {
-      // Notify that pinch has ended through callback with the latest zoom level
-      this.options.onPinchEnd(this.latestZoom);
-      
-      // Reset internal state
-      this.initialZoom = undefined;
-      this.lastZoomCenter = undefined;
-      this.latestZoom = undefined;
+    
+    this.hammer.on('pinchend', (e) => {
+      if (this.initialZoom !== undefined) {
+        const finalZoom = this.initialZoom * e.scale;
+        this.options.onZoomChange(finalZoom, this.lastZoomCenter);
+        this.options.onPinchEnd(finalZoom);
+        this.innerDiv.style.transform = 'none';
+        this.innerDiv.style.transformOrigin = '0 0';
+        this.initialZoom = undefined;
+        this.lastZoomCenter = undefined;
+      }
     });
   }
 
   /**
-   * Clean up event listeners and Hammer instance
+   * Cleans up resources used by the pinch controller
+   * This should be called when the controller is no longer needed
    */
   public destroy(): void {
     if (this.hammer) {
