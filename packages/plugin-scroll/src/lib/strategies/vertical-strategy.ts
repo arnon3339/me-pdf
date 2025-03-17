@@ -95,4 +95,33 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
 
     return wrapper;
   }
+
+  /**
+   * Updates the innerDiv with total content dimensions to prevent visual bouncing
+   * when virtual elements are added/removed during scrolling
+   */
+  protected override updateTotalContentDimensions(pdfPageObject: PdfPageObject[][]): void {
+    if (pdfPageObject.length === 0 || this.virtualItems.length === 0 || !this.innerDiv) {
+      return;
+    }
+    
+    // Get the last item to calculate total height
+    const lastItem = this.virtualItems[this.virtualItems.length - 1];
+    const totalHeight = lastItem.offset + lastItem.size;
+    
+    // Set total height
+    this.innerDiv.style.height = `round(down, var(--scale-factor) * ${totalHeight}px, 1px)`;
+    
+    // Calculate max width based on the widest page/spread
+    const totalWidth = Math.max(...pdfPageObject.map(spread => 
+      spread.reduce((total, page, index) => {
+        const pageWidth = page.size.width;
+        const gap = index < spread.length - 1 ? this.pageGap : 0;
+        return total + pageWidth + gap;
+      }, 0)
+    ));
+    
+    // Set total width
+    this.innerDiv.style.width = `round(down, var(--scale-factor) * ${totalWidth}px, 1px)`;
+  }
 } 

@@ -117,4 +117,29 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
       behavior
     });
   }
+
+  /**
+   * Updates the innerDiv with total content dimensions to prevent visual bouncing
+   * when virtual elements are added/removed during scrolling
+   */
+  protected override updateTotalContentDimensions(pdfPageObject: PdfPageObject[][]): void {
+    if (pdfPageObject.length === 0 || this.virtualItems.length === 0 || !this.innerDiv) {
+      return;
+    }
+    
+    // Get the last item to calculate total width
+    const lastItem = this.virtualItems[this.virtualItems.length - 1];
+    const totalWidth = lastItem.offset + lastItem.size;
+    
+    // Set total width
+    this.innerDiv.style.width = `round(down, var(--scale-factor) * ${totalWidth}px, 1px)`;
+    
+    // Calculate max height based on the tallest page
+    const totalHeight = Math.max(...pdfPageObject.flatMap(spread => 
+      spread.map(page => page.size.height)
+    ));
+    
+    // Set total height
+    this.innerDiv.style.height = `round(down, var(--scale-factor) * ${totalHeight}px, 1px)`;
+  }
 }

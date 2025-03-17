@@ -309,6 +309,7 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
 
   calculateDimensions(pdfPageObject: PdfPageObject[][]): void {
     this.virtualItems = this.createVirtualItems(pdfPageObject);
+    this.updateTotalContentDimensions(pdfPageObject);
   }
 
   scrollToPage(pageNumber: number, behavior?: ScrollBehavior): void {
@@ -370,8 +371,10 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   }
 
   destroy(): void {
-    this.virtualItems = [];
-    this.innerDiv.innerHTML = '';
+    this.removeAllRenderedItems();
+    this.topSpacer.remove();
+    this.bottomSpacer.remove();
+    this.contentContainer.remove();
   }
 
   protected createPageElement(page: PdfPageObject, pageNum: number): HTMLElement {
@@ -387,4 +390,17 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
   protected abstract setScrollPosition(element: HTMLElement, position: number, behavior?: ScrollBehavior): void;
   protected abstract createVirtualItems(pdfPageObject: PdfPageObject[][]): VirtualItem[];
   protected abstract renderItem(item: VirtualItem): HTMLElement;
+
+  /**
+   * Updates the innerDiv total dimensions to prevent visual bouncing
+   * when virtual elements are added/removed during scrolling
+   */
+  protected updateTotalContentDimensions(pdfPageObject: PdfPageObject[][]): void {
+    if (pdfPageObject.length === 0 || this.virtualItems.length === 0 || !this.innerDiv) {
+      return;
+    }
+
+    // This method should be overridden by specific strategies
+    // to implement direction-specific dimension calculation
+  }
 } 

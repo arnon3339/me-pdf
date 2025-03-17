@@ -97,9 +97,8 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
       this.innerDiv = document.createElement('div');
       this.innerDiv.classList.add('pdf-viewport-inner');
       this.innerDiv.style.position = 'relative';
-      this.innerDiv.style.width = '100%';
-      this.innerDiv.style.height = 'auto';
       this.innerDiv.style.boxSizing = 'border-box';
+      this.innerDiv.style.margin = '0 auto';
     }
     
     // Clear container before rebuilding the DOM structure
