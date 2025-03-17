@@ -99,6 +99,8 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
       this.innerDiv.style.position = 'relative';
       this.innerDiv.style.boxSizing = 'border-box';
       this.innerDiv.style.margin = '0 auto';
+      this.innerDiv.style.transform = 'translateZ(0)';
+      this.innerDiv.style.willChange = 'transform';
     }
     
     // Clear container before rebuilding the DOM structure

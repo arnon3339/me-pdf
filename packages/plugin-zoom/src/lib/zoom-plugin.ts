@@ -66,10 +66,9 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
       innerDiv: this.viewport.getInnerDiv(),
       container: this.viewport.getContainer(),
       state: this.state,
-      onZoomChange: (zoom: number, center?: { x: number; y: number }) => this.zoomController.zoomTo(zoom, center),
-      onPinchEnd: (zoom?: number) => {
+      onPinchEnd: (zoom?: number, center?: { x: number; y: number }) => {
         if(!zoom) return;
-        const zoomEvent = this.zoomController.zoomTo(zoom);
+        const zoomEvent = this.zoomController.zoomTo(zoom, center);
 
         this.handleZoomChange(zoomEvent.newZoom, zoomEvent, true);
       }

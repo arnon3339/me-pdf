@@ -28,8 +28,7 @@ interface PinchControllerOptions {
   innerDiv: HTMLElement;
   container: HTMLElement;
   state: ZoomState;
-  onZoomChange: (zoom: number, center?: { x: number; y: number }) => void;
-  onPinchEnd: (zoom?: number) => void; // Updated to accept final zoom value
+  onPinchEnd: (zoom?: number, center?: { x: number; y: number }) => void; // Updated to accept final zoom value
 }
 
 /**
@@ -118,8 +117,7 @@ export class PinchController {
     this.hammer.on('pinchend', (e) => {
       if (this.initialZoom !== undefined) {
         const finalZoom = this.initialZoom * e.scale;
-        this.options.onZoomChange(finalZoom, this.lastZoomCenter);
-        this.options.onPinchEnd(finalZoom);
+        this.options.onPinchEnd(finalZoom, this.lastZoomCenter);
         this.innerDiv.style.transform = 'none';
         this.innerDiv.style.transformOrigin = '0 0';
         this.initialZoom = undefined;
