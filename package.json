@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "packageManager": "pnpm@10.4.0",
   "scripts": {
-    "p:build": "cd $PROJECT_CWD && tsup --config=../../config/tsup.config.ts",
+    "p:build": "cd $PROJECT_CWD && tsup --config=../../config/tsup.config.ts && tsup --config=../../config/tsup.frameworks.config.ts",
     "p:build:watch": "cd $PROJECT_CWD && tsup --config=../../config/tsup.config.ts --watch",
     "p:clean": "cd $PROJECT_CWD && rimraf dist",
     "p:lint": "cd $PROJECT_CWD && eslint src --color",

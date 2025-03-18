@@ -4,3 +4,6 @@ node_modules
 **/dist
 **/.turbo
 config/tsup.config.bundled*
+config/tsup.frameworks.config.bundled*
+.next
+.cursor

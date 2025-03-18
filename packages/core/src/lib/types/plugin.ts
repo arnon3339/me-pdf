@@ -1,10 +1,12 @@
 import { PluginRegistry } from "../registry/plugin-registry";
 import { PdfEngine } from "@embedpdf/models";
 
-export interface IPlugin<TConfig = unknown> {
+export interface IPlugin<TConfig = unknown, TCapability = unknown> {
   id: string;
+  
   initialize?(config: TConfig): Promise<void>;
   destroy?(): Promise<void>;
+  provides?(): TCapability;
 }
 
 export interface BasePluginConfig {
