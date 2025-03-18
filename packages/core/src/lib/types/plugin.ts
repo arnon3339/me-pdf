@@ -28,7 +28,7 @@ export interface PluginManifest<TConfig = unknown> {
 
 export interface PluginPackage<T extends IPlugin<TConfig>, TConfig = unknown> {
   manifest: PluginManifest<TConfig>;
-  create(registry: PluginRegistry, engine: PdfEngine): T;
+  create(registry: PluginRegistry, engine: PdfEngine, config?: TConfig): T;
 }
 
 export type PluginStatus = 

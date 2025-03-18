@@ -201,6 +201,7 @@ export class LayerPlugin implements IPlugin<LayerPluginConfig> {
       layersContainer = document.createElement('div');
       layersContainer.className = 'pdf-layers-container';
       layersContainer.style.position = 'relative';
+      layersContainer.style.transform = 'translate3d(0,0,0)';
       container.appendChild(layersContainer);
     }
     

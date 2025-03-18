@@ -21,6 +21,8 @@
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
   "devDependencies": {
+    "@embedpdf/core": "workspace:*",
+    "@embedpdf/models": "workspace:*",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },

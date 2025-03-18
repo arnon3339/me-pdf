@@ -3,10 +3,6 @@
   "private": false,
   "version": "0.0.0",
   "packageManager": "pnpm@10.4.0",
-  "workspaces": [
-    "packages/core",
-    "packages/plugin-navigation"
-  ],
   "scripts": {
     "p:build": "cd $PROJECT_CWD && tsup --config=../../config/tsup.config.ts",
     "p:build:watch": "cd $PROJECT_CWD && tsup --config=../../config/tsup.config.ts --watch",
@@ -16,6 +12,8 @@
     "p:typecheck": "cd $PROJECT_CWD && tsc -p tsconfig.json",
     "dev": "turbo run dev --parallel",
     "dev:vanilla": "pnpm --filter @embedpdf/example-vanilla run dev",
+    "clean": "turbo run clean && rimraf .turbo/cache",
+    "build:fresh": "pnpm clean && turbo run build",
     "build": "turbo run build",
     "build:watch": "ROARR_LOG=true turbowatch ./config/turbowatch.config.ts | roarr"
   },

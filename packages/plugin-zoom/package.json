@@ -27,11 +27,12 @@
   },
   "dependencies": {
     "@embedpdf/models": "workspace:*",
-    "@embedpdf/plugin-page-manager": "workspace:*",
-    "@embedpdf/plugin-viewport": "workspace:*",
     "hammerjs": "^2.0.8"
   },
   "devDependencies": {
+    "@embedpdf/core": "workspace:*",
+    "@embedpdf/plugin-page-manager": "workspace:*",
+    "@embedpdf/plugin-viewport": "workspace:*",
     "@types/hammerjs": "^2.0.46",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
@@ -39,6 +40,8 @@
   },
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",
+    "@embedpdf/plugin-page-manager": "workspace:*",
+    "@embedpdf/plugin-viewport": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

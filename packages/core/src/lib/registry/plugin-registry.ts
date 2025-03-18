@@ -26,13 +26,11 @@ export class PluginRegistry {
   private engineInitialized = false;
 
   private pendingRegistrations: Array<{
-    manifest: PluginManifest<unknown>;
-    packageCreator: (registry: PluginRegistry, engine: PdfEngine) => IPlugin;
+    package: PluginPackage<IPlugin, unknown>;
     config?: unknown;
   }> = [];
   private processingRegistrations: Array<{
-    manifest: PluginManifest<unknown>;
-    packageCreator: (registry: PluginRegistry, engine: PdfEngine) => IPlugin;
+    package: PluginPackage<IPlugin, unknown>;
     config?: unknown;
   }> = [];
   private initialized = false;
@@ -85,8 +83,7 @@ export class PluginRegistry {
     this.validateManifest(pluginPackage.manifest);
 
     this.pendingRegistrations.push({
-      manifest: pluginPackage.manifest,
-      packageCreator: pluginPackage.create,
+      package: pluginPackage,
       config
     });
   }
@@ -114,27 +111,27 @@ export class PluginRegistry {
         // Build dependency graph for current batch
         for (const reg of this.processingRegistrations) {
           const dependsOn = new Set<string>();
-          for (const capability of reg.manifest.consumes) {
+          for (const capability of reg.package.manifest.consumes) {
             const provider = this.processingRegistrations.find(r =>
-              r.manifest.provides.includes(capability)
+              r.package.manifest.provides.includes(capability)
             );
             if (provider) {
-              dependsOn.add(provider.manifest.id);
+              dependsOn.add(provider.package.manifest.id);
             }
           }
-          this.resolver.addNode(reg.manifest.id, Array.from(dependsOn));
+          this.resolver.addNode(reg.package.manifest.id, Array.from(dependsOn));
         }
 
         // Get load order and initialize current batch
         const loadOrder = this.resolver.resolveLoadOrder();
         for (const pluginId of loadOrder) {
           const registration = this.processingRegistrations.find(
-            r => r.manifest.id === pluginId
+            r => r.package.manifest.id === pluginId
           );
           if (registration) {
             await this.initializePlugin(
-              registration.manifest,
-              registration.packageCreator,
+              registration.package.manifest,
+              registration.package.create,
               registration.config as Partial<unknown>
             );
           }
@@ -163,19 +160,19 @@ export class PluginRegistry {
    */
   private async initializePlugin<TConfig>(
     manifest: PluginManifest<TConfig>,
-    packageCreator: (registry: PluginRegistry, engine: PdfEngine) => IPlugin<TConfig>,
+    packageCreator: (registry: PluginRegistry, engine: PdfEngine, config?: TConfig) => IPlugin<TConfig>,
     config?: Partial<TConfig>
   ): Promise<void> {
-    // Create plugin instance during initialization
-    const plugin = packageCreator(this, this.engine);
-    this.validatePlugin(plugin);
-
     const finalConfig = {
       ...manifest.defaultConfig,
       ...config
     };
 
     this.validateConfig(manifest.id, finalConfig, manifest.defaultConfig);
+
+    // Create plugin instance during initialization
+    const plugin = packageCreator(this, this.engine, finalConfig);
+    this.validatePlugin(plugin);
 
     // Verify all required capabilities are available
     for (const capability of manifest.consumes) {
