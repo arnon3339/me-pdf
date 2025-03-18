@@ -5,6 +5,7 @@ import { ScrollCapability, ScrollMetrics, ScrollPluginConfig } from "./types";
 import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
 import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
 import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
+import { ScrollStrategyConfig } from "./strategies/base-strategy";
 
 export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
   private viewport: ViewportCapability;
@@ -20,18 +21,32 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
   constructor(
     public readonly id: string,
     private registry: PluginRegistry,
+    private config?: ScrollPluginConfig
   ) {
     this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport').provides();
     this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager').provides();
     
     this.currentZoom = parseFloat(this.viewport.getContainer().style.getPropertyValue('--scale-factor') || '1');
 
-    this.strategy = new VerticalScrollStrategy({
+    const strategyConfig: ScrollStrategyConfig = {
       createPageElement: (page, pageNum) => this.pageManager.createPageElement(page, pageNum),
       getScaleFactor: () => this.currentZoom,
       pageGap: this.pageManager.getPageGap(),
       viewportGap: this.viewport.getViewportGap(),
-    });
+      bufferSize: this.config?.bufferSize ?? 2
+    };
+
+    // Choose strategy based on config
+    if (this.config?.strategy === 'horizontal') {
+      this.strategy = new HorizontalScrollStrategy(strategyConfig);
+    } else {
+      // Default to vertical scrolling
+      this.strategy = new VerticalScrollStrategy(strategyConfig);
+    }
+
+    if(this.config?.initialPage) {
+      this.initialPage = this.config.initialPage;
+    }
     
     this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'throttle', wait: 250 });
     this.viewport.onContainerChange(this.handleContainerChange.bind(this));
@@ -111,14 +126,10 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
     };
   }
 
-  async initialize(config: ScrollPluginConfig): Promise<void> {
+  async initialize(): Promise<void> {
     const container = this.viewport.getContainer();
     const innerDiv = this.viewport.getInnerDiv();
     this.strategy.initialize(container, innerDiv);
-
-    if(config.initialPage) {
-      this.initialPage = config.initialPage;
-    }
   }
 
   async destroy(): Promise<void> {

@@ -2,7 +2,7 @@ import { BasePluginConfig } from "@embedpdf/core";
 import { PdfPageObject } from "@embedpdf/models";
 import { ViewportMetrics } from "@embedpdf/plugin-viewport";
 
-export type ScrollStrategy = 'vertical' | 'horizontal' | 'wrapped';
+export type ScrollStrategy = 'vertical' | 'horizontal';
 
 export interface PageVisibilityMetrics {
   pageNumber: number;
@@ -44,6 +44,7 @@ export interface ScrollStrategyInterface {
 export interface ScrollPluginConfig extends BasePluginConfig {
   strategy?: ScrollStrategy;
   initialPage?: number;
+  bufferSize?: number;
 }
 
 export interface ScrollCapability {

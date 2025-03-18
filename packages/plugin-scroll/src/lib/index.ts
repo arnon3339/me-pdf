@@ -5,7 +5,7 @@ import { ScrollPluginConfig } from "./types";
 
 export const ScrollPluginPackage: PluginPackage<ScrollPlugin, ScrollPluginConfig> = {
   manifest,
-  create: (registry) => new ScrollPlugin(SCROLL_PLUGIN_ID, registry)
+  create: (registry, _engine, config) => new ScrollPlugin(SCROLL_PLUGIN_ID, registry, config)
 };
 
 export * from "./scroll-plugin";
