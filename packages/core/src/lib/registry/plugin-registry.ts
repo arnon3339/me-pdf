@@ -279,7 +279,7 @@ export class PluginRegistry {
   /**
    * Register multiple plugins at once
    */
-  registerPluginBatch(registrations: PluginBatchRegistration<IPlugin, unknown>[]): void {
+  registerPluginBatch(registrations: PluginBatchRegistration<IPlugin<any>, any>[]): void {
     for (const reg of registrations) {
       this.registerPlugin(reg.package, reg.config);
     }

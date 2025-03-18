@@ -10,7 +10,7 @@ import type { IPlugin } from '@embedpdf/core';
  * // Get zoom capability
  * const zoom = useCapability<ZoomPlugin>('zoom');
  */
-export function useCapability<T extends IPlugin<any, any>>(pluginId: string): ReturnType<NonNullable<T['provides']>> {
+export function useCapability<T extends IPlugin<any>>(pluginId: string): ReturnType<NonNullable<T['provides']>> {
   const registry = useContext(PDFContext);
   if (!registry) {
     throw new Error('useCapability must be used within a PDFViewer');

@@ -20,5 +20,12 @@ export default {
       pagination: false,
       timestamp: false
     }
+  },
+  viewer: {
+    title: 'Viewer',
+    type: 'page',
+    theme: {
+      timestamp: false
+    }
   }
 }

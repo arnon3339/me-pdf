@@ -1,23 +1,18 @@
 'use client'
 
 import React, { useMemo, useState, useEffect } from "react";
-
-export default function PDFViewer() {
-
-  return (
-    <div>PDF Viewer</div>
-  )
-}
-
-/*
-import { PDFCore } from "@embedpdf/core";
-import { PDFCoreProvider } from "@embedpdf/core/react";
-import { NavigationPlugin } from "@embedpdf/plugin-navigation";
-import { NavigationProvider } from '@embedpdf/plugin-navigation/react';
+import { EmbedPDF, Viewport} from "@embedpdf/core/react";
+import { createPluginRegistration } from '@embedpdf/core';
 import { PdfiumEngine } from "@embedpdf/engines";
 import { init } from "@embedpdf/pdfium";
+import { PdfEngine } from "@embedpdf/models";
+import { ViewportPluginPackage } from "@embedpdf/plugin-viewport";
+import { ScrollPluginPackage } from "@embedpdf/plugin-scroll";
+import { PageManagerPluginPackage } from "@embedpdf/plugin-page-manager";
+import { SpreadPluginPackage } from "@embedpdf/plugin-spread";
+import { LayerPluginPackage } from "@embedpdf/plugin-layer";
+import { LoaderPluginPackage } from "@embedpdf/plugin-loader";
 
-// Move WASM initialization to a singleton
 let engineInstance: PdfiumEngine | null = null;
 
 async function initializeEngine() {
@@ -33,29 +28,29 @@ async function initializeEngine() {
 }
 
 export default function PDFViewer() {
-  const [core, setCore] = useState<PDFCore | null>(null);
+  const [engine, setEngine] = useState<PdfEngine | null>(null);
 
   useEffect(() => {
     initializeEngine()
-      .then(engine => {
-        setCore(new PDFCore({ engine }));
-      });
+      .then(setEngine);
   }, []);
 
-  const navigationPlugin = useMemo(() => new NavigationPlugin({
-    initialPage: 1,
-    defaultZoomLevel: 1,
-    defaultScrollMode: 'continuous',
-  }), []);
-
-  if (!core) return <div>Loading...</div>;
+  if (!engine) return <div>Loading...</div>;
 
   return (
-    <PDFCoreProvider core={core}>
-      <NavigationProvider navigationPlugin={navigationPlugin}>
-        <div>PDFViewer</div>
-      </NavigationProvider>
-    </PDFCoreProvider>
-  );
+    <EmbedPDF 
+      engine={engine} 
+      onInitialized={async (registry) => {}} 
+      plugins={(viewportElement) => [
+        createPluginRegistration(LoaderPluginPackage),
+        createPluginRegistration(ViewportPluginPackage, { container: viewportElement }),
+        createPluginRegistration(ScrollPluginPackage),
+        createPluginRegistration(PageManagerPluginPackage),
+        createPluginRegistration(SpreadPluginPackage),
+        createPluginRegistration(LayerPluginPackage)
+      ]}
+    >
+      <Viewport style={{ width: '100%', height: '500px' }} />
+    </EmbedPDF>
+  )
 }
-*/
