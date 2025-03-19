@@ -11,3 +11,4 @@ export const LayerPluginPackage: PluginPackage<LayerPlugin, LayerPluginConfig> =
 export * from "./base-layer-plugin";
 export * from "./layer-plugin";
 export * from "./types";
+export * from "./utils";

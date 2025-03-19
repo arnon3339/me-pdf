@@ -10,8 +10,9 @@ import { ViewportPluginPackage } from "@embedpdf/plugin-viewport";
 import { ScrollPluginPackage } from "@embedpdf/plugin-scroll";
 import { PageManagerPluginPackage } from "@embedpdf/plugin-page-manager";
 import { SpreadPluginPackage } from "@embedpdf/plugin-spread";
-import { LayerPluginPackage } from "@embedpdf/plugin-layer";
-import { LoaderPluginPackage } from "@embedpdf/plugin-loader";
+import { LayerPluginPackage, createLayerRegistration } from "@embedpdf/plugin-layer";
+import { LoaderPlugin, LoaderPluginPackage } from "@embedpdf/plugin-loader";
+import { RenderLayerPackage } from "@embedpdf/layer-render";
 
 let engineInstance: PdfiumEngine | null = null;
 
@@ -40,14 +41,28 @@ export default function PDFViewer() {
   return (
     <EmbedPDF 
       engine={engine} 
-      onInitialized={async (registry) => {}} 
+      onInitialized={async (registry) => {
+        registry
+          .getPlugin<LoaderPlugin>('loader')
+          .provides()
+          .loadDocument({
+            source: '/demo.pdf',
+            id: 'demo'
+          })
+      }} 
       plugins={(viewportElement) => [
         createPluginRegistration(LoaderPluginPackage),
         createPluginRegistration(ViewportPluginPackage, { container: viewportElement }),
         createPluginRegistration(ScrollPluginPackage),
         createPluginRegistration(PageManagerPluginPackage),
         createPluginRegistration(SpreadPluginPackage),
-        createPluginRegistration(LayerPluginPackage)
+        createPluginRegistration(LayerPluginPackage, {
+          layers: [
+            createLayerRegistration(RenderLayerPackage, {
+              maxScale: 2
+            })
+          ]
+        })
       ]}
     >
       <Viewport style={{ width: '100%', height: '500px' }} />
