@@ -56,7 +56,7 @@ bun add @embedpdf/pdfium
 ```javascript
 import { init, WrappedPdfiumModule } from '@embedpdf/pdfium';
 
-const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
+const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm';
 
 let pdfiumInstance = null;
 
