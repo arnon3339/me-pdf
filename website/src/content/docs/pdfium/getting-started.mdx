@@ -23,7 +23,7 @@ Before you can use any PDFium functions, you need to initialize the library:
 ```typescript filename=" " copy
 import { init, WrappedPdfiumModule } from '@embedpdf/pdfium';
 
-const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
+const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm';
 
 let pdfiumInstance: WrappedPdfiumModule | null = null;
 
@@ -68,7 +68,7 @@ import GetPdfPageCountDemo from './code-examples/get-pdf-page-count.preview';
 ```typescript filename="get-pdf-page-count.ts" copy
 import { init, WrappedPdfiumModule } from '@embedpdf/pdfium';
 
-const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
+const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm';
 
 let pdfiumInstance: WrappedPdfiumModule | null = null;
 

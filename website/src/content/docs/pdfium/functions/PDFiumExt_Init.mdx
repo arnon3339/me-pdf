@@ -40,7 +40,7 @@ async function initializePdfium() {
   if (pdfiumInstance) return pdfiumInstance;
   
   // Load and initialize the WebAssembly module
-  const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/pdfium.wasm';
+  const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm';
   const response = await fetch(pdfiumWasm);
   const wasmBinary = await response.arrayBuffer();
   pdfiumInstance = await init({ wasmBinary });

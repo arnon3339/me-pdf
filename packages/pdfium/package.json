@@ -15,6 +15,23 @@
     },
     "./pdfium.wasm": "./dist/pdfium.wasm"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/embedpdf/embed-pdf-viewer",
+    "directory": "packages/pdfium"
+  },
+  "homepage": "https://www.embedpdf.com/docs/pdfium/introduction",
+  "bugs": {
+    "url": "https://github.com/embedpdf/embed-pdf-viewer/issues"
+  },
+  "keywords": [
+    "pdf",
+    "pdfium",
+    "webassembly",
+    "wasm",
+    "render",
+    "viewer"
+  ],
   "scripts": {
     "build": "PROJECT_CWD=$(pwd) pnpm -w p:build",
     "build:watch": "PROJECT_CWD=$(pwd) pnpm -w p:build:watch",
