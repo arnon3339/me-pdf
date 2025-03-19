@@ -1,3 +1,17 @@
+<div align="center">
+  <a href="https://wwww.embedpdf.com">
+    <picture>
+      <img alt="EmbedPDF logo" src="https://www.embedpdf.com/logo-192.png" height="96">
+    </picture>
+  </a>
+  <h1>EmbedPDF</h1>
+
+<a href="https://www.npmjs.com/package/@embedpdf/pdfium"><img alt="NPM version" src="https://img.shields.io/npm/v/@embedpdf/pdfium.svg?style=for-the-badge&labelColor=000000"></a>
+<a href="https://github.com/embedpdf/embed-pdf-viewer/blob/main/packages/pdfium/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/@embedpdf/pdfium.svg?style=for-the-badge&labelColor=000000"></a>
+<a href="https://github.com/embedpdf/embed-pdf-viewer/discussions"><img alt="Join the community on GitHub" src="https://img.shields.io/badge/Join%20the%20community-blueviolet.svg?style=for-the-badge&labelColor=000000"></a>
+
+</div>
+
 # @embedpdf/pdfium
 
 PDFium WebAssembly for the web platform. This package provides a powerful JavaScript interface to PDFium, enabling high-quality PDF rendering and manipulation directly in web applications.
