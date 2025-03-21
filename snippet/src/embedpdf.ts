@@ -1,7 +1,7 @@
 import { EmbedPdfContainer } from "./web-components/container";
 
 type BaseConfig = {
-
+  src: string;
 };
 
 type ContainerConfig = BaseConfig & {
@@ -13,6 +13,7 @@ customElements.define('embedpdf-container', EmbedPdfContainer);
 
 function initContainer(config: ContainerConfig) {
   const embedPdfElement = document.createElement('embedpdf-container') as EmbedPdfContainer;
+  embedPdfElement.config = config;
   config.target.appendChild(embedPdfElement);
 
   return embedPdfElement;
