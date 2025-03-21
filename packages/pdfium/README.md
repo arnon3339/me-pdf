@@ -1,8 +1,6 @@
 <div align="center">
   <a href="https://wwww.embedpdf.com">
-    <picture>
-      <img alt="EmbedPDF logo" src="https://www.embedpdf.com/logo-192.png" height="96">
-    </picture>
+    <img alt="EmbedPDF logo" src="https://www.embedpdf.com/logo-192.png" height="96">
   </a>
   <h1>EmbedPDF</h1>
 
