@@ -65,9 +65,6 @@ export default function PDFViewer() {
         createPluginRegistration(SpreadPluginPackage, {
           defaultSpreadMode: SpreadMode.None
         }),
-        createPluginRegistration(ZoomPluginPackage, {
-          defaultZoomLevel: ZoomMode.FitPage
-        }),
         createPluginRegistration(LayerPluginPackage, {
           layers: [
             createLayerRegistration(RenderLayerPackage, {
