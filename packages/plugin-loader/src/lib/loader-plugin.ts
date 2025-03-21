@@ -8,6 +8,7 @@ export class LoaderPlugin implements IPlugin<LoaderPluginConfig> {
   private loaderHandlers: ((loaderEvent: LoaderEvent) => void)[] = [];
   private documentLoadedHandlers: ((document: PdfDocumentObject) => void)[] = [];
   private documentLoader: PDFDocumentLoader;
+  private loadingOptions?: Omit<PDFLoadingOptions, 'engine'>;
   private loadedDocument?: PdfDocumentObject;
 
   constructor(
@@ -36,12 +37,21 @@ export class LoaderPlugin implements IPlugin<LoaderPluginConfig> {
         this.documentLoader.registerStrategy(name, strategy);
       });
     }
+
+    if (config.loadingOptions) {
+      this.loadingOptions = config.loadingOptions;
+    }
+  }
+
+  async postInitialize(): Promise<void> {
+    if (this.loadingOptions) {
+      this.loadDocument(this.loadingOptions);
+    }
   }
 
   private async loadDocument(options: Omit<PDFLoadingOptions, 'engine'>): Promise<PdfDocumentObject> {
     try {
       this.notifyHandlers({ type: 'start', documentId: options.id });
-      
       const document = await this.documentLoader.loadDocument({...options, engine: this.engine});
 
       this.loadedDocument = document;

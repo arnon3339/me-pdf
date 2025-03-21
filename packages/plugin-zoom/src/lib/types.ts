@@ -17,7 +17,13 @@ export interface ZoomCapability {
   onStateChange(handler: (state: ZoomState) => void): void;
 }
 
-export type ZoomLevel = 'automatic' | 'fit-page' | 'fit-width' | number;
+export enum ZoomMode {
+  Automatic = 'automatic',
+  FitPage = 'fit-page',
+  FitWidth = 'fit-width'
+}
+
+export type ZoomLevel = ZoomMode | number;
 
 export interface ZoomChangeEvent {
   oldZoom: number;

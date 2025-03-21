@@ -7,9 +7,9 @@ import { PdfiumEngine } from "@embedpdf/engines";
 import { init } from "@embedpdf/pdfium";
 import { PdfEngine } from "@embedpdf/models";
 import { ViewportPluginPackage } from "@embedpdf/plugin-viewport";
-import { ScrollPluginPackage } from "@embedpdf/plugin-scroll";
+import { ScrollPluginPackage, ScrollStrategy } from "@embedpdf/plugin-scroll";
 import { PageManagerPluginPackage } from "@embedpdf/plugin-page-manager";
-import { SpreadPluginPackage } from "@embedpdf/plugin-spread";
+import { SpreadMode, SpreadPluginPackage } from "@embedpdf/plugin-spread";
 import { LayerPluginPackage, createLayerRegistration } from "@embedpdf/plugin-layer";
 import { LoaderPlugin, LoaderPluginPackage } from "@embedpdf/plugin-loader";
 import { RenderLayerPackage } from "@embedpdf/layer-render";
@@ -42,20 +42,28 @@ export default function PDFViewer() {
     <EmbedPDF 
       engine={engine} 
       onInitialized={async (registry) => {
-        registry
-          .getPlugin<LoaderPlugin>('loader')
-          .provides()
-          .loadDocument({
-            source: '/demo.pdf',
-            id: 'demo'
-          })
+
       }} 
       plugins={(viewportElement) => [
-        createPluginRegistration(LoaderPluginPackage),
-        createPluginRegistration(ViewportPluginPackage, { container: viewportElement }),
-        createPluginRegistration(ScrollPluginPackage),
-        createPluginRegistration(PageManagerPluginPackage),
-        createPluginRegistration(SpreadPluginPackage),
+        createPluginRegistration(LoaderPluginPackage, {
+          loadingOptions: {
+            source: '/demo.pdf',
+            id: 'demo'
+          }
+        }),
+        createPluginRegistration(ViewportPluginPackage, { 
+          container: viewportElement, 
+          viewportGap: 10
+        }),
+        createPluginRegistration(ScrollPluginPackage, {
+          strategy: ScrollStrategy.Vertical
+        }),
+        createPluginRegistration(PageManagerPluginPackage, {
+          pageGap: 10
+        }),
+        createPluginRegistration(SpreadPluginPackage, {
+          defaultSpreadMode: SpreadMode.None
+        }),
         createPluginRegistration(LayerPluginPackage, {
           layers: [
             createLayerRegistration(RenderLayerPackage, {

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmbedPDF</title>
+</head>
+<body>
+  <div id="pdf-viewer" style="height: 500px">
+    
+  </div>
+  <script async type="module">
+    import EmbedPDF from './embedpdf.js';
+
+    const EPDFinstance = EmbedPDF.init({
+    }) 
+
+    EPDFinstance.on('onInit', (pdfInstance) => {
+      
+    })
+
+    console.log(EPDFinstance);
+  </script>
+</body>
+</html>

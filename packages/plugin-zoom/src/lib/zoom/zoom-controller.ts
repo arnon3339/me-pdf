@@ -1,6 +1,6 @@
 import { ViewportCapability, ViewportMetrics } from '@embedpdf/plugin-viewport';
 import { PageManagerCapability } from '@embedpdf/plugin-page-manager';
-import { ZoomLevel, ZoomChangeEvent, ZoomState } from '../types';
+import { ZoomLevel, ZoomChangeEvent, ZoomState, ZoomMode } from '../types';
 
 interface ZoomOptions {
   minZoom?: number;
@@ -126,7 +126,7 @@ export class ZoomController {
    * @param mode The zoom mode to calculate ('automatic', 'fit-page', or 'fit-width')
    * @returns The calculated zoom level that satisfies the mode's requirements
    */
-  private calculateZoomLevel(mode: 'automatic' | 'fit-page' | 'fit-width'): number {
+  private calculateZoomLevel(mode: ZoomMode): number {
     const containerWidth = this.container.clientWidth;
     const containerHeight = this.container.clientHeight;
     const spreadPages = this.pageManager.getSpreadPages();
@@ -149,13 +149,13 @@ export class ZoomController {
 
     let zoom: number;
     switch (mode) {
-      case 'fit-width':
+      case ZoomMode.FitWidth:
         zoom = containerWidth / maxWidth;
         break;
-      case 'fit-page':
+      case ZoomMode.FitPage:
         zoom = Math.min(containerWidth / maxWidth, containerHeight / maxHeight);
         break;
-      case 'automatic':
+      case ZoomMode.Automatic:
         zoom = Math.min(containerWidth / maxWidth, 1);
         break;
       default:
@@ -178,11 +178,18 @@ export class ZoomController {
       ? Math.min(Math.max(newZoomLevel, this.minZoom), this.maxZoom)
       : this.calculateZoomLevel(newZoomLevel);
 
-    this.state.currentZoomLevel = newZoom;
+    const { scrollLeft, scrollTop } = this.adjustScrollPosition(oldMetrics, oldZoom, newZoom, center);
+
     this.container.style.setProperty('--scale-factor', `${newZoom}`);
 
+    requestAnimationFrame(() => {
+      this.container.scrollLeft = scrollLeft;
+      this.container.scrollTop = scrollTop;
+    });
+
+    this.state.currentZoomLevel = newZoom;
+
     const newMetrics = this.viewport.getMetrics();
-    this.adjustScrollPosition(oldMetrics, oldZoom, newMetrics, newZoom, center);
 
     return { oldZoom, oldMetrics, newZoom, newMetrics, center };
   }
@@ -198,24 +205,23 @@ export class ZoomController {
   private adjustScrollPosition(
     oldMetrics: ViewportMetrics,
     oldZoom: number,
-    newMetrics: ViewportMetrics,
     newZoom: number,
     center?: { x: number; y: number }
-  ): void {
-    const container = this.viewport.getContainer();
+  ): { scrollLeft: number; scrollTop: number } {
+
 
     if (center) {
       const { cx, cy } = this.getContentPoint(center.x, center.y, oldZoom, oldMetrics.scrollLeft, oldMetrics.scrollTop);
       const { newScrollLeft, newScrollTop } = this.calculateNewScroll(cx, cy, newZoom, center.x, center.y);
-      container.scrollLeft = Math.max(0, newScrollLeft);
-      container.scrollTop = Math.max(0, newScrollTop);
+
+      return { scrollLeft: Math.max(0, newScrollLeft), scrollTop: Math.max(0, newScrollTop) };
     } else {
       const viewportCenterX = oldMetrics.clientWidth / 2;
       const viewportCenterY = oldMetrics.clientHeight / 2;
       const { cx, cy } = this.getContentPoint(viewportCenterX, viewportCenterY, oldZoom, oldMetrics.scrollLeft, oldMetrics.scrollTop);
       const { newScrollLeft, newScrollTop } = this.calculateNewScroll(cx, cy, newZoom, viewportCenterX, viewportCenterY);
-      container.scrollLeft = Math.max(0, newScrollLeft);
-      container.scrollTop = Math.max(0, newScrollTop);
+
+      return { scrollLeft: Math.max(0, newScrollLeft), scrollTop: Math.max(0, newScrollTop) };
     }
   }
 

@@ -7,6 +7,7 @@ export interface IPlugin<TConfig = unknown> {
   initialize?(config: TConfig): Promise<void>;
   destroy?(): Promise<void>;
   provides?(): any;
+  postInitialize?(): Promise<void>;
 }
 
 export interface BasePluginConfig {

@@ -1,7 +1,7 @@
 import { IPlugin, PluginRegistry } from "@embedpdf/core";
 import { PdfPageObject } from "@embedpdf/models";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
-import { ScrollCapability, ScrollMetrics, ScrollPluginConfig } from "./types";
+import { ScrollCapability, ScrollMetrics, ScrollPluginConfig, ScrollStrategy } from "./types";
 import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
 import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
 import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
@@ -37,7 +37,7 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
     };
 
     // Choose strategy based on config
-    if (this.config?.strategy === 'horizontal') {
+    if (this.config?.strategy === ScrollStrategy.Horizontal) {
       this.strategy = new HorizontalScrollStrategy(strategyConfig);
     } else {
       // Default to vertical scrolling

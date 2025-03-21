@@ -141,6 +141,18 @@ export class PluginRegistry {
         this.processingRegistrations = [];
         this.resolver = new DependencyResolver();
       }
+      
+      // Call postInitialize on all plugins after everything is initialized
+      for (const plugin of this.plugins.values()) {
+        if (plugin.postInitialize) {
+          try {
+            await plugin.postInitialize();
+          } catch (error) {
+            console.error(`Error in postInitialize for plugin ${plugin.id}:`, error);
+            this.status.set(plugin.id, 'error');
+          }
+        }
+      }
 
       this.initialized = true;
     } catch (error) {

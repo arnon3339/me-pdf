@@ -4,7 +4,7 @@ import {
 } from "@embedpdf/core";
 import { ViewportCapability, ViewportPlugin } from "@embedpdf/plugin-viewport";
 import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
-import { ZoomCapability, ZoomChangeEvent, ZoomLevel, ZoomPluginConfig, ZoomState } from "./types";
+import { ZoomCapability, ZoomChangeEvent, ZoomLevel, ZoomMode, ZoomPluginConfig, ZoomState } from "./types";
 import { ZoomController } from "./zoom/zoom-controller";
 import { PinchController } from "./zoom/pinch-controller";
 
@@ -20,7 +20,7 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
     registry: PluginRegistry,
   ) {
     super(id, registry, {
-      zoomLevel: 'automatic',
+      zoomLevel: ZoomMode.Automatic,
       currentZoomLevel: 1
     });
 
@@ -80,9 +80,9 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
 
   private refreshZoomIfAutomatic(): void {
     if(
-      this.state.zoomLevel === 'automatic' || 
-      this.state.zoomLevel === 'fit-page' || 
-      this.state.zoomLevel === 'fit-width'
+      this.state.zoomLevel === ZoomMode.Automatic || 
+      this.state.zoomLevel === ZoomMode.FitPage || 
+      this.state.zoomLevel === ZoomMode.FitWidth
     ) {
       this.updateZoomLevel(this.state.zoomLevel);
     }

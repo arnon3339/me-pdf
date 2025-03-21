@@ -5,6 +5,7 @@ import { StrategyResolver } from "./loader";
 
 export interface LoaderPluginConfig extends BasePluginConfig {
   defaultStrategies?: { [key: string]: PDFLoadingStrategy };
+  loadingOptions?: Omit<PDFLoadingOptions, 'engine'>;
 }
 
 export interface LoaderEvent {
