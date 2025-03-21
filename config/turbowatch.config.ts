@@ -40,7 +40,7 @@ export default defineConfig({
     {
       expression: [
         'allof',
-        ['not', ['anyof', ['dirname', 'node_modules'], ['dirname', 'dist']]],
+        ['not', ['anyof', ['dirname', 'node_modules'], ['dirname', 'dist'], ['dirname', '.next']]],
         ['anyof', ...dirList],
         [
           'anyof',

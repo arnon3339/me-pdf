@@ -7,7 +7,7 @@ const SRC_PATH = path.join(PACKAGE_ROOT_PATH, 'src');
 
 function getFrameworkEntries() {
   const entries: Record<string, string> = {};
-  const frameworks = ['react', 'vue', 'svelte'];
+  const frameworks = ['react', 'preact', 'vue', 'svelte'];
   frameworks.forEach(framework => {
     const frameworkEntry = path.join(SRC_PATH, framework, 'index.ts');
     if (fs.existsSync(frameworkEntry)) {

@@ -2,11 +2,11 @@ import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import pdfiumWasm from '@embedpdf/pdfium/pdfium.wasm?url';
 import { init } from '@embedpdf/pdfium';
 import { LayerPlugin, LayerPluginPackage } from '@embedpdf/plugin-layer';
-import { ZoomCapability, ZoomLevel, ZoomPlugin, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
-import { PluginRegistry } from '@embedpdf/core';
+import { ZoomCapability, ZoomLevel, ZoomMode, ZoomPlugin, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
+import { PluginPackage, PluginRegistry, createPluginRegistration } from '@embedpdf/core';
 import { LoaderPlugin, LoaderPluginPackage } from '@embedpdf/plugin-loader';
-import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
-import { ScrollPluginPackage, ScrollCapability, ScrollPlugin } from '@embedpdf/plugin-scroll';
+import { ViewportPlugin, ViewportPluginConfig, ViewportPluginPackage } from '@embedpdf/plugin-viewport';
+import { ScrollPluginPackage, ScrollCapability, ScrollPlugin, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { SpreadCapability, SpreadMode, SpreadPlugin, SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { TextLayerPackage } from '@embedpdf/layer-text';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
@@ -42,9 +42,17 @@ async function initializePDFViewer() {
   });
   const engine = new WebWorkerEngine(worker, logger);
 
+  const pdf = await fetch('/file/compressed.tracemonkey-pldi-09.pdf');
+  const source = await pdf.arrayBuffer();
+
   const registry = new PluginRegistry(engine);
 
-  registry.registerPlugin(LoaderPluginPackage);
+  registry.registerPlugin(LoaderPluginPackage, {
+    loadingOptions: {
+      id: '1',
+      source
+    }
+  });
   registry.registerPlugin(ViewportPluginPackage, {
     container: document.getElementById('viewer-container') as HTMLElement
   });
@@ -52,17 +60,20 @@ async function initializePDFViewer() {
     pageGap: 10
   });
   registry.registerPlugin(ZoomPluginPackage, {
-    defaultZoomLevel: 'automatic'
+    defaultZoomLevel: ZoomMode.Automatic
   });
   registry.registerPlugin(SpreadPluginPackage, {
     defaultSpreadMode: SpreadMode.None
   });
-  registry.registerPlugin(ScrollPluginPackage);
+  registry.registerPlugin(ScrollPluginPackage, {
+    bufferSize: 2,
+    strategy: ScrollStrategy.Vertical
+  });
   registry.registerPlugin(LayerPluginPackage, {
     layers: [
       { package: TextLayerPackage },
       { package: RenderLayerPackage, config: { maxScale: 2 } },
-      { package: RenderPartialLayerPackage, config: { minScale: 2.01 } },
+      //{ package: RenderPartialLayerPackage, config: { minScale: 2.01 } },
       { package: SearchLayerPackage }
     ]
   }); 
@@ -72,19 +83,17 @@ async function initializePDFViewer() {
 
   const loader = registry.getPlugin<LoaderPlugin>('loader').provides();
   const spread = registry.getPlugin<SpreadPlugin>('spread').provides();
-  const layer = registry.getPlugin<LayerPlugin>('layer').provides();
   const zoom = registry.getPlugin<ZoomPlugin>('zoom').provides();
   const scroll = registry.getPlugin<ScrollPlugin>('scroll').provides();
   const pageManager = registry.getPlugin<PageManagerPlugin>('page-manager').provides();
   const search = registry.getPlugin<SearchPlugin>('search').provides();
-  
-  const pdf = await fetch('/file/compressed.tracemonkey-pldi-09.pdf');
-  const source = await pdf.arrayBuffer();
 
-  const pdfDocument = await loader.loadDocument({
-    id: '1',
-    source
-  });
+
+  const pdfDocument = loader.getDocument();
+
+  if(!pdfDocument) {
+    throw new Error('PDF document not loaded');
+  }
 
   const totalPages = pdfDocument.pageCount;
   updatePageInfo(1, totalPages);

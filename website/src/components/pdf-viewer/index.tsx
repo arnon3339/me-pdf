@@ -13,6 +13,7 @@ import { SpreadMode, SpreadPluginPackage } from "@embedpdf/plugin-spread";
 import { LayerPluginPackage, createLayerRegistration } from "@embedpdf/plugin-layer";
 import { LoaderPlugin, LoaderPluginPackage } from "@embedpdf/plugin-loader";
 import { RenderLayerPackage } from "@embedpdf/layer-render";
+import { ZoomPluginPackage, ZoomMode, ZoomPlugin } from "@embedpdf/plugin-zoom";
 
 let engineInstance: PdfiumEngine | null = null;
 
@@ -63,6 +64,9 @@ export default function PDFViewer() {
         }),
         createPluginRegistration(SpreadPluginPackage, {
           defaultSpreadMode: SpreadMode.None
+        }),
+        createPluginRegistration(ZoomPluginPackage, {
+          defaultZoomLevel: ZoomMode.FitPage
         }),
         createPluginRegistration(LayerPluginPackage, {
           layers: [

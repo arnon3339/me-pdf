@@ -17,7 +17,7 @@
     "outDir": "dist",
     "declaration": true,
     "declarationMap": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true
   }
 }

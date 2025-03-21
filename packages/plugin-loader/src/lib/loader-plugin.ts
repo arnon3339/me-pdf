@@ -45,7 +45,7 @@ export class LoaderPlugin implements IPlugin<LoaderPluginConfig> {
 
   async postInitialize(): Promise<void> {
     if (this.loadingOptions) {
-      this.loadDocument(this.loadingOptions);
+      await this.loadDocument(this.loadingOptions);
     }
   }
 
