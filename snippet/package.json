@@ -9,6 +9,11 @@
     "dist",
     "README.md"
   ],
+  "scripts": {
+    "dev": "rollup --watch --config rollup.config.js",
+    "prebuild": "rimraf dist/*",
+    "build": "rollup --config rollup.config.js"
+  },
   "dependencies": {
     "@embedpdf/core": "workspace:*",
     "@embedpdf/engines": "workspace:*",

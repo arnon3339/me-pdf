@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'preact/compat';
 import { h, render } from 'preact';
-import { EmbedPDF, Viewport } from '@embedpdf/core/react';
+import { EmbedPDF, Viewport } from '@embedpdf/core/preact';
 import { createPluginRegistration } from '@embedpdf/core';
 import { PdfiumEngine } from '@embedpdf/engines';
 import { init as initPdfium } from '@embedpdf/pdfium';
@@ -15,10 +15,10 @@ import { RenderLayerPackage } from '@embedpdf/layer-render';
 import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom';
 
 // **Configuration Interface**
-interface PDFViewerConfig {
+export interface PDFViewerConfig {
   src: string;
-  scrollStrategy?: 'vertical' | 'horizontal';
-  zoomMode?: 'fitPage' | 'fitWidth';
+  scrollStrategy?: string;
+  zoomMode?: string;
 }
 
 // **Singleton Engine Instance**
@@ -28,7 +28,7 @@ let engineInstance: PdfEngine | null = null;
 async function initializeEngine(): Promise<PdfEngine> {
   if (engineInstance) return engineInstance;
 
-  const response = await fetch('/wasm/pdfium.wasm');
+  const response = await fetch('/pdfium.wasm');
   const wasmBinary = await response.arrayBuffer();
   const wasmModule = await initPdfium({ wasmBinary });
   engineInstance = new PdfiumEngine(wasmModule);
@@ -56,6 +56,9 @@ export function PDFViewer({ config }: PDFViewerProps) {
   return (
     <EmbedPDF
       engine={engine}
+      onInitialized={async (registry) => {
+        
+      }}
       plugins={(viewportElement: HTMLElement) => [
         createPluginRegistration(LoaderPluginPackage, {
           loadingOptions: { source: config.src, id: 'pdf' },

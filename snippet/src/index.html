@@ -13,11 +13,16 @@
     import EmbedPDF from './embedpdf.js';
 
     const EPDFinstance = EmbedPDF.init({
+      type: 'container',
+      target: document.getElementById('pdf-viewer'),
+      src: '/demo.pdf',
     }) 
 
+    /*
     EPDFinstance.on('onInit', (pdfInstance) => {
       
     })
+    */
 
     console.log(EPDFinstance);
   </script>
