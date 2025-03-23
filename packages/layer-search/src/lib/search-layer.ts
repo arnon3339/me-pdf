@@ -2,7 +2,7 @@ import { BaseLayerPlugin, LayerRenderOptions } from "@embedpdf/plugin-layer";
 import { SearchLayerConfig } from "./types";
 import { PluginRegistry } from "@embedpdf/core";
 import { PdfDocumentObject, PdfEngine, PdfPageObject, Rect, Rotation, SearchResult, transformRect } from "@embedpdf/models";
-import { SearchPlugin, SearchCapability, SearchState, DEFAULT_STATE } from "@embedpdf/plugin-search";
+import { SearchPlugin, SearchCapability, SearchState, initialState } from "@embedpdf/plugin-search";
 import { ScrollPlugin, ScrollCapability } from "@embedpdf/plugin-scroll";
 
 // Cache data for each page
@@ -26,7 +26,7 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
   private scroll: ScrollCapability;
   private currentDocument: PdfDocumentObject | null = null;
   private topic: string = "default";
-  private currentState: SearchState = DEFAULT_STATE;
+  private currentState: SearchState = initialState;
   private rotation: Rotation = Rotation.Degree0;
 
   // Maps for managing highlights

@@ -1,5 +1,5 @@
 import { PluginManifest } from "@embedpdf/core";
-import { ZoomPluginConfig } from "./types";
+import { ZoomMode, ZoomPluginConfig } from "./types";
 
 export const ZOOM_PLUGIN_ID = 'zoom';
 
@@ -11,7 +11,7 @@ export const manifest: PluginManifest<ZoomPluginConfig> = {
   consumes: ['viewport', 'page-manager'],
   defaultConfig: {
     enabled: true,
-    defaultZoomLevel: 'automatic',
+    defaultZoomLevel: ZoomMode.Automatic,
     minZoom: 0.25,
     maxZoom: 10,
     zoomStep: 0.1

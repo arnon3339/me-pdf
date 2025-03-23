@@ -32,7 +32,7 @@ export abstract class BaseLayerPlugin<TConfig = unknown, TCacheData = void> impl
     page: PdfPageObject,
     container: HTMLElement,
     options: LayerRenderOptions
-  ): Promise<void>;
+  ): Promise<void>; 
 
   /**
    * Update an existing render with new options

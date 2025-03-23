@@ -5,7 +5,9 @@ import { LoaderPluginConfig } from "./types";
 
 export const LoaderPluginPackage: PluginPackage<LoaderPlugin, LoaderPluginConfig> = {
   manifest,
-  create: (registry, engine) => new LoaderPlugin(LOADER_PLUGIN_ID, registry, engine)
+  create: (registry, engine) => new LoaderPlugin(LOADER_PLUGIN_ID, registry, engine),
+  reducer: () => {},
+  initialState: {}
 };
 
 export * from "./loader-plugin";

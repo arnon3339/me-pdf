@@ -14,6 +14,14 @@ import {
   PluginConfigurationError
 } from '../types/errors';
 import { PdfEngine } from '@embedpdf/models';
+import { Action, CoreAction, CoreState, Store, initialCoreState, Reducer } from '../store';
+
+// Define a more flexible generic type for plugin registrations
+interface PluginRegistration {
+  // Use existential types for the plugin package to allow accepting any plugin type
+  package: PluginPackage<any, any, any, any>;
+  config?: any;
+}
 
 export class PluginRegistry {
   private plugins: Map<string, IPlugin> = new Map();
@@ -24,21 +32,17 @@ export class PluginRegistry {
   private configurations: Map<string, unknown> = new Map();
   private engine: PdfEngine;
   private engineInitialized = false;
-
-  private pendingRegistrations: Array<{
-    package: PluginPackage<IPlugin, unknown>;
-    config?: unknown;
-  }> = [];
-  private processingRegistrations: Array<{
-    package: PluginPackage<IPlugin, unknown>;
-    config?: unknown;
-  }> = [];
+  private store: Store<CoreState, CoreAction>;
+  
+  private pendingRegistrations: PluginRegistration[] = [];
+  private processingRegistrations: PluginRegistration[] = [];
   private initialized = false;
   private isInitializing = false;
 
   constructor(engine: PdfEngine) {
     this.resolver = new DependencyResolver();
     this.engine = engine;
+    this.store = new Store<CoreState, CoreAction>(initialCoreState);
   }
 
   /**
@@ -72,8 +76,13 @@ export class PluginRegistry {
   /**
    * Register a plugin without initializing it
    */
-  registerPlugin<T extends IPlugin<TConfig>, TConfig>(
-    pluginPackage: PluginPackage<T, TConfig>,
+  registerPlugin<
+    TPlugin extends IPlugin<TConfig>,
+    TConfig = unknown,
+    TState = unknown,
+    TAction extends Action = Action
+  >(
+    pluginPackage: PluginPackage<TPlugin, TConfig, TState, TAction>,
     config?: Partial<TConfig>
   ): void {
     if (this.initialized && !this.isInitializing) {
@@ -82,10 +91,26 @@ export class PluginRegistry {
 
     this.validateManifest(pluginPackage.manifest);
 
+    // Use appropriate typing for store methods
+    this.store.addPluginReducer(
+      pluginPackage.manifest.id,
+      // We need one type assertion here since we can't fully reconcile TAction with Action
+      // due to TypeScript's type system limitations with generic variance
+      pluginPackage.reducer as Reducer<TState, Action>,
+      pluginPackage.initialState
+    );
+
     this.pendingRegistrations.push({
       package: pluginPackage,
       config
     });
+  }
+
+  /**
+   * Get the central store instance
+   */
+  getStore(): Store<CoreState, CoreAction> {
+    return this.store;
   }
 
   /**
@@ -291,7 +316,7 @@ export class PluginRegistry {
   /**
    * Register multiple plugins at once
    */
-  registerPluginBatch(registrations: PluginBatchRegistration<IPlugin<any>, any>[]): void {
+  registerPluginBatch(registrations: PluginBatchRegistration<IPlugin<any>, any, any, any>[]): void {
     for (const reg of registrations) {
       this.registerPlugin(reg.package, reg.config);
     }

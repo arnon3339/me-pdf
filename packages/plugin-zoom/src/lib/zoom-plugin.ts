@@ -7,6 +7,7 @@ import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-
 import { ZoomCapability, ZoomChangeEvent, ZoomLevel, ZoomMode, ZoomPluginConfig, ZoomState } from "./types";
 import { ZoomController } from "./zoom/zoom-controller";
 import { PinchController } from "./zoom/pinch-controller";
+import { setZoomLevel } from "./actions";
 
 export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
   private zoomHandlers: ((zoomEvent: ZoomChangeEvent) => void)[] = [];
@@ -19,10 +20,7 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
     public readonly id: string,
     registry: PluginRegistry,
   ) {
-    super(id, registry, {
-      zoomLevel: ZoomMode.Automatic,
-      currentZoomLevel: 1
-    });
+    super(id, registry);
 
     this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport').provides();
     this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager').provides();
@@ -36,7 +34,6 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
       onZoom: (handler) => this.zoomHandlers.push(handler),
       updateZoomLevel: (zoomLevel) => this.updateZoomLevel(zoomLevel),
       getState: () => this.getState(),
-      onStateChange: (handler) => this.onStateChange(handler),
       zoomIn: () => this.zoomIn(),
       zoomOut: () => this.zoomOut()
     };
@@ -44,16 +41,13 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
 
   async initialize(config: ZoomPluginConfig): Promise<void> {
     // Update state with config values
-    this.updateState({
-      zoomLevel: config.defaultZoomLevel,
-      currentZoomLevel: 1
-    });
+    this.dispatch(setZoomLevel(config.defaultZoomLevel, 1));
 
     // Initialize zoom controller
     this.zoomController = new ZoomController({
       viewport: this.viewport,
       pageManager: this.pageManager,
-      state: this.state,
+      getState: () => this.getState(),
       options: {
         minZoom: config.minZoom,
         maxZoom: config.maxZoom,
@@ -65,7 +59,7 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
     this.pinchController = new PinchController({
       innerDiv: this.viewport.getInnerDiv(),
       container: this.viewport.getContainer(),
-      state: this.state,
+      getState: () => this.getState(),
       onPinchEnd: (zoom?: number, center?: { x: number; y: number }) => {
         if(!zoom) return;
         const zoomEvent = this.zoomController.zoomTo(zoom, center);
@@ -79,20 +73,19 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
   }
 
   private refreshZoomIfAutomatic(): void {
+    const state = this.getState();
+
     if(
-      this.state.zoomLevel === ZoomMode.Automatic || 
-      this.state.zoomLevel === ZoomMode.FitPage || 
-      this.state.zoomLevel === ZoomMode.FitWidth
+      state.zoomLevel === ZoomMode.Automatic || 
+      state.zoomLevel === ZoomMode.FitPage || 
+      state.zoomLevel === ZoomMode.FitWidth
     ) {
-      this.updateZoomLevel(this.state.zoomLevel);
+      this.updateZoomLevel(state.zoomLevel);
     }
   }
 
   private handleZoomChange(zoomLevel: ZoomLevel, zoomEvent: ZoomChangeEvent, force?: boolean): void {
-    this.updateState({ 
-      zoomLevel: zoomLevel, 
-      currentZoomLevel: zoomEvent.newZoom 
-    });
+    this.dispatch(setZoomLevel(zoomLevel, zoomEvent.newZoom));
 
     // Update page scale if zoom level changed
     if (zoomEvent.newZoom !== zoomEvent.oldZoom || force) {
@@ -134,8 +127,5 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
     }
     
     this.zoomHandlers = [];
-    
-    // Call parent destroy to clean up state handlers
-    await super.destroy();
   }
 }

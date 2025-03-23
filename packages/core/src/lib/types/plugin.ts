@@ -1,5 +1,6 @@
 import { PluginRegistry } from "../registry/plugin-registry";
 import { PdfEngine } from "@embedpdf/models";
+import { Action, Reducer } from "../store/types";
 
 export interface IPlugin<TConfig = unknown> {
   id: string;
@@ -29,9 +30,11 @@ export interface PluginManifest<TConfig = unknown> {
   };
 }
 
-export interface PluginPackage<T extends IPlugin<TConfig>, TConfig = unknown> {
+export interface PluginPackage<T extends IPlugin<TConfig>, TConfig = unknown, TState = unknown, TAction extends Action = Action> {
   manifest: PluginManifest<TConfig>;
   create(registry: PluginRegistry, engine: PdfEngine, config?: TConfig): T;
+  reducer: Reducer<TState, TAction>;
+  initialState: TState;
 }
 
 export type PluginStatus = 
@@ -41,7 +44,7 @@ export type PluginStatus =
   | 'disabled'     // Plugin is temporarily disabled
   | 'unregistered'; // Plugin is being unregistered
 
-export interface PluginBatchRegistration<T extends IPlugin<TConfig>, TConfig = unknown> {
-  package: PluginPackage<T, TConfig>;
+export interface PluginBatchRegistration<T extends IPlugin<TConfig>, TConfig = unknown, TState = unknown, TAction extends Action = Action> {
+  package: PluginPackage<T, TConfig, TState, TAction>;
   config?: Partial<TConfig>;
 }

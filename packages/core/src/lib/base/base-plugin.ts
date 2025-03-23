@@ -1,59 +1,20 @@
 import { IPlugin } from '../types/plugin';
 import { PluginRegistry } from '../registry/plugin-registry';
+import { Action, PluginStore } from '../store';
 
 export interface StateChangeHandler<TState> {
   (state: TState): void;
 }
 
-export abstract class BasePlugin<TConfig = unknown, TState = unknown> implements IPlugin<TConfig> {
-  protected stateChangeHandlers: StateChangeHandler<TState>[] = [];
-  protected state: TState;
+export abstract class BasePlugin<TConfig = unknown, TState = unknown, TAction extends Action = Action> implements IPlugin<TConfig> {
+  protected pluginStore: PluginStore<TState, TAction>;
   
   constructor(
     public readonly id: string,
-    protected registry: PluginRegistry,
-    initialState: TState
+    protected registry: PluginRegistry
   ) {
-    this.state = initialState;
-  }
-  
-  /**
-   * Update plugin state and notify subscribers
-   */
-  protected updateState(partialState: Partial<TState>): void {
-    this.state = {
-      ...this.state,
-      ...partialState
-    };
-    
-    this.notifyStateChange();
-  }
-  
-  /**
-   * Get a copy of the current state
-   */
-  public getState(): TState {
-    return { ...this.state };
-  }
-  
-  /**
-   * Subscribe to state changes
-   */
-  public onStateChange(handler: StateChangeHandler<TState>): () => void {
-    this.stateChangeHandlers.push(handler);
-    
-    // Return unsubscribe function
-    return () => {
-      this.stateChangeHandlers = this.stateChangeHandlers.filter(h => h !== handler);
-    };
-  }
-  
-  /**
-   * Notify all subscribers of state change
-   */
-  protected notifyStateChange(): void {
-    const stateCopy = { ...this.state };
-    this.stateChangeHandlers.forEach(handler => handler(stateCopy));
+    const store = this.registry.getStore();
+    this.pluginStore = store.getPluginStore<TState, TAction>(this.id);
   }
   
   /**
@@ -62,9 +23,23 @@ export abstract class BasePlugin<TConfig = unknown, TState = unknown> implements
   abstract initialize(config: TConfig): Promise<void>;
   
   /**
-   * Clean up resources
+   * Get a copy of the current state
    */
-  async destroy(): Promise<void> {
-    this.stateChangeHandlers = [];
+  protected getState(): TState {
+    return this.pluginStore.getState();
+  }
+
+  /**
+   * Subscribe to state changes
+   */
+  protected dispatch(action: TAction): void {
+    this.pluginStore.dispatch(action);
+  }
+
+  /**
+   * Subscribe to state changes
+   */
+  protected subscribe(listener: (action: TAction, state: TState) => void): () => void {
+    return this.pluginStore.subscribeToState(listener);
   }
 } 
