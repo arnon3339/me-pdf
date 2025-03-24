@@ -8,7 +8,7 @@ export const manifest: PluginManifest<RenderPartialLayerConfig> = {
   name: 'Render Partial Layer',
   version: '1.0.0',
   provides: [],
-  requires: ['scroll'],
+  requires: ['scroll', 'viewport'],
   optional: [],
   metadata: {
     name: 'Render Partial Layer',

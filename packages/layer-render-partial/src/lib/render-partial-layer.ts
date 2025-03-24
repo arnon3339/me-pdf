@@ -35,8 +35,8 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
     engine: PdfEngine
   ) {
     super(id, registry, engine);
-    this.scroll = this.registry.getPlugin<ScrollPlugin>('scroll').provides();
-    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport').provides();
+    this.scroll = this.registry.getPlugin<ScrollPlugin>('scroll')!.provides();
+    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
 
     this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'debounce', wait: 250 });
   }
