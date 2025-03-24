@@ -14,7 +14,9 @@ import {
   PluginConfigurationError
 } from '../types/errors';
 import { PdfEngine } from '@embedpdf/models';
-import { Action, CoreAction, CoreState, Store, initialCoreState, Reducer } from '../store';
+import { Action, CoreState, Store, initialCoreState, Reducer } from '../store';
+import { CoreAction } from '../store/actions';
+import { coreReducer } from '../store/reducer';
 
 // Define a more flexible generic type for plugin registrations
 interface PluginRegistration {
@@ -42,7 +44,7 @@ export class PluginRegistry {
   constructor(engine: PdfEngine) {
     this.resolver = new DependencyResolver();
     this.engine = engine;
-    this.store = new Store<CoreState, CoreAction>(initialCoreState);
+    this.store = new Store<CoreState, CoreAction>(coreReducer, initialCoreState);
   }
 
   /**
@@ -136,7 +138,9 @@ export class PluginRegistry {
         // Build dependency graph for current batch
         for (const reg of this.processingRegistrations) {
           const dependsOn = new Set<string>();
-          for (const capability of reg.package.manifest.consumes) {
+          // Consider both required and optional capabilities for load order
+          const allDependencies = [...reg.package.manifest.requires, ...reg.package.manifest.optional];
+          for (const capability of allDependencies) {
             const provider = this.processingRegistrations.find(r =>
               r.package.manifest.provides.includes(capability)
             );
@@ -212,11 +216,19 @@ export class PluginRegistry {
     this.validatePlugin(plugin);
 
     // Verify all required capabilities are available
-    for (const capability of manifest.consumes) {
+    for (const capability of manifest.requires) {
       if (!this.capabilities.has(capability)) {
         throw new PluginRegistrationError(
           `Missing required capability: ${capability} for plugin ${manifest.id}`
         );
+      }
+    }
+
+    // Optional capabilities can be null, so we don't throw errors for them
+    for (const capability of manifest.optional) {
+      if (this.capabilities.has(capability)) {
+        // Optional capability is available, but we don't require it
+        console.debug(`Optional capability ${capability} is available for plugin ${manifest.id}`);
       }
     }
 
@@ -288,6 +300,11 @@ export class PluginRegistry {
     config: Partial<TConfig>
   ): Promise<void> {
     const plugin = this.getPlugin(pluginId);
+
+    if (!plugin) {
+      throw new PluginNotFoundError(`Plugin ${pluginId} not found`);
+    }
+
     const manifest = this.manifests.get(pluginId);
     const currentConfig = this.configurations.get(pluginId);
 
@@ -342,7 +359,7 @@ export class PluginRegistry {
     for (const [otherId, otherManifest] of this.manifests.entries()) {
       if (otherId === pluginId) continue;
 
-      const dependsOnThis = otherManifest.consumes.some(cap =>
+      const dependsOnThis = [...otherManifest.requires, ...otherManifest.optional].some(cap =>
         manifest.provides.includes(cap)
       );
 
@@ -380,24 +397,26 @@ export class PluginRegistry {
 
   /**
    * Get a plugin instance
+   * @param pluginId The ID of the plugin to get
+   * @returns The plugin instance or null if not found
    */
-  getPlugin<T extends IPlugin>(pluginId: string): T {
+  getPlugin<T extends IPlugin>(pluginId: string): T | null {
     const plugin = this.plugins.get(pluginId);
     if (!plugin) {
-      throw new PluginNotFoundError(`Plugin ${pluginId} not found`);
+      return null;
     }
     return plugin as T;
   }
 
   /**
    * Get a plugin that provides a specific capability
+   * @param capability The capability to get a provider for
+   * @returns The plugin providing the capability or null if not found
    */
-  getCapabilityProvider(capability: string): IPlugin {
+  getCapabilityProvider(capability: string): IPlugin | null {
     const pluginId = this.capabilities.get(capability);
     if (!pluginId) {
-      throw new CapabilityNotFoundError(
-        `No plugin provides capability ${capability}`
-      );
+      return null;
     }
     return this.getPlugin(pluginId);
   }
@@ -452,8 +471,11 @@ export class PluginRegistry {
     if (!Array.isArray(manifest.provides)) {
       throw new PluginRegistrationError('Manifest must have a provides array');
     }
-    if (!Array.isArray(manifest.consumes)) {
-      throw new PluginRegistrationError('Manifest must have a consumes array');
+    if (!Array.isArray(manifest.requires)) {
+      throw new PluginRegistrationError('Manifest must have a requires array');
+    }
+    if (!Array.isArray(manifest.optional)) {
+      throw new PluginRegistrationError('Manifest must have an optional array');
     }
   }
 }

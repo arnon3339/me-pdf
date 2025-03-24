@@ -1,20 +1,17 @@
-import { Action } from "./types";
+import { PdfDocumentObject, PdfPageObject, Rotation } from "@embedpdf/models";
 
 export interface CoreState {
-  document: {
-    content: string | null;
-    loading: boolean;
-  };
+  scale: number;
+  rotation: Rotation;
+  document: PdfDocumentObject | null;
+  loading: boolean;
+  error: string | null;
 }
 
 export const initialCoreState: CoreState = {
-  document: {
-    content: null,
-    loading: false,
-  },
+  scale: 1,
+  rotation: Rotation.Degree0,
+  document: null,
+  loading: false,
+  error: null
 };
-
-// Core actions
-export type CoreAction =
-  | { type: 'LOAD_DOCUMENT'; payload: string }
-  | { type: 'SET_DOCUMENT'; payload: string };

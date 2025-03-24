@@ -31,7 +31,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState, Se
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
     this.engine = engine;
-    this.loader = this.registry.getPlugin<LoaderPlugin>("loader").provides();
+    this.loader = this.registry.getPlugin<LoaderPlugin>("loader")!.provides();
 
     this.loader.onDocumentLoaded(this.handleDocumentLoaded.bind(this));
     this.loader.onLoaderEvent(this.handleLoaderEvent.bind(this));

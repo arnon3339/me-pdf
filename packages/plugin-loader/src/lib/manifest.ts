@@ -8,7 +8,8 @@ export const manifest: PluginManifest<LoaderPluginConfig> = {
   name: 'Loader Plugin',
   version: '1.0.0',
   provides: ['loader'],
-  consumes: [],
+  requires: [],
+  optional: [],
   metadata: {
     name: 'Loader Plugin',
     description: 'A plugin for loading PDF documents',

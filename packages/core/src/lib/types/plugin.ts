@@ -20,7 +20,8 @@ export interface PluginManifest<TConfig = unknown> {
   name: string;
   version: string;
   provides: string[];  // Capabilities this plugin provides
-  consumes: string[]; // Capabilities this plugin requires
+  requires: string[]; // Mandatory capabilities
+  optional: string[]; // Optional capabilities
   defaultConfig: TConfig;  // Default configuration
   metadata?: {
     description?: string;

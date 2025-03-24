@@ -81,12 +81,12 @@ async function initializePDFViewer() {
 
   await registry.initialize();
 
-  const loader = registry.getPlugin<LoaderPlugin>('loader').provides();
-  const spread = registry.getPlugin<SpreadPlugin>('spread').provides();
-  const zoom = registry.getPlugin<ZoomPlugin>('zoom').provides();
-  const scroll = registry.getPlugin<ScrollPlugin>('scroll').provides();
-  const pageManager = registry.getPlugin<PageManagerPlugin>('page-manager').provides();
-  const search = registry.getPlugin<SearchPlugin>('search').provides();
+  const loader = registry.getPlugin<LoaderPlugin>('loader')!.provides();
+  const spread = registry.getPlugin<SpreadPlugin>('spread')!.provides();
+  const zoom = registry.getPlugin<ZoomPlugin>('zoom')!.provides();
+  const scroll = registry.getPlugin<ScrollPlugin>('scroll')!.provides();
+  const pageManager = registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
+  const search = registry.getPlugin<SearchPlugin>('search')!.provides();
 
 
   const pdfDocument = loader.getDocument();

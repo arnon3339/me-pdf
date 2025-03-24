@@ -22,8 +22,8 @@ export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
   ) {
     super(id, registry);
 
-    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport').provides();
-    this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager').provides();
+    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
+    this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
   
     this.pageManager.onPagesChange(this.refreshZoomIfAutomatic.bind(this));
     this.viewport.onResize(this.refreshZoomIfAutomatic.bind(this), { mode: 'debounce', wait: 200 });

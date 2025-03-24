@@ -8,7 +8,8 @@ export const manifest: PluginManifest<ViewportPluginConfig> = {
   name: 'Viewport Plugin',
   version: '1.0.0',
   provides: ['viewport'],
-  consumes: [],
+  requires: [],
+  optional: [],
   defaultConfig: {
     enabled: true,
     defaultWidth: 1000,

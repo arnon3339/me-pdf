@@ -1,6 +1,6 @@
 import { IPlugin } from '../types/plugin';
 import { PluginRegistry } from '../registry/plugin-registry';
-import { Action, PluginStore } from '../store';
+import { Action, CoreAction, CoreState, PluginStore, Store } from '../store';
 
 export interface StateChangeHandler<TState> {
   (state: TState): void;
@@ -8,13 +8,14 @@ export interface StateChangeHandler<TState> {
 
 export abstract class BasePlugin<TConfig = unknown, TState = unknown, TAction extends Action = Action> implements IPlugin<TConfig> {
   protected pluginStore: PluginStore<TState, TAction>;
-  
+  protected coreStore: Store<CoreState, CoreAction>;
+
   constructor(
     public readonly id: string,
     protected registry: PluginRegistry
   ) {
-    const store = this.registry.getStore();
-    this.pluginStore = store.getPluginStore<TState, TAction>(this.id);
+    this.coreStore = this.registry.getStore();
+    this.pluginStore = this.coreStore.getPluginStore<TState, TAction>(this.id);
   }
   
   /**

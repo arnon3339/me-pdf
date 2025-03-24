@@ -43,8 +43,8 @@ export class SearchLayer extends BaseLayerPlugin<SearchLayerConfig, SearchLayerC
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry, engine);
 
-    this.search = this.registry.getPlugin<SearchPlugin>("search").provides();
-    this.scroll = this.registry.getPlugin<ScrollPlugin>("scroll").provides();
+    this.search = this.registry.getPlugin<SearchPlugin>("search")!.provides();
+    this.scroll = this.registry.getPlugin<ScrollPlugin>("scroll")!.provides();
 
     // Bind to search state changes
     this.search.onStateChange(this.handleStateChange.bind(this));

@@ -1,4 +1,4 @@
-import { IPlugin, PluginRegistry } from "@embedpdf/core";
+import { BasePlugin, IPlugin, PluginRegistry, SetDocumentAction } from "@embedpdf/core";
 import { PdfDocumentObject, PdfPageObject, Rotation, transformSize } from "@embedpdf/models";
 import { LoaderCapability, LoaderPlugin } from "@embedpdf/plugin-loader";
 import { SpreadCapability, SpreadPlugin, SpreadMode } from "@embedpdf/plugin-spread";
@@ -23,9 +23,8 @@ function getPreviousRotation(current: Rotation): Rotation {
   return ((current + 3) % 4) as Rotation; // +3 is equivalent to -1 in modulo 4
 }
 
-export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
-  private loader: LoaderCapability;
-  private spread: SpreadCapability;
+export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
+  private spread: SpreadCapability | null;
   private layer: LayerCapability;
 
   private pagesChangeHandlers: ((pages: PdfPageObject[][]) => void)[] = [];
@@ -49,15 +48,18 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
 
   constructor(
     public readonly id: string,
-    private registry: PluginRegistry,
+    registry: PluginRegistry,
   ) {
-    this.loader = this.registry.getPlugin<LoaderPlugin>('loader').provides();
-    this.spread = this.registry.getPlugin<SpreadPlugin>('spread').provides();
-    this.layer = this.registry.getPlugin<LayerPlugin>('layer').provides();
+    super(id, registry);
+    const spreadPlugin = registry.getPlugin<SpreadPlugin>('spread');
+    this.spread = spreadPlugin ? spreadPlugin.provides() : null;
+    this.layer = this.registry.getPlugin<LayerPlugin>('layer')!.provides();
 
     // Listen for document loading
-    this.loader.onDocumentLoaded(this.handleDocumentLoaded.bind(this));
-    this.spread.onSpreadChange(this.handleSpreadChange.bind(this));
+    this.coreStore.onAction('SET_DOCUMENT', this.handleDocumentLoaded.bind(this));
+    if (this.spread) {
+      this.spread.onSpreadChange(this.handleSpreadChange.bind(this));
+    }
   }
 
   provides(): PageManagerCapability {
@@ -136,24 +138,27 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
     }
   }
 
+  private getSpreadPages(pages: PdfPageObject[]): PdfPageObject[][] {
+    if (this.spread) {
+      return this.spread.getSpreadPagesObjects(pages);
+    } else {
+      return pages.map(page => [page]);
+    }
+  }
   /**
    * Apply transformSize to each page and create spread pages with transformed dimensions
    */
   private updateSpreadPages(): void {
     if (!this.pdfDocument || !this.pages.length) return;
     
-    // Create transformed pages with proper dimensions based on rotation
     const transformedPages = this.pages.map(page => {
-      // Create a copy of the page to avoid modifying original
       const transformedPage = { ...page };
-      // Apply rotation to get correctly sized pages
       const newSize = transformSize(page.size, this.rotation, 1);
       transformedPage.size = newSize;
       return transformedPage;
     });
     
-    // Create spread pages using the transformed pages
-    this.spreadPages = this.spread.getSpreadPagesObjects(transformedPages);
+    this.spreadPages = this.getSpreadPages(transformedPages);
   }
 
   /**
@@ -315,9 +320,9 @@ export class PageManagerPlugin implements IPlugin<PageManagerPluginConfig> {
     });
   }
 
-  private handleDocumentLoaded(document: PdfDocumentObject): void {
-    this.pdfDocument = document;
-    this.pages = document.pages;
+  private handleDocumentLoaded(action: SetDocumentAction): void {
+    this.pdfDocument = action.payload;
+    this.pages = action.payload.pages;
     
     // Apply transformSize to pages before creating spread pages
     this.updateSpreadPages();

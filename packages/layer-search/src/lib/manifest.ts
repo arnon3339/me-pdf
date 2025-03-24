@@ -8,7 +8,8 @@ export const manifest: PluginManifest<SearchLayerConfig> = {
   name: 'Search Layer',
   version: '1.0.0',
   provides: [],
-  consumes: ['search', 'scroll'],
+  requires: ['search', 'scroll'],
+  optional: [],
   metadata: {
     name: 'Search Layer',
     description: 'Render search layers',

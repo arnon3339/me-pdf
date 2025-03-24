@@ -18,6 +18,10 @@ export function useCapability<T extends IPlugin<any>>(pluginId: string): ReturnT
 
   const plugin = registry.getPlugin<T>(pluginId);
 
+  if(!plugin) {
+    throw new Error(`Plugin ${pluginId} not found`);
+  }
+
   if(!plugin.provides) {
     throw new Error(`Plugin ${pluginId} does not provide a capability`);
   }

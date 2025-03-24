@@ -9,7 +9,7 @@ import { PluginStore } from './plugin-store';
  */
 export class Store<CoreState, CoreAction extends Action = Action> {
   private state: StoreState<CoreState>;
-  private coreReducers: { [K in keyof CoreState]?: Reducer<CoreState[K], CoreAction> } = {};
+  private coreReducer: Reducer<CoreState, CoreAction>;
   private pluginReducers: Record<string, Reducer<any, Action>> = {};
   private listeners: ((action: Action, state: StoreState<CoreState>) => void)[] = [];
   private pluginListeners: Record<string, ((action: Action, state: any) => void)[]> = {};
@@ -18,23 +18,9 @@ export class Store<CoreState, CoreAction extends Action = Action> {
    * Initializes the store with the provided core state.
    * @param initialCoreState The initial core state.
    */
-  constructor(initialCoreState: CoreState) {
-    this.state = { core: { ...initialCoreState }, plugins: {} };
-  }
-
-  /**
-   * Adds a reducer for a specific core state slice.
-   * @param key The state slice key (must be a key of CoreState).
-   * @param reducer The reducer function for this slice.
-   * @param initialState The initial state for this slice.
-   */
-  addCoreReducer<K extends keyof CoreState>(
-    key: K,
-    reducer: Reducer<CoreState[K], CoreAction>,
-    initialState: CoreState[K]
-  ) {
-    this.coreReducers[key] = reducer; // No type assertion needed
-    this.state.core[key] = initialState;
+  constructor( reducer: Reducer<CoreState, CoreAction>, initialCoreState: CoreState) {
+    this.state = { core: initialCoreState, plugins: {} };    
+    this.coreReducer = reducer;
   }
 
   /**
@@ -53,17 +39,13 @@ export class Store<CoreState, CoreAction extends Action = Action> {
   }
 
   /**
-   * Dispatches an action to update a specific core state slice.
-   * @param key The state slice key (must be a key of CoreState).
-   * @param action The action to dispatch, typed as CoreAction.
+   * Dispatches an action to update the core state
+   * @param action The action to dispatch, typed as CoreAction
    */
-  dispatchToCore<K extends keyof CoreState>(key: K, action: CoreAction) {
-    const reducer = this.coreReducers[key];
-    if (!reducer) return;
+  dispatchToCore(action: CoreAction) {
+    if (!this.coreReducer) return;
 
-    const newCoreState = { ...this.state.core };
-    newCoreState[key] = reducer(this.state.core[key], action); // Types align: CoreState[K]
-    this.state.core = newCoreState;
+    this.state.core = this.coreReducer(this.state.core, action);
     this.listeners.forEach(listener => listener(action, this.state));
   }
 
@@ -72,7 +54,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
    * @param pluginId The plugin identifier.
    * @param action The action to dispatch, typed as PluginAction.
    */
-  dispatchToPlugin<PluginAction extends Action>(pluginId: string, action: PluginAction) {
+  dispatchToPlugin<PluginAction extends Action>(pluginId: string, action: PluginAction, notifyGlobal: boolean = true) {
     const reducer = this.pluginReducers[pluginId];
     if (!reducer) return;
 
@@ -80,7 +62,9 @@ export class Store<CoreState, CoreAction extends Action = Action> {
     this.state.plugins[pluginId] = newPluginState;
 
     // Notify global listeners
-    this.listeners.forEach(listener => listener(action, this.state));
+    if (notifyGlobal) {
+      this.listeners.forEach(listener => listener(action, this.state));
+    }
 
     // Notify plugin-specific listeners
     if (this.pluginListeners[pluginId]) {
@@ -95,16 +79,14 @@ export class Store<CoreState, CoreAction extends Action = Action> {
    * @param action The action to dispatch (can be CoreAction or any Action).
    */
   dispatch(action: CoreAction | Action) {
-    // Apply core reducers (only if action is CoreAction)
+    // Apply core reducer (only if action is CoreAction)
     if (this.isCoreAction(action)) {
-      for (const key in this.coreReducers) {
-        this.dispatchToCore(key, action);
-      }
+      this.dispatchToCore(action);
     }
 
     // Apply plugin reducers (for any Action)
     for (const pluginId in this.pluginReducers) {
-      this.dispatchToPlugin(pluginId, action);
+      this.dispatchToPlugin(pluginId, action, false);
     }
   }
 
