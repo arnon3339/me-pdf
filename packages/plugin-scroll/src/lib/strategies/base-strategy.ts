@@ -133,10 +133,18 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
       pageNumber: parseInt(pageElement.dataset.pageNumber || '0'),
       viewportX: intersection.left - containerRect.left,
       viewportY: intersection.top - containerRect.top,
-      pageX: (intersection.left - pageRect.left) / scale,
-      pageY: (intersection.top - pageRect.top) / scale,
-      visibleWidth: visibleWidth / scale,
-      visibleHeight: visibleHeight / scale,
+      original: {
+        pageX: (intersection.left - pageRect.left) / scale,
+        pageY: (intersection.top - pageRect.top) / scale,
+        visibleWidth: visibleWidth / scale,
+        visibleHeight: visibleHeight / scale,
+      },
+      scaled: {
+        pageX: intersection.left - pageRect.left,
+        pageY: intersection.top - pageRect.top,
+        visibleWidth: visibleWidth,
+        visibleHeight: visibleHeight,
+      },
       visiblePercentage: (visibleArea / totalArea) * 100
     };
   }
@@ -279,8 +287,8 @@ export abstract class BaseScrollStrategy implements ScrollStrategyInterface {
     
     // Calculate distances to center for each page
     const pagesWithDistances = mostVisiblePages.map(page => {
-      const pageCenterX = page.viewportX + (page.visibleWidth / 2);
-      const pageCenterY = page.viewportY + (page.visibleHeight / 2);
+      const pageCenterX = page.viewportX + (page.scaled.visibleWidth / 2);
+      const pageCenterY = page.viewportY + (page.scaled.visibleHeight / 2);
       
       const distance = Math.sqrt(
         Math.pow(pageCenterX - viewportCenterX, 2) + 

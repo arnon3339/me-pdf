@@ -153,10 +153,10 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
     if (!pageVisibility) return null;
 
     return {
-      pageX: pageVisibility.pageX,
-      pageY: pageVisibility.pageY,
-      visibleWidth: pageVisibility.visibleWidth,
-      visibleHeight: pageVisibility.visibleHeight
+      pageX: pageVisibility.original.pageX,
+      pageY: pageVisibility.original.pageY,
+      visibleWidth: pageVisibility.original.visibleWidth,
+      visibleHeight: pageVisibility.original.visibleHeight
     };
   }
 
