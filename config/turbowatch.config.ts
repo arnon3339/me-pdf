@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { globSync } from 'glob';
-import { defineConfig, Expression } from 'turbowatch';
+import { defineConfig, Expression, ChokidarWatcher } from 'turbowatch';
 
 const foundPackageJson = globSync('packages/*/package.json');
 
@@ -34,14 +34,28 @@ const dirList = [...allPackages.keys()].map(
   (dir) => ['dirname', dir.replace('/package.json', '')] satisfies Expression
 );
 
+console.log(JSON.stringify([
+  'allof',
+  ['anyof', ...dirList],
+  ['not', ['anyof', ['dirname', 'node_modules'], ['dirname', 'dist'], ['dirname', '.next']]],
+  [
+    'anyof',
+    ['match', '*.ts', 'basename'],
+    ['match', '*.tsx', 'basename'],
+    ['match', '*.js', 'basename'],
+  ],
+], null, 2)
+);
+
 export default defineConfig({
   project: process.cwd(),
+  Watcher: ChokidarWatcher,
   triggers: [
     {
       expression: [
         'allof',
-        ['not', ['anyof', ['dirname', 'node_modules'], ['dirname', 'dist'], ['dirname', '.next']]],
         ['anyof', ...dirList],
+        ['not', ['anyof', ['dirname', 'node_modules'], ['dirname', 'dist'], ['dirname', '.next']]],
         [
           'anyof',
           ['match', '*.ts', 'basename'],

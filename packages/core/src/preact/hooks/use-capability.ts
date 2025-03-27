@@ -5,15 +5,29 @@ import type { IPlugin } from '@embedpdf/core';
 /**
  * Hook to access a plugin's capability.
  * @param pluginId The ID of the plugin to access
- * @returns The capability provided by the plugin
+ * @returns The capability provided by the plugin or null during initialization
  * @example
  * // Get zoom capability
  * const zoom = useCapability<ZoomPlugin>('zoom');
  */
-export function useCapability<T extends IPlugin<any>>(pluginId: string): ReturnType<NonNullable<T['provides']>> {
-  const registry = useContext(PDFContext);
-  if (!registry) {
-    throw new Error('useCapability must be used within a PDFViewer');
+export function useCapability<T extends IPlugin<any>>(pluginId: string): ReturnType<NonNullable<T['provides']>> | null {
+  const contextValue = useContext(PDFContext);
+  
+  // Error if used outside of context
+  if (contextValue === undefined) {
+    throw new Error('useCapability must be used within a PDFContext.Provider');
+  }
+  
+  const { registry, isInitializing } = contextValue;
+  
+  // During initialization, return null instead of throwing an error
+  if (isInitializing) {
+    return null;
+  }
+  
+  // At this point, initialization is complete but registry is still null, which is unexpected
+  if (registry === null) {
+    throw new Error('PDF registry failed to initialize properly');
   }
 
   const plugin = registry.getPlugin<T>(pluginId);
