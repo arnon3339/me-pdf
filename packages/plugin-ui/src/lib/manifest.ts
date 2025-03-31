@@ -12,7 +12,6 @@ export const manifest: PluginManifest<UIPluginConfig> = {
   optional: [],
   defaultConfig: {
     enabled: true,
-    components: {},
-    headers: {}
+    components: {}
   }
 }; 

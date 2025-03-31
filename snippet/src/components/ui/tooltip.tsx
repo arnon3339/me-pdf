@@ -9,12 +9,14 @@ interface TooltipProps {
   className?: string;
   delay?: number;
   style?: 'light' | 'dark';
-  trigger?: 'hover' | 'click';
+  targetElement?: string;
+  trigger?: 'hover' | 'click' | 'none';
 }
 
 export function Tooltip({ 
   children, 
   content, 
+  targetElement,
   position = 'top',
   style = 'dark',
   trigger = 'hover',
@@ -57,7 +59,7 @@ export function Tooltip({
       <div 
         ref={triggerRef}
         className="inline-block"
-        data-tooltip-target={`tooltip-${Math.random().toString(36).substr(2, 9)}`}
+        data-tooltip-target={targetElement}
         data-tooltip-placement={position}
         data-tooltip-style={style}
         data-tooltip-trigger={trigger}
@@ -65,6 +67,7 @@ export function Tooltip({
         {children}
       </div>
       <div
+        id={targetElement}
         ref={tooltipRef}
         role="tooltip"
         className={`

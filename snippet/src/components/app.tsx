@@ -14,8 +14,8 @@ import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-la
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
 import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom';
-import { Header, UIComponent, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
-import { dividerRenderer, groupedItemsRenderer, headerRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
+import { UIComponentCollection, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
+import { dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
 
 // **Configuration Interface**
@@ -45,13 +45,20 @@ interface PDFViewerProps {
 }
 
 // Define components
-export const components: Record<string, UIComponent> = {
+export const components: Record<string, UIComponentCollection> = {
   menuToggleButton: {
     type: 'toggleButton',
     dataElement: 'menuToggleButton',
-    toggleElement: 'menu',
+    toggleElement: 'menuFlyOut',
     label: 'Menu',
-    img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItbWVudSI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTQgOGwxNiAwIiAvPjxwYXRoIGQ9Ik00IDE2bDE2IDAiIC8+PC9zdmc+',
+    img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbi10YWJsZXItbWVudSI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTQgOGwxNiAwIiAvPjxwYXRoIGQ9Ik00IDE2bDE2IDAiIC8+PC9zdmc+',
+  },
+  moreToggleButton: {
+    type: 'toggleButton',
+    dataElement: 'moreToggleButton',
+    toggleElement: 'moreFlyOut',
+    label: 'More',
+    img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNBNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZG90cy12ZXJ0aWNhbCI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTEyIDEybS0xIDBhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgLz48cGF0aCBkPSJNMTIgMTltLTEgMGExIDEgMCAxIDAgMiAwYTEgMSAwIDEgMCAtMiAwIiAvPjxwYXRoIGQ9Ik0xMiA1bS0xIDBhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgLz48L3N2Zz4=',
   },
   filePickerButton: {
     type: 'toolButton',
@@ -72,17 +79,14 @@ export const components: Record<string, UIComponent> = {
     dataElement: 'divider1',
   },
   groupedButtons: {
-    type: 'groupedItems',
     dataElement: 'groupedButtons',
-    items: ['menuToggleButton', 'divider1', 'filePickerButton', 'downloadButton'],
+    type: 'groupedItems',
+    items: ['menuToggleButton', 'divider1', 'filePickerButton', 'downloadButton', 'moreToggleButton', 'divider1'],
     justifyContent: 'start',
     gap: 10,
   },
-};
-
-// Define headers
-export const headers: Record<string, Header> = {
   topHeader: {
+    type: 'header',
     dataElement: 'topHeader',
     placement: 'top',
     items: ['groupedButtons'],
@@ -91,17 +95,31 @@ export const headers: Record<string, Header> = {
       paddingTop: '8px', 
       paddingBottom: '8px', 
       paddingLeft: '16px',
-      paddingRight: '16px',
-      borderBottom: '1px solid #cfd4da' 
+      paddingRight: '16px'
     },
   },
+  menuFlyOut: {
+    dataElement: 'menuFlyOut',
+    type: 'flyOut',
+    open: false,
+    triggerElement: null,
+    triggerHTMLElement: null,
+    items: []
+  },
+  moreFlyOut: {
+    dataElement: 'moreFlyOut',
+    type: 'flyOut',
+    open: false,
+    triggerElement: null,
+    triggerHTMLElement: null,
+    items: ['filePickerButton', 'downloadButton']
+  }
 };
 
 // UIPlugin configuration
 export const uiConfig: UIPluginConfig = {
   enabled: true,
-  components,
-  headers,
+  components
 };
 
 export function PDFViewer({ config }: PDFViewerProps) {
@@ -134,12 +152,16 @@ export function PDFViewer({ config }: PDFViewerProps) {
               uiCapability.registerComponentRenderer('toggleButton', toggleButtonRenderer);
               uiCapability.registerComponentRenderer('header', headerRenderer);
               uiCapability.registerComponentRenderer('divider', dividerRenderer);
+              uiCapability.registerComponentRenderer('flyOut', flyOutRenderer);
             }
           }}
           plugins={(viewportElement: HTMLElement) => [
             createPluginRegistration(UIPluginPackage, uiConfig),
             createPluginRegistration(LoaderPluginPackage, {
-              loadingOptions: { source: config.src, id: 'pdf' },
+              loadingOptions: { 
+                source: config.src, 
+                id: 'pdf' 
+              },
             }),
             createPluginRegistration(ViewportPluginPackage, {
               container: viewportElement,
@@ -148,13 +170,19 @@ export function PDFViewer({ config }: PDFViewerProps) {
             createPluginRegistration(ScrollPluginPackage, {
               strategy: scrollStrategy,
             }),
-            createPluginRegistration(PageManagerPluginPackage, { pageGap: 10 }),
-            createPluginRegistration(SpreadPluginPackage, { defaultSpreadMode: SpreadMode.None }),
+            createPluginRegistration(PageManagerPluginPackage, { 
+              pageGap: 10 
+            }),
+            createPluginRegistration(SpreadPluginPackage, { 
+              defaultSpreadMode: SpreadMode.None 
+            }),
             createPluginRegistration(ZoomPluginPackage, {
-              defaultZoomLevel: zoomMode,
+              defaultZoomLevel: 1,
             }),
             createPluginRegistration(LayerPluginPackage, {
-              layers: [createLayerRegistration(RenderLayerPackage, { maxScale: 2 })],
+              layers: [createLayerRegistration(RenderLayerPackage, { 
+                maxScale: 2 
+              })],
             }),
           ]}
         >

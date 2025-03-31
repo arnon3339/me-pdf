@@ -1,25 +1,36 @@
+import { UIComponent } from "./ui-component";
+
 export interface UIPluginConfig {
   enabled: boolean;
-  components: Record<string, UIComponent>;
-  headers: Record<string, Header>;
+  components: Record<string, UIComponentCollection>;
 }
 
 export type NavbarPlacement = 'top' | 'bottom' | 'left' | 'right';
 
 export interface UICapability {
-  registerComponentRenderer(type: string, renderer: (props: any) => any): void;
-  renderNavbars(): Record<NavbarPlacement, any[]>;
-}
-
-export interface Header {
-  dataElement: string;              // e.g., "default-top-header"
-  placement: 'top' | 'bottom' | 'left' | 'right';
-  items: string[];                  // e.g., ["group1", "button1"]
-  style?: Record<string, string>;   // Optional CSS styles
+  registerComponentRenderer: (type: string, renderer: (props: any, children: any[]) => any) => void;
+  getComponent: <T>(id: string) => UIComponent<T> | undefined;
+  getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => UIComponent<HeaderComponent>[];
+  getFlyOuts: () => UIComponent<FlyOutComponent>[];
 }
 
 export interface BaseUIComponent {
   dataElement: string;   // e.g., "highlightToolButton"
+}
+
+export interface FlyOutComponent extends BaseUIComponent {
+  type: 'flyOut';
+  open: boolean;
+  triggerElement: string | null;
+  triggerHTMLElement: HTMLElement | null;
+  items: string[];
+}
+
+export interface HeaderComponent extends BaseUIComponent {
+  type: 'header';
+  placement: 'top' | 'bottom' | 'left' | 'right';
+  items: string[];                  // e.g., ["group1", "button1"]
+  style?: Record<string, string>;   // Optional CSS styles
 }
 
 export interface GroupedItemsComponent extends BaseUIComponent {
@@ -43,6 +54,7 @@ export interface ToolButtonComponent extends BaseUIComponent {
 
 export interface ToggleButtonComponent extends BaseUIComponent {
   type: 'toggleButton';
+  active?: boolean;
   toggleElement: string;    // e.g., "searchPanel"
   label?: string;           // e.g., "Search"
   img?: string;             // e.g., "icon-search"
@@ -55,4 +67,4 @@ export interface PresetButtonComponent extends BaseUIComponent {
   img?: string;          // e.g., "icon-undo"
 }
 
-export type UIComponent = GroupedItemsComponent | DividerComponent | ToolButtonComponent | ToggleButtonComponent | PresetButtonComponent;
+export type UIComponentCollection = GroupedItemsComponent | DividerComponent | ToolButtonComponent | ToggleButtonComponent | PresetButtonComponent | HeaderComponent | FlyOutComponent;
