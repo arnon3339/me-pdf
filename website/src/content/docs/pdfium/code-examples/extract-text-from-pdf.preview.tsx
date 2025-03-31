@@ -49,7 +49,7 @@ export default function ExtractTextFromPdfDemo() {
       }
       
       // Fetch the sample PDF
-      const response = await fetch('/demo.pdf');
+      const response = await fetch('/ebook.pdf');
       const buffer = await response.arrayBuffer();
       const data = new Uint8Array(buffer);
       

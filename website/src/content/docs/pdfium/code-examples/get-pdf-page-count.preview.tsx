@@ -13,7 +13,7 @@ export default function GetPdfPageCountDemo() {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('/demo.pdf');
+      const response = await fetch('/ebook.pdf');
       const buffer = await response.arrayBuffer();
       const count = await getPdfPageCount(new Uint8Array(buffer));
       
