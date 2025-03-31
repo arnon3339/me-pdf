@@ -14,7 +14,7 @@ import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-la
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
 import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom';
-import { UIComponentCollection, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
+import { FlyOutComponent, HeaderComponent, UIComponentCollection, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
 import { dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
 
@@ -90,12 +90,11 @@ export const components: Record<string, UIComponentCollection> = {
     dataElement: 'topHeader',
     placement: 'top',
     items: ['groupedButtons'],
+    getChildContext: (props: HeaderComponent) => ({
+      direction: props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical'
+    }),
     style: { 
-      backgroundColor: '#ffffff', 
-      paddingTop: '8px', 
-      paddingBottom: '8px', 
-      paddingLeft: '16px',
-      paddingRight: '16px'
+      backgroundColor: '#ffffff'
     },
   },
   menuFlyOut: {
@@ -112,6 +111,9 @@ export const components: Record<string, UIComponentCollection> = {
     open: false,
     triggerElement: null,
     triggerHTMLElement: null,
+    getChildContext: {
+      variant: 'flyout'
+    },
     items: ['filePickerButton', 'downloadButton']
   }
 };

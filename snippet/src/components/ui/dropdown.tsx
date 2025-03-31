@@ -22,7 +22,7 @@ export function Dropdown({
   children,
   placement = 'bottom',
   offsetSkidding = 0,
-  offsetDistance = 10,
+  offsetDistance = 5,
   delay = 300,
   onShow,
   onHide
@@ -77,7 +77,7 @@ export function Dropdown({
     <div 
       id={id}
       ref={targetRef}
-      className="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700 dark:divide-gray-600"
+      className="z-10 hidden border border-[#cfd4da] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700 dark:divide-gray-600"
     >
       {children}
     </div>
@@ -87,7 +87,7 @@ export function Dropdown({
 // Subcomponents for better organization
 export function DropdownItems({ children }: { children: ComponentChildren }) {
   return (
-    <div className="py-2 flex flex-col gap-2">
+    <div className="py-2 flex flex-col ">
       {children}
     </div>
   );

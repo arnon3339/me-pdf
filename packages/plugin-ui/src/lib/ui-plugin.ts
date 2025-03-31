@@ -3,7 +3,7 @@ import { FlyOutComponent, GroupedItemsComponent, HeaderComponent, UICapability, 
 import { UIComponent } from "./ui-component";
 
 export class UIPlugin extends BasePlugin<UIPluginConfig> {
-  private componentRenderers: Record<string, (props: any, children: any[]) => any> = {};
+  private componentRenderers: Record<string, (props: any, children: any[], context?: any) => any> = {};
   private components: Record<string, UIComponent<any>> = {};
   private config: UIPluginConfig;
 
@@ -44,7 +44,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
 
   provides(): UICapability {
     return {
-      registerComponentRenderer: (type: string, renderer: (props: any, children: any[]) => any) => {
+      registerComponentRenderer: (type: string, renderer: (props: any, children: any[], context?: any) => any) => {
         this.componentRenderers[type] = renderer;
       },
       getComponent: <T>(id: string): T | undefined => {

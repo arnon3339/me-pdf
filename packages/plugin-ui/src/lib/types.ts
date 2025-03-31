@@ -8,14 +8,15 @@ export interface UIPluginConfig {
 export type NavbarPlacement = 'top' | 'bottom' | 'left' | 'right';
 
 export interface UICapability {
-  registerComponentRenderer: (type: string, renderer: (props: any, children: any[]) => any) => void;
+  registerComponentRenderer: (type: string, renderer: (props: any, children: any[], context?: any) => any) => void;
   getComponent: <T>(id: string) => UIComponent<T> | undefined;
   getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => UIComponent<HeaderComponent>[];
   getFlyOuts: () => UIComponent<FlyOutComponent>[];
 }
 
 export interface BaseUIComponent {
-  dataElement: string;   // e.g., "highlightToolButton"
+  dataElement: string;   // e.g., "highlightToolButton",
+  getChildContext?: any;
 }
 
 export interface FlyOutComponent extends BaseUIComponent {

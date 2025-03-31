@@ -6,12 +6,16 @@ import { useState, useRef, useEffect } from 'preact/hooks';
 import { useUI } from "@embedpdf/plugin-ui/preact";
 import { Dropdown, DropdownItems, DropdownItem, DropdownDivider } from './ui/dropdown';
 
-export const toolButtonRenderer = (props: ToolButtonComponent) => (
-  <Tooltip content={props.label!}>
+export const toolButtonRenderer = (props: ToolButtonComponent, children: any[], context: {variant: 'flyout'}) => (
+  <Tooltip content={props.label!} trigger={context.variant === 'flyout' ? 'none' : 'hover'}>
     <Button
       onClick={() => console.log(`Tool ${props.toolName} clicked`)}
+      className={`
+        ${context.variant === 'flyout' ? 'px-2 rounded-none w-full' : ''}
+      `}
     >
       {props.img && <img src={props.img} alt={props.label} className="w-5 h-5" />}
+      {context.variant === 'flyout' && props.label && <span className="text-sm pl-2">{props.label}</span>}
     </Button>
   </Tooltip>
 );
@@ -88,28 +92,50 @@ export const flyOutRenderer = (props: FlyOutComponent, children: any[]) => {
   );
 };
 
-export const dividerRenderer = (props: DividerComponent) => {
-  return <div className="h-6 w-[1px] bg-gray-200 self-center" />;
+export const dividerRenderer = (props: DividerComponent, _: any, context: {direction: 'horizontal' | 'vertical'}) => {
+  const className = context.direction === 'horizontal' 
+    ? 'h-6 w-[1px] bg-gray-200 self-center'
+    : 'h-[1px] w-6 bg-gray-200 self-center';
+    
+  return <div className={className} />;
 };
 
-export const groupedItemsRenderer = (props: GroupedItemsComponent, children: any[]) => {
+export const groupedItemsRenderer = (props: GroupedItemsComponent, children: any[], context: {direction: 'horizontal' | 'vertical'}) => {
   const style: h.JSX.CSSProperties = {
     display: 'flex',
+    flexDirection: context.direction === 'horizontal' ? 'row' : 'column',
     justifyContent: props.justifyContent || 'start',
     gap: `${props.gap || 0}px`,
   };
-
-  console.log('props', props);
 
   return <div style={style}>{children}</div>;
 };
 
 export const headerRenderer = (props: HeaderComponent, children: any[]) => {
   const style: h.JSX.CSSProperties = {
-    [props.placement === 'top' ? 'borderBottom' : 'borderTop']: '1px solid #cfd4da',
+    // Get the correct border based on placement
+    ...(props.placement === 'top' ? { borderBottom: '1px solid #cfd4da' } :
+        props.placement === 'bottom' ? { borderTop: '1px solid #cfd4da' } :
+        props.placement === 'left' ? { borderRight: '1px solid #cfd4da' } :
+        { borderLeft: '1px solid #cfd4da' }),
     width: props.placement === 'top' || props.placement === 'bottom' ? '100%' : 'auto',
     height: props.placement === 'left' || props.placement === 'right' ? '100%' : 'auto',
-    zIndex: 10, // Ensure header stays above other content
+    zIndex: 10,
+    // Conditional padding based on placement
+    ...(props.placement === 'top' || props.placement === 'bottom' 
+      ? {
+          paddingTop: '8px',
+          paddingBottom: '8px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
+        }
+      : {
+          paddingLeft: '8px',
+          paddingRight: '8px',
+          paddingTop: '16px',
+          paddingBottom: '16px',
+        }
+    ),
     ...props.style,
   };
 
