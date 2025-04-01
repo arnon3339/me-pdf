@@ -1,21 +1,40 @@
 export class UIComponent<T> {
   public props: T;
   public type: string;
-  private children: UIComponent<any>[] = [];
-  private registry: Record<string, (props: any, children: any[], context?: any) => any>;
+  private children: Array<{ component: UIComponent<any>, priority: number }> = [];
+  private registry: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any>;
   private updateCallbacks: (() => void)[] = [];
   private parent?: UIComponent<any>;
   private hadUpdateBeforeListeners = false;
 
-  constructor(props: T, type: string, registry: Record<string, (props: any, children: any[], context?: any) => any>) {
+  constructor(props: T, type: string, registry: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any>) {
     this.props = props;
     this.type = type;
     this.registry = registry;
   }
 
-  addChild(child: UIComponent<any>) {
-    this.children.push(child);
+  addChild(child: UIComponent<any>, priority: number = 0) {
+    this.children.push({ component: child, priority });
     child.setParent(this);
+    // Sort children by priority
+    this.sortChildren();
+  }
+
+  // Helper to sort children by priority
+  private sortChildren() {
+    this.children.sort((a, b) => a.priority - b.priority);
+  }
+
+  removeChild(child: UIComponent<any>) {
+    this.children = this.children.filter(c => c.component !== child);
+  }
+
+  clearChildren() {
+    // Remove parent reference from all children
+    this.children.forEach(({ component }) => {
+      component['parent'] = undefined;
+    });
+    this.children = [];
   }
 
   private setParent(parent: UIComponent<any>) {
@@ -24,7 +43,7 @@ export class UIComponent<T> {
 
   // Optionally, a component can provide a function to extend the context for its children.
   // For instance, a header could supply a "direction" based on its position.
-  protected getChildContext(context: any): any {
+  protected getChildContext(context: Record<string, any>): Record<string, any> {
     const childContextProp = (this.props as any).getChildContext;
     if (typeof childContextProp === 'function') {
       // Handle function case (existing behavior)
@@ -37,16 +56,19 @@ export class UIComponent<T> {
   }
 
   // Updated render method that accepts an optional context.
-  render(context?: any): any {
+  render(context?: Record<string, any>): any {
     const renderer = this.registry[this.type];
     if (!renderer) {
       throw new Error(`No renderer registered for type: ${this.type}`);
     }
-    // Merge or extend context if the component provides additional context.
     const currentContext = this.getChildContext(context || {});
-    // Pass the current context to all child renders.
-    const renderedChildren = this.children.map(child => child.render(currentContext));
-    return renderer(this.props, renderedChildren, currentContext);
+    
+    const renderChildrenFn = (ctx?: Record<string, any>) =>
+      this.children.map(({ component }) => 
+        component.render(ctx ? { ...currentContext, ...ctx } : currentContext)
+      );
+    
+    return renderer(this.props, renderChildrenFn, currentContext);
   }
 
   update(newProps: Partial<T>) {

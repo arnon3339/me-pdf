@@ -20,7 +20,7 @@ export function Dropdown({
   open,
   trigger,
   children,
-  placement = 'bottom',
+  placement = 'right',
   offsetSkidding = 0,
   offsetDistance = 5,
   delay = 300,

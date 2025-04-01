@@ -13,28 +13,28 @@ export function NavigationWrapper({ children }: { children: ComponentChildren })
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {navbars.top && (
         <div style={{ width: '100%' }}>
-          {navbars.top.map(header => <ComponentWrapper key={header.props.dataElement} component={header} />)}
+          {navbars.top.map(header => <ComponentWrapper key={header.props.id} component={header} />)}
         </div>
       )}
       <div style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, overflow: 'hidden' }}>
         {navbars.left && (
-          <div>{navbars.left.map(header => <ComponentWrapper key={header.props.dataElement} component={header} />)}</div>
+            <div>{navbars.left.map(header => <ComponentWrapper key={header.props.id} component={header} />)}</div>
         )}
         <div style={{ flexGrow: 1, position: 'relative' }}>
           {children}
         </div>
         {navbars.right && (
           <div>
-            {navbars.right.map(header => <ComponentWrapper key={header.props.dataElement} component={header} />)}
+            {navbars.right.map(header => <ComponentWrapper key={header.props.id} component={header} />)}
           </div>
         )}
       </div>
       {navbars.bottom && (
         <div style={{ width: '100%' }}>
-          {navbars.bottom.map(header => <ComponentWrapper key={header.props.dataElement} component={header} />)}
+          {navbars.bottom.map(header => <ComponentWrapper key={header.props.id} component={header} />)}
         </div>
       )}
-      {flyouts.map(flyout => <ComponentWrapper key={flyout.props.dataElement} component={flyout} />)}
+      {flyouts.map(flyout => <ComponentWrapper key={flyout.props.id} component={flyout} />)}
     </div>
   );
 }
