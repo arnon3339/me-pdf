@@ -14,3 +14,4 @@ export const ZoomPluginPackage: PluginPackage<ZoomPlugin, ZoomPluginConfig, Zoom
 
 export * from "./zoom-plugin";
 export * from "./types";
+export * from './manifest';

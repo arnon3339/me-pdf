@@ -6,3 +6,4 @@ export * from './types/errors';
 export * from './base/base-plugin';
 export * from './store/types';
 export * from './store/actions';
+export * from './store/initial-state';

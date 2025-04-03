@@ -1,8 +1,43 @@
+import { CoreState } from "@embedpdf/core";
+import { UI_PLUGIN_ID } from "./manifest";
 import { UIComponent } from "./ui-component";
 
 export interface UIPluginConfig {
   enabled: boolean;
   components: Record<string, UIComponentType>;
+}
+
+export interface UIPluginState {
+  flyOut: {
+    [id: string]: FlyOutState;
+  },
+  actionTabs: {
+    [id: string]: {};
+  },
+  panel: {
+    [id: string]: {};
+  },
+  header: {
+    [id: string]: {};
+  },
+  groupedItems: {
+    [id: string]: {};
+  },
+  divider: {
+    [id: string]: {};
+  },
+  toolButton: {
+    [id: string]: {};
+  },
+  toggleButton: {
+    [id: string]: {};
+  },
+  presetButton: {
+    [id: string]: {};
+  },
+  custom: {
+    [id: string]: any;
+  }
 }
 
 export type NavbarPlacement = 'top' | 'bottom' | 'left' | 'right';
@@ -158,6 +193,13 @@ export type WithComponentId<TProps> = TProps & {
 
 // Add this type for render functions that need component ID in props
 export type ComponentRenderFunction<TProps> = (props: WithComponentId<TProps>, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any;
+
+export interface GlobalStoreState<TPlugins extends Record<string, any> = {}> {
+  core: CoreState;
+  plugins: {
+    [UI_PLUGIN_ID]: UIPluginState;
+  } & TPlugins;
+}
 
 export type UIComponentType<TStore = any> = 
   | GroupedItemsComponent<TStore> 

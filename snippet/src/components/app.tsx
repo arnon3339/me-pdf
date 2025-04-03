@@ -13,8 +13,8 @@ import { SpreadMode, SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-layer';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
-import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom';
-import { FlyOutComponent, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
+import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
+import { FlyOutComponent, GlobalStoreState, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
 import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
 
@@ -44,8 +44,12 @@ interface PDFViewerProps {
   config: PDFViewerConfig;
 }
 
+type State = GlobalStoreState<{
+  [ZOOM_PLUGIN_ID]: ZoomState
+}>
+
 // Define components
-export const components: Record<string, UIComponentType> = {
+export const components: Record<string, UIComponentType<State>> = {
   menuToggleButton: {
     type: 'toggleButton',
     id: 'menuToggleButton',
@@ -188,9 +192,15 @@ export const components: Record<string, UIComponentType> = {
   menuFlyOut: {
     id: 'menuFlyOut',
     type: 'flyOut',
-    props: {
-      open: false,
+    initialState: {
+      open: false
     },
+    props: (initialState) => ({
+      open: initialState.open,
+    }),
+    mapStateToProps: (storeState) => ({
+      open: storeState.plugins.ui.flyOut.menuFlyOut.open
+    }),
     slots: [
 
     ]
@@ -198,6 +208,9 @@ export const components: Record<string, UIComponentType> = {
   moreFlyOut: {
     id: 'moreFlyOut',
     type: 'flyOut',
+    initialState: {
+      open: false
+    },
     props: {
       open: false,
     },

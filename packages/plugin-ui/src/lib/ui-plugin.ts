@@ -1,15 +1,27 @@
-import { BasePlugin, PluginRegistry } from "@embedpdf/core";
-import { FlyOutComponent, GroupedItemsComponent, HeaderComponent, UICapability, UIComponentType, UIPluginConfig } from "./types";
+import { BasePlugin, CoreState, PluginRegistry, StoreState } from "@embedpdf/core";
+import { FlyOutComponent, GroupedItemsComponent, HeaderComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
 import { UIComponent } from "./ui-component";
+import { arePropsEqual } from "./utils";
+import { initialState } from "./reducer";
+import { uiInitComponents } from "./actions";
 
-export class UIPlugin extends BasePlugin<UIPluginConfig> {
+export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
   private componentRenderers: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any> = {};
   private components: Record<string, UIComponent<UIComponentType<any>>> = {};
   private config: UIPluginConfig;
+  private mapStateCallbacks: {
+    [componentId: string]: (storeState: any, ownProps: any) => any;
+  } = {};
+  private globalStoreSubscription: () => void = () => {};
 
   constructor(id: string, registry: PluginRegistry, config: UIPluginConfig) {
     super(id, registry);
     this.config = config;
+
+    // Subscribe exactly once to the global store
+    this.globalStoreSubscription = this.registry.getStore().subscribe((_action, newState) => {
+      this.onGlobalStoreChange(newState);
+    });
   }
 
   async initialize(): Promise<void> {
@@ -18,11 +30,30 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
 
     // Step 2: Link children for grouped items
     this.linkGroupedItems();
+
+    // Step 3: Set initial state for UI components
+    this.setInitialStateUIComponents();
+  }
+
+  private addComponent(id: string, componentConfig: UIComponentType<any>) {
+    if (this.components[id]) {
+      console.warn(`Component with ID ${id} already exists and will be overwritten`);
+    }
+    // Step 1: Build the UIComponent
+    const component = new UIComponent(componentConfig, this.componentRenderers);
+    this.components[id] = component;
+
+    // Step 2: Store mapStateToProps if present
+    if (typeof componentConfig.mapStateToProps === 'function') {
+      this.mapStateCallbacks[id] = componentConfig.mapStateToProps;
+    }
+
+    return component;
   }
 
   private buildComponents() {
     Object.entries(this.config.components).forEach(([id, componentConfig]) => {
-      this.components[id] = new UIComponent(componentConfig, this.componentRenderers);
+      this.addComponent(id, componentConfig);
     });
   }
 
@@ -33,13 +64,48 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
         props.slots.forEach(slot => {
           const child = this.components[slot.componentId];
           if (child) {
-            component.addChild(child, slot.priority);
+            component.addChild(slot.componentId, child, slot.priority);
           } else {
             console.warn(`Child component ${slot.componentId} not found for GroupedItems ${props.id}`);
           }
         });
       }
     });
+  }
+
+  private setInitialStateUIComponents() {
+    const defaultState: UIPluginState = initialState;
+
+    Object.entries(this.config.components).forEach(([componentId, definition]) => {
+      if (definition.initialState) {
+        // store the initialState object, e.g. { open: false } or { active: true }
+        defaultState[definition.type][componentId] = definition.initialState;
+      } else {
+        defaultState[definition.type][componentId] = {};
+      }
+    });
+
+    this.dispatch(uiInitComponents(defaultState));
+  }
+
+  private onGlobalStoreChange(state: StoreState<CoreState>) {
+    for (const [id, uiComponent] of Object.entries(this.components)) {
+      const mapFn = this.mapStateCallbacks[id];
+      if (!mapFn) continue; // no mapping
+
+      // ownProps is the UIComponent's current props
+      const ownProps = uiComponent.props;
+      delete ownProps.id;
+  
+      const partial = mapFn(state, ownProps);
+      // If partial is non-empty or changes from old, do update
+      const merged = { ...ownProps, ...partial };
+
+      if (!arePropsEqual(ownProps, merged)) {
+        console.log('component is being updated');
+        uiComponent.update(partial);
+      }
+    }
   }
 
   private addSlot(parentId: string, slotId: string, priority?: number) {
@@ -80,7 +146,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
     
     // 6. Add the child to the parent component with the appropriate priority
     // The UIComponent will handle sorting and avoid duplicates
-    parentComponent.addChild(childComponent, slotPriority);
+    parentComponent.addChild(slotId, childComponent, slotPriority);
   }
 
   provides(): UICapability {
@@ -91,16 +157,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
       getComponent: <T>(id: string): T | undefined => {
         return this.components[id] as T | undefined;
       },
-      registerComponent: (componentId: string, componentConfig: UIComponentType<any>) => {
-        if (this.components[componentId]) {
-          console.warn(`Component with ID ${componentId} already exists and will be overwritten`);
-        }
-        
-        const component = new UIComponent(componentConfig, this.componentRenderers);
-        this.components[componentId] = component;
-        
-        return component;
-      },
+      registerComponent: this.addComponent.bind(this),
       getFlyOuts: () => Object.values(this.components).filter(component => isFlyOutComponent(component)),
       getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => 
         Object.values(this.components)
@@ -108,6 +165,13 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
           .filter(component => component.props.placement === placement),
       addSlot: this.addSlot.bind(this)
     };
+  }
+
+  async destroy(): Promise<void> {
+    this.globalStoreSubscription();
+    this.components = {};
+    this.componentRenderers = {};
+    this.mapStateCallbacks = {};
   }
 }
 

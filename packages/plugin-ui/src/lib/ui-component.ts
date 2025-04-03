@@ -4,7 +4,7 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
   public componentConfig: T;
   public props: T['id'] extends string ? (T extends BaseUIComponent<infer P, any, any> ? P & { id: string } : any) : any;
   public type: string;
-  private children: Array<{ component: UIComponent<any>, priority: number }> = [];
+  private children: Array<{ name: string,component: UIComponent<any>, priority: number }> = [];
   private registry: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any>;
   private updateCallbacks: (() => void)[] = [];
   private hadUpdateBeforeListeners = false;
@@ -25,8 +25,8 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
     this.registry = registry;
   }
 
-  addChild(child: UIComponent<any>, priority: number = 0) {
-    this.children.push({ component: child, priority });
+  addChild(name: string, child: UIComponent<any>, priority: number = 0) {
+    this.children.push({ component: child, priority, name });
     // Sort children by priority
     this.sortChildren();
   }
