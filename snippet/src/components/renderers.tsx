@@ -177,5 +177,5 @@ export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (pro
 export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, children) => {
   if(!props.open) return null;
 
-  return <div className="w-[250px] bg-white shrink-0 flex">{children()}</div>;
+  return <div className="w-[250px] min-w-[250px] bg-white shrink-0 flex flex-col flex-none">{children()}</div>;
 };
