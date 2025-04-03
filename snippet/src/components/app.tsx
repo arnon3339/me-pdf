@@ -14,7 +14,7 @@ import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-la
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
 import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom';
-import { FlyOutComponent, HeaderComponent, UIComponentCollection, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
+import { FlyOutComponent, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
 import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
 
@@ -45,41 +45,51 @@ interface PDFViewerProps {
 }
 
 // Define components
-export const components: Record<string, UIComponentCollection> = {
+export const components: Record<string, UIComponentType> = {
   menuToggleButton: {
     type: 'toggleButton',
     id: 'menuToggleButton',
-    toggleElement: 'menuFlyOut',
-    label: 'Menu',
-    img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbi10YWJsZXItbWVudSI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTQgOGwxNiAwIiAvPjxwYXRoIGQ9Ik00IDE2bDE2IDAiIC8+PC9zdmc+',
+    props: {
+      toggleElement: 'menuFlyOut',
+      label: 'Menu',
+      img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbi10YWJsZXItbWVudSI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTQgOGwxNiAwIiAvPjxwYXRoIGQ9Ik00IDE2bDE2IDAiIC8+PC9zdmc+',
+    },   
   },
   moreToggleButton: {
     type: 'toggleButton',
     id: 'moreToggleButton',
-    toggleElement: 'moreFlyOut',
-    label: 'More',
-    img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNBNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZG90cy12ZXJ0aWNhbCI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTEyIDEybS0xIDBhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgLz48cGF0aCBkPSJNMTIgMTltLTEgMGExIDEgMCAxIDAgMiAwYTEgMSAwIDEgMCAtMiAwIiAvPjxwYXRoIGQ9Ik0xMiA1bS0xIDBhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgLz48L3N2Zz4=',
+    props: {
+      toggleElement: 'moreFlyOut',
+      label: 'More',
+      img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNBNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZG90cy12ZXJ0aWNhbCI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTEyIDEybS0xIDBhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgLz48cGF0aCBkPSJNMTIgMTltLTEgMGExIDEgMCAxIDAgMiAwYTEgMSAwIDEgMCAtMiAwIiAvPjxwYXRoIGQ9Ik0xMiA1bS0xIDBhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgLz48L3N2Zz4=',
+    },
   },
   filePickerButton: {
     type: 'toolButton',
     id: 'filePickerButton',
-    toolName: 'filePicker',
-    label: 'Open File',
-    img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZmlsZS1pbXBvcnQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNCAzdjRhMSAxIDAgMCAwIDEgMWg0IiAvPjxwYXRoIGQ9Ik01IDEzdi04YTIgMiAwIDAgMSAyIC0yaDdsNSA1djExYTIgMiAwIDAgMSAtMiAyaC01LjVtLTkuNSAtMmg3bS0zIC0zbDMgM2wtMyAzIiAvPjwvc3ZnPg==',
+    props: {
+      toolName: 'filePicker',
+      label: 'Open File',
+      img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZmlsZS1pbXBvcnQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNCAzdjRhMSAxIDAgMCAwIDEgMWg0IiAvPjxwYXRoIGQ9Ik01IDEzdi04YTIgMiAwIDAgMSAyIC0yaDdsNSA1djExYTIgMiAwIDAgMSAtMiAyaC01LjVtLTkuNSAtMmg3bS0zIC0zbDMgM2wtMyAzIiAvPjwvc3ZnPg==',
+    },
   },
   downloadButton: {
     type: 'toolButton',
     id: 'downloadButton',
-    toolName: 'download',
-    label: 'Download',
-    img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZG93bmxvYWQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDE3djJhMiAyIDAgMCAwIDIgMmgxMmEyIDIgMCAwIDAgMiAtMnYtMiIgLz48cGF0aCBkPSJNNyAxMWw1IDVsNSAtNSIgLz48cGF0aCBkPSJNMTIgNGwwIDEyIiAvPjwvc3ZnPg==',
+    props: {
+      toolName: 'download',
+      label: 'Download',
+      img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZG93bmxvYWQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDE3djJhMiAyIDAgMCAwIDIgMmgxMmEyIDIgMCAwIDAgMiAtMnYtMiIgLz48cGF0aCBkPSJNNyAxMWw1IDVsNSAtNSIgLz48cGF0aCBkPSJNMTIgNGwwIDEyIiAvPjwvc3ZnPg==',
+    },
   },
   sidebarButton: {
     type: 'toolButton',
     id: 'sidebarButton',
-    toolName: 'sidebar',
-    label: 'Sidebar',
-    img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNBNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItbGF5b3V0LXNpZGViYXIiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDRtMCAyYTIgMiAwIDAgMSAyIC0yaDEyYTIgMiAwIDAgMSAyIDJ2MTJhMiAyIDAgMCAxIC0yIDJoLTEyYTIgMiAwIDAgMSAtMiAtMnoiIC8+PHBhdGggZD0iTTkgNGwwIDE2IiAvPjwvc3ZnPg==',
+    props: {
+      toolName: 'sidebar',
+      label: 'Sidebar',
+      img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNBNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItbGF5b3V0LXNpZGViYXIiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDRtMCAyYTIgMiAwIDAgMSAyIC0yaDEyYTIgMiAwIDAgMSAyIDJ2MTJhMiAyIDAgMCAxIC0yIDJoLTEyYTIgMiAwIDAgMSAtMiAtMnoiIC8+PHBhdGggZD0iTTkgNGwwIDE2IiAvPjwvc3ZnPg==',
+    },
   },
   divider1: {
     type: 'divider',
@@ -88,12 +98,14 @@ export const components: Record<string, UIComponentCollection> = {
   actionTabs: {
     type: 'actionTabs',
     id: 'actionTabs',
-    targetHeader: 'toolsHeader',
-    tabs: [
-      { id: 'viewTab', label: 'View', triggerComponent: null },
-      { id: 'annotateTab', label: 'Annotate', triggerComponent: 'annotationTools' },
-      { id: 'shapesTab', label: 'Shapes', triggerComponent: null }
-    ]
+    props: {
+      targetHeader: 'toolsHeader',
+      tabs: [
+        { id: 'viewTab', label: 'View', triggerComponent: null },
+        { id: 'annotateTab', label: 'Annotate', triggerComponent: 'annotationTools' },
+        { id: 'shapesTab', label: 'Shapes', triggerComponent: null }
+      ]
+    }
   },
   headerStart: {
     id: 'headerStart',
@@ -106,8 +118,10 @@ export const components: Record<string, UIComponentCollection> = {
       { componentId: 'downloadButton', priority: 4 }, 
       { componentId: 'moreToggleButton', priority: 5 }, 
       { componentId: 'divider1', priority: 6 }
-    ],
-    gap: 10
+    ],  
+    props: {
+      gap: 10
+    }
   },
   headerCenter: {
     id: 'headerCenter',
@@ -126,19 +140,21 @@ export const components: Record<string, UIComponentCollection> = {
   topHeader: {
     type: 'header',
     id: 'topHeader',
-    placement: 'top',
     slots: [
       { componentId: 'headerStart', priority: 0 },
       { componentId: 'headerCenter', priority: 1 },
       { componentId: 'headerEnd', priority: 2 }
     ],
-    getChildContext: (props: HeaderComponent) => ({
+    getChildContext: (props) => ({
       direction: props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical'
     }),
-    style: { 
-      backgroundColor: '#ffffff',
-      gap: '10px'
-    }
+    props: {
+      placement: 'top',
+      style: { 
+        backgroundColor: '#ffffff',
+        gap: '10px'
+      }
+    },
   },
   annotationTools: {
     id: 'annotationTools',
@@ -146,29 +162,35 @@ export const components: Record<string, UIComponentCollection> = {
     slots: [
       { componentId: 'downloadButton', priority: 0 }
     ],
-    gap: 10,
-    visible: false
+    props: {
+      gap: 10,
+      visible: false
+    }
   },
   toolsHeader: {
     type: 'header',
     id: 'toolsHeader',
-    placement: 'top',
+    props: {
+      placement: 'top',
+      style: {
+        backgroundColor: '#f1f3f5',
+        justifyContent: 'center'
+      }
+    },
     slots: [
       { componentId: 'annotationTools', priority: 0 }
     ],
-    getChildContext: (props: HeaderComponent) => ({
+    getChildContext: (props) => ({
       direction: props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical',
       visibleChild: props.visibleChild
-    }),
-    style: {
-      backgroundColor: '#f1f3f5',
-      justifyContent: 'center'
-    }
+    })
   },
   menuFlyOut: {
     id: 'menuFlyOut',
     type: 'flyOut',
-    open: false,
+    props: {
+      open: false,
+    },
     slots: [
 
     ]
@@ -176,7 +198,9 @@ export const components: Record<string, UIComponentCollection> = {
   moreFlyOut: {
     id: 'moreFlyOut',
     type: 'flyOut',
-    open: false,
+    props: {
+      open: false,
+    },
     getChildContext: {
       variant: 'flyout'
     },

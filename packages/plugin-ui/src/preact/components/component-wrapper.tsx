@@ -1,17 +1,48 @@
 import { useState, useEffect } from 'preact/hooks';
 import { UIComponent } from '@embedpdf/plugin-ui';
 
-export function ComponentWrapper({ component }: { component: UIComponent<any> }) {
+export function ComponentWrapper({
+  component,
+  parentContext = {}
+}: {
+  component: UIComponent<any>;
+  parentContext?: Record<string, any>;
+}) {
   const [_, forceUpdate] = useState({});
 
   useEffect(() => {
     const updateCallback = () => forceUpdate({});
-    // If there was an update before we attached the listener, force an update
+    // If the component had updated before we attach the listener, force one re-render
     if (component.onUpdate(updateCallback)) {
       forceUpdate({});
     }
     return () => component.offUpdate(updateCallback);
   }, [component]);
 
-  return component.render();
+  // Merge contexts from parent + the UIComponent's own child context
+  const childContext = component.getChildContext(parentContext);
+
+  // Instead of returning `component.render()`, we do the following:
+
+  // 1) Look up the "renderer function" for this component type
+  const renderer = component.getRenderer(); // We'll define getRenderer() below
+
+  if (!renderer) {
+    throw new Error(`No renderer for type: ${component.type}`);
+  }
+
+  // 2) Build a function that returns child wrappers
+  function renderChildrenFn(overrideCtx?: Record<string, any>) {
+    const merged = overrideCtx ? { ...childContext, ...overrideCtx } : childContext;
+    return component.getChildren().map(({ component: child }) => (
+      <ComponentWrapper
+        key={child.props.id}
+        component={child}
+        parentContext={merged}
+      />
+    ));
+  }
+
+  // 3) Finally call the renderer with (props, childrenFn, context)
+  return renderer(component.props, renderChildrenFn, childContext);
 }

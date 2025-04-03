@@ -1,10 +1,10 @@
 import { BasePlugin, PluginRegistry } from "@embedpdf/core";
-import { ActionTabsComponent, FlyOutComponent, GroupedItemsComponent, HeaderComponent, UICapability, UIComponentCollection, UIPluginConfig } from "./types";
+import { FlyOutComponent, GroupedItemsComponent, HeaderComponent, UICapability, UIComponentType, UIPluginConfig } from "./types";
 import { UIComponent } from "./ui-component";
 
 export class UIPlugin extends BasePlugin<UIPluginConfig> {
   private componentRenderers: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any> = {};
-  private components: Record<string, UIComponent<any>> = {};
+  private components: Record<string, UIComponent<UIComponentType<any>>> = {};
   private config: UIPluginConfig;
 
   constructor(id: string, registry: PluginRegistry, config: UIPluginConfig) {
@@ -21,15 +21,15 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
   }
 
   private buildComponents() {
-    Object.entries(this.config.components).forEach(([id, props]) => {
-      this.components[id] = new UIComponent(props, props.type, this.componentRenderers);
+    Object.entries(this.config.components).forEach(([id, componentConfig]) => {
+      this.components[id] = new UIComponent(componentConfig, this.componentRenderers);
     });
   }
 
   private linkGroupedItems() {
     Object.values(this.components).forEach(component => {
       if (isItemWithSlots(component)) {
-        const props = component.props;
+        const props = component.componentConfig;
         props.slots.forEach(slot => {
           const child = this.components[slot.componentId];
           if (child) {
@@ -65,40 +65,22 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
       return;
     }
     
-    const parentProps = parentComponent.props;
+    const parentChildren = parentComponent.getChildren();
     
     // 4. Determine priority for the new slot
     let slotPriority = priority;
     
     if (slotPriority === undefined) {
       // If no priority is specified, add it at the end with a reasonable gap
-      const existingSlots = parentProps.slots || [];
-      const maxPriority = existingSlots.length > 0 
-        ? Math.max(...existingSlots.map(slot => slot.priority)) 
+      const maxPriority = parentChildren.length > 0 
+        ? Math.max(...parentChildren.map(child => child.priority)) 
         : 0;
       slotPriority = maxPriority + 10; // Add a gap of 10
-    }
-    
-    // 5. Check if slot already exists in the props
-    const existingSlotIndex = (parentProps.slots || []).findIndex(slot => slot.componentId === slotId);
-    
-    if (existingSlotIndex >= 0) {
-      // Update existing slot priority in the props
-      parentProps.slots[existingSlotIndex].priority = slotPriority;
-    } else {
-      // Add the slot to the parent's slots array in the props
-      parentProps.slots = [
-        ...(parentProps.slots || []),
-        { componentId: slotId, priority: slotPriority }
-      ];
     }
     
     // 6. Add the child to the parent component with the appropriate priority
     // The UIComponent will handle sorting and avoid duplicates
     parentComponent.addChild(childComponent, slotPriority);
-    
-    // 7. Notify that the parent component was updated
-    parentComponent.update(parentProps as any);
   }
 
   provides(): UICapability {
@@ -109,36 +91,39 @@ export class UIPlugin extends BasePlugin<UIPluginConfig> {
       getComponent: <T>(id: string): T | undefined => {
         return this.components[id] as T | undefined;
       },
-      registerComponent: (componentId: string, componentProps: UIComponentCollection) => {
+      registerComponent: (componentId: string, componentConfig: UIComponentType<any>) => {
         if (this.components[componentId]) {
           console.warn(`Component with ID ${componentId} already exists and will be overwritten`);
         }
         
-        const component = new UIComponent(componentProps, componentProps.type, this.componentRenderers);
+        const component = new UIComponent(componentConfig, this.componentRenderers);
         this.components[componentId] = component;
         
         return component;
       },
-      getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => Object.values(this.components).filter(component => isHeaderComponent(component) && component.props.placement === placement),
       getFlyOuts: () => Object.values(this.components).filter(component => isFlyOutComponent(component)),
+      getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => 
+        Object.values(this.components)
+          .filter(component => isHeaderComponent(component))
+          .filter(component => component.props.placement === placement),
       addSlot: this.addSlot.bind(this)
     };
   }
 }
 
-function isItemWithSlots(component: UIComponent<any>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<FlyOutComponent> {
+function isItemWithSlots(component: UIComponent<UIComponentType<any>>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<FlyOutComponent> {
   return isGroupedItemsComponent(component) || isHeaderComponent(component) || isFlyOutComponent(component);
 }
 
 // Type guard function
-function isGroupedItemsComponent(component: UIComponent<any>): component is UIComponent<GroupedItemsComponent> {
+function isGroupedItemsComponent(component: UIComponent<UIComponentType>): component is UIComponent<GroupedItemsComponent> {
   return component.type === 'groupedItems';
 }
 
-function isHeaderComponent(component: UIComponent<any>): component is UIComponent<HeaderComponent> {
+function isHeaderComponent(component: UIComponent<UIComponentType>): component is UIComponent<HeaderComponent> {
   return component.type === 'header';
 }
 
-function isFlyOutComponent(component: UIComponent<any>): component is UIComponent<FlyOutComponent> {
+function isFlyOutComponent(component: UIComponent<UIComponentType>): component is UIComponent<FlyOutComponent> {
   return component.type === 'flyOut';
 }

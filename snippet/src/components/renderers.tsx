@@ -1,4 +1,4 @@
-import { ActionTabsComponent, DividerComponent, FlyOutComponent, GroupedItemsComponent, HeaderComponent, ToggleButtonComponent, ToolButtonComponent } from "@embedpdf/plugin-ui";
+import { ActionTabsComponent, ActionTabsProps, ComponentRenderFunction, DividerComponent, FlyOutComponent, FlyOutProps, GroupedItemsComponent, GroupedItemsProps, HeaderComponent, HeaderProps, ToggleButtonComponent, ToggleButtonProps, ToolButtonComponent, ToolButtonProps } from "@embedpdf/plugin-ui";
 import { h, Fragment, Ref, RefObject, ComponentType } from 'preact';
 import { Button } from './ui/button';
 import { Tooltip } from './ui/tooltip';
@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'preact/hooks';
 import { useUI } from "@embedpdf/plugin-ui/preact";
 import { Dropdown, DropdownItems, DropdownItem, DropdownDivider } from './ui/dropdown';
 
-export const toolButtonRenderer = (props: ToolButtonComponent, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => (
+export const toolButtonRenderer: ComponentRenderFunction<ToolButtonProps> = (props, children, context) => (
   <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={props.label!} trigger={context?.variant === 'flyout' ? 'none' : 'hover'}>
     <Button
       onClick={() => console.log(`Tool ${props.toolName} clicked`)}
@@ -20,7 +20,7 @@ export const toolButtonRenderer = (props: ToolButtonComponent, children: (ctx?: 
   </Tooltip>
 );
 
-export const toggleButtonRenderer = (props: ToggleButtonComponent, _children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => {
+export const toggleButtonRenderer: ComponentRenderFunction<ToggleButtonProps> = (props, _children, context) => {
   // Create a ref to store the button element
   const buttonRef = useRef<any>(null);
   // Get the UI instance
@@ -65,7 +65,7 @@ export const toggleButtonRenderer = (props: ToggleButtonComponent, _children: (c
   );
 };
 
-export const flyOutRenderer = (props: FlyOutComponent, children: (ctx?: Record<string, any>) => any[]) => {
+export const flyOutRenderer: ComponentRenderFunction<FlyOutProps> = (props, children) => {
   const ui = useUI();
 
   if (!props.triggerHTMLElement) {
@@ -99,7 +99,7 @@ export const flyOutRenderer = (props: FlyOutComponent, children: (ctx?: Record<s
   );
 };
 
-export const dividerRenderer = (props: DividerComponent, _: any, context?: Record<string, any>) => {
+export const dividerRenderer: ComponentRenderFunction<DividerComponent> = (props, _: any, context) => {
   const className = context?.direction === 'horizontal' 
     ? 'h-6 w-[1px] bg-gray-200 self-center'
     : 'h-[1px] w-6 bg-gray-200 self-center';
@@ -107,7 +107,7 @@ export const dividerRenderer = (props: DividerComponent, _: any, context?: Recor
   return <div className={className} />;
 };
 
-export const groupedItemsRenderer = (props: GroupedItemsComponent, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => {
+export const groupedItemsRenderer: ComponentRenderFunction<GroupedItemsProps> = (props, children, context) => {
   const style: h.JSX.CSSProperties = {
     display: 'flex',
     flexDirection: context?.direction === 'horizontal' ? 'row' : 'column',
@@ -127,7 +127,7 @@ export const groupedItemsRenderer = (props: GroupedItemsComponent, children: (ct
   return <div style={style}>{children()}</div>;
 };
 
-export const headerRenderer = (props: HeaderComponent, children: (ctx?: Record<string, any>) => any[]) => {
+export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, children) => {
   const style: h.JSX.CSSProperties = {
     // Get the correct border based on placement
     ...(props.placement === 'top' ? { borderBottom: '1px solid #cfd4da' } :
@@ -165,7 +165,7 @@ export const headerRenderer = (props: HeaderComponent, children: (ctx?: Record<s
   return <div style={style} className="header">{childrenArray}</div>;
 };
 
-export const actionTabsRenderer = (props: ActionTabsComponent, children: (ctx?: Record<string, any>) => any[]) => {
+export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (props, children) => {
   const [activeTab, setActiveTab] = useState(props.tabs[0].id);
   const ui = useUI();
 

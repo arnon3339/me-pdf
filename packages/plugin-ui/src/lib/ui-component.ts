@@ -1,21 +1,32 @@
-export class UIComponent<T> {
-  public props: T;
+import { BaseUIComponent } from "./types";
+
+export class UIComponent<T extends BaseUIComponent<any, any, any>> {
+  public componentConfig: T;
+  public props: T['id'] extends string ? (T extends BaseUIComponent<infer P, any, any> ? P & { id: string } : any) : any;
   public type: string;
   private children: Array<{ component: UIComponent<any>, priority: number }> = [];
   private registry: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any>;
   private updateCallbacks: (() => void)[] = [];
-  private parent?: UIComponent<any>;
   private hadUpdateBeforeListeners = false;
 
-  constructor(props: T, type: string, registry: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any>) {
-    this.props = props;
-    this.type = type;
+  constructor(componentConfig: T, registry: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any>) {
+    this.componentConfig = componentConfig;
+
+    const props = componentConfig.props || {};
+
+    if (typeof props === 'function') {
+      const initialProps = props(componentConfig.initialState);
+      this.props = { ...initialProps, id: componentConfig.id }
+    } else {
+      this.props = { ...props, id: componentConfig.id }
+    }
+
+    this.type = componentConfig.type;
     this.registry = registry;
   }
 
   addChild(child: UIComponent<any>, priority: number = 0) {
     this.children.push({ component: child, priority });
-    child.setParent(this);
     // Sort children by priority
     this.sortChildren();
   }
@@ -30,21 +41,21 @@ export class UIComponent<T> {
   }
 
   clearChildren() {
-    // Remove parent reference from all children
-    this.children.forEach(({ component }) => {
-      component['parent'] = undefined;
-    });
     this.children = [];
   }
 
-  private setParent(parent: UIComponent<any>) {
-    this.parent = parent;
+  public getRenderer() {
+    return this.registry[this.type];
+  }
+
+  public getChildren() {
+    return this.children;
   }
 
   // Optionally, a component can provide a function to extend the context for its children.
   // For instance, a header could supply a "direction" based on its position.
-  protected getChildContext(context: Record<string, any>): Record<string, any> {
-    const childContextProp = (this.props as any).getChildContext;
+  public getChildContext(context: Record<string, any>): Record<string, any> {
+    const childContextProp = this.componentConfig.getChildContext;
     if (typeof childContextProp === 'function') {
       // Handle function case (existing behavior)
       return { ...context, ...childContextProp(this.props) };
@@ -55,24 +66,9 @@ export class UIComponent<T> {
     return context;
   }
 
-  // Updated render method that accepts an optional context.
-  render(context?: Record<string, any>): any {
-    const renderer = this.registry[this.type];
-    if (!renderer) {
-      throw new Error(`No renderer registered for type: ${this.type}`);
-    }
-    const currentContext = this.getChildContext(context || {});
-    
-    const renderChildrenFn = (ctx?: Record<string, any>) =>
-      this.children.map(({ component }) => 
-        component.render(ctx ? { ...currentContext, ...ctx } : currentContext)
-      );
-    
-    return renderer(this.props, renderChildrenFn, currentContext);
-  }
-
-  update(newProps: Partial<T>) {
-    this.props = { ...this.props, ...newProps };
+  update(newProps: Partial<T extends BaseUIComponent<infer P, any, any> ? P : any>) {
+    const { id, ...otherProps } = newProps;
+    this.props = { ...this.props, ...otherProps };
     if (this.updateCallbacks.length === 0) {
       this.hadUpdateBeforeListeners = true;
     }
@@ -90,8 +86,5 @@ export class UIComponent<T> {
 
   protected notifyUpdate() {
     this.updateCallbacks.forEach(cb => cb());
-    if (this.parent) {
-      this.parent.notifyUpdate(); // Bubble up to parent
-    }
   }
 }
