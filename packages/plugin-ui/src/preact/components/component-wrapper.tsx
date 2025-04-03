@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { UIComponent } from '@embedpdf/plugin-ui';
+import { childrenFunctionOptions, UIComponent } from '@embedpdf/plugin-ui';
 
 export function ComponentWrapper({
   component,
@@ -32,15 +32,20 @@ export function ComponentWrapper({
   }
 
   // 2) Build a function that returns child wrappers
-  function renderChildrenFn(overrideCtx?: Record<string, any>) {
-    const merged = overrideCtx ? { ...childContext, ...overrideCtx } : childContext;
-    return component.getChildren().map(({ component: child }) => (
-      <ComponentWrapper
-        key={child.props.id}
-        component={child}
-        parentContext={merged}
-      />
-    ));
+  function renderChildrenFn(options?: childrenFunctionOptions) {
+    const merged = options?.context ? { ...childContext, ...options.context } : childContext;
+    return component.getChildren()
+      .filter(({ id }) => {
+        // If filter function is provided, use it to determine if we should include this child
+        return !options?.filter || options.filter(id);
+      })
+      .map(({ component: child, id }) => (
+        <ComponentWrapper
+          key={id}
+          component={child}
+          parentContext={merged}
+        />
+      ));
   }
 
   // 3) Finally call the renderer with (props, childrenFn, context)

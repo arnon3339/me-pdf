@@ -9,6 +9,8 @@ export interface StateChangeHandler<TState> {
 export abstract class BasePlugin<TConfig = unknown, TState = unknown, TAction extends Action = Action> implements IPlugin<TConfig> {
   protected pluginStore: PluginStore<TState, TAction>;
   protected coreStore: Store<CoreState, CoreAction>;
+  // Track debounced actions
+  private debouncedActions: Record<string, number> = {};
 
   constructor(
     public readonly id: string,
@@ -31,10 +33,29 @@ export abstract class BasePlugin<TConfig = unknown, TState = unknown, TAction ex
   }
 
   /**
-   * Subscribe to state changes
+   * Dispatch an action
    */
   protected dispatch(action: TAction): void {
     this.pluginStore.dispatch(action);
+  }
+
+  /**
+   * Dispatch an action with debouncing to prevent rapid repeated calls
+   * @param action The action to dispatch
+   * @param debounceTime Time in ms to debounce (default: 100ms)
+   * @returns boolean indicating whether the action was dispatched or debounced
+   */
+  protected debouncedDispatch(action: TAction, debounceTime: number = 100): boolean {
+    const now = Date.now();
+    const lastActionTime = this.debouncedActions[action.type] || 0;
+    
+    if (now - lastActionTime >= debounceTime) {
+      this.debouncedActions[action.type] = now;
+      this.dispatch(action);
+      return true;
+    }
+    
+    return false;
   }
 
   /**

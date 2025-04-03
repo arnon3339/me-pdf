@@ -18,7 +18,7 @@ export interface UIPluginState {
     [id: string]: {};
   },
   header: {
-    [id: string]: {};
+    [id: string]: HeaderState;
   },
   groupedItems: {
     [id: string]: {};
@@ -42,18 +42,26 @@ export interface UIPluginState {
 
 export type NavbarPlacement = 'top' | 'bottom' | 'left' | 'right';
 
+export interface childrenFunctionOptions {
+  context?: Record<string, any>;
+  filter?: (childId: string) => boolean;
+}
+
 export interface UICapability {
-  registerComponentRenderer: (type: string, renderer: (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any) => void;
+  registerComponentRenderer: (type: string, renderer: (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any) => void;
   getComponent: <T extends BaseUIComponent<any, any, any>>(id: string) => UIComponent<T> | undefined;
   getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => UIComponent<HeaderComponent<any>>[];
   getFlyOuts: () => UIComponent<FlyOutComponent>[];
   addSlot: (parentId: string, slotId: string, priority?: number) => void;
   registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
+  toggleFlyout: (id: string, open?: boolean) => void;
+  initFlyout: (id: string, triggerElement: HTMLElement) => void;
 }
 
 export interface BaseUIComponent<TProps, TInitial = undefined, TStore = any> {
   id: string;   // e.g., "highlightToolButton",
   type: string; // e.g., "toolButton",
+  render?: string;
   /**
    * A function that returns a context object for the component's children.
    */
@@ -110,12 +118,12 @@ export interface PanelComponent<TStore = any> extends BaseUIComponent<PanelProps
 
 export interface FlyOutState {
   open: boolean;
+  triggerElement: HTMLElement | null;
 }
 
 export interface FlyOutProps {
   open: boolean;
-  triggerElement?: string | null;
-  triggerHTMLElement?: HTMLElement | null;
+  triggerElement: HTMLElement | null;
   placement?: 'bottom' | 'left' | 'right' | 'top';
 }
 
@@ -124,13 +132,19 @@ export interface FlyOutComponent<TStore = any> extends BaseUIComponent<FlyOutPro
   slots: Slot[];
 }
 
-export interface HeaderProps {
-  placement: 'top' | 'bottom' | 'left' | 'right';
-  style?: Record<string, string>;
+export interface HeaderState {
+  visible?: boolean;
   visibleChild?: string | null;
 }
 
-export interface HeaderComponent<TStore = any> extends BaseUIComponent<HeaderProps, undefined, TStore> {
+export interface HeaderProps {
+  placement: 'top' | 'bottom' | 'left' | 'right';
+  style?: Record<string, string>;
+  visible?: boolean;
+  visibleChild?: string | null;
+}
+
+export interface HeaderComponent<TStore = any> extends BaseUIComponent<HeaderProps, HeaderState, TStore> {
   type: 'header';
   slots: Slot[]; 
 }
@@ -184,6 +198,7 @@ export interface PresetButtonComponent<TStore = any> extends BaseUIComponent<Pre
 
 export interface CustomComponent<TStore = any> extends BaseUIComponent<any, any, TStore> {
   type: 'custom';
+  render: string;
 }
 
 // Add this type to extend component props with an ID
@@ -192,7 +207,7 @@ export type WithComponentId<TProps> = TProps & {
 };
 
 // Add this type for render functions that need component ID in props
-export type ComponentRenderFunction<TProps> = (props: WithComponentId<TProps>, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any;
+export type ComponentRenderFunction<TProps> = (props: WithComponentId<TProps>, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any;
 
 export interface GlobalStoreState<TPlugins extends Record<string, any> = {}> {
   core: CoreState;

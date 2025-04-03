@@ -54,19 +54,29 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'toggleButton',
     id: 'menuToggleButton',
     props: {
+      active: false,
       toggleElement: 'menuFlyOut',
       label: 'Menu',
       img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbi10YWJsZXItbWVudSI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTQgOGwxNiAwIiAvPjxwYXRoIGQ9Ik00IDE2bDE2IDAiIC8+PC9zdmc+',
     },   
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: storeState.plugins.ui.flyOut.menuFlyOut.open
+    })
   },
   moreToggleButton: {
     type: 'toggleButton',
     id: 'moreToggleButton',
     props: {
+      active: false,
       toggleElement: 'moreFlyOut',
       label: 'More',
       img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNBNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZG90cy12ZXJ0aWNhbCI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTEyIDEybS0xIDBhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgLz48cGF0aCBkPSJNMTIgMTltLTEgMGExIDEgMCAxIDAgMiAwYTEgMSAwIDEgMCAtMiAwIiAvPjxwYXRoIGQ9Ik0xMiA1bS0xIDBhMSAxIDAgMSAwIDIgMGExIDEgMCAxIDAgLTIgMCIgLz48L3N2Zz4=',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: storeState.plugins.ui.flyOut.moreFlyOut.open
+    })
   },
   filePickerButton: {
     type: 'toolButton',
@@ -174,46 +184,63 @@ export const components: Record<string, UIComponentType<State>> = {
   toolsHeader: {
     type: 'header',
     id: 'toolsHeader',
-    props: {
+    initialState: {
+      visible: false,
+      visibleChild: null
+    },
+    props: (initialState) => ({
       placement: 'top',
+      visible: initialState.visible,
+      visibleChild: initialState.visibleChild,
       style: {
         backgroundColor: '#f1f3f5',
         justifyContent: 'center'
       }
-    },
+    }),
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      visible: storeState.plugins.ui.header.toolsHeader.visible,
+      visibleChild: storeState.plugins.ui.header.toolsHeader.visibleChild
+    }),
     slots: [
       { componentId: 'annotationTools', priority: 0 }
     ],
     getChildContext: (props) => ({
-      direction: props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical',
-      visibleChild: props.visibleChild
+      direction: props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical'
     })
   },
   menuFlyOut: {
     id: 'menuFlyOut',
     type: 'flyOut',
     initialState: {
-      open: false
+      open: false,
+      triggerElement: null
     },
     props: (initialState) => ({
       open: initialState.open,
+      triggerElement: initialState.triggerElement
     }),
     mapStateToProps: (storeState) => ({
-      open: storeState.plugins.ui.flyOut.menuFlyOut.open
+      open: storeState.plugins.ui.flyOut.menuFlyOut.open,
+      triggerElement: storeState.plugins.ui.flyOut.menuFlyOut.triggerElement
     }),
-    slots: [
-
-    ]
+    slots: []
   },
   moreFlyOut: {
     id: 'moreFlyOut',
     type: 'flyOut',
     initialState: {
-      open: false
-    },
-    props: {
       open: false,
+      triggerElement: null
     },
+    props: (initialState) => ({
+      open: initialState.open,
+      triggerElement: initialState.triggerElement
+    }),
+    mapStateToProps: (storeState) => ({
+      open: storeState.plugins.ui.flyOut.moreFlyOut.open,
+      triggerElement: storeState.plugins.ui.flyOut.moreFlyOut.triggerElement
+    }),
     getChildContext: {
       variant: 'flyout'
     },

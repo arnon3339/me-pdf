@@ -27,20 +27,13 @@ export const toggleButtonRenderer: ComponentRenderFunction<ToggleButtonProps> = 
   const ui = useUI();
 
   useEffect(() => {
-    const flyout = ui?.getComponent(props.toggleElement);
-
-    if (flyout && buttonRef.current) {
-      flyout.update({ triggerHTMLElement: buttonRef.current.base, triggerElement: props.id, placement: context?.direction === 'horizontal' ? 'bottom' : 'right' });
+    if (buttonRef.current) {
+      ui?.initFlyout(props.toggleElement, buttonRef.current.base);
     }
   }, []);
 
   const handleClick = () => {
-    const flyout = ui?.getComponent<FlyOutComponent>(props.toggleElement);
-    if (flyout) {
-      if(flyout.props.open) return;
-
-      flyout.update({ open: !flyout.props.open });
-    }
+    ui?.toggleFlyout(props.toggleElement);
   };
 
   return (
@@ -68,28 +61,23 @@ export const toggleButtonRenderer: ComponentRenderFunction<ToggleButtonProps> = 
 export const flyOutRenderer: ComponentRenderFunction<FlyOutProps> = (props, children) => {
   const ui = useUI();
 
-  if (!props.triggerHTMLElement) {
+  if (!props.triggerElement) {
     return null;
   }
-
-  console.log('props', props);
 
   return (
     <Dropdown
       id={props.id}
-      trigger={props.triggerHTMLElement}
+      trigger={props.triggerElement}
       open={props.open}
       placement={props.placement || 'bottom'}
       onShow={() => {
         if (!props.triggerElement) return;
-        ui?.getComponent(props.triggerElement)?.update({ active: true });
       }}
       onHide={() => {
         if (!props.triggerElement) return;
-        ui?.getComponent(props.triggerElement)?.update({ active: false });
-        setTimeout(() => {
-          ui?.getComponent(props.id)?.update({ open: false });
-        }, 200);
+
+        ui?.toggleFlyout(props.id, false);
       }}
     >
       <DropdownItems>
@@ -158,11 +146,13 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
     ...props.style,
   };
 
-  const childrenArray = children();
+  if(props.visible !== undefined && !props.visible) return null;
 
-  if(childrenArray.filter((child) => child !== null).length === 0) return null;
-
-  return <div style={style} className="header">{childrenArray}</div>;
+  return <div style={style} className="header">{children({
+    ...props.visibleChild && {
+      filter: (childId) => childId === props.visibleChild
+    }
+  })}</div>;
 };
 
 export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (props, children) => {

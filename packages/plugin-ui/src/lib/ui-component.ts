@@ -1,15 +1,15 @@
-import { BaseUIComponent } from "./types";
+import { BaseUIComponent, childrenFunctionOptions } from "./types";
 
 export class UIComponent<T extends BaseUIComponent<any, any, any>> {
   public componentConfig: T;
   public props: T['id'] extends string ? (T extends BaseUIComponent<infer P, any, any> ? P & { id: string } : any) : any;
   public type: string;
-  private children: Array<{ name: string,component: UIComponent<any>, priority: number }> = [];
-  private registry: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any>;
+  private children: Array<{ id: string,component: UIComponent<any>, priority: number }> = [];
+  private registry: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any>;
   private updateCallbacks: (() => void)[] = [];
   private hadUpdateBeforeListeners = false;
 
-  constructor(componentConfig: T, registry: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any>) {
+  constructor(componentConfig: T, registry: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any>) {
     this.componentConfig = componentConfig;
 
     const props = componentConfig.props || {};
@@ -25,8 +25,8 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
     this.registry = registry;
   }
 
-  addChild(name: string, child: UIComponent<any>, priority: number = 0) {
-    this.children.push({ component: child, priority, name });
+  addChild(id: string, child: UIComponent<any>, priority: number = 0) {
+    this.children.push({ id, component: child, priority });
     // Sort children by priority
     this.sortChildren();
   }
@@ -45,6 +45,10 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
   }
 
   public getRenderer() {
+    if(this.componentConfig.render) {
+      return this.registry[this.componentConfig.render];
+    }
+    
     return this.registry[this.type];
   }
 

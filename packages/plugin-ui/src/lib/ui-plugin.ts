@@ -1,12 +1,12 @@
 import { BasePlugin, CoreState, PluginRegistry, StoreState } from "@embedpdf/core";
-import { FlyOutComponent, GroupedItemsComponent, HeaderComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
+import { childrenFunctionOptions, FlyOutComponent, GroupedItemsComponent, HeaderComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
 import { UIComponent } from "./ui-component";
 import { arePropsEqual } from "./utils";
 import { initialState } from "./reducer";
-import { uiInitComponents } from "./actions";
+import { uiInitComponents, uiInitFlyout, uiToggleFlyout } from "./actions";
 
 export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
-  private componentRenderers: Record<string, (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any> = {};
+  private componentRenderers: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any> = {};
   private components: Record<string, UIComponent<UIComponentType<any>>> = {};
   private config: UIPluginConfig;
   private mapStateCallbacks: {
@@ -94,15 +94,13 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
       if (!mapFn) continue; // no mapping
 
       // ownProps is the UIComponent's current props
-      const ownProps = uiComponent.props;
-      delete ownProps.id;
+      const {id: _id, ...ownProps} = uiComponent.props
   
       const partial = mapFn(state, ownProps);
       // If partial is non-empty or changes from old, do update
       const merged = { ...ownProps, ...partial };
 
       if (!arePropsEqual(ownProps, merged)) {
-        console.log('component is being updated');
         uiComponent.update(partial);
       }
     }
@@ -151,7 +149,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
 
   provides(): UICapability {
     return {
-      registerComponentRenderer: (type: string, renderer: (props: any, children: (ctx?: Record<string, any>) => any[], context?: Record<string, any>) => any) => {
+      registerComponentRenderer: (type: string, renderer: (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any) => {
         this.componentRenderers[type] = renderer;
       },
       getComponent: <T>(id: string): T | undefined => {
@@ -163,7 +161,13 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
         Object.values(this.components)
           .filter(component => isHeaderComponent(component))
           .filter(component => component.props.placement === placement),
-      addSlot: this.addSlot.bind(this)
+      addSlot: this.addSlot.bind(this),
+      initFlyout: (id: string, triggerElement: HTMLElement) => {
+        this.dispatch(uiInitFlyout(id, triggerElement));
+      },
+      toggleFlyout: (id: string, open?: boolean) => {
+        this.debouncedDispatch(uiToggleFlyout(id, open), 100);
+      }
     };
   }
 
