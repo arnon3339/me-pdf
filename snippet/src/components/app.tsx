@@ -15,7 +15,7 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
 import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { FlyOutComponent, GlobalStoreState, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
-import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
+import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, panelRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
 
 // **Configuration Interface**
@@ -76,6 +76,20 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: storeState.plugins.ui.flyOut.moreFlyOut.open
+    })
+  },
+  searchToggleButton: {
+    type: 'toggleButton',
+    id: 'searchToggleButton',
+    props: {
+      active: false,
+      toggleElement: 'rightPanel',
+      label: 'Search',
+      img: "data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNBNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItc2VhcmNoIj48cGF0aCBzdHJva2U9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMTAgMTBtLTcgMGE3IDcgMCAxIDAgMTQgMGE3IDcgMCAxIDAgLTE0IDAiIC8+PHBhdGggZD0iTTIxIDIxbC02IC02IiAvPjwvc3ZnPg=="
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: storeState.plugins.ui.panel.rightPanel.open
     })
   },
   filePickerButton: {
@@ -148,7 +162,7 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'headerEnd',
     type: 'groupedItems',
     slots: [
-      { componentId: 'sidebarButton', priority: 2 }
+      { componentId: 'searchToggleButton', priority: 2 }
     ]
   },
   topHeader: {
@@ -185,12 +199,12 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'toolsHeader',
     initialState: {
       visible: false,
-      visibleChild: null
+      renderChild: null
     },
     props: (initialState) => ({
       placement: 'top',
       visible: initialState.visible,
-      visibleChild: initialState.visibleChild,
+      renderChild: initialState.renderChild,
       style: {
         backgroundColor: '#f1f3f5',
         justifyContent: 'center'
@@ -199,7 +213,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       visible: storeState.plugins.ui.header.toolsHeader.visible,
-      visibleChild: storeState.plugins.ui.header.toolsHeader.visibleChild
+      renderChild: storeState.plugins.ui.header.toolsHeader.renderChild
     }),
     slots: [
       { componentId: 'annotationTools', priority: 0 }
@@ -247,6 +261,44 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'filePickerButton', priority: 0 }, 
       { componentId: 'downloadButton', priority: 1 }
     ]
+  },
+  leftPanel: {
+    id: 'leftPanel',
+    type: 'panel',
+    initialState: {
+      open: false,
+      renderChild: null
+    },
+    props: (initialState) => ({
+      open: initialState.open,
+      renderChild: initialState.renderChild,
+      location: 'left'
+    }),
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      open: storeState.plugins.ui.panel.leftPanel.open,
+      renderChild: storeState.plugins.ui.panel.leftPanel.renderChild
+    }),
+    slots: []
+  },
+  rightPanel: {
+    id: 'rightPanel',
+    type: 'panel',
+    initialState: {
+      open: false,
+      renderChild: null
+    },
+    props: (initialState) => ({
+      open: initialState.open,
+      renderChild: initialState.renderChild,
+      location: 'right'
+    }),
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      open: storeState.plugins.ui.panel.rightPanel.open,
+      renderChild: storeState.plugins.ui.panel.rightPanel.renderChild
+    }),
+    slots: []
   }
 };
 
@@ -288,6 +340,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
               uiCapability.registerComponentRenderer('divider', dividerRenderer);
               uiCapability.registerComponentRenderer('flyOut', flyOutRenderer);
               uiCapability.registerComponentRenderer('actionTabs', actionTabsRenderer);
+              uiCapability.registerComponentRenderer('panel', panelRenderer);
             }
           }}
           plugins={(viewportElement: HTMLElement) => [

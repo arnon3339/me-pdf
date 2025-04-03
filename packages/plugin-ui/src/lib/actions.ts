@@ -5,6 +5,7 @@ export const UI_INIT_COMPONENTS = "UI_INIT_COMPONENTS";
 export const UI_INIT_FLYOUT = "UI_INIT_FLYOUT";
 export const UI_TOGGLE_FLYOUT = "UI_TOGGLE_FLYOUT";
 export const UI_SET_HEADER_VISIBLE = "UI_SET_HEADER_VISIBLE";
+export const UI_TOGGLE_PANEL = "UI_TOGGLE_PANEL";
 
 export interface UiInitComponentsAction extends Action {
   type: typeof UI_INIT_COMPONENTS;
@@ -26,11 +27,17 @@ export interface UiSetHeaderVisibleAction extends Action {
   payload: { id: string; visible: boolean; visibleChild?: string | null };
 }
 
+export interface UiTogglePanelAction extends Action {
+  type: typeof UI_TOGGLE_PANEL;
+  payload: { id: string; open?: boolean };
+}
+
 export type UIAction =
   | UiInitComponentsAction
   | UiInitFlyoutAction
   | UiToggleFlyoutAction
-  | UiSetHeaderVisibleAction;
+  | UiSetHeaderVisibleAction
+  | UiTogglePanelAction;
 
 export const uiInitComponents = (state: UIPluginState): UiInitComponentsAction => ({
   type: UI_INIT_COMPONENTS,
@@ -44,6 +51,11 @@ export const uiInitFlyout = (id: string, triggerElement: HTMLElement): UiInitFly
 
 export const uiToggleFlyout = (id: string, open?: boolean): UiToggleFlyoutAction => ({
   type: UI_TOGGLE_FLYOUT,
+  payload: { id, open }
+});
+
+export const uiTogglePanel = (id: string, open?: boolean): UiTogglePanelAction => ({
+  type: UI_TOGGLE_PANEL,
   payload: { id, open }
 });
 

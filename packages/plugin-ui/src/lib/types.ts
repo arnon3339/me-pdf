@@ -15,7 +15,7 @@ export interface UIPluginState {
     [id: string]: {};
   },
   panel: {
-    [id: string]: {};
+    [id: string]: PanelState;
   },
   header: {
     [id: string]: HeaderState;
@@ -51,10 +51,12 @@ export interface UICapability {
   registerComponentRenderer: (type: string, renderer: (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any) => void;
   getComponent: <T extends BaseUIComponent<any, any, any>>(id: string) => UIComponent<T> | undefined;
   getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => UIComponent<HeaderComponent<any>>[];
+  getPanelsByLocation: (location: 'left' | 'right') => UIComponent<PanelComponent<any>>[];
   getFlyOuts: () => UIComponent<FlyOutComponent>[];
   addSlot: (parentId: string, slotId: string, priority?: number) => void;
   registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
   toggleFlyout: (id: string, open?: boolean) => void;
+  togglePanel: (id: string, open?: boolean) => void;
   initFlyout: (id: string, triggerElement: HTMLElement) => void;
   setHeaderVisible: (id: string, visible: boolean, visibleChild?: string | null) => void;
 }
@@ -108,13 +110,20 @@ export interface ActionTabsComponent<TStore = any> extends BaseUIComponent<Actio
   type: 'actionTabs';
 }
 
-export interface PanelProps {
-  location: 'left' | 'right';
-  render: string;
+export interface PanelState {
+  open: boolean;
+  renderChild: string | null;
 }
 
-export interface PanelComponent<TStore = any> extends BaseUIComponent<PanelProps, undefined, TStore> {
+export interface PanelProps {
+  location: 'left' | 'right';
+  open: boolean;
+  renderChild: string | null;
+}
+
+export interface PanelComponent<TStore = any> extends BaseUIComponent<PanelProps, PanelState, TStore> {
   type: 'panel';
+  slots: Slot[];
 }
 
 export interface FlyOutState {
@@ -135,14 +144,14 @@ export interface FlyOutComponent<TStore = any> extends BaseUIComponent<FlyOutPro
 
 export interface HeaderState {
   visible?: boolean;
-  visibleChild?: string | null;
+  renderChild?: string | null;
 }
 
 export interface HeaderProps {
   placement: 'top' | 'bottom' | 'left' | 'right';
   style?: Record<string, string>;
   visible?: boolean;
-  visibleChild?: string | null;
+  renderChild?: string | null;
 }
 
 export interface HeaderComponent<TStore = any> extends BaseUIComponent<HeaderProps, HeaderState, TStore> {
@@ -225,4 +234,5 @@ export type UIComponentType<TStore = any> =
   | HeaderComponent<TStore> 
   | FlyOutComponent<TStore> 
   | ActionTabsComponent<TStore>
+  | PanelComponent<TStore>
   | CustomComponent<TStore>;

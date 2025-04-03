@@ -1,9 +1,9 @@
 import { BasePlugin, CoreState, PluginRegistry, StoreState } from "@embedpdf/core";
-import { childrenFunctionOptions, FlyOutComponent, GroupedItemsComponent, HeaderComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
+import { childrenFunctionOptions, FlyOutComponent, GroupedItemsComponent, HeaderComponent, PanelComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
 import { UIComponent } from "./ui-component";
 import { arePropsEqual } from "./utils";
 import { initialState } from "./reducer";
-import { uiInitComponents, uiInitFlyout, uiSetHeaderVisible, uiToggleFlyout } from "./actions";
+import { uiInitComponents, uiInitFlyout, uiSetHeaderVisible, uiToggleFlyout, uiTogglePanel } from "./actions";
 
 export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
   private componentRenderers: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any> = {};
@@ -161,12 +161,19 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
         Object.values(this.components)
           .filter(component => isHeaderComponent(component))
           .filter(component => component.props.placement === placement),
+      getPanelsByLocation: (location: 'left' | 'right') => 
+        Object.values(this.components)
+          .filter(component => isPanelComponent(component))
+          .filter(component => component.props.location === location),
       addSlot: this.addSlot.bind(this),
       initFlyout: (id: string, triggerElement: HTMLElement) => {
         this.dispatch(uiInitFlyout(id, triggerElement));
       },
       toggleFlyout: (id: string, open?: boolean) => {
         this.debouncedDispatch(uiToggleFlyout(id, open), 100);
+      },
+      togglePanel: (id: string, open?: boolean) => {
+        this.dispatch(uiTogglePanel(id, open));
       },
       setHeaderVisible: (id: string, visible: boolean, visibleChild?: string | null) => {
         this.dispatch(uiSetHeaderVisible(id, visible, visibleChild));
@@ -197,4 +204,8 @@ function isHeaderComponent(component: UIComponent<UIComponentType>): component i
 
 function isFlyOutComponent(component: UIComponent<UIComponentType>): component is UIComponent<FlyOutComponent> {
   return component.type === 'flyOut';
+}
+
+function isPanelComponent(component: UIComponent<UIComponentType>): component is UIComponent<PanelComponent> {
+  return component.type === 'panel';
 }

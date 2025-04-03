@@ -1,4 +1,4 @@
-import { ActionTabsComponent, ActionTabsProps, ComponentRenderFunction, DividerComponent, FlyOutComponent, FlyOutProps, GroupedItemsComponent, GroupedItemsProps, HeaderComponent, HeaderProps, ToggleButtonComponent, ToggleButtonProps, ToolButtonComponent, ToolButtonProps } from "@embedpdf/plugin-ui";
+import { ActionTabsComponent, ActionTabsProps, ComponentRenderFunction, DividerComponent, FlyOutComponent, FlyOutProps, GroupedItemsComponent, GroupedItemsProps, HeaderComponent, HeaderProps, PanelProps, ToggleButtonComponent, ToggleButtonProps, ToolButtonComponent, ToolButtonProps } from "@embedpdf/plugin-ui";
 import { h, Fragment, Ref, RefObject, ComponentType } from 'preact';
 import { Button } from './ui/button';
 import { Tooltip } from './ui/tooltip';
@@ -26,14 +26,22 @@ export const toggleButtonRenderer: ComponentRenderFunction<ToggleButtonProps> = 
   // Get the UI instance
   const ui = useUI();
 
+  const toggleType = ui?.getComponent(props.toggleElement)?.type;
+
   useEffect(() => {
     if (buttonRef.current) {
-      ui?.initFlyout(props.toggleElement, buttonRef.current.base);
+      if(toggleType === 'flyOut') {
+        ui?.initFlyout(props.toggleElement, buttonRef.current.base);
+      }
     }
   }, []);
 
   const handleClick = () => {
-    ui?.toggleFlyout(props.toggleElement);
+    if(toggleType === 'flyOut') {
+      ui?.toggleFlyout(props.toggleElement);
+    } else if(toggleType === 'panel') {
+      ui?.togglePanel(props.toggleElement);
+    }
   };
 
   return (
@@ -140,8 +148,8 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
   if(props.visible !== undefined && !props.visible) return null;
 
   return <div style={style} className="header">{children({
-    ...props.visibleChild && {
-      filter: (childId) => childId === props.visibleChild
+    ...props.renderChild && {
+      filter: (childId) => childId === props.renderChild
     }
   })}</div>;
 };
@@ -164,4 +172,10 @@ export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (pro
       </Button>
     ))}
   </div>;
+};
+
+export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, children) => {
+  if(!props.open) return null;
+
+  return <div className="w-[250px] bg-white shrink-0 flex">{children()}</div>;
 };
