@@ -3,7 +3,7 @@ import { childrenFunctionOptions, FlyOutComponent, GroupedItemsComponent, Header
 import { UIComponent } from "./ui-component";
 import { arePropsEqual } from "./utils";
 import { initialState } from "./reducer";
-import { uiInitComponents, uiInitFlyout, uiToggleFlyout } from "./actions";
+import { uiInitComponents, uiInitFlyout, uiSetHeaderVisible, uiToggleFlyout } from "./actions";
 
 export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
   private componentRenderers: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any> = {};
@@ -167,6 +167,9 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
       },
       toggleFlyout: (id: string, open?: boolean) => {
         this.debouncedDispatch(uiToggleFlyout(id, open), 100);
+      },
+      setHeaderVisible: (id: string, visible: boolean, visibleChild?: string | null) => {
+        this.dispatch(uiSetHeaderVisible(id, visible, visibleChild));
       }
     };
   }

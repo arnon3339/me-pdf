@@ -56,6 +56,7 @@ export interface UICapability {
   registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
   toggleFlyout: (id: string, open?: boolean) => void;
   initFlyout: (id: string, triggerElement: HTMLElement) => void;
+  setHeaderVisible: (id: string, visible: boolean, visibleChild?: string | null) => void;
 }
 
 export interface BaseUIComponent<TProps, TInitial = undefined, TStore = any> {
@@ -153,7 +154,6 @@ export interface GroupedItemsProps {
   justifyContent?: 'start' | 'center' | 'end';
   grow?: number;
   gap?: number;
-  visible?: boolean;
 }
 
 export interface GroupedItemsComponent<TStore = any> extends BaseUIComponent<GroupedItemsProps, undefined, TStore> {

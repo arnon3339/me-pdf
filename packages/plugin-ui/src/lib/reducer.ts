@@ -1,6 +1,6 @@
 import { Reducer } from "@embedpdf/core";
 import { UIPluginState } from "./types";
-import { UI_INIT_COMPONENTS, UI_INIT_FLYOUT, UI_TOGGLE_FLYOUT, UIAction } from "./actions";
+import { UI_INIT_COMPONENTS, UI_INIT_FLYOUT, UI_SET_HEADER_VISIBLE, UI_TOGGLE_FLYOUT, UIAction } from "./actions";
 
 export const initialState: UIPluginState = {
   flyOut: {},
@@ -47,6 +47,19 @@ export const uiReducer: Reducer<UIPluginState, UIAction> = (
           } 
         } 
       };
+    case UI_SET_HEADER_VISIBLE:
+      return {
+        ...state,
+        header: {
+          ...state.header,
+          [action.payload.id]: {
+            ...state.header[action.payload.id],
+            visible: action.payload.visible,
+            visibleChild: action.payload.visibleChild
+          }
+        }
+      };
+      
     default:
       return state;
   }

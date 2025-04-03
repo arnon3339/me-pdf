@@ -177,8 +177,7 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'downloadButton', priority: 0 }
     ],
     props: {
-      gap: 10,
-      visible: false
+      gap: 10
     }
   },
   toolsHeader: {

@@ -4,6 +4,7 @@ import { UIPluginState } from "./types";
 export const UI_INIT_COMPONENTS = "UI_INIT_COMPONENTS";
 export const UI_INIT_FLYOUT = "UI_INIT_FLYOUT";
 export const UI_TOGGLE_FLYOUT = "UI_TOGGLE_FLYOUT";
+export const UI_SET_HEADER_VISIBLE = "UI_SET_HEADER_VISIBLE";
 
 export interface UiInitComponentsAction extends Action {
   type: typeof UI_INIT_COMPONENTS;
@@ -20,10 +21,16 @@ export interface UiToggleFlyoutAction extends Action {
   payload: { id: string; open?: boolean };
 }
 
+export interface UiSetHeaderVisibleAction extends Action {
+  type: typeof UI_SET_HEADER_VISIBLE;
+  payload: { id: string; visible: boolean; visibleChild?: string | null };
+}
+
 export type UIAction =
   | UiInitComponentsAction
   | UiInitFlyoutAction
-  | UiToggleFlyoutAction;
+  | UiToggleFlyoutAction
+  | UiSetHeaderVisibleAction;
 
 export const uiInitComponents = (state: UIPluginState): UiInitComponentsAction => ({
   type: UI_INIT_COMPONENTS,
@@ -40,3 +47,7 @@ export const uiToggleFlyout = (id: string, open?: boolean): UiToggleFlyoutAction
   payload: { id, open }
 });
 
+export const uiSetHeaderVisible = (id: string, visible: boolean, visibleChild?: string | null): UiSetHeaderVisibleAction => ({
+  type: UI_SET_HEADER_VISIBLE,
+  payload: { id, visible, visibleChild }
+});

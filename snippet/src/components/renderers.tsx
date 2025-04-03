@@ -103,15 +103,6 @@ export const groupedItemsRenderer: ComponentRenderFunction<GroupedItemsProps> = 
     gap: `${props.gap || 0}px`,
   };
 
-  /* 
-    If the component is not visible, and the visibleChild is not the current component, return null
-  */
-  if(
-    props.visible !== undefined && 
-    !props.visible && 
-    context?.visibleChild !== props.id
-  ) return null;
-
   return <div style={style}>{children()}</div>;
 };
 
@@ -166,7 +157,7 @@ export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (pro
         className={`text-sm px-2 py-1 rounded-none hover:bg-transparent ${activeTab === tab.id ? 'border-b-2 border-b-blue-500 text-blue-500' : 'border-b-2 border-b-transparent'}`} 
         onClick={() => {
           setActiveTab(tab.id);
-          ui?.getComponent(props.targetHeader)?.update({ visibleChild: tab.triggerComponent });
+          ui?.setHeaderVisible(props.targetHeader, tab.triggerComponent ? true : false, tab.triggerComponent);
         }}
       >
         {tab.label}
