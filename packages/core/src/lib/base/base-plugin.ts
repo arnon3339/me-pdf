@@ -1,59 +1,23 @@
 import { IPlugin } from '../types/plugin';
 import { PluginRegistry } from '../registry/plugin-registry';
+import { Action, CoreAction, CoreState, PluginStore, Store } from '../store';
 
 export interface StateChangeHandler<TState> {
   (state: TState): void;
 }
 
-export abstract class BasePlugin<TConfig = unknown, TState = unknown> implements IPlugin<TConfig> {
-  protected stateChangeHandlers: StateChangeHandler<TState>[] = [];
-  protected state: TState;
-  
+export abstract class BasePlugin<TConfig = unknown, TState = unknown, TAction extends Action = Action> implements IPlugin<TConfig> {
+  protected pluginStore: PluginStore<TState, TAction>;
+  protected coreStore: Store<CoreState, CoreAction>;
+  // Track debounced actions
+  private debouncedActions: Record<string, number> = {};
+
   constructor(
     public readonly id: string,
-    protected registry: PluginRegistry,
-    initialState: TState
+    protected registry: PluginRegistry
   ) {
-    this.state = initialState;
-  }
-  
-  /**
-   * Update plugin state and notify subscribers
-   */
-  protected updateState(partialState: Partial<TState>): void {
-    this.state = {
-      ...this.state,
-      ...partialState
-    };
-    
-    this.notifyStateChange();
-  }
-  
-  /**
-   * Get a copy of the current state
-   */
-  public getState(): TState {
-    return { ...this.state };
-  }
-  
-  /**
-   * Subscribe to state changes
-   */
-  public onStateChange(handler: StateChangeHandler<TState>): () => void {
-    this.stateChangeHandlers.push(handler);
-    
-    // Return unsubscribe function
-    return () => {
-      this.stateChangeHandlers = this.stateChangeHandlers.filter(h => h !== handler);
-    };
-  }
-  
-  /**
-   * Notify all subscribers of state change
-   */
-  protected notifyStateChange(): void {
-    const stateCopy = { ...this.state };
-    this.stateChangeHandlers.forEach(handler => handler(stateCopy));
+    this.coreStore = this.registry.getStore();
+    this.pluginStore = this.coreStore.getPluginStore<TState, TAction>(this.id);
   }
   
   /**
@@ -62,9 +26,42 @@ export abstract class BasePlugin<TConfig = unknown, TState = unknown> implements
   abstract initialize(config: TConfig): Promise<void>;
   
   /**
-   * Clean up resources
+   * Get a copy of the current state
    */
-  async destroy(): Promise<void> {
-    this.stateChangeHandlers = [];
+  protected getState(): TState {
+    return this.pluginStore.getState();
+  }
+
+  /**
+   * Dispatch an action
+   */
+  protected dispatch(action: TAction): void {
+    this.pluginStore.dispatch(action);
+  }
+
+  /**
+   * Dispatch an action with debouncing to prevent rapid repeated calls
+   * @param action The action to dispatch
+   * @param debounceTime Time in ms to debounce (default: 100ms)
+   * @returns boolean indicating whether the action was dispatched or debounced
+   */
+  protected debouncedDispatch(action: TAction, debounceTime: number = 100): boolean {
+    const now = Date.now();
+    const lastActionTime = this.debouncedActions[action.type] || 0;
+    
+    if (now - lastActionTime >= debounceTime) {
+      this.debouncedActions[action.type] = now;
+      this.dispatch(action);
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Subscribe to state changes
+   */
+  protected subscribe(listener: (action: TAction, state: TState) => void): () => void {
+    return this.pluginStore.subscribeToState(listener);
   }
 } 

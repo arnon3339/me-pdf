@@ -5,7 +5,9 @@ import { ViewportPluginConfig } from "./types";
 
 export const ViewportPluginPackage: PluginPackage<ViewportPlugin, ViewportPluginConfig> = {
   manifest,
-  create: (registry) => new ViewportPlugin(VIEWPORT_PLUGIN_ID, registry)
+  create: (registry) => new ViewportPlugin(VIEWPORT_PLUGIN_ID, registry),
+  reducer: () => {},
+  initialState: {}
 };
 
 export * from "./viewport-plugin";

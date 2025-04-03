@@ -11,11 +11,19 @@ export interface PageVisibilityMetrics {
   pageNumber: number;
   viewportX: number;
   viewportY: number;
-  pageX: number;
-  pageY: number;
-  visibleWidth: number;
-  visibleHeight: number;
   visiblePercentage: number;
+  original: {
+    pageX: number;
+    pageY: number;
+    visibleWidth: number;
+    visibleHeight: number;
+  };
+  scaled: {
+    pageX: number;
+    pageY: number;
+    visibleWidth: number;
+    visibleHeight: number;
+  };
 }
 
 export interface ScrollMetrics {

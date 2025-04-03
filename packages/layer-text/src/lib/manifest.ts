@@ -8,7 +8,8 @@ export const manifest: PluginManifest<TextLayerConfig> = {
   name: 'Text Layer',
   version: '1.0.0',
   provides: [],
-  consumes: [],
+  requires: [],
+  optional: [],
   metadata: {
     name: 'Text Layer',
     description: 'Render text layers',

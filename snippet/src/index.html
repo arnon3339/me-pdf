@@ -4,9 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EmbedPDF</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
 </head>
 <body>
-  <div id="pdf-viewer" style="height: 500px">
+  <div id="pdf-viewer" style="height: 100vh">
     
   </div>
   <script async type="module">
@@ -15,7 +21,7 @@
     const EPDFinstance = EmbedPDF.init({
       type: 'container',
       target: document.getElementById('pdf-viewer'),
-      src: '/demo.pdf',
+      src: '/ebook.pdf',
     }) 
 
     /*

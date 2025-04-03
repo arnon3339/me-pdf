@@ -115,7 +115,9 @@ export class LayerPlugin implements IPlugin<LayerPluginConfig> {
           const layerPlugin = layer.package.create(registry, engine);
           this.addLayer(layerPlugin);
           return layerPlugin;
-        }
+        },
+        reducer: layer.package.reducer,
+        initialState: layer.package.initialState
       }, layer.config);
     }
   }

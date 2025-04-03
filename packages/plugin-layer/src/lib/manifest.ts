@@ -8,7 +8,8 @@ export const manifest: PluginManifest<LayerPluginConfig> = {
   name: 'Layer Plugin',
   version: '1.0.0',
   provides: ['layer'],
-  consumes: [],
+  requires: [],
+  optional: [],
   metadata: {
     name: 'Layer Plugin',
     description: 'A plugin for rendering layers',

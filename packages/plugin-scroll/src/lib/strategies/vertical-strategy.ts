@@ -74,9 +74,11 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
   }
 
   protected setScrollPosition(element: HTMLElement, position: number, behavior: ScrollBehavior = 'smooth'): void {
-    element.scrollTo({
-      top: position,
-      behavior
+    requestAnimationFrame(() => {
+      element.scrollTo({
+        top: position,
+        behavior
+      });
     });
   }
 

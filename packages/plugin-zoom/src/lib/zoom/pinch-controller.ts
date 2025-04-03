@@ -27,7 +27,7 @@ const getHammerInputClass = () => {
 interface PinchControllerOptions {
   innerDiv: HTMLElement;
   container: HTMLElement;
-  state: ZoomState;
+  getState: () => ZoomState;
   onPinchEnd: (zoom?: number, center?: { x: number; y: number }) => void; // Updated to accept final zoom value
 }
 
@@ -88,7 +88,7 @@ export class PinchController {
     });
 
     this.hammer.on('pinchstart', (e) => {
-      this.initialZoom = this.options.state.currentZoomLevel;
+      this.initialZoom = this.options.getState().currentZoomLevel;
       const scrollRect = this.scrollContainer.getBoundingClientRect();
       const centerX = e.center.x - scrollRect.left; // Relative to container
       const centerY = e.center.y - scrollRect.top;

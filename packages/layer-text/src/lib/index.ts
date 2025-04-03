@@ -5,7 +5,9 @@ import { TextLayer } from "./text-layer";
 
 export const TextLayerPackage: PluginPackage<TextLayer, TextLayerConfig> = {
   manifest,
-  create: (registry, engine) => new TextLayer(TEXT_LAYER_ID, registry, engine)
+  create: (registry, engine) => new TextLayer(TEXT_LAYER_ID, registry, engine),
+  reducer: () => {},
+  initialState: {}
 };
 
 export * from "./text-layer";

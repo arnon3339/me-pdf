@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h, ComponentChildren } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks'; 
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
@@ -15,6 +15,7 @@ interface EmbedPDFProps {
 
 export function EmbedPDF({ engine, onInitialized, plugins: getPlugins, children }: EmbedPDFProps) {
   const [registry, setRegistry] = useState<PluginRegistry | null>(null);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [viewportElement, setViewportElement] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export function EmbedPDF({ engine, onInitialized, plugins: getPlugins, children 
 
       // Provide the registry to children via context
       setRegistry(pdfViewer);
+      setIsInitializing(false);
     };
 
     initialize().catch(console.error);
@@ -47,7 +49,7 @@ export function EmbedPDF({ engine, onInitialized, plugins: getPlugins, children 
 
   return (
     <ViewportContext.Provider value={viewportContextValue}>
-      <PDFContext.Provider value={registry}>
+      <PDFContext.Provider value={{ registry, isInitializing }}>
         {children}
       </PDFContext.Provider>
     </ViewportContext.Provider>

@@ -5,7 +5,9 @@ import { SearchLayer } from "./search-layer";
 
 export const SearchLayerPackage: PluginPackage<SearchLayer, SearchLayerConfig> = {
   manifest,
-  create: (registry, engine) => new SearchLayer(SEARCH_LAYER_ID, registry, engine)
+  create: (registry, engine) => new SearchLayer(SEARCH_LAYER_ID, registry, engine),
+  reducer: () => {},
+  initialState: {}
 };
 
 export * from "./search-layer";

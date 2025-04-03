@@ -8,7 +8,8 @@ export const manifest: PluginManifest<RenderLayerConfig> = {
   name: 'Render Layer',
   version: '1.0.0',
   provides: [],
-  consumes: [],
+  requires: [],
+  optional: [],
   metadata: {
     name: 'Render Layer',
     description: 'Render canvas layers',

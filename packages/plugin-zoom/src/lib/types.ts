@@ -14,7 +14,6 @@ export interface ZoomCapability {
   zoomIn(): ZoomChangeEvent;
   zoomOut(): ZoomChangeEvent;
   getState(): ZoomState;
-  onStateChange(handler: (state: ZoomState) => void): void;
 }
 
 export enum ZoomMode {
@@ -29,7 +28,6 @@ export interface ZoomChangeEvent {
   oldZoom: number;
   oldMetrics: ViewportMetrics;
   newZoom: number;
-  newMetrics: ViewportMetrics;
   center?: { x: number; y: number };
 } 
 

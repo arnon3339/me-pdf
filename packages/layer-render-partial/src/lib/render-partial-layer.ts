@@ -35,8 +35,8 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
     engine: PdfEngine
   ) {
     super(id, registry, engine);
-    this.scroll = this.registry.getPlugin<ScrollPlugin>('scroll').provides();
-    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport').provides();
+    this.scroll = this.registry.getPlugin<ScrollPlugin>('scroll')!.provides();
+    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
 
     this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'debounce', wait: 250 });
   }
@@ -153,10 +153,10 @@ export class RenderPartialLayer extends BaseLayerPlugin<RenderPartialLayerConfig
     if (!pageVisibility) return null;
 
     return {
-      pageX: pageVisibility.pageX,
-      pageY: pageVisibility.pageY,
-      visibleWidth: pageVisibility.visibleWidth,
-      visibleHeight: pageVisibility.visibleHeight
+      pageX: pageVisibility.original.pageX,
+      pageY: pageVisibility.original.pageY,
+      visibleWidth: pageVisibility.original.visibleWidth,
+      visibleHeight: pageVisibility.original.visibleHeight
     };
   }
 

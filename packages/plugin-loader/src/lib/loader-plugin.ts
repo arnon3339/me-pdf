@@ -1,10 +1,10 @@
-import { IPlugin, PluginRegistry } from "@embedpdf/core";
+import { BasePlugin, IPlugin, PluginRegistry, loadDocument, setDocument } from "@embedpdf/core";
 import { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
 import { PDFDocumentLoader } from "./loader";
 import { PDFLoadingOptions } from "./loader/strategies/loading-strategy";
 import { LoaderCapability, LoaderEvent, LoaderPluginConfig } from "./types";
 
-export class LoaderPlugin implements IPlugin<LoaderPluginConfig> {
+export class LoaderPlugin extends BasePlugin<LoaderPluginConfig> {
   private loaderHandlers: ((loaderEvent: LoaderEvent) => void)[] = [];
   private documentLoadedHandlers: ((document: PdfDocumentObject) => void)[] = [];
   private documentLoader: PDFDocumentLoader;
@@ -13,9 +13,10 @@ export class LoaderPlugin implements IPlugin<LoaderPluginConfig> {
 
   constructor(
     public readonly id: string,
-    private registry: PluginRegistry,
+    registry: PluginRegistry,
     private engine: PdfEngine
   ) {
+    super(id, registry);
     this.documentLoader = new PDFDocumentLoader();
   }
 
@@ -52,9 +53,12 @@ export class LoaderPlugin implements IPlugin<LoaderPluginConfig> {
   private async loadDocument(options: Omit<PDFLoadingOptions, 'engine'>): Promise<PdfDocumentObject> {
     try {
       this.notifyHandlers({ type: 'start', documentId: options.id });
+      this.coreStore.dispatch(loadDocument())
       const document = await this.documentLoader.loadDocument({...options, engine: this.engine});
-
+      this.coreStore.dispatch(setDocument(document))
       this.loadedDocument = document;
+
+      console.log('Document loaded:', document);
       
       this.notifyHandlers({ type: 'complete', documentId: options.id });
       this.notifyDocumentLoaded(document);

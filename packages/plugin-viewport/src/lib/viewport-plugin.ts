@@ -1,8 +1,8 @@
-import { IPlugin, PluginRegistry } from "@embedpdf/core";
+import { BasePlugin, PluginRegistry } from "@embedpdf/core";
 import { ViewportCapability, ViewportMetrics, ViewportPluginConfig, WrapperDivOptions } from "./types";
 import { EventControl, EventControlOptions } from "./utils/event-control";
 
-export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
+export class ViewportPlugin extends BasePlugin<ViewportPluginConfig> {
   private container?: HTMLElement;
   private innerDiv?: HTMLElement;
   private wrapperDivs: Map<string, HTMLElement> = new Map();
@@ -17,8 +17,10 @@ export class ViewportPlugin implements IPlugin<ViewportPluginConfig> {
 
   constructor(
     public readonly id: string,
-    private registry: PluginRegistry,
-  ) {}
+    registry: PluginRegistry,
+  ) {
+    super(id, registry);
+  }
 
   provides(): ViewportCapability {
     return {

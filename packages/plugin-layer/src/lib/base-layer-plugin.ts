@@ -32,7 +32,7 @@ export abstract class BaseLayerPlugin<TConfig = unknown, TCacheData = void> impl
     page: PdfPageObject,
     container: HTMLElement,
     options: LayerRenderOptions
-  ): Promise<void>;
+  ): Promise<void>; 
 
   /**
    * Update an existing render with new options
@@ -144,7 +144,7 @@ export abstract class BaseLayerPlugin<TConfig = unknown, TCacheData = void> impl
    * Get another layer plugin instance by ID
    */
   protected getLayer<T extends ILayerPlugin>(layerId: string): T | undefined {
-    return this.registry.getPlugin<T>(layerId);
+    return this.registry.getPlugin<T>(layerId) as T | undefined;
   }
 
   /**

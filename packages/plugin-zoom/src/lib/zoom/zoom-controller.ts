@@ -12,7 +12,7 @@ interface IZoomControllerOptions {
   viewport: ViewportCapability;
   pageManager: PageManagerCapability;
   options: ZoomOptions;
-  state: ZoomState;
+  getState: () => ZoomState;
 }
 
 /**
@@ -23,7 +23,7 @@ export class ZoomController {
   private readonly maxZoom: number;
   private readonly zoomStep: number;
   private container: HTMLElement;
-  private state: ZoomState;
+  private getState: () => ZoomState;
   private pageManager: PageManagerCapability;
   private viewport: ViewportCapability;
 
@@ -34,7 +34,7 @@ export class ZoomController {
   constructor(options: IZoomControllerOptions) {
     this.viewport = options.viewport;
     this.pageManager = options.pageManager;
-    this.state = options.state;
+    this.getState = options.getState;
     this.minZoom = options.options.minZoom ?? 0.25;
     this.maxZoom = options.options.maxZoom ?? 10;
     this.zoomStep = options.options.zoomStep ?? 0.1;
@@ -112,7 +112,7 @@ export class ZoomController {
   private getContentDimensions(): { width: number; height: number } {
     const innerDiv = this.viewport.getInnerDiv();
     const viewportGap = this.viewport.getViewportGap();
-    const currentScale = this.state.currentZoomLevel;
+    const currentScale = this.getState().currentZoomLevel;
     const scaledWidth = innerDiv.clientWidth;
     const scaledHeight = innerDiv.clientHeight;
     return {
@@ -171,7 +171,7 @@ export class ZoomController {
    * @returns Event object containing information about the zoom change
    */
   public zoomTo(newZoomLevel: ZoomLevel, center?: { x: number; y: number }): ZoomChangeEvent {
-    const oldZoom = this.state.currentZoomLevel;
+    const oldZoom = this.getState().currentZoomLevel;
     const oldMetrics = this.viewport.getMetrics();
 
     const newZoom = typeof newZoomLevel === 'number'
@@ -187,18 +187,13 @@ export class ZoomController {
       this.container.scrollTop = scrollTop;
     });
 
-    this.state.currentZoomLevel = newZoom;
-
-    const newMetrics = this.viewport.getMetrics();
-
-    return { oldZoom, oldMetrics, newZoom, newMetrics, center };
+    return { oldZoom, oldMetrics, newZoom, center };
   }
 
   /**
    * Adjusts the scroll position after a zoom change to maintain the focal point
    * @param oldMetrics Previous viewport metrics
    * @param oldZoom Previous zoom level
-   * @param newMetrics New viewport metrics
    * @param newZoom New zoom level
    * @param center Optional focal point to maintain during zoom
    */
@@ -232,7 +227,7 @@ export class ZoomController {
    * @returns Event object containing information about the zoom change
    */
   public zoomBy(delta: number, center?: { x: number; y: number }): ZoomChangeEvent {
-    return this.zoomTo(this.state.currentZoomLevel + delta, center);
+    return this.zoomTo(this.getState().currentZoomLevel + delta, center);
   }
 
   /**

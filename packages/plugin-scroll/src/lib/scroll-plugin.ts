@@ -23,8 +23,8 @@ export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
     private registry: PluginRegistry,
     private config?: ScrollPluginConfig
   ) {
-    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport').provides();
-    this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager').provides();
+    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
+    this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
     
     this.currentZoom = parseFloat(this.viewport.getContainer().style.getPropertyValue('--scale-factor') || '1');
 
