@@ -189,8 +189,8 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
   }
 }
 
-function isItemWithSlots(component: UIComponent<UIComponentType<any>>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<FlyOutComponent> {
-  return isGroupedItemsComponent(component) || isHeaderComponent(component) || isFlyOutComponent(component);
+function isItemWithSlots(component: UIComponent<UIComponentType<any>>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<FlyOutComponent> | UIComponent<PanelComponent> {
+  return isGroupedItemsComponent(component) || isHeaderComponent(component) || isFlyOutComponent(component) || isPanelComponent(component);
 }
 
 // Type guard function

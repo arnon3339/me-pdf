@@ -177,5 +177,64 @@ export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (pro
 export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, children) => {
   if(!props.open) return null;
 
-  return <div className="w-[250px] min-w-[250px] bg-white shrink-0 flex flex-col flex-none">{children()}</div>;
+  // Determine border class based on position
+  const borderClass = props.location === 'left' ? 'border-r' : 'border-l';
+
+  return <div className={`w-[250px] min-w-[250px] bg-white shrink-0 flex flex-col flex-none ${borderClass} border-[#cfd4da]`}>{children()}</div>;
+};
+
+export const searchRenderer: ComponentRenderFunction<any> = (props, children) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState("");
+  
+  useEffect(() => {
+    // Focus the input element when the component mounts
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+  
+  const handleInputChange = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    setInputValue(target.value);
+  };
+  
+  const clearInput = () => {
+    setInputValue("");
+    // Focus the input after clearing
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+  
+  return (
+    <div className="w-full h-full bg-white p-4">
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg className="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <input 
+          ref={inputRef}
+          type="text" 
+          placeholder="Search" 
+          autoFocus
+          value={inputValue}
+          onInput={handleInputChange}
+          className="w-full pl-10 pr-9 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        />
+        {inputValue && (
+          <div 
+            className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+            onClick={clearInput}
+          >
+            <svg className="w-4 h-4 text-gray-500 hover:text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };

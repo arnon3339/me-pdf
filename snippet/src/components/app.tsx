@@ -15,7 +15,7 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { RenderLayerPackage } from '@embedpdf/layer-render';
 import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { FlyOutComponent, GlobalStoreState, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
-import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, panelRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
+import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, panelRenderer, searchRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
 
 // **Configuration Interface**
@@ -281,6 +281,11 @@ export const components: Record<string, UIComponentType<State>> = {
     }),
     slots: []
   },
+  search: {
+    id: 'search',
+    type: 'custom',
+    render: 'search'
+  },
   rightPanel: {
     id: 'rightPanel',
     type: 'panel',
@@ -298,7 +303,9 @@ export const components: Record<string, UIComponentType<State>> = {
       open: storeState.plugins.ui.panel.rightPanel.open,
       renderChild: storeState.plugins.ui.panel.rightPanel.renderChild
     }),
-    slots: []
+    slots: [
+      { componentId: 'search', priority: 0 }
+    ]
   }
 };
 
@@ -341,7 +348,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
               uiCapability.registerComponentRenderer('flyOut', flyOutRenderer);
               uiCapability.registerComponentRenderer('actionTabs', actionTabsRenderer);
               uiCapability.registerComponentRenderer('panel', panelRenderer);
+              uiCapability.registerComponentRenderer('search', searchRenderer);
             }
+
+            console.log('onInitialized', registry);
           }}
           plugins={(viewportElement: HTMLElement) => [
             createPluginRegistration(UIPluginPackage, uiConfig),
