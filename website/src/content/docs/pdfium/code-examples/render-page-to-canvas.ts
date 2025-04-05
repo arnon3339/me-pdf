@@ -116,7 +116,7 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
             scaledWidth,
             scaledHeight,
             rotateFlag,
-            0
+            16
           );
           
           // Get the bitmap buffer
