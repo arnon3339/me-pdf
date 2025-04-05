@@ -55,7 +55,8 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
       pageIndex: number,
       scale: number = 1.0,
       rotation: number = 0,
-      canvas: HTMLCanvasElement
+      canvas: HTMLCanvasElement,
+      dpr: number = window.devicePixelRatio || 1.0
     ): Promise<{
       width: number;
       height: number;
@@ -76,9 +77,10 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
         const width = pdfium.FPDF_GetPageWidthF(pagePtr);
         const height = pdfium.FPDF_GetPageHeightF(pagePtr);
         
-        // Calculate the scaled dimensions
-        let scaledWidth = Math.floor(width * scale);
-        let scaledHeight = Math.floor(height * scale);
+        // Calculate the scaled dimensions (accounting for both scale and DPR)
+        const effectiveScale = scale * dpr;
+        let scaledWidth = Math.floor(width * effectiveScale);
+        let scaledHeight = Math.floor(height * effectiveScale);
         
         // Apply rotation if requested
         let rotateFlag = 0;
@@ -100,7 +102,11 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
         }
         
         try {
-          // Set canvas dimensions
+          // Set canvas dimensions - logical size for CSS
+          canvas.style.width = `${scaledWidth / dpr}px`;
+          canvas.style.height = `${scaledHeight / dpr}px`;
+          
+          // Set actual canvas buffer size (higher for high DPR)
           canvas.width = scaledWidth;
           canvas.height = scaledHeight;
           
@@ -149,10 +155,10 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
           }
           ctx.putImageData(imageData, 0, 0);
           
-          // Return the dimensions
+          // Return the dimensions (logical size, not the actual buffer size)
           return {
-            width: scaledWidth,
-            height: scaledHeight
+            width: scaledWidth / dpr,
+            height: scaledHeight / dpr
           };
         } finally {
           // Clean up bitmap

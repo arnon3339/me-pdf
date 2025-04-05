@@ -13,7 +13,8 @@ type PdfDocument = {
     pageIndex: number,
     scale: number,
     rotation: number,
-    canvas: HTMLCanvasElement
+    canvas: HTMLCanvasElement,
+    dpr?: number
   ) => Promise<{ width: number; height: number }>;
 };
 

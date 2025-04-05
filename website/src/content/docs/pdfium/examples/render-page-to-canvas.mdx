@@ -98,7 +98,8 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
       pageIndex: number,
       scale: number = 1.0,
       rotation: number = 0,
-      canvas: HTMLCanvasElement
+      canvas: HTMLCanvasElement,
+      dpr: number = window.devicePixelRatio || 1.0
     ): Promise<{
       width: number;
       height: number;
@@ -119,9 +120,10 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
         const width = pdfium.FPDF_GetPageWidthF(pagePtr);
         const height = pdfium.FPDF_GetPageHeightF(pagePtr);
         
-        // Calculate the scaled dimensions
-        let scaledWidth = Math.floor(width * scale);
-        let scaledHeight = Math.floor(height * scale);
+        // Calculate the scaled dimensions with device pixel ratio
+        const effectiveScale = scale * dpr;
+        let scaledWidth = Math.floor(width * effectiveScale);
+        let scaledHeight = Math.floor(height * effectiveScale);
         
         // Apply rotation if requested
         let rotateFlag = 0;
@@ -143,7 +145,11 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
         }
         
         try {
-          // Set canvas dimensions
+          // Set canvas CSS dimensions for proper display
+          canvas.style.width = `${scaledWidth / dpr}px`;
+          canvas.style.height = `${scaledHeight / dpr}px`;
+          
+          // Set actual canvas buffer size
           canvas.width = scaledWidth;
           canvas.height = scaledHeight;
           
@@ -192,10 +198,10 @@ export async function loadPdfDocument(pdfData: Uint8Array) {
           }
           ctx.putImageData(imageData, 0, 0);
           
-          // Return the dimensions
+          // Return the dimensions adjusted for DPR
           return {
-            width: scaledWidth,
-            height: scaledHeight
+            width: scaledWidth / dpr,
+            height: scaledHeight / dpr
           };
         } finally {
           // Clean up bitmap
@@ -298,6 +304,29 @@ const buffer = new Uint8Array(
 3. **Render at appropriate resolution**: Adjust the scale based on the display device. For high-DPI displays, you may want to render at a higher scale.
 
 4. **Use Web Workers**: Consider using Web Workers for rendering to avoid blocking the main thread.
+
+## Handling High-DPI Displays
+
+The example implementation includes support for high-DPI displays (like Retina displays) through the optional `dpr` parameter, which defaults to `window.devicePixelRatio`. This ensures optimal rendering quality on all devices.
+
+When working with high-DPI displays:
+
+- The canvas is rendered at the physical resolution (scaled by DPR) for sharpness
+- CSS dimensions are set to maintain the correct visual size
+- The returned dimensions are adjusted to match the logical size rather than the buffer size
+
+This approach prevents PDFs from appearing blurry on high-resolution displays while maintaining the expected size in the user interface.
+
+```javascript
+// Example of explicitly setting DPR when rendering
+await pdfDocument.renderPage(
+  0,              // First page
+  1.0,            // 100% scale
+  0,              // No rotation
+  canvas,         // Canvas element
+  window.devicePixelRatio  // Current device's pixel ratio
+);
+```
 
 ## Related Functions
 
