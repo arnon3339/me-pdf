@@ -100,7 +100,7 @@ export default function Navbar() {
       {menu && (
         <div className="md:hidden fixed inset-0">
           <div className="absolute right-0 top-[4.5rem] w-full">
-            <div className="mx-4 bg-white/95 backdrop-blur-lg shadow-lg border border-gray-100 rounded-lg overflow-y-auto max-h-[calc(100vh-6rem)]">
+            <div className="mx-4 bg-white/95 backdrop-blur-lg shadow-lg border border-gray-100 rounded-lg overflow-y-auto max-h-[calc(100vh-10rem)]">
               <div className="py-2 space-y-1">
                 {/*<a 
                   href="#features" 
