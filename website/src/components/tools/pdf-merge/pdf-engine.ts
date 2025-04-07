@@ -1,6 +1,6 @@
 import { PdfiumEngine } from '@embedpdf/engines'
 import { init } from '@embedpdf/pdfium'
-import { PdfDocumentObject, PdfEngine, PdfFile, PdfTask, PdfTaskHelper } from '@embedpdf/models'
+import { PdfDocumentObject, PdfEngine, PdfFile, PdfTaskHelper } from '@embedpdf/models'
 
 // Singleton instance of the engine
 let engineInstance: PdfiumEngine | null = null

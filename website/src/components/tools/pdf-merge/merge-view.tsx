@@ -5,7 +5,7 @@ import { MergeDocPage } from './types'
 import { useSensor, useSensors, PointerSensor, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { SortablePage } from './SortablePage'
+import { SortablePage } from './sortable-page'
 import { Button } from '../../button'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 

@@ -2,7 +2,7 @@
 
 import React, { useCallback } from 'react'
 import { DocumentWithPages, DocumentPage } from './types'
-import { VirtualScroller } from './VirtualScroller'
+import { VirtualScroller } from './virtual-scroller'
 import { Button } from '../../button'
 import { PdfEngine } from '@embedpdf/models'
 

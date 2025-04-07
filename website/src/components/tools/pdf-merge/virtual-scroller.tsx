@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DocumentPage } from './types'
 import { PdfDocumentObject, PdfEngine } from '@embedpdf/models'
-import { generateThumbnail } from './PdfEngine'
+import { generateThumbnail } from './pdf-engine'
 
 interface VirtualScrollerProps {
   items: DocumentPage[]

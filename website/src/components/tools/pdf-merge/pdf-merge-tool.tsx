@@ -1,14 +1,14 @@
 'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import { PdfEngine } from '@embedpdf/models'
 import { DocumentPage, DocumentWithPages, MergeDocPage } from './types'
-import { initializeEngine, openPdfDocument, mergePdfPages, closePdfDocument } from './PdfEngine'
-import { DocumentView } from './DocumentView'
-import { MergeView } from './MergeView'
-import { MergeResult } from './MergeResult'
+import { initializeEngine, openPdfDocument, mergePdfPages, closePdfDocument } from './pdf-engine'
+import { DocumentView } from './document-view'
+import { MergeView } from './merge-view'
+import { MergeResult } from './merge-result'
 
 export const PdfMergeTool = () => {
   const [engine, setEngine] = useState<PdfEngine | null>(null)

@@ -1,5 +1,5 @@
 'use client'
 
-import { PdfMergeTool } from './PdfMergeTool'
+import { PdfMergeTool } from './pdf-merge-tool'
 
 export { PdfMergeTool } 
