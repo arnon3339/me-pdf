@@ -8,13 +8,13 @@ import type { Item, MenuItem, PageItem } from 'nextra/normalize-pages'
 import type { FC, FocusEventHandler, MouseEventHandler } from 'react'
 import { forwardRef, useEffect, useId, useRef, useState } from 'react'
 import scrollIntoView from 'scroll-into-view-if-needed'
-import { useActiveAnchor, useConfig } from './stores'
+import { useActiveAnchor, useConfig, useToc } from './stores'
 import { Anchor } from './mdx-components/anchor'
 import { Button } from './button'
 import { ArrowRightIcon } from 'nextra/icons'
 import { Collapse } from './collapse'
 import { setFocusedRoute, useFocusedRoute } from './stores/focused-route'
-import { setMenu } from './stores/menu'
+import { setMenu, useMenu } from './stores/menu'
 const TreeState: Record<string, boolean> = Object.create(null)
 
 const classes = {
@@ -48,7 +48,7 @@ type FolderProps = {
   item: PageItem | MenuItem | Item
   anchors: Heading[]
   onFocus: FocusEventHandler
-  level: number
+  level: number;
 }
 
 const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
@@ -214,6 +214,7 @@ const File: FC<{
     <li className={cn({ active })}>
       <Anchor
         href={(item as PageItem).href || item.route}
+        onClick={handleClick}
         className={cn(classes.link, active ? classes.active : classes.inactive)}
         onFocus={onFocus}
       >
@@ -276,6 +277,87 @@ const Menu = forwardRef<HTMLUListElement, MenuProps>(
   )
 )
 Menu.displayName = 'Menu'
+
+interface MobileNavProps {
+  showAnchors?: boolean;
+  route?: string;
+}
+
+export const MobileNav: FC<MobileNavProps> = ({ showAnchors = false, route }) => {
+  const { directories } = useConfig().normalizePagesResult
+  const toc = useToc()
+
+  const menu = useMenu()
+  const pathname = usePathname()
+  const hash = useHash()
+
+  const getFilteredDirectories = () => {
+    if (!route) return filterOutIndexPages(directories)
+    
+    // Find the directory matching the route
+    const routeDirectory = directories.find(dir => dir.route === route)
+    if (!routeDirectory) return []
+    
+    // If found, return only its children
+    return filterOutIndexPages(routeDirectory.children || [])
+  }
+
+  // Add recursive filter function
+  const filterOutIndexPages = (items: any[]): any[] => {
+    return items
+      .filter(item => item.name !== 'index')
+      .map(item => ({
+        ...item,
+        children: item.children ? filterOutIndexPages(item.children) : undefined
+      }))
+  }
+
+  // Filter the directories
+  const filteredDirectories = getFilteredDirectories()
+
+
+  useEffect(() => {
+    //setMenu(false)
+  }, [pathname, hash])
+
+  const anchors = toc.filter(v => v.depth === 2)
+  const sidebarRef = useRef<HTMLUListElement>(null!)
+
+  useEffect(() => {
+    const sidebar = sidebarRef.current
+    const activeLink = sidebar.querySelector('li.active')
+
+    if (activeLink && menu) {
+      scrollIntoView(activeLink, {
+        block: 'center',
+        inline: 'center',
+        scrollMode: 'always',
+        boundary: sidebar.parentNode as HTMLElement
+      })
+    }
+  }, [menu])
+
+  return (
+    <aside
+      className={cn(
+        'nextra-mobile-nav',
+        'flex flex-col',
+        '[contain:layout_style]',
+        'md:hidden',
+        'bg-nextra-bg'
+      )}
+    >
+      <Menu
+        ref={sidebarRef}
+        className={classes.wrapper}
+        // Use filtered directories instead of original directories
+        directories={filteredDirectories}
+        anchors={showAnchors ? anchors : []}
+        level={0}
+      />
+    </aside>
+  )
+}
 
 export const Sidebar: FC<{ toc: Heading[], floatTOC?: boolean }> = ({ toc, floatTOC = false }) => {
   const { normalizePagesResult, hideSidebar } = useConfig()

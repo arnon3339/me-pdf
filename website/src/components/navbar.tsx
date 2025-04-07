@@ -3,10 +3,12 @@ import Link from 'next/link'
 import { Menu, X, Github } from 'lucide-react';
 import Logo from './logo'
 import { useEffect, useState } from 'react';
+import { MobileNav } from './sidebar';
+import { setMenu, useMenu } from './stores/menu';
 
 export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const menu = useMenu();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,9 +18,22 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Add effect to handle body scroll locking
+  useEffect(() => {
+    if (menu) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [menu]);
   
   return (
-    <header className={`nextra-navbar sticky top-0 z-20 w-full transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-md' : 'bg-transparent'}`}>
+    <>
+    <header className={`nextra-navbar sticky top-0 z-20 w-full transition-all duration-300 ${scrolled && !menu ? 'bg-white/90 backdrop-blur-md shadow-md' : 'bg-transparent'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
@@ -72,70 +87,83 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <button 
             className="md:hidden relative z-10 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-600 hover:text-purple-600 transition-all"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={() => {
+              setMenu(!menu)
+            }}
           >
-            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {menu ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-lg shadow-lg border border-gray-100 rounded-lg mx-4 mt-2 overflow-hidden">
-          <div className="py-2 space-y-1">
-            {/*<a 
-              href="#features" 
-              className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 flex items-center space-x-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
-              <span>Features</span>
-            </a>*/}
-            <Link 
-              href="/docs" 
-              className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-              <span>Documentation</span>
-            </Link>
-            <Link 
-              href="/tools" 
-              className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-orange-50 flex items-center space-x-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <div className="w-1 h-6 bg-orange-400 rounded-full"></div>
-              <span>Tools</span>
-            </Link>
-            {/*<a 
-              href="#examples" 
-              className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-orange-50 flex items-center space-x-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <div className="w-1 h-6 bg-orange-400 rounded-full"></div>
-              <span>Examples</span>
-            </a>*/}
-            {/*<a 
-              href="#community" 
-              className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-red-500 hover:bg-red-50 flex items-center space-x-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <div className="w-1 h-6 bg-red-500 rounded-full"></div>
-              <span>Community</span>
-            </a>*/}
-            <a 
-              href="https://github.com/embedpdf/embed-pdf-viewer"
-              className="mx-4 my-3 flex items-center justify-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-lg"
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Github />
-              <span>GitHub</span>
-            </a>
+      {/* Modified Mobile Navigation */}
+      {menu && (
+        <div className="md:hidden fixed inset-0">
+          <div className="absolute right-0 top-[4.5rem] w-full">
+            <div className="mx-4 bg-white/95 backdrop-blur-lg shadow-lg border border-gray-100 rounded-lg overflow-y-auto max-h-[calc(100vh-6rem)]">
+              <div className="py-2 space-y-1">
+                {/*<a 
+                  href="#features" 
+                  className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 flex items-center space-x-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
+                  <span>Features</span>
+                </a>*/}
+                <Link 
+                  href="/docs" 
+                  className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
+                  onClick={() => setMenu(false)}
+                >
+                  <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                  <span>Documentation</span>
+                </Link>
+                <div className="px-4 pb-3">
+                  <MobileNav route="/docs" />
+                </div>
+                <Link 
+                  href="/tools" 
+                  className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-orange-50 flex items-center space-x-2"
+                  onClick={() => setMenu(false)}
+                >
+                  <div className="w-1 h-6 bg-orange-400 rounded-full"></div>
+                  <span>Tools</span>
+                </Link>
+                {/*<a 
+                  href="#examples" 
+                  className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-orange-50 flex items-center space-x-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="w-1 h-6 bg-orange-400 rounded-full"></div>
+                  <span>Examples</span>
+                </a>*/}
+                {/*<a 
+                  href="#community" 
+                  className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-red-500 hover:bg-red-50 flex items-center space-x-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="w-1 h-6 bg-red-500 rounded-full"></div>
+                  <span>Community</span>
+                </a>*/}
+                <a 
+                  href="https://github.com/embedpdf/embed-pdf-viewer"
+                  className="mx-4 my-3 flex items-center justify-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-lg"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setMenu(false)}
+                >
+                  <Github />
+                  <span>GitHub</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       )}
     </header>
+    {menu && (
+        <div className="md:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-10"></div>
+    )}
+    </>
   )
 } 
