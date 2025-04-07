@@ -13,7 +13,6 @@ export const Steps: FC<ComponentProps<'div'>> = ({
     <div
       className={cn(
         'nextra-steps ms-4 mb-12 border-s border-gray-200 ps-6',
-        'dark:border-neutral-800',
         className
       )}
       style={{

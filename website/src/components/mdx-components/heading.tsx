@@ -13,7 +13,7 @@ const createHeading = (
       className === 'sr-only'
         ? 'sr-only'
         : cn(
-            'tracking-tight text-slate-900 dark:text-slate-100',
+            'tracking-tight text-slate-900',
             Tag === 'h1'
               ? 'font-bold'
               : 'font-semibold target:animate-[fade-in_1.5s]',

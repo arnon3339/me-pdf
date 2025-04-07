@@ -77,7 +77,7 @@ export function Dropdown({
     <div 
       id={id}
       ref={targetRef}
-      className="z-10 hidden border border-[#cfd4da] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700 dark:divide-gray-600"
+      className="z-10 hidden border border-[#cfd4da] bg-white divide-y divide-gray-100 rounded-lg shadow-sm"
     >
       {children}
     </div>
@@ -104,7 +104,7 @@ export function DropdownItem({
     <li>
       <a 
         href="#" 
-        className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+        className="block px-4 py-2 hover:bg-gray-100"
         onClick={(e) => {
           e.preventDefault();
           onClick?.();
@@ -117,5 +117,5 @@ export function DropdownItem({
 }
 
 export function DropdownDivider() {
-  return <hr className="my-1 border-gray-100 dark:border-gray-600" />;
+  return <hr className="my-1 border-gray-100" />;
 } 

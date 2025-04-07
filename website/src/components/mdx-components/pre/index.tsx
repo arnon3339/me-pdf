@@ -6,8 +6,8 @@ import { ToggleWordWrapButton } from './toggle-word-wrap-button'
 
 export const classes = {
   border: cn(
-    'border border-gray-300 dark:border-neutral-700',
-    'contrast-more:border-gray-900 contrast-more:dark:border-gray-50'
+    'border border-gray-300',
+    'contrast-more:border-gray-900'
   )
 }
 
@@ -43,8 +43,8 @@ export const Pre: FC<PreProps> = ({
       {filename && (
         <div
           className={cn(
-            'px-4 text-xs text-gray-700 dark:text-gray-200',
-            'bg-gray-100 dark:bg-neutral-900',
+            'px-4 text-xs text-gray-700',
+            'bg-gray-100',
             'flex items-center h-12 gap-2 rounded-t-md',
             classes.border,
             'border-b-0'
@@ -60,9 +60,9 @@ export const Pre: FC<PreProps> = ({
           'group',
           'focus-visible:nextra-focus',
           'overflow-x-auto subpixel-antialiased text-[.9em]',
-          'bg-white dark:bg-black py-4',
-          'ring-1 ring-inset ring-gray-300 dark:ring-neutral-700',
-          'contrast-more:ring-gray-900 contrast-more:dark:ring-gray-50',
+          'bg-white py-4',
+          'ring-1 ring-inset ring-gray-300',
+          'contrast-more:ring-gray-900',
           'contrast-more:contrast-150',
           filename ? 'rounded-b-md' : 'rounded-md',
           'not-prose', // for nextra-theme-blog

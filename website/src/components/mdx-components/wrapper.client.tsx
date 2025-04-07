@@ -37,14 +37,14 @@ export const ClientWrapper: MDXWrapper = ({
         // For doc type and others, use the article wrapper
         <article className={cn(
           'w-full min-w-0 break-words',
-          'text-slate-700 dark:text-slate-200 pb-8 px-4 pt-4 md:px-12',
+          'text-slate-700 pb-8 px-4 pt-4 md:px-12',
         )}>
           {themeContext.breadcrumb && (
             <Breadcrumb activePath={activePath} />
           )}
           {children}
           {date ? (
-            <div className="mt-12 mb-8 text-xs text-gray-500 text-end dark:text-gray-400">
+            <div className="mt-12 mb-8 text-xs text-gray-500 text-end">
               Last updated on {new Date(date).toLocaleDateString('en-US', {
                 day: 'numeric',
                 month: 'long',

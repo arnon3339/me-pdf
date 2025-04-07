@@ -12,7 +12,7 @@ const Th: FC<ComponentProps<'th'>> = props => {
     <th
       {...props}
       className={cn(
-        'm-0 border border-gray-300 px-4 py-2 font-semibold dark:border-gray-600',
+        'm-0 border border-gray-300 px-4 py-2 font-semibold',
         props.className
       )}
     />
@@ -23,8 +23,8 @@ const Tr: FC<ComponentProps<'tr'>> = props => {
     <tr
       {...props}
       className={cn(
-        'm-0 border-t border-gray-300 p-0 dark:border-gray-600',
-        'even:bg-gray-100 even:dark:bg-gray-600/20',
+        'm-0 border-t border-gray-300 p-0',
+        'even:bg-gray-100',
         props.className
       )}
     />
@@ -35,7 +35,7 @@ const Td: FC<ComponentProps<'td'>> = props => {
     <td
       {...props}
       className={cn(
-        'm-0 border border-gray-300 px-4 py-2 dark:border-gray-600',
+        'm-0 border border-gray-300 px-4 py-2',
         props.className
       )}
     />

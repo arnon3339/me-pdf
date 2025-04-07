@@ -20,7 +20,7 @@ import ToolsOverview from '../tools-overview'
 const Blockquote: FC<ComponentProps<'blockquote'>> = props => (
   <blockquote
     className={cn(
-      'not-first:mt-6 border-gray-300 italic text-gray-700 dark:border-gray-700 dark:text-gray-400',
+      'not-first:mt-6 border-gray-300 italic text-gray-700',
       'border-s-2 ps-6'
     )}
     {...props}

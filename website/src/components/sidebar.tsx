@@ -24,18 +24,17 @@ const classes = {
   ),
   inactive: cn(
     'text-gray-500 hover:bg-gray-100 hover:text-gray-900',
-    'dark:text-neutral-400 dark:hover:bg-primary-100/5 dark:hover:text-gray-50',
-    'contrast-more:text-gray-900 contrast-more:dark:text-gray-50',
-    'contrast-more:border-transparent contrast-more:hover:border-gray-900 contrast-more:dark:hover:border-gray-50'
+    'contrast-more:text-gray-900',
+    'contrast-more:border-transparent contrast-more:hover:border-gray-900'
   ),
   active: cn(
-    'bg-primary-100 font-semibold text-primary-800 dark:bg-primary-400/10 dark:text-primary-600',
+    'bg-primary-100 font-semibold text-primary-800',
     'contrast-more:border-primary-500!'
   ),
   list: cn('grid gap-1'),
   border: cn(
     'relative before:absolute before:inset-y-1',
-    'before:w-px before:bg-gray-200 before:content-[""] dark:before:bg-neutral-800',
+    'before:w-px before:bg-gray-200 before:content-[""]',
     'ps-3 before:start-0 pt-1 ms-3'
   ),
   wrapper: cn('x:p-4 x:overflow-y-auto nextra-scrollbar nextra-mask'),
@@ -146,7 +145,7 @@ const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
           height="18"
           className={cn(
             'shrink-0',
-            'rounded-sm p-0.5 hover:bg-gray-800/5 dark:hover:bg-gray-100/5',
+            'rounded-sm p-0.5 hover:bg-gray-800/5',
             'motion-reduce:*:transition-none origin-center transition-transform rtl:-rotate-180',
             open && 'ltr:rotate-90 rtl:-rotate-270'
           )}
@@ -183,7 +182,7 @@ const Separator: FC<{ title: string }> = ({ title }) => {
       className={cn(
         '[word-break:break-word]',
         title
-          ? 'not-first:mt-5 mb-2 px-2 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100'
+          ? 'not-first:mt-5 mb-2 px-2 py-1.5 text-sm font-semibold text-gray-900'
           : 'my-4'
       )}
     >
