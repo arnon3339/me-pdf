@@ -314,6 +314,12 @@ export function createMockPdfEngine(
         content: new ArrayBuffer(0),
       });
     },
+    mergePages: (mergeConfigs: Array<{ docId: string, pageIndices: number[] }>) => {
+      return PdfTaskHelper.resolve({
+        id: 'id',
+        content: new ArrayBuffer(0),
+      });
+    },
     startSearch: (doc: PdfDocumentObject, contextId: number) => {
       return PdfTaskHelper.resolve(true);
     },

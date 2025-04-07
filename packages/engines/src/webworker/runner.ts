@@ -316,6 +316,9 @@ export class EngineRunner {
       case 'merge':
         task = this.engine[name]!(...args);
         break;
+      case 'mergePages':
+        task = this.engine[name]!(...args);
+        break;
     }
 
     task.wait(

@@ -2183,6 +2183,115 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
+   * Merges specific pages from multiple PDF documents in a custom order
+   * 
+   * @param mergeConfigs Array of configurations specifying which pages to merge from which documents
+   * @returns A PdfTask that resolves with the merged PDF file
+   * @public
+   */
+  mergePages(mergeConfigs: Array<{ docId: string, pageIndices: number[] }>) {
+    const configIds = mergeConfigs.map((config) => `${config.docId}:${config.pageIndices.join(',')}`).join('|');
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'mergePages', mergeConfigs);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `MergePages`, 'Begin', configIds);
+
+    // Create a new document to import pages into
+    const newDocPtr = this.pdfiumModule.FPDF_CreateNewDocument();
+    if (!newDocPtr) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `MergePages`, 'End', configIds);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.CantCreateNewDoc,
+        message: 'Cannot create new document',
+      });
+    }
+
+    try {
+      // Process each merge configuration in reverse order (since we're inserting at position 0)
+      // This ensures the final document has pages in the order specified by the user
+      for (const config of [...mergeConfigs].reverse()) {
+        // Check if the document is open
+        if (!this.docs[config.docId]) {
+          this.logger.warn(
+            LOG_SOURCE, 
+            LOG_CATEGORY, 
+            `Document ${config.docId} is not open, skipping`
+          );
+          continue;
+        }
+
+        const { docPtr } = this.docs[config.docId];
+        
+        // Get the page count for this document
+        const pageCount = this.pdfiumModule.FPDF_GetPageCount(docPtr);
+        
+        // Filter out invalid page indices
+        const validPageIndices = config.pageIndices.filter(index => 
+          index >= 0 && index < pageCount
+        );
+        
+        if (validPageIndices.length === 0) {
+          continue; // No valid pages to import
+        }
+        
+        // Convert 0-based indices to 1-based for PDFium and join with commas
+        const pageString = validPageIndices
+          .map(index => index + 1)
+          .join(',');
+        
+        // Allocate memory for the page string
+        const pageStringPtr = this.malloc(pageString.length + 1); // +1 for null terminator
+        
+        try {
+          // Copy the string to the allocated memory
+          for (let i = 0; i < pageString.length; i++) {
+            this.pdfiumModule.pdfium.setValue(pageStringPtr + i, pageString.charCodeAt(i), 'i8');
+          }
+          // Add null terminator
+          this.pdfiumModule.pdfium.setValue(pageStringPtr + pageString.length, 0, 'i8');
+          
+          // Import all specified pages at once from this document
+          if (!this.pdfiumModule.FPDF_ImportPages(
+            newDocPtr, 
+            docPtr, 
+            pageStringPtr,
+            0 // Insert at the beginning
+          )) {
+            throw new Error(`Failed to import pages ${pageString} from document ${config.docId}`);
+          }
+        } finally {
+          // Always free the allocated memory
+          this.free(pageStringPtr);
+        }
+      }
+      
+      // Save the new document to buffer
+      const buffer = this.saveDocument(newDocPtr);
+      
+      const file: PdfFile = {
+        id: `${Math.random()}`,
+        content: buffer,
+      };
+      
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `MergePages`, 'End', configIds);
+      return PdfTaskHelper.resolve(file);
+      
+    } catch (error) {
+      this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'mergePages failed', error);
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `MergePages`, 'End', configIds);
+      
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.CantImportPages,
+        message: error instanceof Error ? error.message : 'Failed to merge pages',
+      });
+      
+    } finally {
+      // Clean up the new document
+      if (newDocPtr) {
+        this.pdfiumModule.FPDF_CloseDocument(newDocPtr);
+      }
+    }
+  }
+
+  /**
    * {@inheritDoc @embedpdf/models!PdfEngine.saveAsCopy}
    *
    * @public

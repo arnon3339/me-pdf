@@ -1637,6 +1637,13 @@ export interface PdfEngine {
    */
   merge: (files: PdfFile[]) => PdfTask<PdfFile>;
   /**
+   * Merge specific pages from multiple PDF documents in a custom order
+   * @param mergeConfigs Array of configurations specifying which pages to merge from which documents
+   * @returns A PdfTask that resolves with the merged PDF file
+   * @public
+   */
+  mergePages: (mergeConfigs: Array<{ docId: string, pageIndices: number[] }>) => PdfTask<PdfFile>;
+  /**
    * Save a copy of pdf document
    * @param doc - pdf document
    * @returns task contains the new pdf file content

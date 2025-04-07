@@ -1030,6 +1030,29 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.mergePages}
+   *
+   * @public
+   */
+  mergePages(mergeConfigs: Array<{ docId: string, pageIndices: number[] }>) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'mergePages', mergeConfigs);
+    const requestId = this.generateRequestId(mergeConfigs.map((config) => config.docId).join('.'));
+    const task = new WorkerTask<PdfFile>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'mergePages',
+        args: [mergeConfigs],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
    * {@inheritDoc @embedpdf/models!PdfEngine.closeDocument}
    *
    * @public
