@@ -21,6 +21,10 @@ export default {
       timestamp: false
     }
   },
+  tools: {
+    title: 'Tools',
+    type: 'page',
+  },
   viewer: {
     title: 'Viewer',
     type: 'page',

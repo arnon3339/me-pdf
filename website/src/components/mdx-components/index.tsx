@@ -14,6 +14,8 @@ import { Table } from './table'
 import { Code } from './code'
 import { Callout } from '../callout'
 import { Pre } from './pre'
+import { PdfMergeTool } from '../tools/pdf-merge'
+import ToolsOverview from '../tools-overview'
 
 const Blockquote: FC<ComponentProps<'blockquote'>> = props => (
   <blockquote
@@ -88,7 +90,9 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
         </ClientWrapper>
       </div>
     )
-  }
+  },
+  PdfMergeTool,
+  ToolsOverview,
 })
 
 export const useMDXComponents = (components?: Readonly<MDXComponents>) => {
