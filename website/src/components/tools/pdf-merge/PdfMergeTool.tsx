@@ -10,7 +10,7 @@ import { DocumentView } from './DocumentView'
 import { MergeView } from './MergeView'
 import { MergeResult } from './MergeResult'
 
-export function PdfMergeTool() {
+export const PdfMergeTool = () => {
   const [engine, setEngine] = useState<PdfEngine | null>(null)
   const [docs, setDocs] = useState<Record<string, DocumentWithPages>>({})
   const [mergePages, setMergePages] = useState<MergeDocPage[]>([])
