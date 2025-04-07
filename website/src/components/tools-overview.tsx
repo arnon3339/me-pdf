@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, MergeIcon } from 'lucide-react'
 import { Scribble3 } from './icons/scribble3'
 import Link from 'next/link'
 
@@ -9,7 +9,7 @@ const tools = [
   {
     title: 'PDF Merge Tool',
     description: 'Combine multiple PDFs into a single document with custom page ordering',
-    icon: '📄',
+    icon: <MergeIcon className="h-6 w-6 text-white" />,
     href: '/tools/pdf-merge',
     color: 'from-purple-600 to-blue-700',
   },
