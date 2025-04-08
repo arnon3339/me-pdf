@@ -1,10 +1,7 @@
 import { EmbedPdfContainer } from "./web-components/container";
+import { PDFViewerConfig } from './components/app';
 
-type BaseConfig = {
-  src: string;
-};
-
-type ContainerConfig = BaseConfig & {
+type ContainerConfig = PDFViewerConfig & {
   type: 'container';
   target: Element;
 };
@@ -12,8 +9,9 @@ type ContainerConfig = BaseConfig & {
 customElements.define('embedpdf-container', EmbedPdfContainer);
 
 function initContainer(config: ContainerConfig) {
+  const { type, target, ...viewerConfig } = config;
   const embedPdfElement = document.createElement('embedpdf-container') as EmbedPdfContainer;
-  embedPdfElement.config = config;
+  embedPdfElement.config = viewerConfig;
   config.target.appendChild(embedPdfElement);
 
   return embedPdfElement;
