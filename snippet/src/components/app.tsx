@@ -360,6 +360,9 @@ export function PDFViewer({ config }: PDFViewerProps) {
                 pdfFile: {
                   id: 'pdf',
                   url: config.src
+                },
+                options: {
+                  mode: 'full-fetch'
                 }
               },
             }),
