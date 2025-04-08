@@ -48,8 +48,11 @@ export default function PDFViewer() {
       plugins={(viewportElement) => [
         createPluginRegistration(LoaderPluginPackage, {
           loadingOptions: {
-            source: '/demo.pdf',
-            id: 'demo'
+            type: 'url',
+            pdfFile: {
+              id: 'demo',
+              url: '/demo.pdf'
+            }
           }
         }),
         createPluginRegistration(ViewportPluginPackage, { 
