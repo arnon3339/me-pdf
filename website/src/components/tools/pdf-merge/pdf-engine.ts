@@ -45,7 +45,7 @@ export async function openPdfDocument(
     content: fileContent,
   }
   
-  const task = engine.openDocument(pdfFile, password)
+  const task = engine.openDocumentFromBuffer(pdfFile, password)
   
   return new Promise<PdfDocumentObject>((resolve, reject) => {
     task.wait(

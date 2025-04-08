@@ -36,6 +36,8 @@ import {
   PdfErrorCode,
   PdfErrorReason,
   PdfBookmarksObject,
+  PdfUrlOptions,
+  PdfFileUrl,
 } from '@embedpdf/models';
 
 /**
@@ -49,7 +51,10 @@ export function createMockPdfEngine(
   partialEngine?: Partial<PdfEngine>,
 ): PdfEngine {
   const engine: PdfEngine = {
-    openDocument: jest.fn((file: PdfFile, password: string) => {
+    openDocumentUrl: jest.fn((file: PdfFileUrl, options?: PdfUrlOptions) => {
+      return PdfTaskHelper.create();
+    }),
+    openDocumentFromBuffer: jest.fn((file: PdfFile, password: string) => {
       return PdfTaskHelper.create();
     }),
     openDocumentFromLoader: jest.fn((file: PdfFileLoader, password: string) => {

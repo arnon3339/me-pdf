@@ -72,8 +72,11 @@ export function Tooltip({
         role="tooltip"
         className={`
           absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium
-          text-gray-900 bg-white border border-gray-200
           rounded-lg shadow-sm opacity-0 tooltip transition-opacity duration-300
+          ${style === 'dark' 
+            ? 'text-white bg-gray-900 dark:bg-gray-700' 
+            : 'text-gray-900 bg-white border border-gray-200'
+          }
           ${className}
         `}
       >

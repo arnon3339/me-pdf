@@ -1,5 +1,5 @@
-import { PDFLoadingOptions, PDFLoadingStrategy } from './strategies/loading-strategy';
-import { RangeRequestStrategy } from './strategies/range-request-strategy';
+import { PDFUrlLoadingOptions, PDFBufferLoadingOptions, PDFLoadingStrategy, PDFLoadingOptions } from './strategies/loading-strategy';
+import { UrlStrategy } from './strategies/url-strategy';
 import { BufferStrategy } from './strategies/buffer-strategy';
 import { PdfDocumentObject } from '@embedpdf/models';
 
@@ -12,13 +12,13 @@ export class PDFDocumentLoader {
   constructor() {
     // Set up default strategies
     const bufferStrategy = new BufferStrategy();
-    this.registerStrategy('range', new RangeRequestStrategy(bufferStrategy));
+    this.registerStrategy('url', new UrlStrategy());
     this.registerStrategy('buffer', bufferStrategy);
 
     // Add default resolver
     this.addStrategyResolver((options) => {
-      if (typeof options.source === 'string') {
-        return this.strategies.get('range');
+      if (isPdfUrlLoadingOptions(options)) {
+        return this.strategies.get('url');
       }
       return this.strategies.get('buffer');
     });
@@ -59,3 +59,11 @@ export class PDFDocumentLoader {
     return undefined;
   }
 } 
+
+export function isPdfUrlLoadingOptions(options: PDFLoadingOptions): options is PDFUrlLoadingOptions {
+  return options.type === 'url';
+}
+
+export function isPdfBufferLoadingOptions(options: PDFLoadingOptions): options is PDFBufferLoadingOptions {
+  return options.type === 'buffer';
+}

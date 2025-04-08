@@ -49,8 +49,11 @@ async function initializePDFViewer() {
 
   registry.registerPlugin(LoaderPluginPackage, {
     loadingOptions: {
-      id: '1',
-      source
+      type: 'url',
+      pdfFile: {
+        id: '1',
+        url: '/file/compressed.tracemonkey-pldi-09.pdf'
+      }
     }
   });
   registry.registerPlugin(ViewportPluginPackage, {

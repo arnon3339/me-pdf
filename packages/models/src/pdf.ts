@@ -1246,6 +1246,15 @@ export interface PdfFile extends PdfFileWithoutContent {
   content: PdfFileContent;
 }
 
+export interface PdfFileUrl extends PdfFileWithoutContent {
+  url: string;
+}
+
+export interface PdfUrlOptions {
+  mode?: 'auto' | 'range-request' | 'full-fetch';
+  password?: string;
+}
+
 export enum PdfErrorCode {
   Ok, //  #define FPDF_ERR_SUCCESS 0    // No error.
   Unknown, // #define FPDF_ERR_UNKNOWN 1    // Unknown error.
@@ -1356,12 +1365,22 @@ export interface PdfEngine {
    */
   destroy?: () => PdfTask<boolean>;
   /**
-   * Open pdf document
+   * Open a PDF from a URL with specified mode
+   * @param url - The PDF file URL
+   * @param options - Additional options including mode (auto, range-request, full-fetch) and password
+   * @returns Task that resolves with the PdfDocumentObject or an error
+   */
+  openDocumentUrl: (
+    file: PdfFileUrl,
+    options?: PdfUrlOptions
+  ) => PdfTask<PdfDocumentObject>;
+  /**
+   * Open pdf document from buffer
    * @param file - pdf file
    * @param password - protected password for this file
    * @returns task that contains the file or error
    */
-  openDocument: (file: PdfFile, password: string) => PdfTask<PdfDocumentObject>;
+  openDocumentFromBuffer: (file: PdfFile, password: string) => PdfTask<PdfDocumentObject>;
   /**
    * Open pdf document from loader
    * @param file - pdf file

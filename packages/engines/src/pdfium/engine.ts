@@ -68,6 +68,8 @@ import {
   PdfFileLoader,
   transformRect,
   SearchAllPagesResult,
+  PdfUrlOptions,
+  PdfFileUrl,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -192,16 +194,242 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.openDocumentUrl}
+   *
+   * @public
+   */
+  public openDocumentUrl(
+    file: PdfFileUrl,
+    options?: PdfUrlOptions
+  ) {
+    const mode = options?.mode ?? 'auto';
+    const password = options?.password ?? '';
+
+    this.logger.debug(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'openDocumentUrl called',
+      file.url,
+      mode
+    );
+
+    // We'll create a task to wrap asynchronous steps
+    const task = PdfTaskHelper.create<PdfDocumentObject>();
+
+    // Start an async procedure
+    (async () => {
+      try {
+        // Decide on approach
+        if (mode === 'full-fetch') {
+          const fetchFullTask = await this.fetchFullAndOpen(file, password);
+          fetchFullTask.wait(
+            (doc) => task.resolve(doc),
+            (err) => task.reject(err.reason)
+          );
+        } else if (mode === 'range-request') {
+          const openDocumentWithRangeRequestTask = await this.openDocumentWithRangeRequest(file, password);
+          openDocumentWithRangeRequestTask.wait(
+            (doc) => task.resolve(doc),
+            (err) => task.reject(err.reason)
+          );
+        } else {
+          // mode: 'auto'
+          const { supportsRanges, fileLength, content } =  await this.checkRangeSupport(file.url);
+          if (supportsRanges) {
+            const openDocumentWithRangeRequestTask = await this.openDocumentWithRangeRequest(file, password, fileLength);
+            openDocumentWithRangeRequestTask.wait(
+              (doc) => task.resolve(doc),
+              (err) => task.reject(err.reason)
+            );
+          } else if(content) {
+            // If we already have the content from the range check, use it
+            const pdfFile: PdfFile = { id: file.id, content };
+            this.openDocumentFromBuffer(pdfFile, password).wait(
+              (doc) => task.resolve(doc),
+              (err) => task.reject(err.reason)
+            );
+          } else {
+            const fetchFullTask = await this.fetchFullAndOpen(file, password);
+            fetchFullTask.wait(
+              (doc) => task.resolve(doc),
+              (err) => task.reject(err.reason)
+            );
+          }
+        }
+      } catch (err) {
+        this.logger.error(
+          LOG_SOURCE,
+          LOG_CATEGORY,
+          'openDocumentUrl error',
+          err
+        );
+        task.reject({
+          code: PdfErrorCode.Unknown,
+          message: String(err),
+        });
+      }
+    })();
+
+    return task;
+  }
+
+  /**
+   * Check if the server supports range requests:
+   * Sends a HEAD request and sees if 'Accept-Ranges: bytes'.
+   */
+  private async checkRangeSupport(url: string): Promise<{ supportsRanges: boolean; fileLength: number; content: ArrayBuffer | null }> {
+    try {
+      this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'checkRangeSupport', url);
+      
+      // First try HEAD request
+      const headResponse = await fetch(url, { method: 'HEAD' });
+      const fileLength = headResponse.headers.get('Content-Length');
+      const acceptRanges = headResponse.headers.get('Accept-Ranges');
+      
+      // If server explicitly supports ranges, we're done
+      if (acceptRanges === 'bytes') {
+        return { 
+          supportsRanges: true, 
+          fileLength: parseInt(fileLength ?? '0'), 
+          content: null 
+        };
+      }
+  
+      // Test actual range request support
+      const testResponse = await fetch(url, {
+        headers: { 'Range': 'bytes=0-1' }
+      });
+      
+      // If we get 200 instead of 206, server doesn't support ranges
+      // Return the full content since we'll need it anyway
+      if (testResponse.status === 200) {
+        const content = await testResponse.arrayBuffer();
+        return { 
+          supportsRanges: false, 
+          fileLength: parseInt(fileLength ?? '0'),
+          content: content
+        };
+      }
+      
+      // 206 Partial Content indicates range support
+      return {
+        supportsRanges: testResponse.status === 206,
+        fileLength: parseInt(fileLength ?? '0'),
+        content: null
+      };
+  
+    } catch (e) {
+      this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'checkRangeSupport failed', e);
+      throw new Error('Failed to check range support: ' + e);
+    }
+  }
+
+  /**
+   * Fully fetch the file (using fetch) into an ArrayBuffer,
+   * then call openDocumentFromBuffer.
+   */
+  private async fetchFullAndOpen(file: PdfFileUrl, password: string) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'fetchFullAndOpen', file.url);
+
+    // 1. fetch entire PDF as array buffer
+    const response = await fetch(file.url);
+    if (!response.ok) {
+      throw new Error(`Could not fetch PDF: ${response.statusText}`);
+    }
+    const arrayBuf = await response.arrayBuffer();
+
+    // 2. create a PdfFile object
+    const pdfFile: PdfFile = {
+      id: file.id,
+      content: arrayBuf
+    };
+
+    // 3. call openDocumentFromBuffer (the method you already have)
+    //    that returns a PdfTask, but let's wrap it in a Promise
+    return this.openDocumentFromBuffer(pdfFile, password)
+  }
+
+  /**
+   * Use your synchronous partial-loading approach:
+   * - In your snippet, it's done via `openDocumentFromLoader`.
+   * - We'll do a synchronous XHR read callback that pulls
+   *   the desired byte ranges.
+   */
+  private async openDocumentWithRangeRequest(file: PdfFileUrl, password: string, knownFileLength?: number) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentWithRangeRequest', file.url);
+
+    // We first do a HEAD or a partial fetch to get the fileLength:
+    const fileLength = knownFileLength ?? (await this.retrieveFileLength(file.url)).fileLength;
+
+    // 2. define the callback function used by openDocumentFromLoader
+    const callback = (offset: number, length: number) => {
+      // Perform synchronous XHR:
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', file.url, false); // note: block in the Worker
+      xhr.overrideMimeType('text/plain; charset=x-user-defined');
+      xhr.setRequestHeader('Range', `bytes=${offset}-${offset + length - 1}`);
+      xhr.send(null);
+
+      if (xhr.status === 206 || xhr.status === 200) {
+        return this.convertResponseToUint8Array(xhr.responseText);
+      }
+      throw new Error(`Range request failed with status ${xhr.status}`);
+    };
+
+    // 3. call `openDocumentFromLoader` 
+    return this.openDocumentFromLoader(
+      {
+        id: file.id,
+        fileLength,
+        callback
+      },
+      password
+    )
+  }
+
+  /**
+   * Helper to do a HEAD request or partial GET to find file length.
+   */
+  private async retrieveFileLength(url: string): Promise<{ fileLength: number }> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'retrieveFileLength', url);
+
+    // We'll do a HEAD request to get Content-Length
+    const resp = await fetch(url, { method: 'HEAD' });
+    if (!resp.ok) {
+      throw new Error(`Failed HEAD request for file length: ${resp.statusText}`);
+    }
+    const lenStr = resp.headers.get('Content-Length') || '0';
+    const fileLength = parseInt(lenStr, 10) || 0;
+    if (!fileLength) {
+      throw new Error(`Content-Length not found or zero.`);
+    }
+    return { fileLength };
+  }
+
+  /**
+   * Convert response text (x-user-defined) to a Uint8Array
+   * for partial data.
+   */
+  private convertResponseToUint8Array(text: string): Uint8Array {
+    const array = new Uint8Array(text.length);
+    for (let i = 0; i < text.length; i++) {
+      // & 0xff ensures we only get the lower 8 bits
+      array[i] = text.charCodeAt(i) & 0xff;
+    }
+    return array;
+  }
+
+  /**
    * {@inheritDoc @embedpdf/models!PdfEngine.openDocument}
    *
    * @public
    */
-  openDocument(file: PdfFile, password: string) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocument', file, password);
+  openDocumentFromBuffer(file: PdfFile, password: string) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromBuffer', file, password);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
-      `OpenDocument`,
+      `OpenDocumentFromBuffer`,
       'Begin',
       file.id,
     );
@@ -237,7 +465,7 @@ export class PdfiumEngine implements PdfEngine {
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
-        `OpenDocument`,
+        `OpenDocumentFromBuffer`,
         'End',
         file.id,
       );
@@ -272,7 +500,7 @@ export class PdfiumEngine implements PdfEngine {
         this.logger.perf(
           LOG_SOURCE,
           LOG_CATEGORY,
-          `OpenDocument`,
+          `OpenDocumentFromBuffer`,
           'End',
           file.id,
         );
@@ -305,7 +533,7 @@ export class PdfiumEngine implements PdfEngine {
       searchContexts: new Map(),
     };
 
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocument`, 'End', file.id);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromBuffer`, 'End', file.id);
 
     return PdfTaskHelper.resolve(pdfDoc);
   }

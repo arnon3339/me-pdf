@@ -28,6 +28,8 @@ import {
   PdfFileLoader,
   SearchAllPagesResult,
   MatchFlag,
+  PdfUrlOptions,
+  PdfFileUrl,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -221,12 +223,12 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.openDocument}
+   * {@inheritDoc @embedpdf/models!PdfEngine.openDocumentUrl}
    *
    * @public
    */
-  openDocument(file: PdfFile, password: string) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocument', file, password);
+  openDocumentUrl(file: PdfFileUrl, options?: PdfUrlOptions) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentUrl', file.url, options);
     const requestId = this.generateRequestId(file.id);
     const task = new WorkerTask<PdfDocumentObject>(this.worker, requestId);
 
@@ -234,7 +236,30 @@ export class WebWorkerEngine implements PdfEngine {
       id: requestId,
       type: 'ExecuteRequest',
       data: {
-        name: 'openDocument',
+        name: 'openDocumentUrl',
+        args: [file, options],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.openDocument}
+   *
+   * @public
+   */
+  openDocumentFromBuffer(file: PdfFile, password: string) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromBuffer', file, password);
+    const requestId = this.generateRequestId(file.id);
+    const task = new WorkerTask<PdfDocumentObject>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'openDocumentFromBuffer',
         args: [file, password],
       },
     };

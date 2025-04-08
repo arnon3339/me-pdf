@@ -3,7 +3,7 @@ import { h, Fragment } from 'preact';
 import styles from '../styles/index.css';
 import { EmbedPDF, Viewport } from '@embedpdf/core/preact';
 import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
-import { PdfiumEngine } from '@embedpdf/engines';
+import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import { init as initPdfium } from '@embedpdf/pdfium';
 import { PdfEngine } from '@embedpdf/models';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
@@ -30,13 +30,12 @@ let engineInstance: PdfEngine | null = null;
 
 // **Initialize the Pdfium Engine**
 async function initializeEngine(): Promise<PdfEngine> {
-  if (engineInstance) return engineInstance;
-
-  const response = await fetch('/pdfium.wasm');
-  const wasmBinary = await response.arrayBuffer();
-  const wasmModule = await initPdfium({ wasmBinary });
-  engineInstance = new PdfiumEngine(wasmModule);
-  return engineInstance;
+  const worker = new Worker('/worker.js', {
+    type: 'module',
+  });
+  const engine = new WebWorkerEngine(worker);
+  engineInstance = engine;
+  return engine;
 }
 
 // **Props for the PDFViewer Component**
@@ -357,8 +356,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
             createPluginRegistration(UIPluginPackage, uiConfig),
             createPluginRegistration(LoaderPluginPackage, {
               loadingOptions: { 
-                source: config.src, 
-                id: 'pdf' 
+                type: 'url',
+                pdfFile: {
+                  id: 'pdf',
+                  url: config.src
+                }
               },
             }),
             createPluginRegistration(ViewportPluginPackage, {

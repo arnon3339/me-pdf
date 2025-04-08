@@ -229,7 +229,10 @@ export class EngineRunner {
       case 'destroy':
         task = this.engine[name]!(...args);
         break;
-      case 'openDocument':
+      case 'openDocumentUrl':
+        task = this.engine[name]!(...args);
+        break;
+      case 'openDocumentFromBuffer':
         task = this.engine[name]!(...args);
         break;
       case 'openDocumentFromLoader':

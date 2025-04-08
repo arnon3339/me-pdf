@@ -1,11 +1,11 @@
 import { PdfDocumentObject } from '@embedpdf/models';
-import { PDFBufferLoadingOptions, PDFLoadingStrategy } from './loading-strategy';
+import { PDFUrlLoadingOptions, PDFLoadingStrategy } from './loading-strategy';
 
-export class BufferStrategy implements PDFLoadingStrategy {
-  async load(loadingOptions: PDFBufferLoadingOptions): Promise<PdfDocumentObject> {
+export class UrlStrategy implements PDFLoadingStrategy {
+  async load(loadingOptions: PDFUrlLoadingOptions): Promise<PdfDocumentObject> {
     const { pdfFile, options, engine } = loadingOptions;
 
-    const task = engine.openDocumentFromBuffer(pdfFile, options?.password || '');
+    const task = engine.openDocumentUrl(pdfFile, options);
 
     return new Promise<PdfDocumentObject>((resolve, reject) => {
       task.wait(

@@ -52,21 +52,19 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig> {
 
   private async loadDocument(options: Omit<PDFLoadingOptions, 'engine'>): Promise<PdfDocumentObject> {
     try {
-      this.notifyHandlers({ type: 'start', documentId: options.id });
+      this.notifyHandlers({ type: 'start', documentId: options.pdfFile.id });
       this.coreStore.dispatch(loadDocument())
-      const document = await this.documentLoader.loadDocument({...options, engine: this.engine});
+      const document = await this.documentLoader.loadDocument({...options, engine: this.engine} as PDFLoadingOptions);
       this.coreStore.dispatch(setDocument(document))
       this.loadedDocument = document;
-
-      console.log('Document loaded:', document);
       
-      this.notifyHandlers({ type: 'complete', documentId: options.id });
+      this.notifyHandlers({ type: 'complete', documentId: options.pdfFile.id });
       this.notifyDocumentLoaded(document);
       return document;
     } catch (error) {
       const errorEvent: LoaderEvent = {
         type: 'error',
-        documentId: options.id,
+        documentId: options.pdfFile.id,
         error: error instanceof Error ? error : new Error(String(error))
       };
       this.notifyHandlers(errorEvent);
