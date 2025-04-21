@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'preact/compat';
 import { h, Fragment } from 'preact';
 import styles from '../styles/index.css';
-import { EmbedPDF, Viewport } from '@embedpdf/core/preact';
+import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
 import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import { init, init as initPdfium } from '@embedpdf/pdfium';
 import { PdfEngine } from '@embedpdf/models';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
+import { Viewport } from '@embedpdf/plugin-viewport/preact';
 import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
+import { Scroller } from '@embedpdf/plugin-scroll/preact';
 import { PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
 import { SpreadMode, SpreadPluginPackage } from '@embedpdf/plugin-spread';
-import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-layer';
+//import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-layer';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
-import { RenderLayerPackage } from '@embedpdf/layer-render';
-import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
+//import { RenderLayerPackage } from '@embedpdf/layer-render';
+//import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { FlyOutComponent, GlobalStoreState, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
 import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, panelRenderer, searchRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
@@ -59,7 +61,7 @@ interface PDFViewerProps {
 }
 
 type State = GlobalStoreState<{
-  [ZOOM_PLUGIN_ID]: ZoomState
+  //[ZOOM_PLUGIN_ID]: ZoomState
 }>
 
 // Define components
@@ -342,8 +344,8 @@ export function PDFViewer({ config }: PDFViewerProps) {
   if (!engine) return <div>Loading...</div>;
 
   // Map config values to plugin settings
-  const scrollStrategy = config.scrollStrategy === 'horizontal' ? ScrollStrategy.Horizontal : ScrollStrategy.Vertical;
-  const zoomMode = config.zoomMode === 'fitWidth' ? ZoomMode.FitWidth : ZoomMode.FitPage;
+  //const scrollStrategy = config.scrollStrategy === 'horizontal' ? ScrollStrategy.Horizontal : ScrollStrategy.Vertical;
+  //const zoomMode = config.zoomMode === 'fitWidth' ? ZoomMode.FitWidth : ZoomMode.FitPage;
 
   return (
     <>
@@ -368,7 +370,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
               uiCapability.registerComponentRenderer('search', searchRenderer);
             }
           }}
-          plugins={(viewportElement: HTMLElement) => [
+          plugins={[
             createPluginRegistration(UIPluginPackage, uiConfig),
             createPluginRegistration(LoaderPluginPackage, {
               loadingOptions: { 
@@ -381,17 +383,17 @@ export function PDFViewer({ config }: PDFViewerProps) {
                   mode: 'full-fetch'
                 }
               },
-            }),
+            }), 
             createPluginRegistration(ViewportPluginPackage, {
-              container: viewportElement,
               viewportGap: 10,
             }),
             createPluginRegistration(ScrollPluginPackage, {
-              strategy: scrollStrategy,
+              strategy: ScrollStrategy.Horizontal,
             }),
             createPluginRegistration(PageManagerPluginPackage, { 
               pageGap: 10 
             }),
+            /*
             createPluginRegistration(SpreadPluginPackage, { 
               defaultSpreadMode: SpreadMode.None 
             }),
@@ -403,10 +405,15 @@ export function PDFViewer({ config }: PDFViewerProps) {
                 maxScale: 2 
               })],
             }),
+            */
           ]}
         >
           <NavigationWrapper>
-            <Viewport style={{ width: '100%', height: '100%', flexGrow: 1, backgroundColor: '#f1f3f5' }} />
+            <Viewport style={{ width: '100%', height: '100%', flexGrow: 1, backgroundColor: '#f1f3f5', overflow: 'auto' }}>
+              <Scroller>
+                <h1>Hello</h1>
+              </Scroller>
+            </Viewport>
           </NavigationWrapper>
         </EmbedPDF>
       </div>

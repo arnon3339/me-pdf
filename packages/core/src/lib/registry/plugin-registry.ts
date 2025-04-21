@@ -4,7 +4,8 @@ import {
   PluginBatchRegistration,
   PluginManifest,
   PluginStatus,
-  PluginPackage
+  PluginPackage,
+  PluginRegistryConfig
 } from '../types/plugin';
 import {
   PluginRegistrationError,
@@ -13,7 +14,7 @@ import {
   CapabilityNotFoundError,
   PluginConfigurationError
 } from '../types/errors';
-import { PdfEngine } from '@embedpdf/models';
+import { PdfEngine, Rotation } from '@embedpdf/models';
 import { Action, CoreState, Store, initialCoreState, Reducer } from '../store';
 import { CoreAction } from '../store/actions';
 import { coreReducer } from '../store/reducer';
@@ -40,11 +41,13 @@ export class PluginRegistry {
   private processingRegistrations: PluginRegistration[] = [];
   private initialized = false;
   private isInitializing = false;
+  private initialCoreState: CoreState;
 
-  constructor(engine: PdfEngine) {
+  constructor(engine: PdfEngine, config?: PluginRegistryConfig) {
     this.resolver = new DependencyResolver();
     this.engine = engine;
-    this.store = new Store<CoreState, CoreAction>(coreReducer, initialCoreState);
+    this.initialCoreState = initialCoreState(config);
+    this.store = new Store<CoreState, CoreAction>(coreReducer, this.initialCoreState);
   }
 
   /**
@@ -99,7 +102,12 @@ export class PluginRegistry {
       // We need one type assertion here since we can't fully reconcile TAction with Action
       // due to TypeScript's type system limitations with generic variance
       pluginPackage.reducer as Reducer<TState, Action>,
-      pluginPackage.initialState
+      'function' === typeof pluginPackage.initialState
+        ? (pluginPackage.initialState as (coreState: CoreState, config: TConfig) => TState)(this.initialCoreState, {
+          ...pluginPackage.manifest.defaultConfig,
+          ...config
+        })
+        : pluginPackage.initialState
     );
 
     this.pendingRegistrations.push({
@@ -120,6 +128,7 @@ export class PluginRegistry {
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
+      console.log('initialize already initialized');
       throw new PluginRegistrationError('Registry is already initialized');
     }
 
@@ -134,6 +143,8 @@ export class PluginRegistry {
         // Move current pending registrations to processing
         this.processingRegistrations = [...this.pendingRegistrations];
         this.pendingRegistrations = [];
+
+        console.log('initialize processingRegistrations', this.processingRegistrations);
 
         // Build dependency graph for current batch
         for (const reg of this.processingRegistrations) {
@@ -232,6 +243,8 @@ export class PluginRegistry {
       }
     }
 
+    console.log('initializePlugin', manifest.id, manifest.provides);
+
     // Register provided capabilities
     for (const capability of manifest.provides) {
       if (this.capabilities.has(capability)) {
@@ -257,6 +270,7 @@ export class PluginRegistry {
       // Cleanup on initialization failure
       this.plugins.delete(manifest.id);
       this.manifests.delete(manifest.id);
+      console.log('initializePlugin failed', manifest.id, manifest.provides);
       manifest.provides.forEach(cap => this.capabilities.delete(cap));
       throw error;
     }

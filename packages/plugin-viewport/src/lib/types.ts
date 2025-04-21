@@ -1,14 +1,15 @@
-import { BasePluginConfig } from "@embedpdf/core";
-import { EventControlOptions } from "./utils/event-control";
+import { BasePluginConfig, EventControlOptions } from "@embedpdf/core";
 
-export interface ViewportPluginConfig extends BasePluginConfig {
-  container?: HTMLElement; 
-  defaultWidth?: number;
-  defaultHeight?: number;    
+export interface ViewportState {
+  viewportGap: number;
+  viewportMetrics: ViewportMetrics;
+}
+
+export interface ViewportPluginConfig extends BasePluginConfig {  
   viewportGap?: number;
 }
 
-export interface ViewportMetrics {
+export interface ViewportInputMetrics {
   width: number;
   height: number;
   scrollTop: number;
@@ -17,10 +18,18 @@ export interface ViewportMetrics {
   clientHeight: number;
   scrollWidth: number;
   scrollHeight: number;
+}
+
+export interface ViewportMetrics extends ViewportInputMetrics {
   relativePosition: {
     x: number;
     y: number;
   };
+}
+
+export interface ViewportScrollMetrics {
+  scrollTop: number;
+  scrollLeft: number;
 }
 
 export interface ScrollControlOptions {
@@ -28,29 +37,13 @@ export interface ScrollControlOptions {
   wait: number;
 }
 
-export interface WrapperDivOptions {
-  id: string;
-  className?: string;
-  styles?: Partial<CSSStyleDeclaration>;
-  position?: number; // Optional position in the wrapper stack (0 is closest to container)
-}
-
 export interface ViewportCapability {
-  getContainer: () => HTMLElement;
-  getMetrics: () => ViewportMetrics;
-  setContainer: (container: HTMLElement) => void;
   getViewportGap: () => number;
-  // Inner div methods
-  getInnerDiv: () => HTMLElement;
-  // Wrapper div methods
-  addWrapperDiv: (options: WrapperDivOptions) => HTMLElement;
-  getWrapperDiv: (id: string) => HTMLElement | null;
-  removeWrapperDiv: (id: string) => boolean;
-  // Event handlers
+  getMetrics: () => ViewportMetrics;
+  setViewportMetrics: (metrics: ViewportInputMetrics) => void;
+  setViewportScrollMetrics: (metrics: ViewportScrollMetrics) => void;
   onViewportChange: (
     handler: (metrics: ViewportMetrics) => void,
     options?: EventControlOptions
   ) => (metrics: ViewportMetrics) => void;
-  onResize: (handler: (metrics: ViewportMetrics) => void, options?: EventControlOptions) => (metrics: ViewportMetrics) => void;
-  onContainerChange: (handler: (container: HTMLElement) => void) => void;
 }

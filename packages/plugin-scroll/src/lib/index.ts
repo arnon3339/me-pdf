@@ -1,13 +1,20 @@
 import { PluginPackage } from "@embedpdf/core";
 import { ScrollPlugin } from "./scroll-plugin";
 import { manifest, SCROLL_PLUGIN_ID } from "./manifest";
-import { ScrollPluginConfig } from "./types";
+import { ScrollPluginConfig, ScrollState } from "./types";
+import { scrollReducer, initialState } from "./reducer";
+import { ScrollAction } from "./actions";
 
-export const ScrollPluginPackage: PluginPackage<ScrollPlugin, ScrollPluginConfig> = {
+export const ScrollPluginPackage: PluginPackage<
+  ScrollPlugin,
+  ScrollPluginConfig,
+  ScrollState,
+  ScrollAction
+> = {
   manifest,
   create: (registry, _engine, config) => new ScrollPlugin(SCROLL_PLUGIN_ID, registry, config),
-  reducer: () => {},
-  initialState: {}
+  reducer: scrollReducer,
+  initialState: (coreState, config) => initialState(coreState, config)
 };
 
 export * from "./scroll-plugin";

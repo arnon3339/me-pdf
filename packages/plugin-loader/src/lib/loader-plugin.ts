@@ -4,7 +4,7 @@ import { PDFDocumentLoader } from "./loader";
 import { PDFLoadingOptions } from "./loader/strategies/loading-strategy";
 import { LoaderCapability, LoaderEvent, LoaderPluginConfig } from "./types";
 
-export class LoaderPlugin extends BasePlugin<LoaderPluginConfig> {
+export class LoaderPlugin extends BasePlugin<LoaderPluginConfig, LoaderCapability> {
   private loaderHandlers: ((loaderEvent: LoaderEvent) => void)[] = [];
   private documentLoadedHandlers: ((document: PdfDocumentObject) => void)[] = [];
   private documentLoader: PDFDocumentLoader;
@@ -20,7 +20,7 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig> {
     this.documentLoader = new PDFDocumentLoader();
   }
 
-  provides(): LoaderCapability {
+  protected buildCapability(): LoaderCapability {
     return {
       onLoaderEvent: (handler) => this.loaderHandlers.push(handler),
       loadDocument: (options) => this.loadDocument(options),

@@ -27,36 +27,46 @@ export class PluginStore<PluginState, PluginAction extends Action> {
   }
 
   /**
-   * Dispatches an action for the plugin.
+   * Dispatches an action for the plugin and returns the *new* global state.
+   * If you only need the plugin’s updated state, call `getState()` afterward.
    * @param action The action to dispatch.
+   * @returns The updated global store state (after plugin reducer).
    */
-  dispatch(action: PluginAction) {
-    this.store.dispatchToPlugin(this.pluginId, action);
+  dispatch(action: PluginAction): PluginState {
+    return this.store.dispatchToPlugin(this.pluginId, action);
   }
 
   /**
    * Subscribes to state changes only for this specific plugin.
+   * You now receive (action, newPluginState, oldPluginState) in the callback.
+   *
    * @param listener The callback to invoke when plugin state changes.
    * @returns A function to unsubscribe the listener.
    */
-  subscribeToState(listener: (action: PluginAction, state: PluginState) => void) {
-    return this.store.subscribeToPlugin(this.pluginId, (action, state) => {
-      listener(action as PluginAction, state as PluginState);
+  subscribeToState(
+    listener: (action: PluginAction, newState: PluginState, oldState: PluginState) => void
+  ) {
+    return this.store.subscribeToPlugin(this.pluginId, (action, newPluginState, oldPluginState) => {
+      listener(action as PluginAction, newPluginState as PluginState, oldPluginState as PluginState);
     });
   }
 
   /**
    * Subscribes to a specific action type for the plugin.
+   * This still uses the main store's `onAction`, so you get the *global*
+   * old/new store states there. If you specifically want old/new plugin state,
+   * use `subscribeToState` instead.
+   *
    * @param type The action type to listen for.
    * @param handler The callback to invoke when the action occurs.
    * @returns A function to unsubscribe the handler.
    */
   onAction<T extends PluginAction['type']>(
     type: T,
-    handler: (action: Extract<PluginAction, { type: T }>, state: PluginState) => void
+    handler: (action: Extract<PluginAction, { type: T }>, state: PluginState, oldState: PluginState) => void
   ) {
-    return this.store.onAction(type, (action, state) => {
-      handler(action as Extract<PluginAction, { type: T }>, state.plugins[this.pluginId] as PluginState);
+    return this.store.onAction(type, (action, state, oldState) => {
+      handler(action as Extract<PluginAction, { type: T }>, state.plugins[this.pluginId] as PluginState, oldState.plugins[this.pluginId] as PluginState);
     });
   }
 }

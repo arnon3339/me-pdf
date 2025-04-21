@@ -1,29 +1,21 @@
 'use client'
 
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import EmbedPDF from "@embedpdf/snippet";
 
 export default function PDFViewer() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [instance, setInstance] = useState<ReturnType<typeof EmbedPDF.init> | null>(null);
-  
-  useEffect(() => {
-    if (!ref.current) return;
-    if (instance) return;
-
-    const EPDFinstance = EmbedPDF.init({
-      type: 'container',
-      target: ref.current,
-      src: '/ebook.pdf',
-      wasmUrl: '/wasm/pdfium.wasm',
-    }) 
-
-    if(EPDFinstance) {
-      setInstance(EPDFinstance);
+  const viewerRef = useCallback((node: HTMLDivElement) => {
+    if (node !== null) {
+      EmbedPDF.init({
+        type: 'container',
+        target: node,
+        src: '/ebook.pdf',
+        wasmUrl: '/wasm/pdfium.wasm',
+      })
     }
   }, []);
 
   return (
-    <div id="pdf-viewer" style={{ height: '500px' }} ref={ref} />
+    <div id="pdf-viewer" style={{ height: '500px' }} ref={viewerRef} />
   )
 }

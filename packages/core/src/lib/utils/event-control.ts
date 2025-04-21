@@ -1,45 +1,43 @@
-import { ViewportMetrics } from "../types";
-
-export type EventHandler = (viewport: ViewportMetrics) => void;
+export type EventHandler<T> = (data: T) => void;
 
 export interface EventControlOptions {
   mode: 'debounce' | 'throttle';
   wait: number;
 }
 
-export class EventControl {
+export class EventControl<T> {
   private timeoutId?: number;
   private lastRun: number = 0;
 
   constructor(
-    private handler: EventHandler,
+    private handler: EventHandler<T>,
     private options: EventControlOptions
   ) {}
 
-  handle = (viewport: ViewportMetrics): void => {
+  handle = (data: T): void => {
     if (this.options.mode === 'debounce') {
-      this.debounce(viewport);
+      this.debounce(data);
     } else {
-      this.throttle(viewport);
+      this.throttle(data);
     }
   };
 
-  private debounce(viewport: ViewportMetrics): void {
+  private debounce(data: T): void {
     if (this.timeoutId) {
       window.clearTimeout(this.timeoutId);
     }
     
     this.timeoutId = window.setTimeout(() => {
-      this.handler(viewport);
+      this.handler(data);
       this.timeoutId = undefined;
     }, this.options.wait);
   }
 
-  private throttle(viewport: ViewportMetrics): void {
+  private throttle(data: T): void {
     const now = Date.now();
     
     if (now - this.lastRun >= this.options.wait) {
-      this.handler(viewport);
+      this.handler(data);
       this.lastRun = now;
       
       if (this.timeoutId) {
@@ -52,7 +50,7 @@ export class EventControl {
       }
       
       this.timeoutId = window.setTimeout(() => {
-        this.handler(viewport);
+        this.handler(data);
         this.lastRun = Date.now();
         this.timeoutId = undefined;
       }, this.options.wait - (now - this.lastRun));

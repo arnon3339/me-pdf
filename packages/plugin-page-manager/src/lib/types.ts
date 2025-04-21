@@ -14,7 +14,7 @@ export interface PageManagerCapability {
   getPages(): PdfPageObject[];
   getSpreadPages(): PdfPageObject[][];
   getPageGap(): number;
-  createPageElement(page: PdfPageObject, pageNum: number): HTMLElement;
+  //createPageElement(page: PdfPageObject, pageNum: number): HTMLElement;
   getScale(): number;
   updateScale(scale: number): void;
   getRotation(): Rotation;

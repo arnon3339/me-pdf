@@ -2,17 +2,18 @@ import { BasePlugin, IPlugin, PluginRegistry, SetDocumentAction } from "@embedpd
 import { PdfDocumentObject, PdfPageObject, Rotation, transformSize } from "@embedpdf/models";
 import { LoaderCapability, LoaderPlugin } from "@embedpdf/plugin-loader";
 import { SpreadCapability, SpreadPlugin, SpreadMode } from "@embedpdf/plugin-spread";
-import { LayerCapability, LayerController, LayerPlugin } from "@embedpdf/plugin-layer";
+//import { LayerCapability, LayerController, LayerPlugin } from "@embedpdf/plugin-layer";
 import { PageManagerCapability, PageManagerPluginConfig, UpdateVisiblePages } from "./types";
 
 // Define a structure that combines page element, controller, and rendering properties
+/*
 interface PageElementCache {
   element: HTMLElement;
   controller: LayerController | null;
   scale: number;
   rotation: Rotation;
   pageNum: number;
-}
+}*/
 
 // Rotation helper functions - simplified with modular arithmetic
 function getNextRotation(current: Rotation): Rotation {
@@ -23,20 +24,20 @@ function getPreviousRotation(current: Rotation): Rotation {
   return ((current + 3) % 4) as Rotation; // +3 is equivalent to -1 in modulo 4
 }
 
-export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
+export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig, PageManagerCapability> {
   private spread: SpreadCapability | null;
-  private layer: LayerCapability;
+  //private layer: LayerCapability; 
 
   private pagesChangeHandlers: ((pages: PdfPageObject[][]) => void)[] = [];
   private pageManagerInitializedHandlers: ((pages: PdfPageObject[][]) => void)[] = [];
-
+ 
   private pdfDocument: PdfDocumentObject | null = null;
   private pages: PdfPageObject[] = [];
   private spreadPages: PdfPageObject[][] = [];
   private pageGap: number = 20;
   
   // Unified cache that contains both element and controller together with metadata
-  private pageCache: Map<number, PageElementCache> = new Map();
+  //private pageCache: Map<number, PageElementCache> = new Map();
   
   private rotation: Rotation = Rotation.Degree0;
   private scale: number = 1;
@@ -53,7 +54,7 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
     super(id, registry);
     const spreadPlugin = registry.getPlugin<SpreadPlugin>('spread');
     this.spread = spreadPlugin ? spreadPlugin.provides() : null;
-    this.layer = this.registry.getPlugin<LayerPlugin>('layer')!.provides();
+    //this.layer = this.registry.getPlugin<LayerPlugin>('layer')!.provides();
 
     // Listen for document loading
     this.coreStore.onAction('SET_DOCUMENT', this.handleDocumentLoaded.bind(this));
@@ -62,14 +63,14 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
     }
   }
 
-  provides(): PageManagerCapability {
+  protected buildCapability(): PageManagerCapability {
     return {
       onPagesChange: (handler) => this.pagesChangeHandlers.push(handler),
       onPageManagerInitialized: (handler) => this.pageManagerInitializedHandlers.push(handler),
       getPages: () => this.pages,
       getSpreadPages: () => this.spreadPages,
       getPageGap: () => this.pageGap,
-      createPageElement: this.createPageElement.bind(this),
+      //createPageElement: this.createPageElement.bind(this),
       getScale: () => this.scale,
       updateScale: this.updateScale.bind(this),
       getRotation: () => this.rotation,
@@ -179,6 +180,8 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
     for (const pageIndex of sortedIndexes) {
       // We need to adjust for 1-indexed page numbers in the cache
       const pageNum = pageIndex + 1;
+
+      /*
       const cached = this.pageCache.get(pageNum);
       
       if (cached?.controller) {
@@ -194,6 +197,7 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
           console.error(`Error updating page ${pageIndex}:`, error);
         });
       }
+      */
     }
   }
   
@@ -224,18 +228,20 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
     for (let i = 0; i < Math.min(pagesToClear, nonVisibleRendered.length); i++) {
       const pageIndex = nonVisibleRendered[i];
       const pageNum = pageIndex + 1; // Adjust for 1-indexed page numbers
+      /*
       const cached = this.pageCache.get(pageNum);
       
       if (cached?.controller) {
         cached.controller.removeCache().catch(error => {
           console.error(`Error removing cache for page ${pageIndex}:`, error);
         });
-      }
+      }*/
     }
   }
 
-  createPageElement(page: PdfPageObject, pageNum: number): HTMLElement {
+  createPageElement(page: PdfPageObject, pageNum: number) {
     // Check if we already have a cached element for this page
+    /*
     const cached = this.pageCache.get(pageNum);
     
     // If we have a cached version with current scale and rotation, reuse it
@@ -292,6 +298,7 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
     this.renderPage(page, pageNum, pageElement);
     
     return pageElement;
+    */
   }
   
   /**
@@ -305,6 +312,7 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
     
     const pageIndex = pageNum - 1; // Convert to 0-indexed for the render method
     
+    /*
     this.layer.render(this.pdfDocument, pageIndex, element, {
       scale: this.scale,
       rotation: this.rotation,
@@ -318,6 +326,7 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
     }).catch(error => {
       console.error(`Error rendering page ${pageNum}:`, error);
     });
+    */
   }
 
   private handleDocumentLoaded(action: SetDocumentAction): void {
@@ -344,6 +353,7 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
   }
 
   async destroy(): Promise<void> {
+    /*
     // Clean up all layer controllers
     for (const [pageNum, cached] of this.pageCache.entries()) {
       if (cached.controller) {
@@ -356,5 +366,6 @@ export class PageManagerPlugin extends BasePlugin<PageManagerPluginConfig> {
     }
     
     this.pageCache.clear();
+    */
   }
 }

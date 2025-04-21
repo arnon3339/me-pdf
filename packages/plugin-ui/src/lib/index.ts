@@ -3,9 +3,9 @@ import { UIPlugin } from "./ui-plugin";
 import { manifest, UI_PLUGIN_ID } from "./manifest";
 import { UIPluginConfig, UIPluginState } from "./types";
 import { uiReducer, initialState } from "./reducer";
-import { UIAction } from "./actions";
+import { UIPluginAction } from "./actions";
 
-export const UIPluginPackage: PluginPackage<UIPlugin, UIPluginConfig, UIPluginState, UIAction> = {
+export const UIPluginPackage: PluginPackage<UIPlugin, UIPluginConfig, UIPluginState, UIPluginAction> = {
   manifest,
   create: (registry, _engine, config) => new UIPlugin(UI_PLUGIN_ID, registry, config!),
   reducer: uiReducer,

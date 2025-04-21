@@ -9,7 +9,7 @@ export function NavigationWrapper({ children }: { children: ComponentChildren })
   const navbars = ui ? {top: ui.getHeadersByPlacement('top'), left: ui.getHeadersByPlacement('left'), right: ui.getHeadersByPlacement('right'), bottom: ui.getHeadersByPlacement('bottom')} : {top: [], left: [], right: [], bottom: []};
   const flyouts = ui ? ui.getFlyOuts() : [];
   const panels = ui ? {left: ui.getPanelsByLocation('left'), right: ui.getPanelsByLocation('right')} : {left: [], right: []};
-
+  
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {navbars.top.length > 0 && (

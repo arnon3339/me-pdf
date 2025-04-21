@@ -11,6 +11,7 @@ export const manifest: PluginManifest<ScrollPluginConfig> = {
   requires: ['viewport', 'page-manager'],
   optional: [],
   defaultConfig: {
-    enabled: true
+    enabled: true,
+    pageGap: 10
   }
 }; 

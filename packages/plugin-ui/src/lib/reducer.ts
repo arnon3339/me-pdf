@@ -1,6 +1,6 @@
 import { Reducer } from "@embedpdf/core";
 import { UIPluginState } from "./types";
-import { UI_INIT_COMPONENTS, UI_INIT_FLYOUT, UI_SET_HEADER_VISIBLE, UI_TOGGLE_FLYOUT, UI_TOGGLE_PANEL, UIAction } from "./actions";
+import { UI_INIT_COMPONENTS, UI_INIT_FLYOUT, UI_SET_HEADER_VISIBLE, UI_TOGGLE_FLYOUT, UI_TOGGLE_PANEL, UIPluginAction } from "./actions";
 
 export const initialState: UIPluginState = {
   flyOut: {},
@@ -15,7 +15,7 @@ export const initialState: UIPluginState = {
   custom: {}
 };
 
-export const uiReducer: Reducer<UIPluginState, UIAction> = (
+export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (
   state = initialState,
   action
 ) => {

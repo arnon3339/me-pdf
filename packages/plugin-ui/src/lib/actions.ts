@@ -32,7 +32,7 @@ export interface UiTogglePanelAction extends Action {
   payload: { id: string; open?: boolean };
 }
 
-export type UIAction =
+export type UIPluginAction =
   | UiInitComponentsAction
   | UiInitFlyoutAction
   | UiToggleFlyoutAction

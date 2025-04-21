@@ -4,7 +4,7 @@ import { SpreadCapability, SpreadMode, SpreadPluginConfig, SpreadState } from '.
 import { setSpreadMode } from './actions';
 import { SpreadAction } from './actions';
 
-export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadState, SpreadAction> {
+export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadCapability, SpreadState, SpreadAction> {
   private spreadHandlers: ((spreadMode: SpreadMode) => void)[] = [];
 
   constructor(id: string, registry: PluginRegistry) {
@@ -55,7 +55,7 @@ export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadState, Sp
     this.spreadHandlers.forEach((handler) => handler(spreadMode));
   }
 
-  provides(): SpreadCapability {
+  protected buildCapability(): SpreadCapability {
     return {
       onSpreadChange: (handler) => this.spreadHandlers.push(handler),
       setSpreadMode: (mode) => this.setSpreadMode(mode),

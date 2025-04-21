@@ -7,3 +7,5 @@ export * from './base/base-plugin';
 export * from './store/types';
 export * from './store/actions';
 export * from './store/initial-state';
+export * from './utils/event-control';
+export * from './utils/eventing';

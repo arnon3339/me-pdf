@@ -1,4 +1,4 @@
-import { IPlugin, PluginRegistry } from "@embedpdf/core";
+import { BasePlugin, IPlugin, PluginRegistry } from "@embedpdf/core";
 import { PdfDocumentObject, PdfEngine, PdfPageObject, transformSize } from "@embedpdf/models";
 import { LayerCapability, LayerPluginConfig, LayerRenderOptions, ILayerPlugin, LayerController } from "./types";
 
@@ -85,17 +85,18 @@ class LayerControllerImpl implements LayerController {
   }
 }
 
-export class LayerPlugin implements IPlugin<LayerPluginConfig> {
+export class LayerPlugin extends BasePlugin<LayerPluginConfig, LayerCapability> {
   private layers: Map<string, ILayerPlugin> = new Map();
 
   constructor(
     public readonly id: string,
-    private registry: PluginRegistry,
+    registry: PluginRegistry,
     private _engine: PdfEngine
   ) {
+    super(id, registry);
   }
 
-  provides(): LayerCapability {
+  protected buildCapability(): LayerCapability {
     return {
       render: (pdfDocument, pageIndex, container, options) => 
         this.renderLayers(pdfDocument, pageIndex, container, options),
@@ -110,9 +111,9 @@ export class LayerPlugin implements IPlugin<LayerPluginConfig> {
     for (const layer of config.layers) {
       await this.registry.registerPlugin({
         manifest: layer.package.manifest,
-        create: (registry, engine) => {
+        create: (registry, engine, config) => {
           // Layer plugin creation logic
-          const layerPlugin = layer.package.create(registry, engine);
+          const layerPlugin = layer.package.create(registry, engine, config);
           this.addLayer(layerPlugin);
           return layerPlugin;
         },

@@ -3,9 +3,9 @@ import { childrenFunctionOptions, FlyOutComponent, GroupedItemsComponent, Header
 import { UIComponent } from "./ui-component";
 import { arePropsEqual } from "./utils";
 import { initialState } from "./reducer";
-import { uiInitComponents, uiInitFlyout, uiSetHeaderVisible, uiToggleFlyout, uiTogglePanel } from "./actions";
+import { uiInitComponents, uiInitFlyout, UIPluginAction, uiSetHeaderVisible, uiToggleFlyout, uiTogglePanel } from "./actions";
 
-export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
+export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginState, UIPluginAction> {
   private componentRenderers: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any> = {};
   private components: Record<string, UIComponent<UIComponentType<any>>> = {};
   private config: UIPluginConfig;
@@ -16,7 +16,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
 
   constructor(id: string, registry: PluginRegistry, config: UIPluginConfig) {
     super(id, registry);
-    this.config = config;
+    this.config = config; 
 
     // Subscribe exactly once to the global store
     this.globalStoreSubscription = this.registry.getStore().subscribe((_action, newState) => {
@@ -147,7 +147,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
     parentComponent.addChild(slotId, childComponent, slotPriority);
   }
 
-  provides(): UICapability {
+  protected buildCapability(): UICapability {
     return {
       registerComponentRenderer: (type: string, renderer: (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any) => {
         this.componentRenderers[type] = renderer;

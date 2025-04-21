@@ -19,7 +19,7 @@ import {
   SearchAction,
 } from "./actions";
 
-export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState, SearchAction> {
+export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapability, SearchState, SearchAction> {
   private loader: LoaderCapability;
   private currentDocument?: PdfDocumentObject;
   private engine: PdfEngine;
@@ -60,7 +60,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchState, Se
     );
   }
 
-  provides(): SearchCapability {
+  protected buildCapability(): SearchCapability {
     return {
       startSearch: this.startSearchSession.bind(this),
       stopSearch: this.stopSearchSession.bind(this),

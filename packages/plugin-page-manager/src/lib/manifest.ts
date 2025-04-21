@@ -9,7 +9,7 @@ export const manifest: PluginManifest<PageManagerPluginConfig> = {
   name: 'Page Manager Plugin',
   version: '1.0.0',
   provides: ['page-manager'],
-  requires: ['layer'],
+  requires: [],
   optional: ['spread'],
   defaultConfig: {
     enabled: true,

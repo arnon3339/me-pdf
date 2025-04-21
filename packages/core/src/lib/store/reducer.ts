@@ -1,9 +1,9 @@
 import { Reducer } from "./types";
-import { CoreState, initialCoreState } from "./initial-state";
+import { CoreState } from "./initial-state";
 import { CoreAction, LOAD_DOCUMENT, SET_DOCUMENT, SET_DOCUMENT_ERROR } from "./actions";
 
 export const coreReducer: Reducer<CoreState, CoreAction> = (
-  state = initialCoreState,
+  state,
   action
 ): CoreState => {
   switch (action.type) {
