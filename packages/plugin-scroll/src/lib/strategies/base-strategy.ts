@@ -70,8 +70,8 @@ export abstract class BaseScrollStrategy {
     const currentPage = this.determineCurrentPage(pageVisibilityMetrics);
     const first     = virtualItems[ range.start ];
     const last      = virtualItems[ range.end ];
-    const topPadding    = first   ? first.offset * scale : 0;
-    const bottomPadding = last
+    const startSpacing    = first   ? first.offset * scale : 0;
+    const endSpacing = last
       ? (virtualItems[virtualItems.length - 1].offset +  // end of content
          virtualItems[virtualItems.length - 1].height  ) * scale -  // minus
         (last.offset + last.height) * scale             // end of last rendered
@@ -83,8 +83,8 @@ export abstract class BaseScrollStrategy {
       pageVisibilityMetrics,
       renderedPageIndexes,
       scrollOffset: { x: viewport.scrollLeft, y: viewport.scrollTop },
-      topPadding,
-      bottomPadding,
+      startSpacing,
+      endSpacing,
     };
   }
 

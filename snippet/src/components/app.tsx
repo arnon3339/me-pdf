@@ -410,9 +410,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
         >
           <NavigationWrapper>
             <Viewport style={{ width: '100%', height: '100%', flexGrow: 1, backgroundColor: '#f1f3f5', overflow: 'auto' }}>
-              <Scroller>
-                <h1>Hello</h1>
-              </Scroller>
+              <Scroller />
             </Viewport>
           </NavigationWrapper>
         </EmbedPDF>

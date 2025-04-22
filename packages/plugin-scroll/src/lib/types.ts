@@ -41,8 +41,8 @@ export interface ScrollMetrics {
   pageVisibilityMetrics: PageVisibilityMetrics[];
   renderedPageIndexes: number[];
   scrollOffset: { x: number; y: number };
-  topPadding: number;
-  bottomPadding: number;
+  startSpacing: number;
+  endSpacing: number;
 }
 
 export interface ScrollStrategyInterface {

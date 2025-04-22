@@ -11,26 +11,26 @@ export function NavigationWrapper({ children }: { children: ComponentChildren })
   const panels = ui ? {left: ui.getPanelsByLocation('left'), right: ui.getPanelsByLocation('right')} : {left: [], right: []};
   
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div id="viewer-wrapper" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {navbars.top.length > 0 && (
-        <div style={{ width: '100%' }}>
+        <div id="viewer-header-top" style={{ width: '100%' }}>
           {navbars.top.map(header => <ComponentWrapper key={header.props.id} component={header} />)}
         </div>
       )}
-      <div style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, overflow: 'hidden' }}>
+      <div id="viewer-container" style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, overflow: 'hidden' }}>
         {navbars.left.length > 0 && (
-            <div>{navbars.left.map(header => <ComponentWrapper key={header.props.id} component={header} />)}</div>
+            <div id="viewer-header-left">{navbars.left.map(header => <ComponentWrapper key={header.props.id} component={header} />)}</div>
         )}
         {panels.left.length > 0 && (
           <>
             {panels.left.map(panel => <ComponentWrapper key={panel.props.id} component={panel} />)}
           </>
         )}
-        <div style={{ flexGrow: 1, position: 'relative' }}>
+        <div id="viewer-content" style={{ flexGrow: 1, position: 'relative', display: 'flex', width: '100%', overflow: 'hidden' }}>
           {children}
         </div>
         {navbars.right.length > 0 && (
-          <div>
+          <div id="viewer-header-right">
             {navbars.right.map(header => <ComponentWrapper key={header.props.id} component={header} />)}
           </div>
         )}
@@ -41,7 +41,7 @@ export function NavigationWrapper({ children }: { children: ComponentChildren })
         )}
       </div>
       {navbars.bottom.length > 0 && (
-        <div style={{ width: '100%' }}>
+        <div id="viewer-header-bottom" style={{ width: '100%' }}>
           {navbars.bottom.map(header => <ComponentWrapper key={header.props.id} component={header} />)}
         </div>
       )}

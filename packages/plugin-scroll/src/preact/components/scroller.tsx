@@ -1,14 +1,14 @@
 /** @jsxImportSource preact */
-import { ComponentChildren, JSX } from 'preact';
+import { JSX } from 'preact';
 import { useScroll } from '../hooks';
 import { useEffect, useState } from 'preact/hooks';
 import { ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
 
 type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  children: ComponentChildren;
+
 };
 
-export function Scroller({ children, ...props }: ScrollerProps) {
+export function Scroller({ ...props }: ScrollerProps) {
   const scroll = useScroll();
   const [state, setState] = useState<ScrollState | null>(
     () => scroll?.getState() ?? null
@@ -30,10 +30,19 @@ export function Scroller({ children, ...props }: ScrollerProps) {
     margin: '0 auto',
     ...(state.strategy === ScrollStrategy.Horizontal) && {
       display: 'flex',
-      flexDirection: 'row',
+      flexDirection: 'row', 
     }
   }}>
-    <div style={{ height: state.topPadding }} />
+    <div style={{ 
+      ...(state.strategy === ScrollStrategy.Horizontal) ? {
+        width: state.startSpacing,
+        height: '100%',
+        flexShrink: 0,
+      } : {
+        height: state.startSpacing,
+        width: '100%'
+      }
+    }} />
     <div style={{ 
       gap: state.pageGap, 
       display: 'flex', 
@@ -65,6 +74,15 @@ export function Scroller({ children, ...props }: ScrollerProps) {
         </div>
       )}
     </div>
-    <div style={{ height: state.bottomPadding }} />
+    <div style={{ 
+      ...(state.strategy === ScrollStrategy.Horizontal) ? {
+        width: state.endSpacing,
+        height: '100%',
+        flexShrink: 0,
+      } : {
+        height: state.endSpacing,
+        width: '100%'
+      }
+    }} />
   </div>;
 }
