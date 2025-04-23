@@ -1,7 +1,6 @@
-import { BasePlugin, CoreState, PluginRegistry, StoreState } from "@embedpdf/core";
+import { BasePlugin, CoreState, PluginRegistry, StoreState, arePropsEqual } from "@embedpdf/core";
 import { childrenFunctionOptions, FlyOutComponent, GroupedItemsComponent, HeaderComponent, PanelComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
 import { UIComponent } from "./ui-component";
-import { arePropsEqual } from "./utils";
 import { initialState } from "./reducer";
 import { uiInitComponents, uiInitFlyout, UIPluginAction, uiSetHeaderVisible, uiToggleFlyout, uiTogglePanel } from "./actions";
 
@@ -16,7 +15,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
 
   constructor(id: string, registry: PluginRegistry, config: UIPluginConfig) {
     super(id, registry);
-    this.config = config; 
+    this.config = config;
 
     // Subscribe exactly once to the global store
     this.globalStoreSubscription = this.registry.getStore().subscribe((_action, newState) => {

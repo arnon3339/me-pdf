@@ -9,6 +9,17 @@ export interface ScrollState extends ScrollMetrics {
   desiredScrollPosition: { x: number; y: number };
   strategy: ScrollStrategy;
   pageGap: number;
+  scale: number;
+}
+
+export interface ScrollerLayout {
+  startSpacing: number;
+  endSpacing: number;
+  totalWidth: number;
+  totalHeight: number;
+  pageGap: number;
+  strategy: ScrollState['strategy'];
+  items: VirtualItem[];
 }
 
 export enum ScrollStrategy {
@@ -66,6 +77,7 @@ export type LayoutChangePayload =
   Pick<ScrollState, 'virtualItems' | 'totalContentSize'>;
 
 export interface ScrollCapability {
+  onScrollerData: EventHook<ScrollerLayout>;
   onStateChange: EventHook<ScrollState>;
   onScroll      : EventHook<ScrollMetrics>;
   onPageChange  : EventHook<number>;
@@ -76,4 +88,5 @@ export interface ScrollCapability {
   getMetrics(viewport?: ViewportMetrics): ScrollMetrics;
   getLayout(): LayoutChangePayload;
   getState(): ScrollState;
+  getScrollerLayout(): ScrollerLayout;
 }

@@ -17,8 +17,9 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
 //import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { FlyOutComponent, GlobalStoreState, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
-import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, panelRenderer, searchRenderer, toggleButtonRenderer, toolButtonRenderer } from './renderers';
+import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, panelRenderer, searchRenderer, toggleButtonRenderer, toolButtonRenderer, zoomRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
+import { ZOOM_PLUGIN_ID, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -61,7 +62,7 @@ interface PDFViewerProps {
 }
 
 type State = GlobalStoreState<{
-  //[ZOOM_PLUGIN_ID]: ZoomState
+  [ZOOM_PLUGIN_ID]: ZoomState
 }>
 
 // Define components
@@ -161,7 +162,8 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'filePickerButton', priority: 3 }, 
       { componentId: 'downloadButton', priority: 4 }, 
       { componentId: 'moreToggleButton', priority: 5 }, 
-      { componentId: 'divider1', priority: 6 }
+      { componentId: 'divider1', priority: 6 },
+      { componentId: 'zoom', priority: 7 }
     ],  
     props: {
       gap: 10
@@ -302,6 +304,21 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'custom',
     render: 'search'
   },
+  zoom: {
+    id: 'zoom',
+    type: 'custom',
+    render: 'zoom',
+    initialState: {
+      zoomLevel: 1
+    },
+    props: (initialState: any) => ({
+      zoomLevel: initialState.zoomLevel
+    }),
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      zoomLevel: storeState.plugins.zoom.currentZoomLevel
+    })
+  },
   rightPanel: {
     id: 'rightPanel',
     type: 'panel',
@@ -368,6 +385,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
               uiCapability.registerComponentRenderer('actionTabs', actionTabsRenderer);
               uiCapability.registerComponentRenderer('panel', panelRenderer);
               uiCapability.registerComponentRenderer('search', searchRenderer);
+              uiCapability.registerComponentRenderer('zoom', zoomRenderer);
             }
           }}
           plugins={[
@@ -388,10 +406,13 @@ export function PDFViewer({ config }: PDFViewerProps) {
               viewportGap: 10,
             }),
             createPluginRegistration(ScrollPluginPackage, {
-              strategy: ScrollStrategy.Horizontal,
+              strategy: ScrollStrategy.Vertical,
             }),
             createPluginRegistration(PageManagerPluginPackage, { 
               pageGap: 10 
+            }),
+            createPluginRegistration(ZoomPluginPackage, {
+              defaultZoomLevel: 1,
             }),
             /*
             createPluginRegistration(SpreadPluginPackage, { 

@@ -1,9 +1,11 @@
-import { BasePlugin, PluginRegistry, EventControlOptions, EventControl } from "@embedpdf/core";
+import { BasePlugin, PluginRegistry, EventControlOptions, EventControl, createEmitter } from "@embedpdf/core";
 import { ViewportPluginConfig, ViewportState, ViewportCapability, ViewportMetrics, ViewportScrollMetrics, ViewportInputMetrics } from "./types";
 import { ViewportAction, setViewportMetrics, setViewportScrollMetrics, setViewportGap } from "./actions";
 
 export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCapability, ViewportState, ViewportAction> {
   private viewportChangeHandlers: Array<(metrics: ViewportMetrics) => void> = [];
+  private readonly scrollReq$ =
+    createEmitter<{ x:number; y:number; behavior?:ScrollBehavior }>();
 
   constructor(public readonly id: string, registry: PluginRegistry, config: ViewportPluginConfig) {
     super(id, registry);
@@ -31,7 +33,12 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
       },
       setViewportScrollMetrics: (scrollMetrics: ViewportScrollMetrics) => {
         this.dispatch(setViewportScrollMetrics(scrollMetrics));
-      }
+      },
+      scrollTo: (pos) => this.scrollReq$.emit({
+        behavior: 'auto',
+        ...pos
+      }),
+      onScrollRequest : this.scrollReq$.on,
     };
   }
 
@@ -50,5 +57,6 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
     super.destroy();
     // Clear out any handlers
     this.viewportChangeHandlers = [];
+    this.scrollReq$.clear();
   }
 }

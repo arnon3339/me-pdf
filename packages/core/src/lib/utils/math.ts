@@ -1,4 +1,16 @@
 /**
+ * Restrict a numeric value to the inclusive range [min, max].
+ *
+ * @example
+ *   clamp( 5, 0, 10)  // 5
+ *   clamp(-3, 0, 10)  // 0
+ *   clamp(17, 0, 10)  // 10
+ */
+export function clamp(value: number, min: number, max: number): number {
+  return value < min ? min : value > max ? max : value;
+}
+
+/**
  * Deeply compares two values (objects, arrays, primitives)
  * with the following rules:
  *  - Objects are compared ignoring property order.

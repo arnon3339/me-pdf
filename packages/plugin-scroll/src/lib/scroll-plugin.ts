@@ -1,13 +1,14 @@
-import { BasePlugin, PluginRegistry, createBehaviorEmitter, createEmitter } from "@embedpdf/core";
+import { BasePlugin, CoreState, PluginRegistry, StoreState, createBehaviorEmitter, createEmitter } from "@embedpdf/core";
 import { PdfPageObject } from "@embedpdf/models";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
 import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
-import { ScrollCapability, ScrollPluginConfig, ScrollStrategy, ScrollMetrics, ScrollState, LayoutChangePayload } from "./types";
+import { ScrollCapability, ScrollPluginConfig, ScrollStrategy, ScrollMetrics, ScrollState, LayoutChangePayload, ScrollerLayout } from "./types";
 import { BaseScrollStrategy } from "./strategies/base-strategy";
 import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
 import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
 import { updateScrollState, setDesiredScrollPosition, ScrollAction } from "./actions";
 import { VirtualItem } from "./types/virtual-item";
+import { getScrollerLayout } from "./selectors";
 
 export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapability, ScrollState, ScrollAction> {
   private viewport: ViewportCapability;
@@ -20,6 +21,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   private readonly layout$ = createBehaviorEmitter<LayoutChangePayload>();
   private readonly scroll$ = createBehaviorEmitter<ScrollMetrics>();
   private readonly state$ = createBehaviorEmitter<ScrollState>();
+  private readonly scrollerLayout$ = createBehaviorEmitter<ScrollerLayout>();
   private readonly pageChange$  = createEmitter<number>();
 
   constructor(
@@ -33,7 +35,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
 
     const strategyConfig = {
-      pageGap: this.config?.pageGap ?? 10,
+      pageGap: this.pageManager.getPageGap() ?? 10,
       viewportGap: this.viewport.getViewportGap(),
       bufferSize: this.config?.bufferSize ?? 2,
     };
@@ -43,6 +45,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       : new VerticalScrollStrategy(strategyConfig);
 
     this.initialPage = this.config?.initialPage;
+    this.currentScale = this.coreStore.getState().core.scale;
 
     // Subscribe to viewport and page manager events
     this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'throttle', wait: 250 });
@@ -105,8 +108,25 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     return state.virtualItems || [];
   }
 
+  private getScrollerLayoutFromState(): ScrollerLayout {
+    const scale = this.coreStore.getState().core.scale;
+    return getScrollerLayout(this.getState(), scale);
+  }
+
+  private pushScrollLayout() {
+    this.scrollerLayout$.emit(this.getScrollerLayoutFromState());
+  }
+
   override onStoreUpdated(prevState: ScrollState, newState: ScrollState): void {
-    this.state$.emit(newState);
+    this.pushScrollLayout();
+  }
+
+  override onCoreStoreUpdated(prevState: StoreState<CoreState>, newState: StoreState<CoreState>): void {
+    if(prevState.core.scale !== newState.core.scale) {
+      this.currentScale = newState.core.scale;
+      this.pushScrollLayout();
+      this.updateScrollMetrics(this.viewport.getMetrics());
+    }
   }
 
   protected buildCapability(): ScrollCapability {
@@ -115,6 +135,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       onLayoutChange: this.layout$.on,
       onScroll: this.scroll$.on,
       onPageChange  : this.pageChange$.on,
+      onScrollerData: this.scrollerLayout$.on,
       scrollToPage: (pageNumber, behavior = 'smooth') => {
         const virtualItems = this.getVirtualItemsFromState();
         const position = this.strategy.getScrollPositionForPage(pageNumber, virtualItems, this.currentScale);
@@ -153,6 +174,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       getMetrics: this.getMetrics.bind(this),
       getLayout: this.getLayout.bind(this),
       getState: () => this.getState(),
+      getScrollerLayout: () => this.getScrollerLayoutFromState(),
     };
   }
 

@@ -1,42 +1,118 @@
-export type Listener<T> = (value: T) => void;
-export type Unsubscribe = () => void;
+import { arePropsEqual } from './math';
 
-/** A function that registers a listener and returns an unsubscribe handle. */
+/* ------------------------------------------------------------------ */
+/* basic types                                                        */
+/* ------------------------------------------------------------------ */
+export type Listener<T>    = (value: T) => void;
+export type Unsubscribe    = () => void;
+/** A function that registers a listener and returns an unsubscribe handle */
 export type EventHook<T>   = (listener: Listener<T>) => Unsubscribe;
 
+/* ------------------------------------------------------------------ */
+/* minimal “dumb” emitter (no value cache, no equality)               */
+/* ------------------------------------------------------------------ */
 export interface Emitter<T> {
   emit(value: T): void;
   on(listener: Listener<T>): Unsubscribe;
   off(listener: Listener<T>): void;
-  clear(): void;            // <‑‑ new
+  clear(): void;
 }
 
 export function createEmitter<T>(): Emitter<T> {
   const listeners = new Set<Listener<T>>();
 
-  function on(listener: Listener<T>): Unsubscribe {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  }
+  const on: EventHook<T> = (l) => {
+    listeners.add(l);
+    return () => listeners.delete(l);
+  };
 
   return {
-    emit:  (v) => listeners.forEach(l => l(v)),
+    emit : (v) => listeners.forEach(l => l(v)),
     on,
-    off:   (l) => listeners.delete(l),
-    clear: ()   => listeners.clear(),
+    off  : (l) => listeners.delete(l),
+    clear: ()  => listeners.clear(),
   };
 }
 
-/** Remembers the last value and replays it for new listeners */
-export function createBehaviorEmitter<T>(initial?: T): Emitter<T> & { value?: T } {
-  const e = createEmitter<T>() as ReturnType<typeof createEmitter<T>> & { value?: T };
-  e.value = initial;
-  const baseEmit = e.emit;
-  e.emit = (v: T) => { e.value = v; baseEmit(v); };
-  const baseOn  = e.on;
-  e.on   = (l: Listener<T>) => {
-    if (e.value !== undefined) l(e.value);
-    return baseOn(l);
+/* ------------------------------------------------------------------ */
+/* Behaviour emitter with                                             
+     – cached last value                                              
+     – distinct‑until‑changed semantics                               
+     – lightweight `.select()` for derived streams                    */
+/* ------------------------------------------------------------------ */
+export interface BehaviorEmitter<T> extends Emitter<T> {
+  /** Last value that was emitted ( `undefined` until the first emit). */
+  readonly value?: T;
+
+  /**
+   * Build a *derived* event hook.  
+   * `selector` maps the source value; the listener is called **only when**
+   * the mapped value is truly different (as judged by `equality`).
+   *
+   * No extra emitter is created – it’s just a thin wrapper around `on`.
+   */
+  select<U>(
+    selector : (v: T) => U,
+    equality?: (a: U, b: U) => boolean
+  ): EventHook<U>;
+}
+
+export function createBehaviorEmitter<T>(
+  initial?: T,
+  equality: (a: T, b: T) => boolean = arePropsEqual
+): BehaviorEmitter<T> {
+  const listeners = new Set<Listener<T>>();
+  let _value = initial;                    // cached value
+
+  /* -------- helpers ------------------------------------------------ */
+  const notify = (v: T) => listeners.forEach(l => l(v));
+
+  const baseOn: EventHook<T> = (listener) => {
+    if (_value !== undefined) listener(_value);  // replay last value
+    listeners.add(listener);
+    return () => listeners.delete(listener);
   };
-  return e;
+
+  /* -------- public object ------------------------------------------ */
+  return {
+    /* Emitter methods ------------------------------------------------ */
+    get value() { return _value; },
+
+    emit(v: T) {
+      if (_value === undefined || !equality(_value, v)) {
+        _value = v;
+        notify(v);
+      }
+    },
+
+    on : baseOn,
+    off: (l) => listeners.delete(l),
+    clear() { listeners.clear(); },
+
+    /* Derived hook --------------------------------------------------- */
+    select<U>(
+      selector : (v: T) => U,
+      eq:        (a: U, b: U) => boolean = arePropsEqual
+    ): EventHook<U> {
+      return (listener) => {
+        let prev: U | undefined;
+
+        /* fire immediately if we already have a value */
+        if (_value !== undefined) {
+          const mapped = selector(_value);
+          prev = mapped;
+          listener(mapped);
+        }
+
+        /* subscribe to parent stream */
+        return baseOn((next) => {
+          const mapped = selector(next);
+          if (prev === undefined || !eq(prev, mapped)) {
+            prev = mapped;
+            listener(mapped);
+          }
+        });
+      };
+    },
+  };
 }

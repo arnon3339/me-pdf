@@ -5,6 +5,7 @@ import { Tooltip } from './ui/tooltip';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { useUI } from "@embedpdf/plugin-ui/preact";
 import { Dropdown, DropdownItems, DropdownItem, DropdownDivider } from './ui/dropdown';
+import { useZoom } from "@embedpdf/plugin-zoom/preact";
 
 export const toolButtonRenderer: ComponentRenderFunction<ToolButtonProps> = (props, children, context) => (
   <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={props.label!} trigger={context?.variant === 'flyout' ? 'none' : 'hover'}>
@@ -162,7 +163,7 @@ export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (pro
     {props.tabs.map((tab) => (
       <Button 
         key={tab.id} 
-        className={`text-sm px-2 py-1 rounded-none hover:bg-transparent ${activeTab === tab.id ? 'border-b-2 border-b-blue-500 text-blue-500' : 'border-b-2 border-b-transparent'}`} 
+        className={`text-sm px-2 py-1 rounded-none hover:bg-transparent ${activeTab === tab.id ? 'border-b-2 border-b-blue-500 text-blue-500' : 'border-b-2 border-b-transparent'} hover:ring-transparent`} 
         onClick={() => {
           setActiveTab(tab.id);
           ui?.setHeaderVisible(props.targetHeader, tab.triggerComponent ? true : false, tab.triggerComponent);
@@ -237,4 +238,64 @@ export const searchRenderer: ComponentRenderFunction<any> = (props, children) =>
       </div>
     </div>
   );
+};
+
+interface ZoomRendererProps {
+  zoomLevel: number;
+}
+
+export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, children, context) => {
+  const zoom = useZoom();
+  const [zoomDropdownOpen, setZoomDropdownOpen] = useState(false);
+  const zoomDropdownRef = useRef<any>(null);
+  // Format zoom level as percentage and round to avoid floating point issues
+  const zoomPercentage = Math.round(props.zoomLevel * 100);
+
+  const handleZoomOut = () => {
+    zoom?.zoomOut();
+  };
+
+  const handleZoomIn = () => {
+    zoom?.zoomIn();
+  };
+
+  useEffect(() => {
+    if(zoomDropdownRef.current) {
+      console.log(zoomDropdownRef.current);
+    }
+  }, [zoomDropdownRef.current]);
+
+  return <div className="flex flex-row items-center bg-[#f1f3f5] rounded-md">
+    <div className="ZoomText">
+      <input type="text" className="border-0 bg-transparent text-sm text-right p-0 h-6 w-8" aria-label="Set zoom" value={zoomPercentage} />
+      <span className="text-sm">%</span>
+    </div>
+    <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={'Zoom Options'} trigger={'hover'}>
+      <Button className="p-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+          <path d="M6 9l6 6l6 -6" />
+        </svg>
+      </Button>
+    </Tooltip>
+    <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={'Zoom Out'} trigger={'hover'}>
+      <Button className="p-1" onClick={handleZoomOut}>
+        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="none"  stroke="#343a40"  strokeWidth="2"  strokeLinecap="round"  strokeLinejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-minus">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+          <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+          <path d="M9 12l6 0" />
+        </svg>
+      </Button>
+    </Tooltip>
+    <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={'Zoom In'} trigger={'hover'}>
+      <Button className="p-1" onClick={handleZoomIn}>
+        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="none"  stroke="#343a40"  strokeWidth="2"  strokeLinecap="round"  strokeLinejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-plus">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+          <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+          <path d="M9 12h6" />
+          <path d="M12 9v6" />
+        </svg>
+      </Button>
+    </Tooltip>
+  </div>;
 };

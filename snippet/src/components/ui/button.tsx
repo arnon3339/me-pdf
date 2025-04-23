@@ -22,7 +22,7 @@ export function Button({ id, children, onClick, active = false, className = '', 
         rounded-md transition-colors
         ${active 
           ? 'border-none shadow ring-1 ring-blue-500 text-blue-500 bg-blue-50' 
-          : 'hover:bg-gray-100'
+          : 'hover:bg-gray-100 hover:ring-1 hover:ring-[#1a466b]'
         }
         ${className}
       `}

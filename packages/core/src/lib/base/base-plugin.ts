@@ -1,6 +1,6 @@
 import { IPlugin } from '../types/plugin';
 import { PluginRegistry } from '../registry/plugin-registry';
-import { Action, CoreAction, CoreState, PluginStore, Store } from '../store';
+import { Action, CoreAction, CoreState, PluginStore, Store, StoreState } from '../store';
 
 export interface StateChangeHandler<TState> {
   (state: TState): void;
@@ -17,6 +17,7 @@ export abstract class BasePlugin<
   // Track debounced actions
   private debouncedActions: Record<string, number> = {};
   private unsubscribeFromState: (() => void) | null = null;
+  private unsubscribeFromCoreStore: (() => void) | null = null;
 
   private _capability?: Readonly<TCapability>;
 
@@ -28,6 +29,9 @@ export abstract class BasePlugin<
     this.pluginStore = this.coreStore.getPluginStore<TState, TAction>(this.id);
     this.unsubscribeFromState = this.pluginStore.subscribeToState((action, newState, oldState) => {
       this.onStoreUpdated(oldState, newState);
+    });
+    this.unsubscribeFromCoreStore = this.coreStore.subscribe((action, newState, oldState) => {
+      this.onCoreStoreUpdated(oldState, newState);
     });
   }
 
@@ -53,6 +57,20 @@ export abstract class BasePlugin<
    */
   protected getState(): TState {
     return this.pluginStore.getState();
+  }
+
+  /**
+   * Get a copy of the current core state
+   */
+  protected getCoreState(): StoreState<CoreState> {
+    return this.coreStore.getState();
+  }
+
+  /**
+   * Core Dispatch
+   */
+  protected dispatchCoreAction(action: CoreAction): StoreState<CoreState> {
+    return this.coreStore.dispatch(action);
   }
 
   /**
@@ -89,11 +107,27 @@ export abstract class BasePlugin<
   }
 
   /**
+   * Subscribe to core store changes
+   */
+  protected subscribeToCoreStore(listener: (action: Action, state: StoreState<CoreState>) => void): () => void {
+    return this.coreStore.subscribe(listener);
+  }
+
+  /**
    * Called when the plugin store state is updated
    * @param oldState Previous state
    * @param newState New state
    */
   protected onStoreUpdated(oldState: TState, newState: TState): void {
+    // Default implementation does nothing - can be overridden by plugins
+  }
+
+  /**
+   * Called when the core store state is updated
+   * @param oldState Previous state
+   * @param newState New state
+   */
+  protected onCoreStoreUpdated(oldState: StoreState<CoreState>, newState: StoreState<CoreState>): void {
     // Default implementation does nothing - can be overridden by plugins
   }
 
@@ -104,6 +138,10 @@ export abstract class BasePlugin<
     if (this.unsubscribeFromState) {
       this.unsubscribeFromState();
       this.unsubscribeFromState = null;
+    }
+    if (this.unsubscribeFromCoreStore) {
+      this.unsubscribeFromCoreStore();
+      this.unsubscribeFromCoreStore = null;
     }
   }
 } 

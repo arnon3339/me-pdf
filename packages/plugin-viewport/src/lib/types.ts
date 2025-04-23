@@ -1,4 +1,4 @@
-import { BasePluginConfig, EventControlOptions } from "@embedpdf/core";
+import { BasePluginConfig, EventControlOptions, EventHook } from "@embedpdf/core";
 
 export interface ViewportState {
   viewportGap: number;
@@ -37,6 +37,12 @@ export interface ScrollControlOptions {
   wait: number;
 }
 
+export interface ScrollToPayload {
+  x: number;
+  y: number;
+  behavior?: ScrollBehavior;   // defaults to 'auto'
+}
+
 export interface ViewportCapability {
   getViewportGap: () => number;
   getMetrics: () => ViewportMetrics;
@@ -46,4 +52,6 @@ export interface ViewportCapability {
     handler: (metrics: ViewportMetrics) => void,
     options?: EventControlOptions
   ) => (metrics: ViewportMetrics) => void;
+  scrollTo(position: ScrollToPayload): void;
+  onScrollRequest: EventHook<ScrollToPayload>;
 }

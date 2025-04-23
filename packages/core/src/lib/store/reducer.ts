@@ -1,6 +1,6 @@
 import { Reducer } from "./types";
 import { CoreState } from "./initial-state";
-import { CoreAction, LOAD_DOCUMENT, SET_DOCUMENT, SET_DOCUMENT_ERROR } from "./actions";
+import { CoreAction, LOAD_DOCUMENT, SET_DOCUMENT, SET_DOCUMENT_ERROR, SET_SCALE } from "./actions";
 
 export const coreReducer: Reducer<CoreState, CoreAction> = (
   state,
@@ -27,6 +27,12 @@ export const coreReducer: Reducer<CoreState, CoreAction> = (
         ...state,
         loading: false,
         error: action.payload
+      };
+
+    case SET_SCALE:
+      return {
+        ...state,
+        scale: action.payload
       };
 
     default:

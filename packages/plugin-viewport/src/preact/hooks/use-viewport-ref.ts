@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 import { useViewport } from "./use-viewport"; 
 
 export function useViewportRef() {
   const viewport = useViewport();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!viewport) return;
 
     const container = containerRef.current;
@@ -35,10 +35,15 @@ export function useViewportRef() {
     });
     resizeObserver.observe(container);
 
+    const unsubscribeScrollRequest = viewport.onScrollRequest(({ x, y, behavior='auto' }) => {
+      container.scrollTo({ left: x, top: y, behavior });
+    });
+
     // Cleanup
     return () => {
       container.removeEventListener("scroll", onScroll);
       resizeObserver.disconnect();
+      unsubscribeScrollRequest();
     };
   }, [viewport]);
 

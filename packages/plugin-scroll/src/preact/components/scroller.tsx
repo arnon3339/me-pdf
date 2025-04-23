@@ -2,7 +2,7 @@
 import { JSX } from 'preact';
 import { useScroll } from '../hooks';
 import { useEffect, useState } from 'preact/hooks';
-import { ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
+import { ScrollStrategy, ScrollerLayout } from '@embedpdf/plugin-scroll';
 
 type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
 
@@ -10,46 +10,46 @@ type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
 
 export function Scroller({ ...props }: ScrollerProps) {
   const scroll = useScroll();
-  const [state, setState] = useState<ScrollState | null>(
-    () => scroll?.getState() ?? null
+  const [scrollerLayout, setScrollerLayout] = useState<ScrollerLayout | null>(
+    () => scroll?.getScrollerLayout() ?? null
   );
 
   useEffect(() => {
     if (!scroll) return;
 
-    return scroll.onStateChange(setState);
+    return scroll.onScrollerData(setScrollerLayout);
   }, [scroll]);
 
-  if (!state) return null;
+  if (!scrollerLayout) return null;
 
   return <div {...props} style={{
-    width : `${state.totalContentSize.width}px`,
-    height: `${state.totalContentSize.height}px`,
+    width : `${scrollerLayout.totalWidth}px`,
+    height: `${scrollerLayout.totalHeight}px`,
     position: 'relative',
     boxSizing: 'border-box',
     margin: '0 auto',
-    ...(state.strategy === ScrollStrategy.Horizontal) && {
+    ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) && {
       display: 'flex',
-      flexDirection: 'row', 
+      flexDirection: 'row',
     }
   }}>
     <div style={{ 
-      ...(state.strategy === ScrollStrategy.Horizontal) ? {
-        width: state.startSpacing,
+      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
+        width: scrollerLayout.startSpacing,
         height: '100%',
         flexShrink: 0,
       } : {
-        height: state.startSpacing,
+        height: scrollerLayout.startSpacing,
         width: '100%'
       }
     }} />
     <div style={{ 
-      gap: state.pageGap, 
+      gap: scrollerLayout.pageGap, 
       display: 'flex', 
       alignItems: 'center',
       position: 'relative',
       boxSizing: 'border-box',
-      ...(state.strategy === ScrollStrategy.Horizontal) ? {
+      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
         flexDirection: 'row',
         minHeight: '100%'
       } : {
@@ -57,12 +57,12 @@ export function Scroller({ ...props }: ScrollerProps) {
         minWidth: 'fit-content',
       }
     }}>
-      {state.renderedPageIndexes.map(idx => 
-        <div key={idx} style={{
+      {scrollerLayout.items.map(item => 
+        <div key={item.pageNumbers[0]} style={{
           display: 'flex',
           justifyContent: 'center',
         }}>
-          {state.virtualItems[idx].pageLayouts.map(layout => 
+          {item.pageLayouts.map(layout => 
             <div key={layout.pageNumber} style={{
               width: `${layout.width}px`,
               height: `${layout.height}px`,
@@ -75,12 +75,12 @@ export function Scroller({ ...props }: ScrollerProps) {
       )}
     </div>
     <div style={{ 
-      ...(state.strategy === ScrollStrategy.Horizontal) ? {
-        width: state.endSpacing,
+      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
+        width: scrollerLayout.endSpacing,
         height: '100%',
         flexShrink: 0,
       } : {
-        height: state.endSpacing,
+        height: scrollerLayout.endSpacing,
         width: '100%'
       }
     }} />

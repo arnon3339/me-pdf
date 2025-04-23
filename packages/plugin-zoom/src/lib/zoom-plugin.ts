@@ -1,131 +1,265 @@
-import { 
+import {
+  BasePlugin,
   PluginRegistry,
-  BasePlugin
+  createEmitter,
+  clamp,
+  setScale,
 } from "@embedpdf/core";
-import { ViewportCapability, ViewportPlugin } from "@embedpdf/plugin-viewport";
-import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
-import { ZoomCapability, ZoomChangeEvent, ZoomLevel, ZoomMode, ZoomPluginConfig, ZoomState } from "./types";
-import { ZoomController } from "./zoom/zoom-controller";
-import { PinchController } from "./zoom/pinch-controller";
-import { setZoomLevel } from "./actions";
 
-export class ZoomPlugin extends BasePlugin<ZoomPluginConfig, ZoomState> {
-  private zoomHandlers: ((zoomEvent: ZoomChangeEvent) => void)[] = [];
-  private viewport: ViewportCapability;
-  private pageManager: PageManagerCapability;
-  private zoomController!: ZoomController;
-  private pinchController!: PinchController;
+import {
+  ViewportPlugin,    ViewportCapability,
+  ViewportMetrics
+} from "@embedpdf/plugin-viewport";
+import {
+  PageManagerPlugin, PageManagerCapability
+} from "@embedpdf/plugin-page-manager";
 
-  constructor(  
-    public readonly id: string,
-    registry: PluginRegistry,
-  ) {
+import {
+  ZoomPluginConfig,
+  ZoomState,
+  ZoomLevel,
+  ZoomMode,
+  Point,
+  ZoomChangeEvent,
+  ZoomCapability,
+  ZoomPreset,
+  ZoomRangeStep,
+} from "./types";
+import { setZoomLevel, ZoomAction }   from "./actions";
+
+export class ZoomPlugin
+  extends BasePlugin<
+    ZoomPluginConfig,
+    ZoomCapability,
+    ZoomState,
+    ZoomAction
+  > {
+
+  /* ------------------------------------------------------------------ */
+  /* internals                                                           */
+  /* ------------------------------------------------------------------ */
+  private readonly zoom$     = createEmitter<ZoomChangeEvent>();
+  private readonly viewport  : ViewportCapability;
+  private readonly pageMgr   : PageManagerCapability;
+  private readonly presets   : ZoomPreset[];
+  private readonly zoomRanges: ZoomRangeStep[];
+
+  private readonly minZoom   : number;
+  private readonly maxZoom   : number;
+  private readonly zoomStep  : number;
+
+  /* ------------------------------------------------------------------ */
+  constructor(id: string, registry: PluginRegistry, cfg: ZoomPluginConfig) {
     super(id, registry);
 
-    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
-    this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
-  
-    this.pageManager.onPagesChange(this.refreshZoomIfAutomatic.bind(this));
-    this.viewport.onResize(this.refreshZoomIfAutomatic.bind(this), { mode: 'debounce', wait: 200 });
+    this.viewport = registry.getPlugin<ViewportPlugin>('viewport')!.provides();
+    this.pageMgr  = registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
+
+    this.minZoom  = cfg.minZoom ?? 0.25;
+    this.maxZoom  = cfg.maxZoom ?? 10;
+    this.zoomStep = cfg.zoomStep ?? 0.1;
+    this.presets  = cfg.presets ?? [];
+    this.zoomRanges = this.normalizeRanges(cfg.zoomRanges ?? []);
+    /* keep “automatic” modes up to date -------------------------------- */
+    this.viewport.onViewportChange (() => this.recalcAuto(), { mode:"debounce", wait:150 });
+    this.pageMgr .onPagesChange    (() => this.recalcAuto());
   }
 
-  provides(): ZoomCapability {
+  /* ------------------------------------------------------------------ */
+  /* capability                                                          */
+  /* ------------------------------------------------------------------ */
+  protected buildCapability(): ZoomCapability {
     return {
-      onZoom: (handler) => this.zoomHandlers.push(handler),
-      updateZoomLevel: (zoomLevel) => this.updateZoomLevel(zoomLevel),
-      getState: () => this.getState(),
-      zoomIn: () => this.zoomIn(),
-      zoomOut: () => this.zoomOut()
+      onZoomChange : this.zoom$.on,
+      zoomIn       : () => {
+        const cur = this.getState().currentZoomLevel;
+        return this.handleRequest(cur,  this.stepFor(cur));
+      },
+      zoomOut      : () => {
+        const cur = this.getState().currentZoomLevel;
+        return this.handleRequest(cur, -this.stepFor(cur));
+      },
+      requestZoom  : (level, c) => this.handleRequest(level, 0, c),
+      requestZoomBy: (d,c)    => {
+        const cur = this.getState().currentZoomLevel;
+        const target = this.toZoom(cur + d);
+        return this.handleRequest(target,0,c);
+      },
+      getState     : () => this.getState(),
+      getPresets   : () => this.presets,
     };
   }
 
-  async initialize(config: ZoomPluginConfig): Promise<void> {
-    // Update state with config values
-    this.dispatch(setZoomLevel(config.defaultZoomLevel, 1));
+  /* ------------------------------------------------------------------ */
+  /* plugin life‑cycle                                                   */
+  /* ------------------------------------------------------------------ */
+  async initialize(cfg: ZoomPluginConfig): Promise<void> {
+    /* apply the initial zoom                                              */
+    this.handleRequest(cfg.defaultZoomLevel);
+  }
 
-    // Initialize zoom controller
-    this.zoomController = new ZoomController({
-      viewport: this.viewport,
-      pageManager: this.pageManager,
-      getState: () => this.getState(),
-      options: {
-        minZoom: config.minZoom,
-        maxZoom: config.maxZoom,
-        zoomStep: config.zoomStep
-      }
+  async destroy() { this.zoom$.clear(); }
+
+  /**
+   * Sort ranges once, make sure they are sane
+   */
+  private normalizeRanges(ranges: ZoomRangeStep[]): ZoomRangeStep[] {
+    return [...ranges]
+      .filter(r => r.step > 0 && r.max > r.min)      // basic sanity
+      .sort((a, b) => a.min - b.min);
+  }
+
+  /** pick the step that applies to a given numeric zoom */
+  private stepFor(zoom: number): number {
+    const r = this.zoomRanges.find(r => zoom >= r.min && zoom < r.max);
+    return r ? r.step : this.zoomStep;              // fallback
+  }
+
+  /** clamp + round helper reused later */
+  private toZoom(v: number) {
+    return parseFloat(clamp(v, this.minZoom, this.maxZoom).toFixed(2));
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* main entry – handles **every** zoom request                          */
+  /* ------------------------------------------------------------------ */
+  private handleRequest(
+    level : ZoomLevel,
+    delta : number = 0,
+    center?: Point
+  ) {
+    const state      = this.getState();
+    const metrics    = this.viewport.getMetrics();
+    const oldZoom    = state.currentZoomLevel;
+
+    /* ------------------------------------------------------------------ */
+    /* step 1 – resolve the **target numeric zoom**                        */
+    /* ------------------------------------------------------------------ */
+    const base =
+      typeof level === "number"
+        ? level
+        : this.computeZoomForMode(level, metrics);
+
+    const newZoom = parseFloat(clamp(base + delta, this.minZoom, this.maxZoom).toFixed(2));
+
+    /* ------------------------------------------------------------------ */
+    /* step 2 – figure out the viewport point we should keep under focus   */
+    /* ------------------------------------------------------------------ */
+    const focus : Point = center ?? {
+      vx: metrics.clientWidth  / 2,
+      vy: metrics.clientHeight / 2,
+    };
+
+    /* ------------------------------------------------------------------ */
+    /* step 3 – translate that into desired scroll offsets                 */
+    /* ------------------------------------------------------------------ */
+    const { desiredScrollLeft, desiredScrollTop } =
+      this.computeScrollForZoomChange(metrics, oldZoom, newZoom, focus);
+
+    /* ------------------------------------------------------------------ */
+    /* step 4 – dispatch + notify                                          */
+    /* ------------------------------------------------------------------ */
+    this.dispatch(setZoomLevel(typeof level === "number" ? newZoom : level, newZoom));
+    this.dispatchCoreAction(setScale(newZoom));
+    this.viewport.scrollTo({
+      x: desiredScrollLeft,
+      y: desiredScrollTop,
+      behavior: 'instant',
     });
 
-    // Initialize pinch controller
-    this.pinchController = new PinchController({
-      innerDiv: this.viewport.getInnerDiv(),
-      container: this.viewport.getContainer(),
-      getState: () => this.getState(),
-      onPinchEnd: (zoom?: number, center?: { x: number; y: number }) => {
-        if(!zoom) return;
-        const zoomEvent = this.zoomController.zoomTo(zoom, center);
+    this.pageMgr.updateScale(newZoom);          // let other plugins react
 
-        this.handleZoomChange(zoomEvent.newZoom, zoomEvent, true);
-      }
+    const evt: ZoomChangeEvent = {
+      oldZoom, newZoom, level, center: focus,
+      desiredScrollLeft, desiredScrollTop,
+      viewport: metrics,
+    };
+
+    this.zoom$.emit(evt);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* helpers                                                             */
+  /* ------------------------------------------------------------------ */
+
+  /** numeric zoom for Automatic / FitPage / FitWidth */
+  private computeZoomForMode(mode: ZoomMode, vp: ViewportMetrics): number {
+    const spreads   = this.pageMgr.getSpreadPages();
+    if (!spreads.length) return 1;
+
+    const pgGap     = this.pageMgr.getPageGap();
+    const vpGap     = this.viewport.getViewportGap();
+
+    let maxW = 0, maxH = 0;
+
+    spreads.forEach(spread => {
+      const w = spread.reduce((s,p,i)=> s + p.size.width + (i?pgGap:0), 0) + 2*vpGap;
+      const h = Math.max(...spread.map(p=>p.size.height))                 + 2*vpGap;
+      maxW = Math.max(maxW, w);
+      maxH = Math.max(maxH, h);
     });
 
-    // Initial zoom level setup
-    await this.updateZoomLevel(config.defaultZoomLevel);
-  }
-
-  private refreshZoomIfAutomatic(): void {
-    const state = this.getState();
-
-    if(
-      state.zoomLevel === ZoomMode.Automatic || 
-      state.zoomLevel === ZoomMode.FitPage || 
-      state.zoomLevel === ZoomMode.FitWidth
-    ) {
-      this.updateZoomLevel(state.zoomLevel);
+    switch (mode) {
+      case ZoomMode.FitWidth : return vp.clientWidth  / maxW;
+      case ZoomMode.FitPage  : return Math.min(vp.clientWidth / maxW,
+                                               vp.clientHeight/ maxH);
+      case ZoomMode.Automatic: return Math.min(vp.clientWidth / maxW, 1);
+      /* istanbul ignore next */
+      default                : return 1;
     }
   }
 
-  private handleZoomChange(zoomLevel: ZoomLevel, zoomEvent: ZoomChangeEvent, force?: boolean): void {
-    this.dispatch(setZoomLevel(zoomLevel, zoomEvent.newZoom));
+  /** where to scroll so that *focus* stays stable after scaling          */
+  private computeScrollForZoomChange(
+    vp: ViewportMetrics,
+    oldZoom: number,
+    newZoom: number,
+    focus: Point
+  ) {
+    /* unscaled content size ------------------------------------------- */
+    const spreads   = this.pageMgr.getSpreadPages();
+    const pgGap     = this.pageMgr.getPageGap();
+    const vpGap     = this.viewport.getViewportGap();
 
-    // Update page scale if zoom level changed
-    if (zoomEvent.newZoom !== zoomEvent.oldZoom || force) {
-      this.pageManager.updateScale(zoomEvent.newZoom);
-    }
+    const contentW  = Math.max(...spreads.map(s =>
+                        s.reduce((w,p,i)=> w + p.size.width + (i?pgGap:0), 0))) + 2*vpGap;
+    const contentH  = Math.max(...spreads.map(s =>
+                        Math.max(...s.map(p=>p.size.height))))                 + 2*vpGap;
 
-    // Notify handlers about zoom change
-    this.zoomHandlers.forEach(handler => handler(zoomEvent));
+    /* helper: offset if content is narrower than viewport -------------- */
+    const off = (vw:number, cw:number, zoom:number) =>
+      cw*zoom < vw ? (vw - cw*zoom)/2 : 0;
+
+    const offXold = off(vp.clientWidth , contentW, oldZoom);
+    const offYold = off(vp.clientHeight, contentH, oldZoom);
+
+    const offXnew = off(vp.clientWidth , contentW, newZoom);
+    const offYnew = off(vp.clientHeight, contentH, newZoom);
+
+    /* content coords of the focal point -------------------------------- */
+    const cx = (vp.scrollLeft + focus.vx - offXold) / oldZoom;
+    const cy = (vp.scrollTop  + focus.vy - offYold) / oldZoom;
+
+    /* new scroll so that (cx,cy) appears under focus again ------------- */
+    const desiredScrollLeft =
+      cx*newZoom + offXnew - focus.vx;
+
+    const desiredScrollTop  =
+      cy*newZoom + offYnew - focus.vy;
+
+    return {
+      desiredScrollLeft: Math.max(0, desiredScrollLeft),
+      desiredScrollTop : Math.max(0, desiredScrollTop ),
+    };
   }
 
-  updateZoomLevel(zoomLevel: ZoomLevel): ZoomChangeEvent {
-    const zoomEvent = this.zoomController.zoomTo(zoomLevel);
-    this.handleZoomChange(zoomLevel, zoomEvent);
-    
-    return zoomEvent;
-  }
-
-  zoomIn(): ZoomChangeEvent {
-    const zoomEvent = this.zoomController.zoomIn();
-    this.handleZoomChange(zoomEvent.newZoom, zoomEvent);
-
-    return zoomEvent;
-  }
-
-  zoomOut(): ZoomChangeEvent {
-    const zoomEvent = this.zoomController.zoomOut();
-    this.handleZoomChange(zoomEvent.newZoom, zoomEvent);
-
-    return zoomEvent;
-  }
-
-  async destroy(): Promise<void> {
-    if (this.zoomController) {
-      this.zoomController.destroy();
-    }
-    
-    if (this.pinchController) {
-      this.pinchController.destroy();
-    }
-    
-    this.zoomHandlers = [];
+  /** recalculates Automatic / Fit* when viewport or pages change */
+  private recalcAuto() {
+    const s = this.getState();
+    if (
+      s.zoomLevel === ZoomMode.Automatic ||
+      s.zoomLevel === ZoomMode.FitPage   ||
+      s.zoomLevel === ZoomMode.FitWidth
+    ) this.handleRequest(s.zoomLevel);
   }
 }

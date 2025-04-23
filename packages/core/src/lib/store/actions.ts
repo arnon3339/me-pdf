@@ -3,7 +3,7 @@ import { PdfDocumentObject } from "@embedpdf/models";
 export const LOAD_DOCUMENT = 'LOAD_DOCUMENT';
 export const SET_DOCUMENT = 'SET_DOCUMENT';
 export const SET_DOCUMENT_ERROR = 'SET_DOCUMENT_ERROR';
-
+export const SET_SCALE = 'SET_SCALE';
 // Action Type Interfaces
 export interface LoadDocumentAction {
   type: typeof LOAD_DOCUMENT;
@@ -19,10 +19,16 @@ export interface SetDocumentErrorAction {
   payload: string;
 }
 
+export interface SetScaleAction {
+  type: typeof SET_SCALE;
+  payload: number;
+}
+
 export type DocumentAction =
   | LoadDocumentAction
   | SetDocumentAction
-  | SetDocumentErrorAction;
+  | SetDocumentErrorAction
+  | SetScaleAction;
 
 // Core actions
 export type CoreAction = DocumentAction;
@@ -30,3 +36,4 @@ export type CoreAction = DocumentAction;
 export const loadDocument = (): CoreAction => ({ type: LOAD_DOCUMENT });
 export const setDocument = (document: PdfDocumentObject): CoreAction => ({ type: SET_DOCUMENT, payload: document });
 export const setDocumentError = (error: string): CoreAction => ({ type: SET_DOCUMENT_ERROR, payload: error });
+export const setScale = (scale: number): CoreAction => ({ type: SET_SCALE, payload: scale });

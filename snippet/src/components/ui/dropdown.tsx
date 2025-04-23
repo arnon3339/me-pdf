@@ -59,7 +59,9 @@ export function Dropdown({
 
     // Cleanup
     return () => {
-      console.log('cleanup');
+      if(dropdownRef.current) {
+        dropdownRef.current.destroy();
+      }
     };
   }, [placement, offsetSkidding, offsetDistance, delay]);
 

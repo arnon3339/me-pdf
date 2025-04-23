@@ -9,3 +9,4 @@ export * from './store/actions';
 export * from './store/initial-state';
 export * from './utils/event-control';
 export * from './utils/eventing';
+export * from './utils/math';
