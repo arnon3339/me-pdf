@@ -12,7 +12,8 @@ export const initialState: UIPluginState = {
   toolButton: {},
   toggleButton: {},
   presetButton: {},
-  custom: {}
+  custom: {},
+  floating: {}
 };
 
 export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (

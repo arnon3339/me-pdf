@@ -1,5 +1,5 @@
 import { BasePlugin, CoreState, PluginRegistry, StoreState, arePropsEqual } from "@embedpdf/core";
-import { childrenFunctionOptions, FlyOutComponent, GroupedItemsComponent, HeaderComponent, PanelComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
+import { childrenFunctionOptions, FloatingComponent, FlyOutComponent, GroupedItemsComponent, HeaderComponent, PanelComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
 import { UIComponent } from "./ui-component";
 import { initialState } from "./reducer";
 import { uiInitComponents, uiInitFlyout, UIPluginAction, uiSetHeaderVisible, uiToggleFlyout, uiTogglePanel } from "./actions";
@@ -156,6 +156,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
       },
       registerComponent: this.addComponent.bind(this),
       getFlyOuts: () => Object.values(this.components).filter(component => isFlyOutComponent(component)),
+      getFloatingComponents: () => Object.values(this.components).filter(component => isFloatingComponent(component)),
       getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => 
         Object.values(this.components)
           .filter(component => isHeaderComponent(component))
@@ -188,8 +189,8 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
   }
 }
 
-function isItemWithSlots(component: UIComponent<UIComponentType<any>>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<FlyOutComponent> | UIComponent<PanelComponent> {
-  return isGroupedItemsComponent(component) || isHeaderComponent(component) || isFlyOutComponent(component) || isPanelComponent(component);
+function isItemWithSlots(component: UIComponent<UIComponentType<any>>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<FlyOutComponent> | UIComponent<PanelComponent> | UIComponent<FloatingComponent> {
+  return isGroupedItemsComponent(component) || isHeaderComponent(component) || isFlyOutComponent(component) || isPanelComponent(component) || isFloatingComponent(component);
 }
 
 // Type guard function
@@ -207,4 +208,8 @@ function isFlyOutComponent(component: UIComponent<UIComponentType>): component i
 
 function isPanelComponent(component: UIComponent<UIComponentType>): component is UIComponent<PanelComponent> {
   return component.type === 'panel';
+}
+
+function isFloatingComponent(component: UIComponent<UIComponentType>): component is UIComponent<FloatingComponent> {
+  return component.type === 'floating';
 }

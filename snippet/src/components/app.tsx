@@ -6,9 +6,9 @@ import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
 import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import { init, init as initPdfium } from '@embedpdf/pdfium';
 import { PdfEngine } from '@embedpdf/models';
-import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
+import { VIEWPORT_PLUGIN_ID, ViewportPluginPackage, ViewportState } from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/preact';
-import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
+import { SCROLL_PLUGIN_ID, ScrollPluginPackage, ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/preact';
 import { PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
 import { SpreadMode, SpreadPluginPackage } from '@embedpdf/plugin-spread';
@@ -16,8 +16,8 @@ import { SpreadMode, SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
 //import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
-import { FlyOutComponent, GlobalStoreState, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
-import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, panelRenderer, searchRenderer, toggleButtonRenderer, toolButtonRenderer, zoomRenderer } from './renderers';
+import { defineComponent, FlyOutComponent, GlobalStoreState, HeaderComponent, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage } from '@embedpdf/plugin-ui';
+import { actionTabsRenderer, dividerRenderer, flyOutRenderer, groupedItemsRenderer, headerRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, toggleButtonRenderer, toolButtonRenderer, zoomRenderer } from './renderers';
 import { NavigationWrapper } from '@embedpdf/plugin-ui/preact';
 import { ZOOM_PLUGIN_ID, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 
@@ -62,7 +62,9 @@ interface PDFViewerProps {
 }
 
 type State = GlobalStoreState<{
-  [ZOOM_PLUGIN_ID]: ZoomState
+  [ZOOM_PLUGIN_ID]: ZoomState,
+  [VIEWPORT_PLUGIN_ID]: ViewportState,
+  [SCROLL_PLUGIN_ID]: ScrollState
 }>
 
 // Define components
@@ -174,6 +176,42 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'groupedItems',
     slots: [
       { componentId: 'actionTabs', priority: 2 }
+    ]
+  },
+  pageControls: defineComponent<{ currentPage: number, pageCount: number }, PageControlsProps, State>()({
+    id: 'pageControls',
+    type: 'custom',
+    render: 'pageControls',
+    initialState: {
+      currentPage: 1,
+      pageCount: 1
+    },
+    props: (initialState) => ({
+      currentPage: initialState.currentPage,
+      pageCount: initialState.pageCount
+    }),
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      currentPage: storeState.plugins.scroll.currentPage,
+      pageCount: storeState.core.document?.pageCount ?? 1
+    })
+  }),
+  pageControlsContainer: {
+    id: 'pageControlsContainer',
+    type: 'floating',
+    render: 'pageControlsContainer',
+    initialState: {
+      open: false
+    },
+    props: (initialState) => ({
+      open: initialState.open
+    }),
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      open: storeState.plugins.ui.floating.pageControlsContainer.open
+    }),
+    slots: [
+      { componentId: 'pageControls', priority: 0 }
     ]
   },
   headerEnd: {
@@ -304,21 +342,21 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'custom',
     render: 'search'
   },
-  zoom: {
+  zoom: defineComponent<{ zoomLevel: number }, { zoomLevel: number }, State>()({
     id: 'zoom',
     type: 'custom',
     render: 'zoom',
     initialState: {
       zoomLevel: 1
     },
-    props: (initialState: any) => ({
+    props: (initialState) => ({
       zoomLevel: initialState.zoomLevel
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       zoomLevel: storeState.plugins.zoom.currentZoomLevel
     })
-  },
+  }),
   rightPanel: {
     id: 'rightPanel',
     type: 'panel',
@@ -386,6 +424,8 @@ export function PDFViewer({ config }: PDFViewerProps) {
               uiCapability.registerComponentRenderer('panel', panelRenderer);
               uiCapability.registerComponentRenderer('search', searchRenderer);
               uiCapability.registerComponentRenderer('zoom', zoomRenderer);
+              uiCapability.registerComponentRenderer('pageControlsContainer', pageControlsContainerRenderer);
+              uiCapability.registerComponentRenderer('pageControls', pageControlsRenderer);
             }
           }}
           plugins={[

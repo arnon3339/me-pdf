@@ -139,7 +139,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       scrollToPage: (pageNumber, behavior = 'smooth') => {
         const virtualItems = this.getVirtualItemsFromState();
         const position = this.strategy.getScrollPositionForPage(pageNumber, virtualItems, this.currentScale);
-        this.dispatch(setDesiredScrollPosition(position));
+        this.viewport.scrollTo({ ...position, behavior });
       },
       scrollToNextPage: (behavior = 'smooth') => {
         const virtualItems = this.getVirtualItemsFromState();
@@ -153,7 +153,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
             virtualItems,
             this.currentScale
           );
-          this.dispatch(setDesiredScrollPosition(position));
+          this.viewport.scrollTo({ ...position, behavior });
         }
       },
       scrollToPreviousPage: (behavior = 'smooth') => {
@@ -168,7 +168,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
             virtualItems,
             this.currentScale
           );
-          this.dispatch(setDesiredScrollPosition(position));
+          this.viewport.scrollTo({ ...position, behavior });
         }
       },
       getMetrics: this.getMetrics.bind(this),

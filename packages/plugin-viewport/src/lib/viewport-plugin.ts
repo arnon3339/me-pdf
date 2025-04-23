@@ -1,11 +1,11 @@
-import { BasePlugin, PluginRegistry, EventControlOptions, EventControl, createEmitter } from "@embedpdf/core";
+import { BasePlugin, PluginRegistry, EventControlOptions, EventControl, createEmitter, createBehaviorEmitter } from "@embedpdf/core";
 import { ViewportPluginConfig, ViewportState, ViewportCapability, ViewportMetrics, ViewportScrollMetrics, ViewportInputMetrics } from "./types";
 import { ViewportAction, setViewportMetrics, setViewportScrollMetrics, setViewportGap } from "./actions";
 
 export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCapability, ViewportState, ViewportAction> {
-  private viewportChangeHandlers: Array<(metrics: ViewportMetrics) => void> = [];
-  private readonly scrollReq$ =
-    createEmitter<{ x:number; y:number; behavior?:ScrollBehavior }>();
+  private readonly viewportMetrics$ = createBehaviorEmitter<ViewportMetrics>();
+  private readonly scrollMetrics$ = createBehaviorEmitter<ViewportScrollMetrics>();
+  private readonly scrollReq$ = createEmitter<{ x:number; y:number; behavior?:ScrollBehavior }>();
 
   constructor(public readonly id: string, registry: PluginRegistry, config: ViewportPluginConfig) {
     super(id, registry);
@@ -19,13 +19,14 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
     return {
       getViewportGap: () => this.getState().viewportGap,
       getMetrics: () => this.getState().viewportMetrics,
+      onScrollChange: this.scrollMetrics$.on,
       onViewportChange: (handler, options?: EventControlOptions) => {
         if (options) {
           const controlledHandler = new EventControl<ViewportMetrics>(handler, options).handle;
-          this.viewportChangeHandlers.push(controlledHandler);
+          this.viewportMetrics$.on(controlledHandler);
           return controlledHandler;
         }
-        this.viewportChangeHandlers.push(handler);
+        this.viewportMetrics$.on(handler);
         return handler;
       },
       setViewportMetrics: (viewportMetrics: ViewportInputMetrics) => {
@@ -45,7 +46,11 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
   // Subscribe to store changes to notify onViewportChange
   override onStoreUpdated(prevState: ViewportState, newState: ViewportState): void {
     if (prevState !== newState) {
-      this.viewportChangeHandlers.forEach(handler => handler(newState.viewportMetrics));
+      this.viewportMetrics$.emit(newState.viewportMetrics);
+      this.scrollMetrics$.emit({
+        scrollTop: newState.viewportMetrics.scrollTop,
+        scrollLeft: newState.viewportMetrics.scrollLeft
+      });
     }
   }
   
@@ -56,7 +61,8 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
   async destroy(): Promise<void> {
     super.destroy();
     // Clear out any handlers
-    this.viewportChangeHandlers = [];
+    this.viewportMetrics$.clear();
+    this.scrollMetrics$.clear();
     this.scrollReq$.clear();
   }
 }

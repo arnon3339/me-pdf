@@ -37,6 +37,9 @@ export interface UIPluginState {
   },
   custom: {
     [id: string]: any;
+  },
+  floating: {
+    [id: string]: FloatingState;
   }
 }
 
@@ -53,6 +56,7 @@ export interface UICapability {
   getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => UIComponent<HeaderComponent<any>>[];
   getPanelsByLocation: (location: 'left' | 'right') => UIComponent<PanelComponent<any>>[];
   getFlyOuts: () => UIComponent<FlyOutComponent>[];
+  getFloatingComponents: () => UIComponent<FloatingComponent>[];
   addSlot: (parentId: string, slotId: string, priority?: number) => void;
   registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
   toggleFlyout: (id: string, open?: boolean) => void;
@@ -210,6 +214,19 @@ export interface CustomComponent<TStore = any> extends BaseUIComponent<any, any,
   render: string;
 }
 
+export interface FloatingState {
+  open: boolean;
+}
+
+export interface FloatingComponentProps {
+  open: boolean;
+}
+
+export interface FloatingComponent<TStore = any> extends BaseUIComponent<FloatingComponentProps, FloatingState, TStore> {
+  type: 'floating';
+  slots: Slot[];
+}
+
 // Add this type to extend component props with an ID
 export type WithComponentId<TProps> = TProps & {
   id: string;
@@ -235,4 +252,5 @@ export type UIComponentType<TStore = any> =
   | FlyOutComponent<TStore> 
   | ActionTabsComponent<TStore>
   | PanelComponent<TStore>
-  | CustomComponent<TStore>;
+  | CustomComponent<TStore>
+  | FloatingComponent<TStore>;

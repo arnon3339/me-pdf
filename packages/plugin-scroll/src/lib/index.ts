@@ -18,4 +18,5 @@ export const ScrollPluginPackage: PluginPackage<
 };
 
 export * from "./scroll-plugin";
-export * from "./types"; 
+export * from "./types";
+export * from './manifest';

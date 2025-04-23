@@ -54,4 +54,5 @@ export interface ViewportCapability {
   ) => (metrics: ViewportMetrics) => void;
   scrollTo(position: ScrollToPayload): void;
   onScrollRequest: EventHook<ScrollToPayload>;
+  onScrollChange: EventHook<ViewportScrollMetrics>;
 }

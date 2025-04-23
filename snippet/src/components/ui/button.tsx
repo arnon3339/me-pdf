@@ -1,6 +1,6 @@
-import { h, ComponentChildren, Ref } from 'preact';
+import { h, ComponentChildren, Ref, JSX } from 'preact';
 
-interface ButtonProps {
+type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
   id?: string;
   children: ComponentChildren;
   onClick?: () => void;
