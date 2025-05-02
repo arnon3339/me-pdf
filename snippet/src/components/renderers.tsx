@@ -539,3 +539,9 @@ export const commentRender: ComponentRenderFunction<any> = (props, children) => 
     Comments
   </div>;
 };
+
+export const sidebarRender: ComponentRenderFunction<any> = (props, children) => {
+  return <div>
+    Sidebar
+  </div>;
+};

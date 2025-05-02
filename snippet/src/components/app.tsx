@@ -17,7 +17,7 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
 //import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { MenuItem, defineComponent, GlobalStoreState, IconRegistry, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage, hasActive, isActive, UI_PLUGIN_ID } from '@embedpdf/plugin-ui';
-import { actionTabsRenderer, commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, toolButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
+import { actionTabsRenderer, commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, sidebarRender, toolButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import { ZOOM_PLUGIN_ID, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 
@@ -782,7 +782,14 @@ export const components: Record<string, UIComponentType<State>> = {
       open: storeState.plugins.ui.panel.leftPanel.open,
       visibleChild: storeState.plugins.ui.panel.leftPanel.visibleChild
     }),
-    slots: []
+    slots: [
+      { componentId: 'sidebar', priority: 0 }
+    ]
+  },
+  sidebar: {
+    id: 'sidebar',
+    type: 'custom',
+    render: 'sidebar'
   },
   search: {
     id: 'search',
@@ -912,6 +919,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
               uiCapability.registerComponentRenderer('pageControls', pageControlsRenderer);
               uiCapability.registerComponentRenderer('commandMenu', commandMenuRenderer);
               uiCapability.registerComponentRenderer('comment', commentRender);
+              uiCapability.registerComponentRenderer('sidebar', sidebarRender);
             }
           }}
           plugins={[
@@ -970,7 +978,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                   <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                     {panels.left.length > 0 && (
                       <Fragment>
-                        <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full">
+                        <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full z-10">
                           {panels.left}
                         </div>
                         <div className="hidden md:flex flex-col static">
@@ -994,7 +1002,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                     </div>
                     {panels.right.length > 0 && (
                       <Fragment>
-                        <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full">
+                        <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full z-10">
                           {panels.right}
                         </div>
                         <div className="hidden md:flex flex-col static">
