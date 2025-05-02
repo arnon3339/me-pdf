@@ -60,7 +60,7 @@ export function Dropdown({
   useEffect(() => {
     const reference = trigger;
     const floating = menuRef.current;
-    if (!reference || !floating) return;
+    if (!floating) return;
 
     if (open) {
       floating.style.display = 'block';
@@ -74,6 +74,7 @@ export function Dropdown({
       onHide?.();
     }
 
+    if( !reference) return;
     if (!open) return;
 
     const cleanup = autoUpdate(reference, floating, () => {
@@ -122,15 +123,18 @@ export function Dropdown({
     <div
       ref={menuRef}
       style={{ 
-        display: 'none',
-        left: `${position.x}px`,
-        top: `${position.y}px`
+        ...(trigger && {
+          display: 'none',
+          left: `${position.x}px`,
+          top: `${position.y}px`
+        }),
       }}
       className={`
         absolute z-50 min-w-[8rem] rounded-lg border border-[#cfd4da] bg-white
         shadow-sm divide-y divide-gray-100 focus:outline-none
         transition-opacity duration-150
         ${open ? 'opacity-100' : 'opacity-0'}
+        ${!trigger && 'bottom-0 left-0 right-0'}
         ${className}
       `}
     >

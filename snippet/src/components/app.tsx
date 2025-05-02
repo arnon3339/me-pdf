@@ -147,6 +147,10 @@ export const icons: IconRegistry = {
   sidebar: {
     id: 'sidebar',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-sidebar-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 18v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M14 18v-12a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2z" /></svg>'
+  },
+  dots: {
+    id: 'dots',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>'
   }
 }
 
@@ -568,6 +572,45 @@ export const menuItems: Record<string, MenuItem<State>> = {
       }
     },
     active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'shapeTools'
+  },
+  fillAndSign: {
+    id: 'fillAndSign',
+    label: 'Fill and Sign',
+    type: 'action',
+    action: (registry) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if(ui) {
+        ui.setHeaderVisible({id: 'toolsHeader', visible: true, visibleChild: 'fillAndSignTools'});
+      }
+    },
+    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'fillAndSignTools'
+  },
+  form: {
+    id: 'form',
+    label: 'Form',
+    type: 'action',
+    action: (registry) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if(ui) {
+        ui.setHeaderVisible({id: 'toolsHeader', visible: true, visibleChild: 'formTools'});
+      }
+    },
+    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'formTools'
+  },
+  tabOverflow: {
+    id: 'tabOverflow',
+    label: 'More',
+    icon: 'dots',
+    type: 'menu',
+    children: [
+      'view',
+      'annotate',
+      'shapes',
+      'fillAndSign',
+      'form'
+    ]
   }
 }
 
@@ -726,13 +769,51 @@ export const components: Record<string, UIComponentType<State>> = {
       active: isActive(menuItems.shapes, storeState)
     })
   },
+  fillAndSignTab: {
+    type: 'tabButton',
+    id: 'fillAndSignTab',
+    props: {
+      label: 'Fill and Sign',
+      commandId: 'fillAndSign',
+      active: false
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.fillAndSign, storeState)
+    })
+  },
+  formTab: {
+    type: 'tabButton',
+    id: 'formTab',
+    props: {
+      label: 'Form',
+      commandId: 'form',
+      active: false
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.form, storeState)
+    })
+  },
+  tabOverflowButton: {
+    type: 'iconButton',
+    id: 'tabOverflowButton',
+    props: {
+      label: 'More',
+      commandId: 'tabOverflow',
+      active: false
+    }
+  },
   headerCenter: {
     id: 'headerCenter',
     type: 'groupedItems',
     slots: [
       { componentId: 'viewTab', priority: 0 },
-      { componentId: 'annotateTab', priority: 1 },
-      { componentId: 'shapesTab', priority: 2 }
+      { componentId: 'annotateTab', priority: 1, className: 'hidden @min-[500px]:block' },
+      { componentId: 'shapesTab', priority: 2, className: 'hidden @min-[600px]:block' },
+      { componentId: 'fillAndSignTab', priority: 3, className: 'hidden @min-[700px]:block' },
+      { componentId: 'formTab', priority: 4, className: 'hidden @min-[700px]:block' },
+      { componentId: 'tabOverflowButton', priority: 50, className: 'hidden max-[700px]:block' },
     ],
     props: {
       gap: 10
