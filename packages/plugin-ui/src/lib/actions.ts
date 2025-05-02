@@ -6,6 +6,43 @@ export const UI_INIT_FLYOUT = "UI_INIT_FLYOUT";
 export const UI_TOGGLE_FLYOUT = "UI_TOGGLE_FLYOUT";
 export const UI_SET_HEADER_VISIBLE = "UI_SET_HEADER_VISIBLE";
 export const UI_TOGGLE_PANEL = "UI_TOGGLE_PANEL";
+export const UI_SHOW_COMMAND_MENU = "UI_SHOW_COMMAND_MENU";
+export const UI_HIDE_COMMAND_MENU = "UI_HIDE_COMMAND_MENU";
+export const UI_UPDATE_COMMAND_MENU = "UI_UPDATE_COMMAND_MENU";
+
+export interface InitFlyoutPayload {
+  id: string;
+  triggerElement: HTMLElement;
+}
+
+export interface ToggleFlyoutPayload {
+  id: string;
+  open?: boolean;
+}
+
+export interface SetHeaderVisiblePayload {
+  id: string;
+  visible: boolean;
+  visibleChild?: string;
+}
+
+export interface TogglePanelPayload {
+  id: string;
+  open?: boolean;
+  visibleChild: string;
+}
+
+export interface ShowCommandMenuPayload {
+  id: string;
+  commandId: string;
+  triggerElement?: HTMLElement;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+  flatten?: boolean;
+}
+
+export interface HideCommandMenuPayload {
+  id: string;
+}
 
 export interface UiInitComponentsAction extends Action {
   type: typeof UI_INIT_COMPONENTS;
@@ -14,22 +51,32 @@ export interface UiInitComponentsAction extends Action {
 
 export interface UiInitFlyoutAction extends Action {
   type: typeof UI_INIT_FLYOUT;
-  payload: { id: string; triggerElement: HTMLElement };
+  payload: InitFlyoutPayload;
 }
 
 export interface UiToggleFlyoutAction extends Action {
   type: typeof UI_TOGGLE_FLYOUT;
-  payload: { id: string; open?: boolean };
+  payload: ToggleFlyoutPayload;
 }
 
 export interface UiSetHeaderVisibleAction extends Action {
   type: typeof UI_SET_HEADER_VISIBLE;
-  payload: { id: string; visible: boolean; visibleChild?: string | null };
+  payload: SetHeaderVisiblePayload;
 }
 
 export interface UiTogglePanelAction extends Action {
   type: typeof UI_TOGGLE_PANEL;
-  payload: { id: string; open?: boolean };
+  payload: TogglePanelPayload;
+}
+
+export interface UiShowCommandMenuAction extends Action {
+  type: typeof UI_SHOW_COMMAND_MENU;
+  payload: ShowCommandMenuPayload;
+}
+
+export interface UiHideCommandMenuAction extends Action {
+  type: typeof UI_HIDE_COMMAND_MENU;
+  payload: HideCommandMenuPayload;
 }
 
 export type UIPluginAction =
@@ -37,29 +84,41 @@ export type UIPluginAction =
   | UiInitFlyoutAction
   | UiToggleFlyoutAction
   | UiSetHeaderVisibleAction
-  | UiTogglePanelAction;
+  | UiTogglePanelAction
+  | UiShowCommandMenuAction
+  | UiHideCommandMenuAction
 
 export const uiInitComponents = (state: UIPluginState): UiInitComponentsAction => ({
   type: UI_INIT_COMPONENTS,
   payload: state
 });
 
-export const uiInitFlyout = (id: string, triggerElement: HTMLElement): UiInitFlyoutAction => ({
+export const uiInitFlyout = (payload: InitFlyoutPayload): UiInitFlyoutAction => ({
   type: UI_INIT_FLYOUT,
-  payload: { id, triggerElement }
+  payload
 });
 
-export const uiToggleFlyout = (id: string, open?: boolean): UiToggleFlyoutAction => ({
+export const uiToggleFlyout = (payload: ToggleFlyoutPayload): UiToggleFlyoutAction => ({
   type: UI_TOGGLE_FLYOUT,
-  payload: { id, open }
+  payload
 });
 
-export const uiTogglePanel = (id: string, open?: boolean): UiTogglePanelAction => ({
+export const uiTogglePanel = (payload: TogglePanelPayload): UiTogglePanelAction => ({
   type: UI_TOGGLE_PANEL,
-  payload: { id, open }
+  payload
 });
 
-export const uiSetHeaderVisible = (id: string, visible: boolean, visibleChild?: string | null): UiSetHeaderVisibleAction => ({
+export const uiSetHeaderVisible = (payload: SetHeaderVisiblePayload): UiSetHeaderVisibleAction => ({
   type: UI_SET_HEADER_VISIBLE,
-  payload: { id, visible, visibleChild }
+  payload
+});
+
+export const uiShowCommandMenu = (payload: ShowCommandMenuPayload): UiShowCommandMenuAction => ({
+  type: UI_SHOW_COMMAND_MENU,
+  payload
+});
+
+export const uiHideCommandMenu = (payload: HideCommandMenuPayload): UiHideCommandMenuAction => ({
+  type: UI_HIDE_COMMAND_MENU,
+  payload
 });

@@ -7,7 +7,7 @@ import babel from '@rollup/plugin-babel';
 import typescript from '@rollup/plugin-typescript';
 import postcss from 'rollup-plugin-postcss';
 import autoprefixer from 'autoprefixer'
-import tailwindcss from 'tailwindcss'
+import tailwindcss from '@tailwindcss/postcss'
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import url from '@rollup/plugin-url';
@@ -71,7 +71,7 @@ export default [
         extract: false,
         modules: false,
         autoModules: false,
-        minimize: true,
+        minimize: false,
         inject: false,
         plugins: [autoprefixer(), tailwindcss()]
       }),

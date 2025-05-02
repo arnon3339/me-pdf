@@ -1,6 +1,5 @@
-import { useContext } from "preact/hooks";
-import { PDFContext } from "../context";
 import type { IPlugin } from '@embedpdf/core';
+import { useRegistry } from "./use-registry";
 
 /**
  * Hook to access a plugin's capability.
@@ -11,23 +10,11 @@ import type { IPlugin } from '@embedpdf/core';
  * const zoom = useCapability<ZoomPlugin>('zoom');
  */
 export function useCapability<T extends IPlugin<any>>(pluginId: string): ReturnType<NonNullable<T['provides']>> | null {
-  const contextValue = useContext(PDFContext);
+  const registry = useRegistry();
   
-  // Error if used outside of context
-  if (contextValue === undefined) {
-    throw new Error('useCapability must be used within a PDFContext.Provider');
-  }
-  
-  const { registry, isInitializing } = contextValue;
-  
-  // During initialization, return null instead of throwing an error
-  if (isInitializing) {
-    return null;
-  }
-  
-  // At this point, initialization is complete but registry is still null, which is unexpected
+  // If registry is null (during initialization), useRegistry will return null
   if (registry === null) {
-    throw new Error('PDF registry failed to initialize properly');
+    return null;
   }
 
   const plugin = registry.getPlugin<T>(pluginId);

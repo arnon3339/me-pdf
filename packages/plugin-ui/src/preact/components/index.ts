@@ -1,1 +1,1 @@
-export * from './navigation-wrapper';
+export * from './plugin-ui-provider';

@@ -1,16 +1,18 @@
 import { CoreState } from "@embedpdf/core";
 import { UI_PLUGIN_ID } from "./manifest";
 import { UIComponent } from "./ui-component";
+import { MenuRegistry, MenuManagerCapabilities } from "./menu/types";
+import { IconRegistry, IconCapabilities } from "./icons/types";
+import { SetHeaderVisiblePayload, TogglePanelPayload } from "./actions";
 
 export interface UIPluginConfig {
   enabled: boolean;
   components: Record<string, UIComponentType>;
+  menuItems?: MenuRegistry;
+  icons?: IconRegistry;
 }
 
 export interface UIPluginState {
-  flyOut: {
-    [id: string]: FlyOutState;
-  },
   actionTabs: {
     [id: string]: {};
   },
@@ -29,9 +31,6 @@ export interface UIPluginState {
   toolButton: {
     [id: string]: {};
   },
-  toggleButton: {
-    [id: string]: {};
-  },
   presetButton: {
     [id: string]: {};
   },
@@ -40,6 +39,9 @@ export interface UIPluginState {
   },
   floating: {
     [id: string]: FloatingState;
+  },
+  commandMenu: {
+    [id: string]: CommandMenuState;
   }
 }
 
@@ -50,19 +52,18 @@ export interface childrenFunctionOptions {
   filter?: (childId: string) => boolean;
 }
 
-export interface UICapability {
+export type UICapability = IconCapabilities & MenuManagerCapabilities & {
   registerComponentRenderer: (type: string, renderer: (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any) => void;
   getComponent: <T extends BaseUIComponent<any, any, any>>(id: string) => UIComponent<T> | undefined;
+  getCommandMenu: () => UIComponent<CommandMenuComponent> | undefined;
+  hideCommandMenu: () => void;
   getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => UIComponent<HeaderComponent<any>>[];
   getPanelsByLocation: (location: 'left' | 'right') => UIComponent<PanelComponent<any>>[];
-  getFlyOuts: () => UIComponent<FlyOutComponent>[];
   getFloatingComponents: () => UIComponent<FloatingComponent>[];
   addSlot: (parentId: string, slotId: string, priority?: number) => void;
   registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
-  toggleFlyout: (id: string, open?: boolean) => void;
-  togglePanel: (id: string, open?: boolean) => void;
-  initFlyout: (id: string, triggerElement: HTMLElement) => void;
-  setHeaderVisible: (id: string, visible: boolean, visibleChild?: string | null) => void;
+  togglePanel: (payload: TogglePanelPayload) => void;
+  setHeaderVisible: (payload: SetHeaderVisiblePayload) => void;
 }
 
 export interface BaseUIComponent<TProps, TInitial = undefined, TStore = any> {
@@ -97,6 +98,7 @@ export interface BaseUIComponent<TProps, TInitial = undefined, TStore = any> {
 export interface Slot {
   componentId: string;
   priority: number;
+  className?: string;
 }
 
 export interface ActionTab {
@@ -116,13 +118,13 @@ export interface ActionTabsComponent<TStore = any> extends BaseUIComponent<Actio
 
 export interface PanelState {
   open: boolean;
-  renderChild: string | null;
+  visibleChild: string | null;
 }
 
 export interface PanelProps {
   location: 'left' | 'right';
   open: boolean;
-  renderChild: string | null;
+  visibleChild: string | null;
 }
 
 export interface PanelComponent<TStore = any> extends BaseUIComponent<PanelProps, PanelState, TStore> {
@@ -130,32 +132,16 @@ export interface PanelComponent<TStore = any> extends BaseUIComponent<PanelProps
   slots: Slot[];
 }
 
-export interface FlyOutState {
-  open: boolean;
-  triggerElement: HTMLElement | null;
-}
-
-export interface FlyOutProps {
-  open: boolean;
-  triggerElement: HTMLElement | null;
-  placement?: 'bottom' | 'left' | 'right' | 'top';
-}
-
-export interface FlyOutComponent<TStore = any> extends BaseUIComponent<FlyOutProps, FlyOutState, TStore> {
-  type: 'flyOut';
-  slots: Slot[];
-}
-
 export interface HeaderState {
   visible?: boolean;
-  renderChild?: string | null;
+  visibleChild?: string | null;
 }
 
 export interface HeaderProps {
   placement: 'top' | 'bottom' | 'left' | 'right';
   style?: Record<string, string>;
   visible?: boolean;
-  renderChild?: string | null;
+  visibleChild?: string | null;
 }
 
 export interface HeaderComponent<TStore = any> extends BaseUIComponent<HeaderProps, HeaderState, TStore> {
@@ -179,24 +165,15 @@ export interface DividerComponent<TStore = any> extends BaseUIComponent<undefine
 }
 
 export interface ToolButtonProps {
-  toolName: string;
+  active?: boolean;
+  commandId?: string;
+  onClick?: () => void;
   label?: string;
   img?: string;
 }
 
 export interface ToolButtonComponent<TStore = any> extends BaseUIComponent<ToolButtonProps, undefined, TStore> {
   type: 'toolButton';
-}
-
-export interface ToggleButtonProps {
-  active?: boolean;
-  toggleElement: string;
-  label?: string;
-  img?: string;
-}
-
-export interface ToggleButtonComponent<TStore = any> extends BaseUIComponent<ToggleButtonProps, undefined, TStore> {
-  type: 'toggleButton';
 }
 
 export interface PresetButtonProps {
@@ -227,6 +204,26 @@ export interface FloatingComponent<TStore = any> extends BaseUIComponent<Floatin
   slots: Slot[];
 }
 
+export interface CommandMenuState {
+  triggerElement?: HTMLElement;
+  activeCommand: string | null;
+  open: boolean;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+  flatten?: boolean;
+}
+
+export interface CommandMenuProps {
+  triggerElement?: HTMLElement;
+  activeCommand: string | null;
+  open: boolean;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+  flatten?: boolean;
+}
+
+export interface CommandMenuComponent<TStore = any> extends BaseUIComponent<CommandMenuProps, CommandMenuState, TStore> {
+  type: 'commandMenu';
+}
+
 // Add this type to extend component props with an ID
 export type WithComponentId<TProps> = TProps & {
   id: string;
@@ -246,11 +243,10 @@ export type UIComponentType<TStore = any> =
   | GroupedItemsComponent<TStore> 
   | DividerComponent<TStore> 
   | ToolButtonComponent<TStore> 
-  | ToggleButtonComponent<TStore> 
   | PresetButtonComponent<TStore> 
   | HeaderComponent<TStore> 
-  | FlyOutComponent<TStore> 
   | ActionTabsComponent<TStore>
   | PanelComponent<TStore>
   | CustomComponent<TStore>
-  | FloatingComponent<TStore>;
+  | FloatingComponent<TStore>
+  | CommandMenuComponent<TStore>;

@@ -28,7 +28,7 @@ export function ComponentWrapper({
   const renderer = component.getRenderer(); // We'll define getRenderer() below
 
   if (!renderer) {
-    throw new Error(`No renderer for type: ${component.type}`);
+    throw new Error(`No renderer for type: ${component.getRenderType}`);
   }
 
   // 2) Build a function that returns child wrappers
@@ -39,12 +39,14 @@ export function ComponentWrapper({
         // If filter function is provided, use it to determine if we should include this child
         return !options?.filter || options.filter(id);
       })
-      .map(({ component: child, id }) => (
-        <ComponentWrapper
-          key={id}
-          component={child}
-          parentContext={merged}
-        />
+      .map(({ component: child, id, className }) => (
+        <div className={className}>
+          <ComponentWrapper
+            key={id}
+            component={child}
+            parentContext={merged}
+          />
+        </div>
       ));
   }
 

@@ -1,100 +1,53 @@
-import { ActionTabsComponent, ActionTabsProps, ComponentRenderFunction, DividerComponent, FloatingComponentProps, FlyOutComponent, FlyOutProps, GroupedItemsComponent, GroupedItemsProps, HeaderComponent, HeaderProps, PanelProps, ToggleButtonComponent, ToggleButtonProps, ToolButtonComponent, ToolButtonProps } from "@embedpdf/plugin-ui";
-import { h, Fragment, Ref, RefObject, ComponentType } from 'preact';
+import { Action, ActionTabsProps, CommandMenuProps, ComponentRenderFunction, DividerComponent, FloatingComponentProps, Group, GroupedItemsProps, HeaderProps, Menu, MenuItem, PanelProps, ToolButtonProps } from "@embedpdf/plugin-ui";
+import { h, Fragment } from 'preact';
 import { Button } from './ui/button';
 import { Tooltip } from './ui/tooltip';
 import { useState, useRef, useEffect, useCallback } from 'preact/hooks';
 import { useUI } from "@embedpdf/plugin-ui/preact";
-import { Dropdown, DropdownItems, DropdownItem, DropdownDivider } from './ui/dropdown';
+import { Dropdown } from './ui/dropdown';
 import { useZoom } from "@embedpdf/plugin-zoom/preact";
 import { useViewport } from "@embedpdf/plugin-viewport/preact";
 import { useScroll } from "@embedpdf/plugin-scroll/preact";
+import { Icon } from "./ui/icon";
 
-export const toolButtonRenderer: ComponentRenderFunction<ToolButtonProps> = (props, children, context) => (
-  <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={props.label!} trigger={context?.variant === 'flyout' ? 'none' : 'hover'}>
-    <Button
-      onClick={() => console.log(`Tool ${props.toolName} clicked`)}
-      className={`
-        ${context?.variant === 'flyout' ? 'px-2 rounded-none w-full' : ''}
-      `}
-    >
-      {props.img && <img src={props.img} alt={props.label} className="w-5 h-5" />}
-      {context?.variant === 'flyout' && props.label && <span className="text-sm pl-2">{props.label}</span>}
-    </Button>
-  </Tooltip>
-);
-
-export const toggleButtonRenderer: ComponentRenderFunction<ToggleButtonProps> = (props, _children, context) => {
-  // Create a ref to store the button element
-  const buttonRef = useRef<any>(null);
-  // Get the UI instance
+export const toolButtonRenderer: ComponentRenderFunction<ToolButtonProps> = ({commandId, onClick, active, ...props}, children, context) => {
   const ui = useUI();
+  const command = commandId ? ui?.getMenuOrAction(commandId) : null;
+  
+  const handleClick = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  const toggleType = ui?.getComponent(props.toggleElement)?.type;
-
-  useEffect(() => {
-    if (buttonRef.current) {
-      if(toggleType === 'flyOut') {
-        ui?.initFlyout(props.toggleElement, buttonRef.current.base);
-      }
+    if(onClick) {
+      onClick();
+      return;
     }
-  }, []);
+    
+    if (!commandId || !ui || !command) return;
+    
+    // Get the button element to use for positioning menus
+    const triggerElement = e.currentTarget as HTMLElement;
 
-  const handleClick = () => {
-    if(toggleType === 'flyOut') {
-      ui?.toggleFlyout(props.toggleElement);
-    } else if(toggleType === 'panel') {
-      ui?.togglePanel(props.toggleElement);
-    }
-  };
+    ui.executeCommand(commandId, { 
+      source: 'click',
+      triggerElement,
+      position: context?.direction === 'horizontal' ? 'bottom' : 'right'
+    });
+  }, [command, commandId, ui, onClick]);
 
   return (
-    <Tooltip 
-      position={context?.direction === 'horizontal' ? 'bottom' : 'right'} 
-      content={props.label!} 
-      trigger={props.active ? 'none' : 'hover'} 
-      targetElement={props.id}
-    >
+    <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={props.label!} trigger={active ? 'none' : 'hover'} delay={500}>
       <Button
-        ref={buttonRef}
+        active={active}
         onClick={handleClick}
-        active={props.active}
-        data-element={props.id}
-        data-dropdown-placement="right"
-        data-dropdown-toggle={props.id}
-        className="toggleButton"
+        className={`
+          ${context?.variant === 'flyout' ? 'px-2 rounded-none w-full' : ''}
+        `}
       >
-        {props.img && <img src={props.img} alt={props.label} className="w-5 h-5" />}
+        {!command?.icon && props.img && <img src={props.img} alt={props.label} className="w-5 h-5" /> }
+        {command?.icon && <Icon icon={command.icon} className="w-5 h-5" />}
       </Button>
     </Tooltip>
-  );
-};
-
-export const flyOutRenderer: ComponentRenderFunction<FlyOutProps> = (props, children) => {
-  const ui = useUI();
-
-  if (!props.triggerElement) {
-    return null;
-  }
-
-  return (
-    <Dropdown
-      id={props.id}
-      trigger={props.triggerElement}
-      open={props.open}
-      placement={props.placement || 'bottom'}
-      onShow={() => {
-        if (!props.triggerElement) return;
-      }}
-      onHide={() => {
-        if (!props.triggerElement) return;
-
-        ui?.toggleFlyout(props.id, false);
-      }}
-    >
-      <DropdownItems>
-        {children()}
-      </DropdownItems>
-    </Dropdown>
   );
 };
 
@@ -151,8 +104,8 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
   if(props.visible !== undefined && !props.visible) return null;
 
   return <div style={style} className="header">{children({
-    ...props.renderChild && {
-      filter: (childId) => childId === props.renderChild
+    ...props.visibleChild && {
+      filter: (childId) => childId === props.visibleChild
     }
   })}</div>;
 };
@@ -168,7 +121,7 @@ export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (pro
         className={`text-sm px-2 py-1 rounded-none hover:bg-transparent ${activeTab === tab.id ? 'border-b-2 border-b-blue-500 text-blue-500' : 'border-b-2 border-b-transparent'} hover:ring-transparent`} 
         onClick={() => {
           setActiveTab(tab.id);
-          ui?.setHeaderVisible(props.targetHeader, tab.triggerComponent ? true : false, tab.triggerComponent);
+          ui?.setHeaderVisible({id: props.targetHeader, visible: tab.triggerComponent ? true : false, visibleChild: tab.triggerComponent || undefined});
         }}
       >
         {tab.label}
@@ -181,9 +134,15 @@ export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, childr
   if(!props.open) return null;
 
   // Determine border class based on position
-  const borderClass = props.location === 'left' ? 'border-r' : 'border-l';
+  const borderClass = props.location === 'left' ? 'md:border-r' : 'md:border-l';
 
-  return <div className={`w-[250px] min-w-[250px] bg-white shrink-0 flex flex-col flex-none ${borderClass} border-[#cfd4da]`}>{children()}</div>;
+  return <div className={`border-t md:border-t-0 w-full md:w-[250px] md:min-w-[250px] bg-white shrink-0 flex flex-col flex-none ${borderClass} border-[#cfd4da] h-full`}>
+    {children({
+      ...props.visibleChild && {
+        filter: (childId) => childId === props.visibleChild
+      }
+    })}
+  </div>;
 };
 
 export const searchRenderer: ComponentRenderFunction<any> = (props, children) => {
@@ -242,23 +201,38 @@ export const searchRenderer: ComponentRenderFunction<any> = (props, children) =>
   );
 };
 
-interface ZoomRendererProps {
+export interface ZoomRendererProps {
   zoomLevel: number;
+  commandZoomIn: string;
+  commandZoomOut: string;
+  commandZoomMenu: string;
+  zoomMenuActive: boolean;
 }
 
 export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, children, context) => {
   const zoom = useZoom();
+  const ui = useUI();
+
+  if(!ui) return null;
+
+  const commandZoomMenu = props.commandZoomMenu ? ui.getMenuOrAction(props.commandZoomMenu) : null;
+  const commandZoomIn = props.commandZoomIn ? ui.getMenuOrAction(props.commandZoomIn) : null;
+  const commandZoomOut = props.commandZoomOut ? ui.getMenuOrAction(props.commandZoomOut) : null;
+
   const [zoomDropdownOpen, setZoomDropdownOpen] = useState(false);
   const zoomDropdownRef = useRef<any>(null);
   // Format zoom level as percentage and round to avoid floating point issues
   const zoomPercentage = Math.round(props.zoomLevel * 100);
 
-  const handleZoomOut = () => {
-    zoom?.zoomOut();
-  };
-
-  const handleZoomIn = () => {
-    zoom?.zoomIn();
+  const handleClick = (e: MouseEvent, command: Menu<any> | Action<any> | null | undefined) => {
+    if (command) {
+      ui.executeCommand(command.id, {
+        source: 'click',
+        triggerElement: e.currentTarget as HTMLElement,
+        position: context?.direction === 'horizontal' ? 'bottom' : 'right',
+        flatten: true
+      });
+    }
   };
 
   useEffect(() => {
@@ -268,12 +242,12 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, 
   }, [zoomDropdownRef.current]);
 
   return <div className="flex flex-row items-center bg-[#f1f3f5] rounded-md">
-    <div className="ZoomText">
+    <div className="hidden @3xl:block">
       <input type="text" className="border-0 bg-transparent text-sm text-right p-0 h-6 w-8" aria-label="Set zoom" value={zoomPercentage} />
       <span className="text-sm">%</span>
     </div>
-    <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={'Zoom Options'} trigger={'hover'}>
-      <Button className="p-1">
+    <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={'Zoom Options'} trigger={props.zoomMenuActive ? 'none' : 'hover'}>
+      <Button className={`p-1`} onClick={(e) => handleClick(e, commandZoomMenu)} active={props.zoomMenuActive}>
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down">
           <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
           <path d="M6 9l6 6l6 -6" />
@@ -281,22 +255,13 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, 
       </Button>
     </Tooltip>
     <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={'Zoom Out'} trigger={'hover'}>
-      <Button className="p-1" onClick={handleZoomOut}>
-        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="none"  stroke="#343a40"  strokeWidth="2"  strokeLinecap="round"  strokeLinejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-minus">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-          <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-          <path d="M9 12l6 0" />
-        </svg>
+      <Button className="p-1" onClick={(e) => handleClick(e, commandZoomOut)}>
+        {commandZoomOut?.icon && <Icon icon={commandZoomOut.icon} className="w-5 h-5" />}
       </Button>
     </Tooltip>
     <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={'Zoom In'} trigger={'hover'}>
-      <Button className="p-1" onClick={handleZoomIn}>
-        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="none"  stroke="#343a40"  strokeWidth="2"  strokeLinecap="round"  strokeLinejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-plus">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-          <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-          <path d="M9 12h6" />
-          <path d="M12 9v6" />
-        </svg>
+      <Button className="p-1" onClick={(e) => handleClick(e, commandZoomIn)}>
+        {commandZoomIn?.icon && <Icon icon={commandZoomIn.icon} className="w-5 h-5" />}
       </Button>
     </Tooltip>
   </div>;
@@ -416,5 +381,161 @@ export const pageControlsRenderer: ComponentRenderFunction<PageControlsProps> = 
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
       </Button>
     </Tooltip>
+  </div>;
+};
+
+export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({activeCommand, open, position, triggerElement, flatten}) => {
+  const ui = useUI();
+  const [history, setHistory] = useState<string[]>([]);
+  const lastPushRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!open) setHistory([]);
+  }, [open]);
+
+  useEffect(() => {
+    if (!activeCommand) return;
+
+    if (lastPushRef.current === activeCommand) {
+      lastPushRef.current = null;
+      return;
+    }
+
+    setHistory([]);
+  }, [activeCommand]);
+
+  if(!ui) return null;
+
+  const items = activeCommand 
+    ? ui?.getChildItems(activeCommand, { flatten }) 
+    : null;
+
+  const currentMenu =
+    history.length > 0 && activeCommand ? ui.getMenuOrAction(activeCommand) : undefined;
+
+  const handleHide = () => {
+    ui.hideCommandMenu();
+  };
+
+  const handleCommandClick = (command: MenuItem) => {
+    if (command.type === 'action') {
+      ui.executeCommand(command.id);
+      ui.hideCommandMenu();
+    } else if (command.type === 'menu') {
+      pushMenu(command.id);
+    }
+  };
+
+  const pushMenu = (menuId: string) => {
+    if (activeCommand) setHistory(prev => [...prev, activeCommand]);
+    lastPushRef.current = menuId;
+
+    ui.executeCommand(menuId, {
+      triggerElement: triggerElement,
+      position: position
+    });
+  };
+
+  const goBack = () => {
+    if (history.length === 0) return;
+    const previous = history[history.length - 1];
+    setHistory(prev => prev.slice(0, -1));
+    lastPushRef.current = previous;
+    ui.executeCommand(previous, {
+      triggerElement: triggerElement,
+      position: position
+    });
+  };
+
+  const renderCommandItem = (command: MenuItem, index: number) => {
+    if (command.type === 'group') {
+      const group = command as Group;
+      const groupChildren = ui.getItemsByIds(group.children);
+      
+      return (
+        <Fragment key={command.id}>
+          <div className="px-4 py-1 text-xs font-medium text-gray-600 uppercase">
+            {group.label}
+          </div>
+          {groupChildren.map((child, childIndex) => (
+            <Fragment key={child.id}>
+              {renderCommandItem(child, childIndex)}
+            </Fragment>
+          ))}
+          <hr className="my-2 border-gray-200" />
+        </Fragment>
+      );
+    }
+
+    const divider = command.dividerBefore && index !== 0 ? (
+      <hr className="my-2 border-gray-200" />
+    ) : null;
+
+    return (
+      <Fragment key={command.id}>
+        {divider}
+        <div 
+          onClick={() => handleCommandClick(command)} 
+          className={`px-4 py-1 cursor-pointer hover:bg-gray-100 flex flex-row items-center justify-between gap-2 ${
+            command.type === 'menu' ? 'menu-item' : ''
+          }`}
+        >
+          <div className="flex flex-row items-center gap-2">
+            <div className="flex justify-center items-center text-gray-500 w-6 h-6">
+              {command.icon && <Icon icon={command.icon} className="w-6 h-6" />}
+            </div>
+            <div className="text-sm text-gray-500">{command.label}</div>
+          </div>
+          <div className="flex items-center">
+            {command.shortcutLabel && (
+              <div className="text-sm text-gray-500 mr-2">
+                ({command.shortcutLabel})
+              </div>
+            )}
+            {command.type === 'menu' && (
+              <Icon icon="chevronRight" className="w-6 h-6 text-gray-500" />
+            )}
+          </div>
+        </div>
+      </Fragment>
+    );
+  };
+
+  const menuContent = (
+    <Fragment>
+      {history.length > 0 && (
+        <div
+          onClick={goBack}
+          className="px-4 py-1 cursor-pointer hover:bg-gray-100
+                     flex flex-row items-center text-gray-500 gap-2 text-sm font-medium"
+        >
+          <Icon icon="chevronLeft" className="w-6 h-6 text-gray-500" /> {currentMenu?.label}
+        </div>
+      )}
+      {items?.map((item, index) => renderCommandItem(item, index))}
+    </Fragment>
+  );
+
+  if (!open) return null;
+
+  // Render as Dropdown if there's a triggerElement, otherwise as SwipeableDrawer
+  return ( 
+    <Dropdown
+      trigger={triggerElement}
+      open={open}
+      placement={position || 'bottom'}
+      className="@max-[900px]:!bottom-0 @max-[900px]:!top-auto @max-[900px]:!left-0 @max-[900px]:!right-0"
+      onShow={() => {
+    
+      }}
+      onHide={handleHide}
+    >
+      {menuContent}
+    </Dropdown>)
+};
+
+export const commentRender: ComponentRenderFunction<any> = (props, children) => {
+  return <div>
+    Comments
   </div>;
 };
