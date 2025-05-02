@@ -1,4 +1,4 @@
-import { Action, ActionTabsProps, CommandMenuProps, ComponentRenderFunction, DividerComponent, FloatingComponentProps, Group, GroupedItemsProps, HeaderProps, Menu, MenuItem, PanelProps, ToolButtonProps } from "@embedpdf/plugin-ui";
+import { Action, CommandMenuProps, ComponentRenderFunction, DividerComponent, FloatingComponentProps, Group, GroupedItemsProps, HeaderProps, IconButtonProps, Menu, MenuItem, PanelProps, TabButtonProps } from "@embedpdf/plugin-ui";
 import { h, Fragment } from 'preact';
 import { Button } from './ui/button';
 import { Tooltip } from './ui/tooltip';
@@ -10,7 +10,7 @@ import { useViewport } from "@embedpdf/plugin-viewport/preact";
 import { useScroll } from "@embedpdf/plugin-scroll/preact";
 import { Icon } from "./ui/icon";
 
-export const toolButtonRenderer: ComponentRenderFunction<ToolButtonProps> = ({commandId, onClick, active, ...props}, children, context) => {
+export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = ({commandId, onClick, active, ...props}, children, context) => {
   const ui = useUI();
   const command = commandId ? ui?.getMenuOrAction(commandId) : null;
   
@@ -48,6 +48,37 @@ export const toolButtonRenderer: ComponentRenderFunction<ToolButtonProps> = ({co
         {command?.icon && <Icon icon={command.icon} className="w-5 h-5" />}
       </Button>
     </Tooltip>
+  );
+};
+
+export const tabButtonRenderer: ComponentRenderFunction<TabButtonProps> = ({commandId, onClick, active, ...props}, children) => {
+  const ui = useUI();
+  const command = commandId ? ui?.getMenuOrAction(commandId) : null;
+
+  const handleClick = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if(onClick) {
+      onClick();
+      return;
+    }
+    
+    if (!commandId || !ui || !command) return;
+    
+    ui.executeCommand(commandId, { 
+      source: 'click'
+    });
+  }, [command, commandId, ui, onClick]);
+
+  return (
+    <Button 
+      key={props.id} 
+      className={`text-sm px-2 py-1 rounded-none hover:bg-transparent ${active ? 'border-b-2 border-b-blue-500 text-blue-500' : 'border-b-2 border-b-transparent'} hover:ring-transparent`} 
+      onClick={handleClick}
+    >
+      {props.label}
+    </Button>
   );
 };
 
@@ -108,26 +139,6 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
       filter: (childId) => childId === props.visibleChild
     }
   })}</div>;
-};
-
-export const actionTabsRenderer: ComponentRenderFunction<ActionTabsProps> = (props, children) => {
-  const [activeTab, setActiveTab] = useState(props.tabs[0].id);
-  const ui = useUI();
-
-  return <div className="flex flex-row items-center gap-4">
-    {props.tabs.map((tab) => (
-      <Button 
-        key={tab.id} 
-        className={`text-sm px-2 py-1 rounded-none hover:bg-transparent ${activeTab === tab.id ? 'border-b-2 border-b-blue-500 text-blue-500' : 'border-b-2 border-b-transparent'} hover:ring-transparent`} 
-        onClick={() => {
-          setActiveTab(tab.id);
-          ui?.setHeaderVisible({id: props.targetHeader, visible: tab.triggerComponent ? true : false, visibleChild: tab.triggerComponent || undefined});
-        }}
-      >
-        {tab.label}
-      </Button>
-    ))}
-  </div>;
 };
 
 export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, children) => {

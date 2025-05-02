@@ -13,9 +13,6 @@ export interface UIPluginConfig {
 }
 
 export interface UIPluginState {
-  actionTabs: {
-    [id: string]: {};
-  },
   panel: {
     [id: string]: PanelState;
   },
@@ -28,10 +25,10 @@ export interface UIPluginState {
   divider: {
     [id: string]: {};
   },
-  toolButton: {
+  iconButton: {
     [id: string]: {};
   },
-  presetButton: {
+  tabButton: {
     [id: string]: {};
   },
   custom: {
@@ -101,21 +98,6 @@ export interface Slot {
   className?: string;
 }
 
-export interface ActionTab {
-  id: string;
-  label: string;
-  triggerComponent: string | null;
-}
-
-export interface ActionTabsProps {
-  tabs: ActionTab[];
-  targetHeader: string;
-}
-
-export interface ActionTabsComponent<TStore = any> extends BaseUIComponent<ActionTabsProps, undefined, TStore> {
-  type: 'actionTabs';
-}
-
 export interface PanelState {
   open: boolean;
   visibleChild: string | null;
@@ -164,7 +146,7 @@ export interface DividerComponent<TStore = any> extends BaseUIComponent<undefine
   type: 'divider';
 }
 
-export interface ToolButtonProps {
+export interface IconButtonProps {
   active?: boolean;
   commandId?: string;
   onClick?: () => void;
@@ -172,18 +154,19 @@ export interface ToolButtonProps {
   img?: string;
 }
 
-export interface ToolButtonComponent<TStore = any> extends BaseUIComponent<ToolButtonProps, undefined, TStore> {
-  type: 'toolButton';
+export interface IconButtonComponent<TStore = any> extends BaseUIComponent<IconButtonProps, undefined, TStore> {
+  type: 'iconButton';
 }
 
-export interface PresetButtonProps {
-  buttonType: string;
-  label?: string;
-  img?: string;
+export interface TabButtonProps {
+  active?: boolean;
+  commandId?: string;
+  onClick?: () => void;
+  label: string;
 }
 
-export interface PresetButtonComponent<TStore = any> extends BaseUIComponent<PresetButtonProps, undefined, TStore> {
-  type: 'presetButton';
+export interface TabButtonComponent<TStore = any> extends BaseUIComponent<TabButtonProps, undefined, TStore> {
+  type: 'tabButton';
 }
 
 export interface CustomComponent<TStore = any> extends BaseUIComponent<any, any, TStore> {
@@ -242,10 +225,9 @@ export interface GlobalStoreState<TPlugins extends Record<string, any> = {}> {
 export type UIComponentType<TStore = any> = 
   | GroupedItemsComponent<TStore> 
   | DividerComponent<TStore> 
-  | ToolButtonComponent<TStore> 
-  | PresetButtonComponent<TStore> 
+  | IconButtonComponent<TStore> 
+  | TabButtonComponent<TStore>
   | HeaderComponent<TStore> 
-  | ActionTabsComponent<TStore>
   | PanelComponent<TStore>
   | CustomComponent<TStore>
   | FloatingComponent<TStore>

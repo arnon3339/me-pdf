@@ -3,13 +3,12 @@ import { UIPluginState } from "./types";
 import { UI_HIDE_COMMAND_MENU, UI_INIT_COMPONENTS, UI_SET_HEADER_VISIBLE, UI_SHOW_COMMAND_MENU, UI_TOGGLE_PANEL, UIPluginAction } from "./actions";
 
 export const initialState: UIPluginState = {
-  actionTabs: {},
   panel: {},
   header: {},
   groupedItems: {},
   divider: {},
-  toolButton: {},
-  presetButton: {},
+  iconButton: {},
+  tabButton: {},
   custom: {},
   floating: {},
   commandMenu: {}

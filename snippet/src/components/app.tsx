@@ -17,7 +17,7 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
 //import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { MenuItem, defineComponent, GlobalStoreState, IconRegistry, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage, hasActive, isActive, UI_PLUGIN_ID } from '@embedpdf/plugin-ui';
-import { actionTabsRenderer, commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, sidebarRender, toolButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
+import { commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, sidebarRender, tabButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import { ZOOM_PLUGIN_ID, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 
@@ -523,13 +523,58 @@ export const menuItems: Record<string, MenuItem<State>> = {
       }
     },
     active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true && storeState.plugins.ui.panel.leftPanel.visibleChild === 'sidebar'
+  },
+  view: {
+    id: 'view',
+    label: 'View',
+    type: 'action',
+    shortcut: 'Shift+V',
+    shortcutLabel: 'V',
+    action: (registry) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if(ui) {
+        ui.setHeaderVisible({id: 'toolsHeader', visible: false});
+      }
+    },
+    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === false
+  },
+  annotate: {
+    id: 'annotate',
+    label: 'Annotate',
+    type: 'action',
+    shortcut: 'Shift+A',
+    shortcutLabel: 'A',
+    action: (registry) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if(ui) {
+        ui.setHeaderVisible({id: 'toolsHeader', visible: true, visibleChild: 'annotationTools'});
+      }
+    },
+    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'annotationTools'
+  },
+  shapes: {
+    id: 'shapes',
+    label: 'Shapes',
+    type: 'action',
+    shortcut: 'Shift+S',
+    shortcutLabel: 'S',
+    action: (registry) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if(ui) {
+        ui.setHeaderVisible({id: 'toolsHeader', visible: true, visibleChild: 'shapeTools'});
+      }
+    },
+    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'shapeTools'
   }
 }
 
 // Define components
 export const components: Record<string, UIComponentType<State>> = {
   menuButton: {
-    type: 'toolButton',
+    type: 'iconButton',
     id: 'menuButton',
     props: {
       commandId: 'menuCtr',
@@ -542,7 +587,7 @@ export const components: Record<string, UIComponentType<State>> = {
     })
   },
   viewCtrButton: {
-    type: 'toolButton',
+    type: 'iconButton',
     id: 'viewCtrButton',
     props: {
       commandId: 'viewCtr',
@@ -555,7 +600,7 @@ export const components: Record<string, UIComponentType<State>> = {
     })
   },
   commentButton: {
-    type: 'toolButton',
+    type: 'iconButton',
     id: 'commentButton',
     props: {
       active: false,
@@ -568,7 +613,7 @@ export const components: Record<string, UIComponentType<State>> = {
     })
   },
   searchButton: {
-    type: 'toolButton',
+    type: 'iconButton',
     id: 'searchButton',
     props: {
       active: false,
@@ -581,7 +626,7 @@ export const components: Record<string, UIComponentType<State>> = {
     })
   },
   filePickerButton: {
-    type: 'toolButton',
+    type: 'iconButton',
     id: 'filePickerButton',
     props: {
       label: 'Open File',
@@ -589,7 +634,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
   },
   downloadButton: {
-    type: 'toolButton',
+    type: 'iconButton',
     id: 'downloadButton',
     props: {
       label: 'Download',
@@ -597,7 +642,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
   },  
   zoomButton: {
-    type: 'toolButton',
+    type: 'iconButton',
     id: 'zoomButton',
     props: {
       commandId: 'zoom',
@@ -610,7 +655,7 @@ export const components: Record<string, UIComponentType<State>> = {
     })
   },
   sidebarButton: {
-    type: 'toolButton',
+    type: 'iconButton',
     id: 'sidebarButton',
     props: {
       commandId: 'sidebar',
@@ -625,18 +670,6 @@ export const components: Record<string, UIComponentType<State>> = {
   divider1: {
     type: 'divider',
     id: 'divider1',
-  },
-  actionTabs: {
-    type: 'actionTabs',
-    id: 'actionTabs',
-    props: {
-      targetHeader: 'toolsHeader',
-      tabs: [
-        { id: 'viewTab', label: 'View', triggerComponent: null },
-        { id: 'annotateTab', label: 'Annotate', triggerComponent: 'annotationTools' },
-        { id: 'shapesTab', label: 'Shapes', triggerComponent: null }
-      ]
-    }
   },
   headerStart: {
     id: 'headerStart',
@@ -654,12 +687,56 @@ export const components: Record<string, UIComponentType<State>> = {
       gap: 10
     }
   },
+  viewTab: {
+    type: 'tabButton',
+    id: 'viewTab',
+    props: {
+      label: 'View',
+      commandId: 'view',
+      active: false
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.view, storeState)
+    })
+  },
+  annotateTab: {
+    type: 'tabButton',
+    id: 'annotateTab',
+    props: {
+      label: 'Annotate',
+      commandId: 'annotate',
+      active: false
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.annotate, storeState)
+    })
+  },
+  shapesTab: {
+    type: 'tabButton',
+    id: 'shapesTab',
+    props: {
+      label: 'Shapes',
+      commandId: 'shapes',
+      active: false
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.shapes, storeState)
+    })
+  },
   headerCenter: {
     id: 'headerCenter',
     type: 'groupedItems',
     slots: [
-      { componentId: 'actionTabs', priority: 2 }
-    ]
+      { componentId: 'viewTab', priority: 0 },
+      { componentId: 'annotateTab', priority: 1 },
+      { componentId: 'shapesTab', priority: 2 }
+    ],
+    props: {
+      gap: 10
+    }
   },
   headerEnd: {
     id: 'headerEnd',
@@ -908,10 +985,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
 
             if (uiCapability) {
               uiCapability.registerComponentRenderer('groupedItems', groupedItemsRenderer);
-              uiCapability.registerComponentRenderer('toolButton', toolButtonRenderer);
+              uiCapability.registerComponentRenderer('iconButton', iconButtonRenderer);
+              uiCapability.registerComponentRenderer('tabButton', tabButtonRenderer);
               uiCapability.registerComponentRenderer('header', headerRenderer);
               uiCapability.registerComponentRenderer('divider', dividerRenderer);
-              uiCapability.registerComponentRenderer('actionTabs', actionTabsRenderer);
               uiCapability.registerComponentRenderer('panel', panelRenderer);
               uiCapability.registerComponentRenderer('search', searchRenderer);
               uiCapability.registerComponentRenderer('zoom', zoomRenderer);
