@@ -9,6 +9,7 @@ export const initialState: UIPluginState = {
   divider: {},
   iconButton: {},
   tabButton: {},
+  selectButton: {},
   custom: {},
   floating: {},
   commandMenu: {}

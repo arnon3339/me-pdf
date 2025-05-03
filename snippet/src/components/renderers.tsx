@@ -1,4 +1,4 @@
-import { Action, CommandMenuProps, ComponentRenderFunction, DividerComponent, FloatingComponentProps, Group, GroupedItemsProps, HeaderProps, IconButtonProps, Menu, MenuItem, PanelProps, TabButtonProps } from "@embedpdf/plugin-ui";
+import { Action, CommandMenuProps, ComponentRenderFunction, DividerComponent, FloatingComponentProps, Group, GroupedItemsProps, HeaderProps, IconButtonProps, Menu, MenuItem, PanelProps, SelectButtonProps, TabButtonProps } from "@embedpdf/plugin-ui";
 import { h, Fragment } from 'preact';
 import { Button } from './ui/button';
 import { Tooltip } from './ui/tooltip';
@@ -517,7 +517,7 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
       {history.length > 0 && (
         <div
           onClick={goBack}
-          className="px-4 py-1 cursor-pointer hover:bg-gray-100
+          className="px-4 py-1 pb-2 cursor-pointer hover:bg-gray-100
                      flex flex-row items-center text-gray-500 gap-2 text-sm font-medium"
         >
           <Icon icon="chevronLeft" className="w-6 h-6 text-gray-500" /> {currentMenu?.label}
@@ -555,4 +555,40 @@ export const sidebarRender: ComponentRenderFunction<any> = (props, children) => 
   return <div>
     Sidebar
   </div>;
+};
+
+export const selectButtonRenderer: ComponentRenderFunction<SelectButtonProps> = ({activeCommandId, menuCommandId, active}, children) => {
+  const ui = useUI();
+  if(!ui) return null;
+
+  const activeCommand = ui.getMenuOrAction(activeCommandId);
+
+  const handleClick = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!ui || !menuCommandId) return;
+    
+    const triggerElement = e.currentTarget as HTMLElement;
+
+    ui.executeCommand(menuCommandId, { 
+      source: 'click',
+      triggerElement: triggerElement
+    });
+  }, [menuCommandId, ui]);
+
+  return (
+    <div style={{ maxWidth: '100px', width: '100px' }}>
+      <Button 
+        className={`
+          !w-full col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 px-3 text-xs text-gray-900 ${active ? 'outline outline-2 -outline-offset-2 outline-blue-500 text-blue-500' : 'outline outline-1 -outline-offset-1 outline-gray-300'} hover:ring-transparent
+          flex flex-row items-center justify-between gap-2
+        `} 
+        onClick={handleClick}
+      >
+        <span className="truncate flex-1 min-w-0 text-left">{activeCommand?.label}</span>
+        <Icon icon="chevronDown" className="w-4 h-4 text-gray-500" />
+      </Button>
+    </div>
+  );
 };

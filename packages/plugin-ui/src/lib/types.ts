@@ -31,6 +31,9 @@ export interface UIPluginState {
   tabButton: {
     [id: string]: {};
   },
+  selectButton: {
+    [id: string]: {};
+  },
   custom: {
     [id: string]: any;
   },
@@ -169,6 +172,17 @@ export interface TabButtonComponent<TStore = any> extends BaseUIComponent<TabBut
   type: 'tabButton';
 }
 
+export interface SelectButtonProps {
+  active?: boolean;
+  commandIds: string[];
+  menuCommandId: string;
+  activeCommandId: string;
+}
+
+export interface SelectButtonComponent<TStore = any> extends BaseUIComponent<SelectButtonProps, undefined, TStore> {
+  type: 'selectButton';
+}
+
 export interface CustomComponent<TStore = any> extends BaseUIComponent<any, any, TStore> {
   type: 'custom';
   render: string;
@@ -231,4 +245,5 @@ export type UIComponentType<TStore = any> =
   | PanelComponent<TStore>
   | CustomComponent<TStore>
   | FloatingComponent<TStore>
-  | CommandMenuComponent<TStore>;
+  | CommandMenuComponent<TStore>
+  | SelectButtonComponent<TStore>;

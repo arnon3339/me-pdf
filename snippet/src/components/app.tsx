@@ -17,7 +17,7 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
 //import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { MenuItem, defineComponent, GlobalStoreState, IconRegistry, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage, hasActive, isActive, UI_PLUGIN_ID } from '@embedpdf/plugin-ui';
-import { commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, sidebarRender, tabButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
+import { commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, selectButtonRenderer, sidebarRender, tabButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import { ZOOM_PLUGIN_ID, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 
@@ -135,6 +135,10 @@ export const icons: IconRegistry = {
   chevronLeft: {
     id: 'chevronLeft',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>'
+  },
+  chevronDown: {
+    id: 'chevronDown',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>'
   },
   search: {
     id: 'search',
@@ -292,6 +296,14 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: () => {
       console.log('coverFacingPage');
     }
+  },
+  leftAction: {
+    id: 'leftAction',
+    label: 'Left action',
+    type: 'menu',
+    icon: 'dots',
+    children: ['viewCtr', 'zoom'],
+    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'leftAction'
   },
   zoom:     {
     id:'zoom',     
@@ -610,7 +622,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
       'shapes',
       'fillAndSign',
       'form'
-    ]
+    ],
+    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'tabOverflow'
   }
 }
 
@@ -714,6 +727,18 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'divider',
     id: 'divider1',
   },
+  expandLeftActionsButton: {
+    type: 'iconButton',
+    id: 'expandLeftActionsButton',
+    props: {
+      commandId: 'leftAction',
+      label: 'Left Panel Actions',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.leftAction, storeState)
+    })
+  },
   headerStart: {
     id: 'headerStart',
     type: 'groupedItems',
@@ -721,10 +746,11 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'menuButton', priority: 0 }, 
       { componentId: 'divider1', priority: 1, className: 'flex' }, 
       { componentId: 'sidebarButton', priority: 2 }, 
-      { componentId: 'viewCtrButton', priority: 3 }, 
-      { componentId: 'divider1', priority: 6, className: 'flex' },
-      { componentId: 'zoomButton', priority: 7, className: 'block @min-[900px]:hidden' },
-      { componentId: 'zoom', priority: 7, className: 'hidden @min-[900px]:block' }
+      { componentId: 'expandLeftActionsButton', priority: 3, className: '@min-[400px]:hidden' },
+      { componentId: 'viewCtrButton', priority: 4, className: 'hidden @min-[400px]:block' }, 
+      { componentId: 'divider1', priority: 6, className: 'hidden @min-[400px]:flex' },
+      { componentId: 'zoomButton', priority: 7, className: 'hidden @min-[400px]:block @min-[900px]:hidden' },
+      { componentId: 'zoom', priority: 8, className: 'hidden @min-[900px]:block' }
     ],  
     props: {
       gap: 10
@@ -802,18 +828,38 @@ export const components: Record<string, UIComponentType<State>> = {
       label: 'More',
       commandId: 'tabOverflow',
       active: false
-    }
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.tabOverflow, storeState)
+    })
+  },
+  selectButton: {
+    type: 'selectButton',
+    id: 'selectButton',
+    props: {
+      menuCommandId: 'tabOverflow',
+      commandIds: ['view', 'annotate', 'shapes', 'fillAndSign', 'form'],
+      activeCommandId: 'view',
+      active: false
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      activeCommandId: ownProps.commandIds.find(commandId => isActive(menuItems[commandId], storeState)) ?? ownProps.commandIds[0],
+      active: isActive(menuItems.tabOverflow, storeState)
+    })
   },
   headerCenter: {
     id: 'headerCenter',
     type: 'groupedItems',
     slots: [
-      { componentId: 'viewTab', priority: 0 },
-      { componentId: 'annotateTab', priority: 1, className: 'hidden @min-[500px]:block' },
-      { componentId: 'shapesTab', priority: 2, className: 'hidden @min-[600px]:block' },
-      { componentId: 'fillAndSignTab', priority: 3, className: 'hidden @min-[700px]:block' },
-      { componentId: 'formTab', priority: 4, className: 'hidden @min-[700px]:block' },
-      { componentId: 'tabOverflowButton', priority: 50, className: 'hidden max-[700px]:block' },
+      { componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
+      { componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
+      { componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
+      { componentId: 'shapesTab', priority: 3, className: 'hidden @min-[600px]:block' },
+      { componentId: 'fillAndSignTab', priority: 4, className: 'hidden @min-[700px]:block' },
+      { componentId: 'formTab', priority: 5, className: 'hidden @min-[800px]:block' },
+      { componentId: 'tabOverflowButton', priority: 60, className: 'hidden @min-[500px]:block @min-[701px]:hidden' },
     ],
     props: {
       gap: 10
@@ -1078,6 +1124,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
               uiCapability.registerComponentRenderer('commandMenu', commandMenuRenderer);
               uiCapability.registerComponentRenderer('comment', commentRender);
               uiCapability.registerComponentRenderer('sidebar', sidebarRender);
+              uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
             }
           }}
           plugins={[
