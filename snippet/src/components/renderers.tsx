@@ -581,7 +581,7 @@ export const selectButtonRenderer: ComponentRenderFunction<SelectButtonProps> = 
     <div style={{ maxWidth: '100px', width: '100px' }}>
       <Button 
         className={`
-          !w-full col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 px-3 text-xs text-gray-900 ${active ? 'outline outline-2 -outline-offset-2 outline-blue-500 text-blue-500' : 'outline outline-1 -outline-offset-1 outline-gray-300'} hover:ring-transparent
+          !w-full col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pl-3 pr-2 text-[13px] text-gray-900 ${active ? 'outline outline-2 -outline-offset-2 outline-blue-500 text-blue-500' : 'outline outline-1 -outline-offset-1 outline-gray-300'} hover:ring-transparent
           flex flex-row items-center justify-between gap-2
         `} 
         onClick={handleClick}
