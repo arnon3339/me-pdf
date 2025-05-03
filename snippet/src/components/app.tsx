@@ -303,7 +303,11 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'menu',
     icon: 'dots',
     children: ['viewCtr', 'zoom'],
-    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'leftAction'
+    active: (storeState) => 
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'leftAction' || 
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'zoom' || 
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'changeZoomLevel' ||
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'viewCtr'
   },
   zoom:     {
     id:'zoom',     

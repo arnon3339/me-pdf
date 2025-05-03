@@ -246,6 +246,15 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, 
     }
   };
 
+  const handleZoomChange = (e: Event) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const zoomStr = formData.get('zoom') as string;
+
+    zoom?.requestZoom(parseFloat(zoomStr) / 100);
+  };
+
   useEffect(() => {
     if(zoomDropdownRef.current) {
       console.log(zoomDropdownRef.current);
@@ -253,10 +262,23 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, 
   }, [zoomDropdownRef.current]);
 
   return <div className="flex flex-row items-center bg-[#f1f3f5] rounded-md">
-    <div className="hidden @3xl:block">
-      <input type="text" className="border-0 bg-transparent text-sm text-right p-0 h-6 w-8" aria-label="Set zoom" value={zoomPercentage} />
+    <form onSubmit={handleZoomChange} className="hidden @3xl:block">
+      <input
+        name="zoom"
+        type="text"
+        inputMode="numeric"
+        pattern="\d*"
+        className="border-0 bg-transparent text-sm text-right p-0 h-6 w-8"
+        aria-label="Set zoom"
+        value={zoomPercentage}
+        onInput={e => {
+          // Only allow numbers
+          const target = e.target as HTMLInputElement;
+          target.value = target.value.replace(/[^0-9]/g, '');
+        }}
+      />
       <span className="text-sm">%</span>
-    </div>
+    </form>
     <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={'Zoom Options'} trigger={props.zoomMenuActive ? 'none' : 'hover'}>
       <Button className={`p-1`} onClick={(e) => handleClick(e, commandZoomMenu)} active={props.zoomMenuActive}>
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down">
@@ -380,7 +402,20 @@ export const pageControlsRenderer: ComponentRenderFunction<PageControlsProps> = 
       </Button>
     </Tooltip>
     <form className="flex flex-row items-center gap-3" onSubmit={handlePageChange}>
-      <input name="page" type="text" className="border-1 border-gray-600 rounded-md bg-white text-sm text-center p-0 h-8 w-8" aria-label="Set page" value={props.currentPage} />
+      <input
+        name="page"
+        type="text"
+        inputMode="numeric"
+        pattern="\d*"
+        className="border-1 border-gray-600 rounded-md bg-white text-sm text-center p-0 h-8 w-8"
+        aria-label="Set page"
+        value={props.currentPage}
+        onInput={e => {
+          // Only allow numbers
+          const target = e.target as HTMLInputElement;
+          target.value = target.value.replace(/[^0-9]/g, '');
+        }}
+      />
       <span className="text-sm">{props.pageCount}</span>
     </form>
     <Tooltip position={'top'} content={'Next Page'} trigger={isLastPage ? 'none' : 'hover'}>
