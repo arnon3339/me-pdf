@@ -3,7 +3,7 @@ import { PdfPageObject } from "@embedpdf/models";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
 import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
 import { ScrollCapability, ScrollPluginConfig, ScrollStrategy, ScrollMetrics, ScrollState, LayoutChangePayload, ScrollerLayout } from "./types";
-import { BaseScrollStrategy } from "./strategies/base-strategy";
+import { BaseScrollStrategy, ScrollStrategyConfig } from "./strategies/base-strategy";
 import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
 import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
 import { updateScrollState, setDesiredScrollPosition, ScrollAction } from "./actions";
@@ -14,6 +14,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   private viewport: ViewportCapability;
   private pageManager: PageManagerCapability;
   private strategy: BaseScrollStrategy;
+  private strategyConfig: ScrollStrategyConfig;
   private currentScale: number = 1;
   private initialPage?: number;
   private currentPage: number = 1;
@@ -34,15 +35,15 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
     this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
 
-    const strategyConfig = {
+    this.strategyConfig = {
       pageGap: this.pageManager.getPageGap() ?? 10,
       viewportGap: this.viewport.getViewportGap(),
       bufferSize: this.config?.bufferSize ?? 2,
     };
 
     this.strategy = this.config?.strategy === ScrollStrategy.Horizontal
-      ? new HorizontalScrollStrategy(strategyConfig)
-      : new VerticalScrollStrategy(strategyConfig);
+      ? new HorizontalScrollStrategy(this.strategyConfig)
+      : new VerticalScrollStrategy(this.strategyConfig);
 
     this.initialPage = this.config?.initialPage;
     this.currentScale = this.coreStore.getState().core.scale;
@@ -129,12 +130,43 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     }
   }
 
+  /**
+   * Change the scroll strategy at runtime (e.g., vertical <-> horizontal)
+   * @param newStrategy ScrollStrategy.Horizontal or ScrollStrategy.Vertical
+   */
+  private setScrollStrategy(newStrategy: ScrollStrategy) {
+    // Only update if the strategy is actually changing
+    if (
+      (newStrategy === ScrollStrategy.Horizontal && this.strategy instanceof HorizontalScrollStrategy) ||
+      (newStrategy === ScrollStrategy.Vertical && this.strategy instanceof VerticalScrollStrategy)
+    ) {
+      return;
+    }
+
+    this.strategy =
+      newStrategy === ScrollStrategy.Horizontal
+        ? new HorizontalScrollStrategy(this.strategyConfig)
+        : new VerticalScrollStrategy(this.strategyConfig);
+
+    // Update state with new strategy
+    this.dispatch(
+      updateScrollState({
+        strategy: newStrategy,
+      })
+    );
+
+    // Recalculate layout and scroll metrics
+    const pages = this.pageManager.getSpreadPages();
+    this.recalcLayout(pages);
+    this.updateScrollMetrics(this.viewport.getMetrics());
+  }
+
   protected buildCapability(): ScrollCapability {
     return {
       onStateChange: this.state$.on,
       onLayoutChange: this.layout$.on,
       onScroll: this.scroll$.on,
-      onPageChange  : this.pageChange$.on,
+      onPageChange: this.pageChange$.on,
       onScrollerData: this.scrollerLayout$.on,
       scrollToPage: (pageNumber, behavior = 'smooth') => {
         const virtualItems = this.getVirtualItemsFromState();
@@ -175,6 +207,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       getLayout: this.getLayout.bind(this),
       getState: () => this.getState(),
       getScrollerLayout: () => this.getScrollerLayoutFromState(),
+      setScrollStrategy: (strategy: ScrollStrategy) => this.setScrollStrategy(strategy),
     };
   }
 

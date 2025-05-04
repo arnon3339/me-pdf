@@ -500,7 +500,7 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
       
       return (
         <Fragment key={command.id}>
-          <div className="px-4 py-1 text-xs font-medium text-gray-600 uppercase">
+          <div className="px-4 py-3 text-xs font-medium text-gray-600 uppercase">
             {group.label}
           </div>
           {groupChildren.map((child, childIndex) => (
@@ -520,11 +520,13 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
     return (
       <Fragment key={command.id}>
         {divider}
-        <div 
+        <button 
+          disabled={command.disabled ? true : false}
           onClick={() => handleCommandClick(command)} 
           className={`px-4 py-1 cursor-pointer hover:bg-gray-100 flex flex-row items-center justify-between gap-2 
-            ${ command.type === 'menu' ? 'menu-item' : '' }
-            ${ command.active ? 'bg-blue-50' : '' }
+            ${command.type === 'menu' ? 'menu-item' : ''} 
+            ${command.active && !command.disabled ? 'bg-blue-50' : ''} 
+            ${command.disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
           `}
         >
           <div className="flex flex-row items-center gap-2">
@@ -543,7 +545,7 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
               <Icon icon="chevronRight" className="w-6 h-6 text-gray-500" />
             )}
           </div>
-        </div>
+        </button>
       </Fragment>
     );
   };

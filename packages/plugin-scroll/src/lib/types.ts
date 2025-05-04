@@ -89,4 +89,5 @@ export interface ScrollCapability {
   getLayout(): LayoutChangePayload;
   getState(): ScrollState;
   getScrollerLayout(): ScrollerLayout;
+  setScrollStrategy(strategy: ScrollStrategy): void;
 }

@@ -8,7 +8,7 @@ import { init, init as initPdfium } from '@embedpdf/pdfium';
 import { PdfEngine } from '@embedpdf/models';
 import { VIEWPORT_PLUGIN_ID, ViewportPluginPackage, ViewportState } from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/preact';
-import { SCROLL_PLUGIN_ID, ScrollPluginPackage, ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
+import { SCROLL_PLUGIN_ID, ScrollPlugin, ScrollPluginPackage, ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/preact';
 import { PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
 import { SPREAD_PLUGIN_ID, SpreadMode, SpreadPlugin, SpreadPluginPackage, SpreadState } from '@embedpdf/plugin-spread';
@@ -156,6 +156,14 @@ export const icons: IconRegistry = {
   dots: {
     id: 'dots',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>'
+  },
+  vertical: {
+    id: 'vertical',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-vertical"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7l4 -4l4 4" /><path d="M8 17l4 4l4 -4" /><path d="M12 3l0 18" /></svg>'
+  },
+  horizontal: {
+    id: 'horizontal',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-horizontal"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 8l-4 4l4 4" /><path d="M17 8l4 4l-4 4" /><path d="M3 12l18 0" /></svg>'
   }
 }
 
@@ -237,7 +245,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     shortcutLabel: 'V',
     type: 'menu',
     children:[
-      'pageOrientation', 'pageLayout', 'enterFS'
+      'pageOrientation', 'scrollLayout', 'pageLayout', 'enterFS'
     ],
     active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'viewCtr'
   },
@@ -265,6 +273,38 @@ export const menuItems: Record<string, MenuItem<State>> = {
       console.log('rotateCounterClockwise');
     }
   },
+  scrollLayout: {
+    id: 'scrollLayout',
+    label: 'Scroll layout',
+    type: 'group',
+    children: ['vertical', 'horizontal']
+  },
+  vertical: {
+    id: 'vertical',
+    label: 'Vertical',
+    icon: 'vertical',
+    type: 'action',
+    active: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Vertical,
+    action: (registry) => {
+      const scroll = registry.getPlugin<ScrollPlugin>(SCROLL_PLUGIN_ID)?.provides();
+      if(scroll) {
+        scroll.setScrollStrategy(ScrollStrategy.Vertical);
+      }
+    }
+  },
+  horizontal: {
+    id: 'horizontal',
+    label: 'Horizontal',
+    icon: 'horizontal',
+    type: 'action',
+    active: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Horizontal,
+    action: (registry) => {
+      const scroll = registry.getPlugin<ScrollPlugin>(SCROLL_PLUGIN_ID)?.provides();
+      if(scroll) {
+        scroll.setScrollStrategy(ScrollStrategy.Horizontal);
+      }
+    }
+  },
   pageLayout: {
     id: 'pageLayout',
     label: 'Page layout',
@@ -276,6 +316,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Single page',
     icon: 'singlePage',
     type: 'action',
+    disabled: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Horizontal,
     active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.None,
     action: (registry) => {
       const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
@@ -289,6 +330,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Double page',
     icon: 'doublePage',
     type: 'action',
+    disabled: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Horizontal,
     active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.Odd,
     action: (registry) => {
       const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
@@ -302,6 +344,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Cover facing page',
     icon: 'coverFacingPage',
     type: 'action',
+    disabled: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Horizontal,
     active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.Even,
     action: (registry) => {
       const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
@@ -351,22 +394,11 @@ export const menuItems: Record<string, MenuItem<State>> = {
     ],
     active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'changeZoomLevel'
   },
-  zoom10: {
-    id: 'zoom10',
-    label: '10%',
-    type: 'action',
-    action: (registry) => {
-      const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
-
-      if(zoom) {
-        zoom.requestZoom(0.10);
-      }
-    }
-  },
   zoom25: {
     id: 'zoom25',
     label: '25%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 0.25,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
@@ -379,6 +411,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'zoom50',
     label: '50%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 0.5,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
@@ -391,6 +424,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'zoom100',
     label: '100%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 1,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
@@ -403,6 +437,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'zoom125',
     label: '125%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 1.25,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
@@ -415,6 +450,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'zoom150',
     label: '150%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 1.50,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
@@ -427,6 +463,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'zoom200',
     label: '200%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 2,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
@@ -439,6 +476,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'zoom400',
     label: '400%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 4,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
@@ -451,6 +489,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'zoom800',
     label: '800%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 8,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
@@ -463,6 +502,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'zoom1600',
     label: '1600%',
     type: 'action',
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 16,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
