@@ -11,7 +11,7 @@ import { Viewport } from '@embedpdf/plugin-viewport/preact';
 import { SCROLL_PLUGIN_ID, ScrollPluginPackage, ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/preact';
 import { PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
-import { SpreadMode, SpreadPluginPackage } from '@embedpdf/plugin-spread';
+import { SPREAD_PLUGIN_ID, SpreadMode, SpreadPlugin, SpreadPluginPackage, SpreadState } from '@embedpdf/plugin-spread';
 //import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-layer';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
@@ -64,7 +64,8 @@ interface PDFViewerProps {
 type State = GlobalStoreState<{
   [ZOOM_PLUGIN_ID]: ZoomState,
   [VIEWPORT_PLUGIN_ID]: ViewportState,
-  [SCROLL_PLUGIN_ID]: ScrollState
+  [SCROLL_PLUGIN_ID]: ScrollState,
+  [SPREAD_PLUGIN_ID]: SpreadState
 }>
 
 export const icons: IconRegistry = {
@@ -275,8 +276,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Single page',
     icon: 'singlePage',
     type: 'action',
-    action: () => {
-      console.log('singlePage');
+    active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.None,
+    action: (registry) => {
+      const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
+      if(spread) {
+        spread.setSpreadMode(SpreadMode.None);
+      }
     }
   },
   doublePage: {
@@ -284,8 +289,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Double page',
     icon: 'doublePage',
     type: 'action',
-    action: () => {
-      console.log('doublePage');
+    active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.Odd,
+    action: (registry) => {
+      const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
+      if(spread) {
+        spread.setSpreadMode(SpreadMode.Odd);
+      }
     }
   },
   coverFacingPage: {
@@ -293,8 +302,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Cover facing page',
     icon: 'coverFacingPage',
     type: 'action',
-    action: () => {
-      console.log('coverFacingPage');
+    active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.Even,
+    action: (registry) => {
+      const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
+      if(spread) {
+        spread.setSpreadMode(SpreadMode.Even);
+      }
     }
   },
   leftAction: {
@@ -1157,10 +1170,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
             createPluginRegistration(ZoomPluginPackage, {
               defaultZoomLevel: 1,
             }),
-            /*
             createPluginRegistration(SpreadPluginPackage, { 
               defaultSpreadMode: SpreadMode.None 
             }),
+            /*
             createPluginRegistration(ZoomPluginPackage, {
               defaultZoomLevel: 1,
             }),

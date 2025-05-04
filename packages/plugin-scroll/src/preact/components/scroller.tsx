@@ -61,6 +61,7 @@ export function Scroller({ ...props }: ScrollerProps) {
         <div key={item.pageNumbers[0]} style={{
           display: 'flex',
           justifyContent: 'center',
+          gap: scrollerLayout.pageGap
         }}>
           {item.pageLayouts.map(layout => 
             <div key={layout.pageNumber} style={{

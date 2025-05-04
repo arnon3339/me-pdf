@@ -19,3 +19,4 @@ export const SpreadPluginPackage: PluginPackage<
 
 export * from "./spread-plugin";
 export * from "./types";
+export * from './manifest';

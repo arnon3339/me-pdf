@@ -522,9 +522,10 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
         {divider}
         <div 
           onClick={() => handleCommandClick(command)} 
-          className={`px-4 py-1 cursor-pointer hover:bg-gray-100 flex flex-row items-center justify-between gap-2 ${
-            command.type === 'menu' ? 'menu-item' : ''
-          }`}
+          className={`px-4 py-1 cursor-pointer hover:bg-gray-100 flex flex-row items-center justify-between gap-2 
+            ${ command.type === 'menu' ? 'menu-item' : '' }
+            ${ command.active ? 'bg-blue-50' : '' }
+          `}
         >
           <div className="flex flex-row items-center gap-2">
             <div className="flex justify-center items-center text-gray-500 w-6 h-6">
