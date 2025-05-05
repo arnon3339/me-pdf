@@ -120,7 +120,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     this.scrollerLayout$.emit(this.getScrollerLayoutFromState());
   }
 
-  override onStoreUpdated(prevState: ScrollState, newState: ScrollState): void {
+  override onStoreUpdated(_prevState: ScrollState, _newState: ScrollState): void {
     this.pushScrollLayout();
   }
 

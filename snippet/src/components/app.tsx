@@ -19,7 +19,7 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { MenuItem, defineComponent, GlobalStoreState, IconRegistry, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage, hasActive, isActive, UI_PLUGIN_ID } from '@embedpdf/plugin-ui';
 import { commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, selectButtonRenderer, sidebarRender, tabButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
-import { ZOOM_PLUGIN_ID, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
+import { ZOOM_PLUGIN_ID, ZoomMode, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -570,8 +570,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Fit to width',
     icon: 'fitToWidth',
     type: 'action',
-    action: () => {
-      console.log('fitToWidth');
+    active: (storeState) => storeState.plugins.zoom.zoomLevel === ZoomMode.FitWidth,
+    action: (registry) => {
+      const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
+
+      if(zoom) {
+        zoom.requestZoom(ZoomMode.FitWidth)
+      }
     }
   },
   fitToPage: {
@@ -579,8 +584,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Fit to page',
     icon: 'fitToPage',
     type: 'action',
-    action: () => {
-      console.log('fitToPage');
+    active: (storeState) => storeState.plugins.zoom.zoomLevel === ZoomMode.FitPage,
+    action: (registry) => {
+      const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
+
+      if(zoom) {
+        zoom.requestZoom(ZoomMode.FitPage)
+      }
     }
   },
   sidebar: {
@@ -1208,7 +1218,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
               pageGap: 10 
             }),
             createPluginRegistration(ZoomPluginPackage, {
-              defaultZoomLevel: 1,
+              defaultZoomLevel: ZoomMode.FitPage,
             }),
             createPluginRegistration(SpreadPluginPackage, { 
               defaultSpreadMode: SpreadMode.None 
