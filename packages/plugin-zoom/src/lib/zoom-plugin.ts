@@ -159,8 +159,17 @@ export class ZoomPlugin
     /* ------------------------------------------------------------------ */
     /* step 4 – dispatch + notify                                          */
     /* ------------------------------------------------------------------ */
+
+    if(!isNaN(desiredScrollLeft) && !isNaN(desiredScrollTop)) {
+      this.viewport.setViewportScrollMetrics({
+        scrollLeft: desiredScrollLeft,
+        scrollTop: desiredScrollTop,
+      });
+    }
+
     this.dispatch(setZoomLevel(typeof level === "number" ? newZoom : level, newZoom));
     this.dispatchCoreAction(setScale(newZoom));
+
     this.viewport.scrollTo({
       x: desiredScrollLeft,
       y: desiredScrollTop,

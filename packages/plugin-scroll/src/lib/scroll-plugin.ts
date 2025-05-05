@@ -86,7 +86,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   /* ------------------------------------------------------------------ */
   /* viewport scroll or resize                                          */
   /* ------------------------------------------------------------------ */
-  private updateScrollMetrics(vp: ViewportMetrics) {
+  private updateScrollMetrics(vp: ViewportMetrics): ScrollMetrics {
     const s      = this.getState();
     const metr   = this.strategy.handleScroll(
                      vp, s.virtualItems, this.currentScale);
@@ -102,6 +102,8 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       currentPage : metr.currentPage,
       renderedPageIndexes: metr.renderedPageIndexes,
     });
+
+    return metr;
   }
 
   private getVirtualItemsFromState(): VirtualItem[] {

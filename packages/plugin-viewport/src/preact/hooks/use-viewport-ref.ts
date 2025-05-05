@@ -36,7 +36,9 @@ export function useViewportRef() {
     resizeObserver.observe(container);
 
     const unsubscribeScrollRequest = viewport.onScrollRequest(({ x, y, behavior='auto' }) => {
-      container.scrollTo({ left: x, top: y, behavior });
+      requestAnimationFrame(() => {
+        container.scrollTo({ left: x, top: y, behavior });
+      });
     });
 
     // Cleanup
