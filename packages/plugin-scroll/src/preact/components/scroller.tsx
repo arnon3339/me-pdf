@@ -5,10 +5,10 @@ import { useEffect, useState } from 'preact/hooks';
 import { ScrollStrategy, ScrollerLayout } from '@embedpdf/plugin-scroll';
 
 type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
-
+  renderPage: (pageIndex: number) => JSX.Element;
 };
 
-export function Scroller({ ...props }: ScrollerProps) {
+export function Scroller({ renderPage, ...props }: ScrollerProps) {
   const scroll = useScroll();
   const [scrollerLayout, setScrollerLayout] = useState<ScrollerLayout | null>(
     () => scroll?.getScrollerLayout() ?? null
@@ -67,9 +67,8 @@ export function Scroller({ ...props }: ScrollerProps) {
             <div key={layout.pageNumber} style={{
               width: `${layout.width}px`,
               height: `${layout.height}px`,
-              backgroundColor: 'blue',
             }}>
-              {layout.pageNumber}
+              {renderPage(layout.pageIndex)}
             </div>
           )}
         </div>

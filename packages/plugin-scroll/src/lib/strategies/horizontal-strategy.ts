@@ -15,6 +15,7 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
       const pageLayouts: PageLayout[] = pagesInSpread.map(page => {
         const layout: PageLayout = {
           pageNumber: page.index + 1,
+          pageIndex: page.index,
           x: pageX,
           y: 0,
           width: page.size.width,

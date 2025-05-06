@@ -20,6 +20,8 @@ import { MenuItem, defineComponent, GlobalStoreState, IconRegistry, UIComponentT
 import { commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, selectButtonRenderer, sidebarRender, tabButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import { ZOOM_PLUGIN_ID, ZoomMode, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
+import { RenderPluginPackage } from '@embedpdf/plugin-render';
+import { RenderLayer } from '@embedpdf/plugin-render/preact';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -1223,6 +1225,9 @@ export function PDFViewer({ config }: PDFViewerProps) {
             createPluginRegistration(SpreadPluginPackage, { 
               defaultSpreadMode: SpreadMode.None 
             }),
+            createPluginRegistration(RenderPluginPackage, {
+
+            }),
             /*
             createPluginRegistration(ZoomPluginPackage, {
               defaultZoomLevel: 1,
@@ -1268,7 +1273,9 @@ export function PDFViewer({ config }: PDFViewerProps) {
                           overflow: 'auto',
                         }}
                       >
-                        <Scroller />
+                        <Scroller 
+                          renderPage={(pageIndex) => <RenderLayer pageIndex={pageIndex} />}
+                        />
                       </Viewport>
                       {floating}
                     </div>

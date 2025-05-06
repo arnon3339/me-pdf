@@ -1435,7 +1435,7 @@ export interface PdfEngine {
     rotation: Rotation,
     dpr: number,
     options: PdfRenderOptions,
-  ) => PdfTask<ImageData>;
+  ) => PdfTask<Blob>;
   /**
    * Render the specified rect of pdf page
    * @param doc - pdf document
@@ -1455,7 +1455,7 @@ export interface PdfEngine {
     dpr: number,
     rect: Rect,
     options: PdfRenderOptions,
-  ) => PdfTask<ImageData>;
+  ) => PdfTask<Blob>;
   /**
    * Get annotations of pdf page
    * @param doc - pdf document
@@ -1538,7 +1538,7 @@ export interface PdfEngine {
     scaleFactor: number,
     rotation: Rotation,
     dpr: number,
-  ) => PdfTask<ImageData>;
+  ) => PdfTask<Blob>;
   /**
    * Start searching with new context
    * @param doc - pdf document

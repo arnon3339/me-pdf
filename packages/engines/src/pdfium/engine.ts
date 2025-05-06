@@ -70,6 +70,8 @@ import {
   SearchAllPagesResult,
   PdfUrlOptions,
   PdfFileUrl,
+  Task,
+  PdfErrorReason,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -954,6 +956,8 @@ export class PdfiumEngine implements PdfEngine {
     dpr: number,
     options: PdfRenderOptions,
   ) {
+    const task = new Task<Blob, PdfErrorReason>();
+
     this.logger.debug(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1007,7 +1011,10 @@ export class PdfiumEngine implements PdfEngine {
       'End',
       `${doc.id}-${page.index}`,
     );
-    return PdfTaskHelper.resolve(imageData);
+
+    this.imageDataToBlob(imageData).then((blob) => task.resolve(blob));
+
+    return task;
   }
 
   /**
@@ -1024,6 +1031,8 @@ export class PdfiumEngine implements PdfEngine {
     rect: Rect,
     options: PdfRenderOptions,
   ) {
+    const task = new Task<Blob, PdfErrorReason>();
+
     this.logger.debug(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1076,7 +1085,9 @@ export class PdfiumEngine implements PdfEngine {
       `${doc.id}-${page.index}`,
     );
 
-    return PdfTaskHelper.resolve(imageData);
+    this.imageDataToBlob(imageData).then((blob) => task.resolve(blob));
+
+    return task;
   }
 
   /**
@@ -5781,5 +5792,19 @@ export class PdfiumEngine implements PdfEngine {
     this.pdfiumModule.FPDF_ClosePage(pagePtr);
     
     return pageResults;
+  }
+
+  /**
+   * Convert ImageData to Blob
+   * 
+   * @param imageData - ImageData
+   * @returns Blob
+   * 
+   * @private
+   */
+  private imageDataToBlob(imageData: ImageData): Promise<Blob> {
+    const off = new OffscreenCanvas(imageData.width, imageData.height);
+    off.getContext('2d')!.putImageData(imageData, 0, 0);
+    return off.convertToBlob({ type: 'image/png' });
   }
 }

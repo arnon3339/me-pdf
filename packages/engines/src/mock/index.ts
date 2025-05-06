@@ -157,9 +157,10 @@ export function createMockPdfEngine(
           array[i * 4 + 3] = alphaValue;
         }
 
-        return PdfTaskHelper.resolve(
-          new ImageData(array, imageSize.width, imageSize.height),
-        );
+        const ab = array.buffer;
+        const realBuffer = ab instanceof ArrayBuffer ? ab : new Uint8Array(array).buffer;
+        const blob = new Blob([realBuffer], { type: 'application/octet-stream' });
+        return PdfTaskHelper.resolve(blob);
       },
     ),
     renderPageRect: jest.fn(
@@ -189,9 +190,10 @@ export function createMockPdfEngine(
           array[i * 4 + 3] = alphaValue;
         }
 
-        return PdfTaskHelper.resolve(
-          new ImageData(array, imageSize.width, imageSize.height),
-        );
+        const ab = array.buffer;
+        const realBuffer = ab instanceof ArrayBuffer ? ab : new Uint8Array(array).buffer;
+        const blob = new Blob([realBuffer], { type: 'application/octet-stream' });
+        return PdfTaskHelper.resolve(blob);
       },
     ),
     renderThumbnail: jest.fn((doc: PdfDocumentObject, page: PdfPageObject) => {
@@ -209,9 +211,11 @@ export function createMockPdfEngine(
         array[i * 4 + 3] = alphaValue;
       }
 
-      return PdfTaskHelper.resolve(
-        new ImageData(array, thumbnailWidth, thumbnailHeight),
-      );
+      const ab = array.buffer;
+      const realBuffer = ab instanceof ArrayBuffer ? ab : new Uint8Array(array).buffer;
+      const blob = new Blob([realBuffer], { type: 'image/png' });
+  
+      return PdfTaskHelper.resolve(blob);
     }),
     getPageAnnotations: jest.fn(
       (

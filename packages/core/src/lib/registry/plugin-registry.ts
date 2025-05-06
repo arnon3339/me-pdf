@@ -124,6 +124,13 @@ export class PluginRegistry {
   }
 
   /**
+   * Get the engine instance
+   */
+  getEngine(): PdfEngine {
+    return this.engine;
+  }
+
+  /**
    * Initialize all registered plugins in correct dependency order
    */
   async initialize(): Promise<void> {

@@ -32,6 +32,7 @@
     "@embedpdf/plugin-ui": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
+    "@embedpdf/plugin-render": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {

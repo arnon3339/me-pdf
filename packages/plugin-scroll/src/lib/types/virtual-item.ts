@@ -1,5 +1,6 @@
 export interface PageLayout {
   pageNumber: number;
+  pageIndex: number;
   x: number; // Relative to item, in original coordinates
   y: number;
   width: number;

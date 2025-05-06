@@ -431,7 +431,7 @@ export class WebWorkerEngine implements PdfEngine {
       options,
     );
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<ImageData>(this.worker, requestId);
+    const task = new WorkerTask<Blob>(this.worker, requestId);
 
     const request: ExecuteRequest = {
       id: requestId,
@@ -473,7 +473,7 @@ export class WebWorkerEngine implements PdfEngine {
       options,
     );
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<ImageData>(this.worker, requestId);
+    const task = new WorkerTask<Blob>(this.worker, requestId);
 
     const request: ExecuteRequest = {
       id: requestId,
@@ -687,7 +687,7 @@ export class WebWorkerEngine implements PdfEngine {
       dpr,
     );
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<ImageData>(this.worker, requestId);
+    const task = new WorkerTask<Blob>(this.worker, requestId);
 
     const request: ExecuteRequest = {
       id: requestId,
