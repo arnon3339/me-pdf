@@ -166,6 +166,14 @@ export const icons: IconRegistry = {
   horizontal: {
     id: 'horizontal',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-horizontal"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 8l-4 4l4 4" /><path d="M17 8l4 4l-4 4" /><path d="M3 12l18 0" /></svg>'
+  },
+  book: {
+    id: 'book',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6l0 13" /><path d="M12 6l0 13" /><path d="M21 6l0 13" /></svg>'
+  },
+  book2: {
+    id: 'book2',  
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z" /><path d="M19 16h-12a2 2 0 0 0 -2 2" /><path d="M9 8h6" /></svg>'
   }
 }
 
@@ -330,7 +338,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
   doublePage: {
     id: 'doublePage',
     label: 'Double page',
-    icon: 'doublePage',
+    icon: 'book',
     type: 'action',
     disabled: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Horizontal,
     active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.Odd,
@@ -344,7 +352,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
   coverFacingPage: {
     id: 'coverFacingPage',
     label: 'Cover facing page',
-    icon: 'coverFacingPage',
+    icon: 'book2',
     type: 'action',
     disabled: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Horizontal,
     active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.Even,
@@ -1173,138 +1181,136 @@ export function PDFViewer({ config }: PDFViewerProps) {
       <style>
         {styles}
       </style>
-      <div className="flex flex-col h-full w-full @container">
-        <EmbedPDF
-          engine={engine}
-          onInitialized={async (registry) => {
-            const uiCapability = registry.getPlugin<UIPlugin>('ui')?.provides();
+      <EmbedPDF
+        engine={engine}
+        onInitialized={async (registry) => {
+          const uiCapability = registry.getPlugin<UIPlugin>('ui')?.provides();
 
-            if (uiCapability) {
-              uiCapability.registerComponentRenderer('groupedItems', groupedItemsRenderer);
-              uiCapability.registerComponentRenderer('iconButton', iconButtonRenderer);
-              uiCapability.registerComponentRenderer('tabButton', tabButtonRenderer);
-              uiCapability.registerComponentRenderer('header', headerRenderer);
-              uiCapability.registerComponentRenderer('divider', dividerRenderer);
-              uiCapability.registerComponentRenderer('panel', panelRenderer);
-              uiCapability.registerComponentRenderer('search', searchRenderer);
-              uiCapability.registerComponentRenderer('zoom', zoomRenderer);
-              uiCapability.registerComponentRenderer('pageControlsContainer', pageControlsContainerRenderer);
-              uiCapability.registerComponentRenderer('pageControls', pageControlsRenderer);
-              uiCapability.registerComponentRenderer('commandMenu', commandMenuRenderer);
-              uiCapability.registerComponentRenderer('comment', commentRender);
-              uiCapability.registerComponentRenderer('sidebar', sidebarRender);
-              uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
-            }
-          }}
-          plugins={[
-            createPluginRegistration(UIPluginPackage, uiConfig),
-            createPluginRegistration(LoaderPluginPackage, {
-              loadingOptions: { 
-                type: 'url',
-                pdfFile: {
-                  id: 'pdf',
-                  url: config.src
-                },
-                options: {
-                  mode: 'full-fetch'
-                }
+          if (uiCapability) {
+            uiCapability.registerComponentRenderer('groupedItems', groupedItemsRenderer);
+            uiCapability.registerComponentRenderer('iconButton', iconButtonRenderer);
+            uiCapability.registerComponentRenderer('tabButton', tabButtonRenderer);
+            uiCapability.registerComponentRenderer('header', headerRenderer);
+            uiCapability.registerComponentRenderer('divider', dividerRenderer);
+            uiCapability.registerComponentRenderer('panel', panelRenderer);
+            uiCapability.registerComponentRenderer('search', searchRenderer);
+            uiCapability.registerComponentRenderer('zoom', zoomRenderer);
+            uiCapability.registerComponentRenderer('pageControlsContainer', pageControlsContainerRenderer);
+            uiCapability.registerComponentRenderer('pageControls', pageControlsRenderer);
+            uiCapability.registerComponentRenderer('commandMenu', commandMenuRenderer);
+            uiCapability.registerComponentRenderer('comment', commentRender);
+            uiCapability.registerComponentRenderer('sidebar', sidebarRender);
+            uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
+          }
+        }}
+        plugins={[
+          createPluginRegistration(UIPluginPackage, uiConfig),
+          createPluginRegistration(LoaderPluginPackage, {
+            loadingOptions: { 
+              type: 'url',
+              pdfFile: {
+                id: 'pdf',
+                url: config.src
               },
-            }), 
-            createPluginRegistration(ViewportPluginPackage, {
-              viewportGap: 10,
-            }),
-            createPluginRegistration(ScrollPluginPackage, {
-              strategy: ScrollStrategy.Vertical,
-            }),
-            createPluginRegistration(PageManagerPluginPackage, { 
-              pageGap: 10 
-            }),
-            createPluginRegistration(ZoomPluginPackage, {
-              defaultZoomLevel: ZoomMode.FitPage,
-            }),
-            createPluginRegistration(SpreadPluginPackage, { 
-              defaultSpreadMode: SpreadMode.None 
-            }),
-            createPluginRegistration(RenderPluginPackage, {
+              options: {
+                mode: 'full-fetch'
+              }
+            },
+          }), 
+          createPluginRegistration(ViewportPluginPackage, {
+            viewportGap: 10,
+          }),
+          createPluginRegistration(ScrollPluginPackage, {
+            strategy: ScrollStrategy.Vertical,
+          }),
+          createPluginRegistration(PageManagerPluginPackage, { 
+            pageGap: 10 
+          }),
+          createPluginRegistration(ZoomPluginPackage, {
+            defaultZoomLevel: ZoomMode.FitPage,
+          }),
+          createPluginRegistration(SpreadPluginPackage, { 
+            defaultSpreadMode: SpreadMode.None 
+          }),
+          createPluginRegistration(RenderPluginPackage, {
 
-            }),
-            /*
-            createPluginRegistration(ZoomPluginPackage, {
-              defaultZoomLevel: 1,
-            }),
-            createPluginRegistration(LayerPluginPackage, {
-              layers: [createLayerRegistration(RenderLayerPackage, { 
-                maxScale: 2 
-              })],
-            }),
-            */
-          ]}
-        >
-          <PluginUIProvider>
-            {({ headers, panels, floating, commandMenu }) => (
-              <div className="flex flex-col h-full w-full @container">
-                {headers.top.length > 0 && (
-                  <div>
-                    {headers.top}
-                  </div>
-                )}
-                <div className="flex flex-row flex-1 overflow-hidden">
-                  <div className="flex flex-col">
-                    {headers.left}
-                  </div>
-                  <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-                    {panels.left.length > 0 && (
-                      <Fragment>
-                        <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full z-10">
-                          {panels.left}
-                        </div>
-                        <div className="hidden md:flex flex-col static">
-                          {panels.left}
-                        </div>
-                      </Fragment>
-                    )}
-                    <div className="flex-1 relative flex w-full overflow-hidden">
-                      <Viewport
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          flexGrow: 1,
-                          backgroundColor: '#f1f3f5',
-                          overflow: 'auto',
-                        }}
-                      >
-                        <Scroller 
-                          renderPage={(pageIndex) => <RenderLayer pageIndex={pageIndex} />}
-                        />
-                      </Viewport>
-                      {floating}
-                    </div>
-                    {panels.right.length > 0 && (
-                      <Fragment>
-                        <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full z-10">
-                          {panels.right}
-                        </div>
-                        <div className="hidden md:flex flex-col static">
-                          {panels.right}
-                        </div>
-                      </Fragment>
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    {headers.right}
-                  </div>
+          }),
+          /*
+          createPluginRegistration(ZoomPluginPackage, {
+            defaultZoomLevel: 1,
+          }),
+          createPluginRegistration(LayerPluginPackage, {
+            layers: [createLayerRegistration(RenderLayerPackage, { 
+              maxScale: 2 
+            })],
+          }),
+          */
+        ]}
+      >
+        <PluginUIProvider>
+          {({ headers, panels, floating, commandMenu }) => (
+            <div className="flex flex-col h-full w-full @container">
+              {headers.top.length > 0 && (
+                <div>
+                  {headers.top}
                 </div>
-                {headers.bottom.length > 0 && (
-                  <div>
-                    {headers.bottom}
+              )}
+              <div className="flex flex-row flex-1 overflow-hidden">
+                <div className="flex flex-col">
+                  {headers.left}
+                </div>
+                <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+                  {panels.left.length > 0 && (
+                    <Fragment>
+                      <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full z-10">
+                        {panels.left}
+                      </div>
+                      <div className="hidden md:flex flex-col static">
+                        {panels.left}
+                      </div>
+                    </Fragment>
+                  )}
+                  <div className="flex-1 relative flex w-full overflow-hidden">
+                    <Viewport
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        flexGrow: 1,
+                        backgroundColor: '#f1f3f5',
+                        overflow: 'auto',
+                      }}
+                    >
+                      <Scroller 
+                        renderPage={(pageIndex) => <RenderLayer pageIndex={pageIndex} />}
+                      />
+                    </Viewport>
+                    {floating}
                   </div>
-                )}
-                {commandMenu}
+                  {panels.right.length > 0 && (
+                    <Fragment>
+                      <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full z-10">
+                        {panels.right}
+                      </div>
+                      <div className="hidden md:flex flex-col static">
+                        {panels.right}
+                      </div>
+                    </Fragment>
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  {headers.right}
+                </div>
               </div>
-            )}
-          </PluginUIProvider>
-        </EmbedPDF>
-      </div>
+              {headers.bottom.length > 0 && (
+                <div>
+                  {headers.bottom}
+                </div>
+              )}
+              {commandMenu}
+            </div>
+          )}
+        </PluginUIProvider>
+      </EmbedPDF>
     </>
   );
 }

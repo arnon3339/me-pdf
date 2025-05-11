@@ -21,18 +21,12 @@ export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...pro
       task.wait((blob) => {
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
-
-        // Revoke previous URL if any
-        if (urlRef.current) {
-          URL.revokeObjectURL(urlRef.current);
-        }
         urlRef.current = url;
       }, (reason) => {
         console.error(reason);
       });
     }
 
-    // Cleanup on unmount: revoke the last URL
     return () => {
       if (urlRef.current) {
         URL.revokeObjectURL(urlRef.current);
@@ -41,10 +35,18 @@ export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...pro
     };
   }, [pageIndex, scaleFactor, dpr, renderPlugin]);
 
+  const handleImageLoad = () => {
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+  };
+
   return <Fragment>
     {imageUrl && (
       <img
         src={imageUrl}
+        onLoad={handleImageLoad}
         {...props}
         style={{
           width: '100%',

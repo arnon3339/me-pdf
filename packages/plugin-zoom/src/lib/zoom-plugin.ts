@@ -60,6 +60,7 @@ export class ZoomPlugin
     this.zoomStep = cfg.zoomStep ?? 0.1;
     this.presets  = cfg.presets ?? [];
     this.zoomRanges = this.normalizeRanges(cfg.zoomRanges ?? []);
+    this.handleRequest(cfg.defaultZoomLevel);
     /* keep “automatic” modes up to date -------------------------------- */
     this.viewport.onViewportChange (() => this.recalcAuto(), { mode:"debounce", wait:150 });
     this.pageMgr .onPagesChange    (() => this.recalcAuto());
@@ -95,7 +96,7 @@ export class ZoomPlugin
   /* ------------------------------------------------------------------ */
   async initialize(cfg: ZoomPluginConfig): Promise<void> {
     /* apply the initial zoom                                              */
-    this.handleRequest(cfg.defaultZoomLevel);
+
   }
 
   async destroy() { this.zoom$.clear(); }

@@ -10,6 +10,12 @@ import { updateScrollState, setDesiredScrollPosition, ScrollAction } from "./act
 import { VirtualItem } from "./types/virtual-item";
 import { getScrollerLayout } from "./selectors";
 
+type PartialScroll = Partial<ScrollState>;
+type Emits = {
+  layout?: LayoutChangePayload;
+  metrics?: ScrollMetrics;
+};
+
 export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapability, ScrollState, ScrollAction> {
   private viewport: ViewportCapability;
   private pageManager: PageManagerCapability;
@@ -49,61 +55,75 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     this.currentScale = this.coreStore.getState().core.scale;
 
     // Subscribe to viewport and page manager events
-    this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'throttle', wait: 250 });
-    //this.viewport.onContainerChange(this.handleContainerChange.bind(this));
-    this.pageManager.onPagesChange(this.handlePageSpreadChange.bind(this));
-    this.pageManager.onPageManagerInitialized(this.handlePageManagerInitialized.bind(this));
-  }
-
-  /* viewport listener */
-  private handleViewportChange(vp: ViewportMetrics): void {
-    this.updateScrollMetrics(vp);
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* layout recalculated when:                                          */
-  /*   ‑ pageManager initialises / changes                              */
-  /*   ‑ scale changes                                                  */
-  /* ------------------------------------------------------------------ */
-  private recalcLayout(pages: PdfPageObject[][]) {
-    const virtualItems      = this.strategy.createVirtualItems(pages);
-    const totalContentSize  = this.strategy.getTotalContentSize(
-                                virtualItems, this.currentScale);
-    this.dispatch(updateScrollState({ virtualItems, totalContentSize }));
-    this.layout$.emit({ virtualItems, totalContentSize });
-  }
-
-  private handlePageManagerInitialized(pages: PdfPageObject[][]) {
-    this.recalcLayout(pages);
-    this.updateScrollMetrics(this.viewport.getMetrics());
-  }
-
-  private handlePageSpreadChange(pages: PdfPageObject[][]) {
-    this.recalcLayout(pages);
-    this.updateScrollMetrics(this.viewport.getMetrics());
+    this.viewport.onViewportChange(
+      vp => this.commitMetrics(this.computeMetrics(vp)),
+      { mode: 'throttle', wait: 250 },
+    );
+    this.pageManager.onPageManagerInitialized(pg =>
+      this.refreshAll(pg, this.viewport.getMetrics()),
+    );
+    this.pageManager.onPagesChange(pg =>
+      this.refreshAll(pg, this.viewport.getMetrics()),
+    );
   }
 
   /* ------------------------------------------------------------------ */
-  /* viewport scroll or resize                                          */
+  /*  ᴄᴏᴍᴘᴜᴛᴇʀs                                                       */
   /* ------------------------------------------------------------------ */
-  private updateScrollMetrics(vp: ViewportMetrics): ScrollMetrics {
-    const s      = this.getState();
-    const metr   = this.strategy.handleScroll(
-                     vp, s.virtualItems, this.currentScale);
-    this.dispatch(updateScrollState(metr));
-    this.scroll$.emit(metr);
 
-    if (metr.currentPage !== this.currentPage) {
-      this.currentPage = metr.currentPage;
-      this.pageChange$.emit(metr.currentPage);
+  private computeLayout(pages: PdfPageObject[][]) {
+    const virtualItems = this.strategy.createVirtualItems(pages);
+    const totalContentSize = this.strategy.getTotalContentSize(virtualItems);
+    return { virtualItems, totalContentSize };
+  }
+
+  private computeMetrics(
+    vp: ViewportMetrics,
+    items: VirtualItem[] = this.getState().virtualItems,
+  ) {
+    return this.strategy.handleScroll(vp, items, this.currentScale);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  ᴄᴏᴍᴍɪᴛ  (single source of truth)                                  */
+  /* ------------------------------------------------------------------ */
+
+  private commit(stateDelta: PartialScroll, emit?: Emits) {
+    /* update Redux-like store */
+    this.dispatch(updateScrollState(stateDelta));
+
+    /* fire optional events */
+    if (emit?.layout) this.layout$.emit(emit.layout);
+    if (emit?.metrics) {
+      this.scroll$.emit(emit.metrics);
+
+      if (emit.metrics.currentPage !== this.currentPage) {
+        this.currentPage = emit.metrics.currentPage;
+        this.pageChange$.emit(this.currentPage);
+      }
+
+      this.pageManager.updateVisiblePages({
+        visiblePages: emit.metrics.visiblePages,
+        currentPage: emit.metrics.currentPage,
+        renderedPageIndexes: emit.metrics.renderedPageIndexes,
+      });
     }
-    this.pageManager.updateVisiblePages({
-      visiblePages: metr.visiblePages,
-      currentPage : metr.currentPage,
-      renderedPageIndexes: metr.renderedPageIndexes,
-    });
 
-    return metr;
+    /* keep scroller-layout reactive */
+    this.scrollerLayout$.emit(this.getScrollerLayoutFromState());
+  }
+
+  /* convenience wrappers */
+  private commitMetrics(metrics: ScrollMetrics) {
+    this.commit(metrics, { metrics });
+  }
+
+  /* full re-compute after page-spread or initialisation */
+  private refreshAll(pages: PdfPageObject[][], vp: ViewportMetrics) {
+    const layout = this.computeLayout(pages);
+    const metrics = this.computeMetrics(vp, layout.virtualItems);
+
+    this.commit({ ...layout, ...metrics }, { layout, metrics });
   }
 
   private getVirtualItemsFromState(): VirtualItem[] {
@@ -127,8 +147,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   override onCoreStoreUpdated(prevState: StoreState<CoreState>, newState: StoreState<CoreState>): void {
     if(prevState.core.scale !== newState.core.scale) {
       this.currentScale = newState.core.scale;
-      this.pushScrollLayout();
-      this.updateScrollMetrics(this.viewport.getMetrics());
+      this.commitMetrics(this.computeMetrics(this.viewport.getMetrics()));
     }
   }
 
@@ -159,8 +178,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
 
     // Recalculate layout and scroll metrics
     const pages = this.pageManager.getSpreadPages();
-    this.recalcLayout(pages);
-    this.updateScrollMetrics(this.viewport.getMetrics());
+    this.refreshAll(pages, this.viewport.getMetrics());
   }
 
   protected buildCapability(): ScrollCapability {

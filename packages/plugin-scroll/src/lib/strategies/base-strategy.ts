@@ -21,7 +21,7 @@ export abstract class BaseScrollStrategy {
   }
 
   abstract createVirtualItems(pdfPageObject: PdfPageObject[][]): VirtualItem[];
-  abstract getTotalContentSize(virtualItems: VirtualItem[], scale: number): { width: number; height: number };
+  abstract getTotalContentSize(virtualItems: VirtualItem[]): { width: number; height: number };
   abstract getScrollPositionForPage(pageNumber: number, virtualItems: VirtualItem[], scale: number): { x: number; y: number };
   protected abstract getScrollOffset(viewport: ViewportMetrics): number;
   protected abstract getClientSize(viewport: ViewportMetrics): number;

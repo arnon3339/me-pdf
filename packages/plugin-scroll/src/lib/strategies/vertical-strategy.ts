@@ -44,13 +44,13 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
     });
   }
 
-  getTotalContentSize(virtualItems: VirtualItem[], scale: number): { width: number; height: number } {
+  getTotalContentSize(virtualItems: VirtualItem[]): { width: number; height: number } {
     if (virtualItems.length === 0) return { width: 0, height: 0 };
     const maxWidth = Math.max(...virtualItems.map(item => item.width));
     const totalHeight = virtualItems[virtualItems.length - 1].y + virtualItems[virtualItems.length - 1].height;
     return {
-      width: maxWidth * scale,
-      height: totalHeight * scale,
+      width: maxWidth,
+      height: totalHeight,
     };
   }
 

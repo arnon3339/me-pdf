@@ -523,26 +523,26 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
         <button 
           disabled={command.disabled ? true : false}
           onClick={() => handleCommandClick(command)} 
-          className={`px-4 py-1 cursor-pointer hover:bg-gray-100 flex flex-row items-center justify-between gap-2 
+          className={`px-4 py-1 cursor-pointer flex flex-row items-center justify-between gap-2 
             ${command.type === 'menu' ? 'menu-item' : ''} 
-            ${command.active && !command.disabled ? 'bg-blue-50' : ''} 
+            ${command.active && !command.disabled ? 'bg-blue-500 text-white' : 'text-gray-500 hover:bg-blue-900 hover:text-white'} 
             ${command.disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
           `}
         >
           <div className="flex flex-row items-center gap-2">
-            <div className="flex justify-center items-center text-gray-500 w-6 h-6">
+            <div className="flex justify-center items-center w-6 h-6">
               {command.icon && <Icon icon={command.icon} className="w-6 h-6" />}
             </div>
-            <div className="text-sm text-gray-500">{command.label}</div>
+            <div className="text-sm">{command.label}</div>
           </div>
           <div className="flex items-center">
             {command.shortcutLabel && (
-              <div className="text-sm text-gray-500 mr-2">
+              <div className="text-sm mr-2">
                 ({command.shortcutLabel})
               </div>
             )}
             {command.type === 'menu' && (
-              <Icon icon="chevronRight" className="w-6 h-6 text-gray-500" />
+              <Icon icon="chevronRight" className="w-6 h-6" />
             )}
           </div>
         </button>

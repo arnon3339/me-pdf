@@ -43,13 +43,13 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     });
   }
 
-  getTotalContentSize(virtualItems: VirtualItem[], scale: number): { width: number; height: number } {
+  getTotalContentSize(virtualItems: VirtualItem[]): { width: number; height: number } {
     if (virtualItems.length === 0) return { width: 0, height: 0 };
     const totalWidth = virtualItems[virtualItems.length - 1].x + virtualItems[virtualItems.length - 1].width;
     const maxHeight = Math.max(...virtualItems.map(item => item.height));
     return {
-      width: totalWidth * scale,
-      height: maxHeight * scale,
+      width: totalWidth,
+      height: maxHeight,
     };
   }
 
