@@ -42,6 +42,7 @@ export class PluginRegistry {
   private initialized = false;
   private isInitializing = false;
   private initialCoreState: CoreState;
+  private pluginsReadyPromise: Promise<void> | null = null;
 
   constructor(engine: PdfEngine, config?: PluginRegistryConfig) {
     this.resolver = new DependencyResolver();
@@ -128,6 +129,34 @@ export class PluginRegistry {
    */
   getEngine(): PdfEngine {
     return this.engine;
+  }
+
+  /**
+   * Get a promise that resolves when all plugins are ready
+   */
+  public pluginsReady(): Promise<void> {
+    // Re-use the same promise every time it’s asked for
+    if (this.pluginsReadyPromise) {
+      return this.pluginsReadyPromise;
+    }
+
+    // Build the promise the *first* time it’s requested
+    this.pluginsReadyPromise = (async () => {
+      // 1. Wait until the registry itself has finished initialising
+      if (!this.initialized) {
+        await this.initialize();
+      }
+
+      // 2. Wait for every plugin’s ready() promise (if it has one)
+      const readyPromises = Array.from(this.plugins.values())
+        .map(p =>
+          typeof p.ready === 'function' ? p.ready() : Promise.resolve()
+        );
+
+      await Promise.all(readyPromises);     // resolves when the slowest is done
+    })();
+
+    return this.pluginsReadyPromise;
   }
 
   /**

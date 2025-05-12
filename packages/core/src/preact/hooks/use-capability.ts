@@ -1,5 +1,11 @@
-import type { IPlugin } from '@embedpdf/core';
-import { useRegistry } from "./use-registry";
+import type { BasePlugin } from '@embedpdf/core';
+import { usePlugin } from './use-plugin';
+
+type CapabilityState<T extends BasePlugin> = {
+  provides: ReturnType<NonNullable<T['provides']>> | null;
+  isLoading: boolean;
+  ready: Promise<void>;
+};
 
 /**
  * Hook to access a plugin's capability.
@@ -7,25 +13,28 @@ import { useRegistry } from "./use-registry";
  * @returns The capability provided by the plugin or null during initialization
  * @example
  * // Get zoom capability
- * const zoom = useCapability<ZoomPlugin>('zoom');
+ * const zoom = useCapability<ZoomPlugin>(ZoomPlugin.id);
  */
-export function useCapability<T extends IPlugin<any>>(pluginId: string): ReturnType<NonNullable<T['provides']>> | null {
-  const registry = useRegistry();
-  
-  // If registry is null (during initialization), useRegistry will return null
-  if (registry === null) {
-    return null;
+export function useCapability<T extends BasePlugin>(
+  pluginId: T['id']
+): CapabilityState<T> {
+  const { plugin, isLoading, ready } = usePlugin<T>(pluginId);
+
+  if (!plugin) {
+    return {
+      provides: null,
+      isLoading,
+      ready
+    };
   }
 
-  const plugin = registry.getPlugin<T>(pluginId);
-
-  if(!plugin) {
-    throw new Error(`Plugin ${pluginId} not found`);
-  }
-
-  if(!plugin.provides) {
+  if (!plugin.provides) {
     throw new Error(`Plugin ${pluginId} does not provide a capability`);
   }
 
-  return plugin.provides();
+  return {
+    provides: plugin.provides() as ReturnType<NonNullable<T['provides']>>,
+    isLoading,
+    ready
+  };
 } 

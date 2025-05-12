@@ -1,4 +1,5 @@
-import { useCapability } from "@embedpdf/core/preact";
+import { useCapability, usePlugin } from "@embedpdf/core/preact";
 import { ViewportPlugin } from "@embedpdf/plugin-viewport";
 
-export const useViewport = () => useCapability<ViewportPlugin>('viewport');
+export const useViewport = () => usePlugin<ViewportPlugin>(ViewportPlugin.id);
+export const useViewportCapability = () => useCapability<ViewportPlugin>(ViewportPlugin.id);

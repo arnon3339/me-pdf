@@ -6,16 +6,23 @@ import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
 import { PDFContext } from '../context';
 
+interface EmbedPDFState {
+  registry: PluginRegistry | null;
+  isInitializing: boolean;
+  pluginsReady: boolean;
+}
+
 interface EmbedPDFProps {
   engine: PdfEngine;
   onInitialized: (registry: PluginRegistry) => Promise<void>
   plugins: PluginBatchRegistration<IPlugin<any>, any>[]
-  children: ComponentChildren;
+  children: ComponentChildren | ((state: EmbedPDFState) => ComponentChildren)
 }
 
 export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFProps) {
   const [registry, setRegistry] = useState<PluginRegistry | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
+  const [pluginsReady, setPluginsReady] = useState<boolean>(false);
 
   useEffect(() => {
     const initialize = async () => {
@@ -27,6 +34,7 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
       // Initialize the viewer and load the document
       await pdfViewer.initialize();
       await onInitialized(pdfViewer);
+      pdfViewer.pluginsReady().then(() => setPluginsReady(true));
 
       // Provide the registry to children via context
       setRegistry(pdfViewer);
@@ -37,8 +45,8 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
   }, [engine, onInitialized, plugins]);
 
   return (
-    <PDFContext.Provider value={{ registry, isInitializing }}>
-      {children}
+    <PDFContext.Provider value={{ registry, isInitializing, pluginsReady }}>
+      {typeof children === 'function' ? children({ registry, isInitializing, pluginsReady }) : children}
     </PDFContext.Provider>
   );
 } 

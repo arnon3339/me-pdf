@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { JSX } from 'preact';
-import { useScroll } from '../hooks';
+import { useScrollCapability } from '../hooks';
 import { useEffect, useState } from 'preact/hooks';
 import { ScrollStrategy, ScrollerLayout } from '@embedpdf/plugin-scroll';
 
@@ -9,16 +9,16 @@ type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
 };
 
 export function Scroller({ renderPage, ...props }: ScrollerProps) {
-  const scroll = useScroll();
+  const { provides: scrollProvides } = useScrollCapability();
   const [scrollerLayout, setScrollerLayout] = useState<ScrollerLayout | null>(
-    () => scroll?.getScrollerLayout() ?? null
+    () => scrollProvides?.getScrollerLayout() ?? null
   );
 
   useEffect(() => {
-    if (!scroll) return;
+    if (!scrollProvides) return;
 
-    return scroll.onScrollerData(setScrollerLayout);
-  }, [scroll]);
+    return scrollProvides.onScrollerData(setScrollerLayout);
+  }, [scrollProvides]);
 
   if (!scrollerLayout) return null;
 

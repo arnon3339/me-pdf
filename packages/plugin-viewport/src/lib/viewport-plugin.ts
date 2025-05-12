@@ -3,6 +3,7 @@ import { ViewportPluginConfig, ViewportState, ViewportCapability, ViewportMetric
 import { ViewportAction, setViewportMetrics, setViewportScrollMetrics, setViewportGap } from "./actions";
 
 export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCapability, ViewportState, ViewportAction> {
+  static readonly id = 'viewport' as const;
   private readonly viewportMetrics$ = createBehaviorEmitter<ViewportMetrics>();
   private readonly scrollMetrics$ = createBehaviorEmitter<ViewportScrollMetrics>();
   private readonly scrollReq$ = createEmitter<{ x:number; y:number; behavior?:ScrollBehavior }>();

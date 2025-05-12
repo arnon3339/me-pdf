@@ -12,6 +12,8 @@ export abstract class BasePlugin<
   TState = unknown,
   TAction extends Action = Action
 > implements IPlugin<TConfig> {
+  static readonly id: string;
+
   protected pluginStore: PluginStore<TState, TAction>;
   protected coreStore: Store<CoreState, CoreAction>;
   // Track debounced actions
@@ -21,10 +23,16 @@ export abstract class BasePlugin<
 
   private _capability?: Readonly<TCapability>;
 
+  private readyPromise: Promise<void>;
+  private readyResolve!: () => void;
+
   constructor(
     public readonly id: string,
     protected registry: PluginRegistry
   ) {
+    if (id !== (this.constructor as typeof BasePlugin).id) {
+      throw new Error(`Plugin ID mismatch: ${id} !== ${(this.constructor as typeof BasePlugin).id}`);
+    }
     this.coreStore = this.registry.getStore();
     this.pluginStore = this.coreStore.getPluginStore<TState, TAction>(this.id);
     this.unsubscribeFromState = this.pluginStore.subscribeToState((action, newState, oldState) => {
@@ -33,6 +41,13 @@ export abstract class BasePlugin<
     this.unsubscribeFromCoreStore = this.coreStore.subscribe((action, newState, oldState) => {
       this.onCoreStoreUpdated(oldState, newState);
     });
+
+    // Initialize ready state
+    this.readyPromise = new Promise((resolve) => {
+      this.readyResolve = resolve;
+    });
+    // By default, plugins are ready immediately
+    this.readyResolve();
   }
 
   /** Construct the public capability (called once & cached). */
@@ -143,5 +158,28 @@ export abstract class BasePlugin<
       this.unsubscribeFromCoreStore();
       this.unsubscribeFromCoreStore = null;
     }
+  }
+
+  /**
+   * Returns a promise that resolves when the plugin is ready
+   */
+  public ready(): Promise<void> {
+    return this.readyPromise;
+  }
+
+  /**
+   * Mark the plugin as ready
+   */
+  protected markReady(): void {
+    this.readyResolve();
+  }
+
+  /**
+   * Reset the ready state (useful for plugins that need to reinitialize)
+   */
+  protected resetReady(): void {
+    this.readyPromise = new Promise((resolve) => {
+      this.readyResolve = resolve;
+    });
   }
 } 

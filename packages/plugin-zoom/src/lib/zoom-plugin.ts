@@ -4,16 +4,15 @@ import {
   createEmitter,
   clamp,
   setScale,
+  SET_PAGES,
+  SET_DOCUMENT,
 } from "@embedpdf/core";
 
 import {
   ViewportPlugin,    ViewportCapability,
   ViewportMetrics
 } from "@embedpdf/plugin-viewport";
-import {
-  PageManagerPlugin, PageManagerCapability
-} from "@embedpdf/plugin-page-manager";
-
+import { ScrollPlugin, ScrollCapability } from "@embedpdf/plugin-scroll";
 import {
   ZoomPluginConfig,
   ZoomState,
@@ -25,7 +24,7 @@ import {
   ZoomPreset,
   ZoomRangeStep,
 } from "./types";
-import { setZoomLevel, ZoomAction }   from "./actions";
+import { setInitialZoomLevel, setZoomLevel, ZoomAction }   from "./actions";
 
 export class ZoomPlugin
   extends BasePlugin<
@@ -34,13 +33,13 @@ export class ZoomPlugin
     ZoomState,
     ZoomAction
   > {
-
+  static readonly id = 'zoom' as const;
   /* ------------------------------------------------------------------ */
   /* internals                                                           */
   /* ------------------------------------------------------------------ */
   private readonly zoom$     = createEmitter<ZoomChangeEvent>();
   private readonly viewport  : ViewportCapability;
-  private readonly pageMgr   : PageManagerCapability;
+  private readonly scroll    : ScrollCapability;
   private readonly presets   : ZoomPreset[];
   private readonly zoomRanges: ZoomRangeStep[];
 
@@ -53,17 +52,18 @@ export class ZoomPlugin
     super(id, registry);
 
     this.viewport = registry.getPlugin<ViewportPlugin>('viewport')!.provides();
-    this.pageMgr  = registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
-
+    this.scroll = registry.getPlugin<ScrollPlugin>('scroll')!.provides();
     this.minZoom  = cfg.minZoom ?? 0.25;
     this.maxZoom  = cfg.maxZoom ?? 10;
     this.zoomStep = cfg.zoomStep ?? 0.1;
     this.presets  = cfg.presets ?? [];
     this.zoomRanges = this.normalizeRanges(cfg.zoomRanges ?? []);
-    this.handleRequest(cfg.defaultZoomLevel);
+    this.dispatch(setInitialZoomLevel(cfg.defaultZoomLevel));
     /* keep “automatic” modes up to date -------------------------------- */
     this.viewport.onViewportChange (() => this.recalcAuto(), { mode:"debounce", wait:150 });
-    this.pageMgr .onPagesChange    (() => this.recalcAuto());
+    this.coreStore.onAction(SET_PAGES, () => this.recalcAuto());
+    this.coreStore.onAction(SET_DOCUMENT, () => this.recalcAuto());
+    this.resetReady();
   }
 
   /* ------------------------------------------------------------------ */
@@ -133,6 +133,10 @@ export class ZoomPlugin
     const metrics    = this.viewport.getMetrics();
     const oldZoom    = state.currentZoomLevel;
 
+    if(metrics.clientWidth === 0 || metrics.clientHeight === 0) {
+      return;
+    }
+
     /* ------------------------------------------------------------------ */
     /* step 1 – resolve the **target numeric zoom**                        */
     /* ------------------------------------------------------------------ */
@@ -140,6 +144,10 @@ export class ZoomPlugin
       typeof level === "number"
         ? level
         : this.computeZoomForMode(level, metrics);
+
+    if(base === false) {
+      return;
+    }
 
     const newZoom = parseFloat(clamp(base + delta, this.minZoom, this.maxZoom).toFixed(2));
 
@@ -170,14 +178,13 @@ export class ZoomPlugin
 
     this.dispatch(setZoomLevel(typeof level === "number" ? newZoom : level, newZoom));
     this.dispatchCoreAction(setScale(newZoom));
+    this.markReady();
 
     this.viewport.scrollTo({
       x: desiredScrollLeft,
       y: desiredScrollTop,
       behavior: 'instant',
     });
-
-    this.pageMgr.updateScale(newZoom);          // let other plugins react
 
     const evt: ZoomChangeEvent = {
       oldZoom, newZoom, level, center: focus,
@@ -193,12 +200,16 @@ export class ZoomPlugin
   /* ------------------------------------------------------------------ */
 
   /** numeric zoom for Automatic / FitPage / FitWidth */
-  private computeZoomForMode(mode: ZoomMode, vp: ViewportMetrics): number {
-    const spreads   = this.pageMgr.getSpreadPages();
-    if (!spreads.length) return 1;
+  private computeZoomForMode(mode: ZoomMode, vp: ViewportMetrics): number | false {
+    const spreads   = this.coreStore.getState().core.pages;
+    if (!spreads.length) return false;
 
-    const pgGap     = this.pageMgr.getPageGap();
+    const pgGap     = this.scroll.getPageGap();
     const vpGap     = this.viewport.getViewportGap();
+
+    if(vp.clientWidth === 0 || vp.clientHeight === 0) {
+      return false;
+    }
 
     let maxW = 0, maxH = 0;
 
@@ -227,14 +238,11 @@ export class ZoomPlugin
     focus: Point
   ) {
     /* unscaled content size ------------------------------------------- */
-    const spreads   = this.pageMgr.getSpreadPages();
-    const pgGap     = this.pageMgr.getPageGap();
+    const layout    = this.scroll.getLayout();
     const vpGap     = this.viewport.getViewportGap();
 
-    const contentW  = Math.max(...spreads.map(s =>
-                        s.reduce((w,p,i)=> w + p.size.width + (i?pgGap:0), 0))) + 2*vpGap;
-    const contentH  = Math.max(...spreads.map(s =>
-                        Math.max(...s.map(p=>p.size.height))))                 + 2*vpGap;
+    const contentW  = layout.totalContentSize.width;
+    const contentH  = layout.totalContentSize.height;
 
     /* helper: offset if content is narrower than viewport -------------- */
     const off = (vw:number, cw:number, zoom:number) =>

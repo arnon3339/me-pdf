@@ -5,12 +5,11 @@ import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
 import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import { init, init as initPdfium } from '@embedpdf/pdfium';
-import { PdfEngine } from '@embedpdf/models';
+import { PdfEngine, Rotation } from '@embedpdf/models';
 import { VIEWPORT_PLUGIN_ID, ViewportPluginPackage, ViewportState } from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/preact';
 import { SCROLL_PLUGIN_ID, ScrollPlugin, ScrollPluginPackage, ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/preact';
-import { PageManagerPluginPackage } from '@embedpdf/plugin-page-manager';
 import { SPREAD_PLUGIN_ID, SpreadMode, SpreadPlugin, SpreadPluginPackage, SpreadState } from '@embedpdf/plugin-spread';
 //import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-layer';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
@@ -22,7 +21,7 @@ import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import { ZOOM_PLUGIN_ID, ZoomMode, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/preact';
-
+import { ROTATE_PLUGIN_ID, RotatePlugin, RotatePluginPackage } from '@embedpdf/plugin-rotate';
 // **Configuration Interface**
 export interface PDFViewerConfig {
   src: string;
@@ -270,8 +269,11 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Rotate clockwise',
     icon: 'rotateClockwise',
     type: 'action',
-    action: () => {
-      console.log('rotateClockwise');
+    action: (registry) => {
+      const rotate = registry.getPlugin<RotatePlugin>(ROTATE_PLUGIN_ID)?.provides();
+      if(rotate) {
+        rotate.rotateBackward()
+      }
     }
   },
   rotateCounterClockwise: {
@@ -279,8 +281,11 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Rotate counter clockwise',
     icon: 'rotateCounterClockwise',
     type: 'action',
-    action: () => {
-      console.log('rotateCounterClockwise');
+    action: (registry) => {
+      const rotate = registry.getPlugin<RotatePlugin>(ROTATE_PLUGIN_ID)?.provides();
+      if(rotate) {
+        rotate.rotateForward()
+      }
     }
   },
   scrollLayout: {
@@ -1162,6 +1167,7 @@ export const uiConfig: UIPluginConfig = {
 
 export function PDFViewer({ config }: PDFViewerProps) {
   const [engine, setEngine] = useState<PdfEngine | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     initializeEngine({
@@ -1223,9 +1229,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(ScrollPluginPackage, {
             strategy: ScrollStrategy.Vertical,
           }),
-          createPluginRegistration(PageManagerPluginPackage, { 
-            pageGap: 10 
-          }),
           createPluginRegistration(ZoomPluginPackage, {
             defaultZoomLevel: ZoomMode.FitPage,
           }),
@@ -1234,6 +1237,9 @@ export function PDFViewer({ config }: PDFViewerProps) {
           }),
           createPluginRegistration(RenderPluginPackage, {
 
+          }),
+          createPluginRegistration(RotatePluginPackage, {
+            defaultRotation: Rotation.Degree0
           }),
           /*
           createPluginRegistration(ZoomPluginPackage, {
@@ -1246,7 +1252,8 @@ export function PDFViewer({ config }: PDFViewerProps) {
           }),
           */
         ]}
-      >
+      > 
+       {({pluginsReady}) => (
         <PluginUIProvider>
           {({ headers, panels, floating, commandMenu }) => (
             <div className="flex flex-col h-full w-full @container">
@@ -1280,9 +1287,14 @@ export function PDFViewer({ config }: PDFViewerProps) {
                         overflow: 'auto',
                       }}
                     >
-                      <Scroller 
-                        renderPage={(pageIndex) => <RenderLayer pageIndex={pageIndex} />}
-                      />
+                      {pluginsReady && <Scroller 
+                          renderPage={(pageIndex) => 
+                            <div className="bg-white w-full h-full">
+                              <RenderLayer pageIndex={pageIndex} />
+                            </div>
+                          }
+                        />
+                      }
                     </Viewport>
                     {floating}
                   </div>
@@ -1310,6 +1322,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             </div>
           )}
         </PluginUIProvider>
+      )}
       </EmbedPDF>
     </>
   );

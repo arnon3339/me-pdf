@@ -3,6 +3,7 @@ import { RenderCapability, RenderPluginConfig } from "./types";
 import { PdfEngine, PdfPageObject, Rotation } from "@embedpdf/models";
 
 export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapability> {
+  static readonly id = 'render' as const;
   private engine: PdfEngine;
 
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {

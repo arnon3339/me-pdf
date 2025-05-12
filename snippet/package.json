@@ -25,7 +25,6 @@
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/plugin-layer": "workspace:*",
     "@embedpdf/plugin-loader": "workspace:*",
-    "@embedpdf/plugin-page-manager": "workspace:*",
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-search": "workspace:*",
     "@embedpdf/plugin-spread": "workspace:*",
@@ -33,6 +32,7 @@
     "@embedpdf/plugin-viewport": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
+    "@embedpdf/plugin-rotate": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {

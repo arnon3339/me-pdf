@@ -7,6 +7,7 @@ import { MenuManager } from "./menu/menu-manager";
 import { IconManager } from "./icons/icon-manager";
 
 export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginState, UIPluginAction> {
+  static readonly id = 'ui' as const;
   private componentRenderers: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any> = {};
   private components: Record<string, UIComponent<UIComponentType<any>>> = {};
   private config: UIPluginConfig;
@@ -128,7 +129,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
 
       // ownProps is the UIComponent's current props
       const {id: _id, ...ownProps} = uiComponent.props
-  
+
       const partial = mapFn(state, ownProps);
       // If partial is non-empty or changes from old, do update
       const merged = { ...ownProps, ...partial };

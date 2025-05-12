@@ -8,7 +8,7 @@ export const manifest: PluginManifest<ZoomPluginConfig> = {
   name: 'Zoom Plugin',
   version: '1.0.0',
   provides: ['zoom'],
-  requires: ['viewport', 'page-manager'],
+  requires: ['viewport', 'scroll'],
   optional: [],
   defaultConfig: {
     enabled: true,

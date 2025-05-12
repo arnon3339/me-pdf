@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { ComponentChildren, Fragment, JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { useRender } from '../hooks/use-render';
+import { useRenderCapability } from '../hooks/use-render';
 
 type RenderLayoutProps = Omit<JSX.HTMLAttributes<HTMLImageElement>, 'style'> & {
   pageIndex: number;
@@ -11,13 +11,13 @@ type RenderLayoutProps = Omit<JSX.HTMLAttributes<HTMLImageElement>, 'style'> & {
 };
 
 export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...props }: RenderLayoutProps) {
-  const renderPlugin = useRender();
+  const { provides: renderProvides } = useRenderCapability();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (renderPlugin) {
-      const task = renderPlugin.renderPage(pageIndex, scaleFactor, dpr);
+    if (renderProvides) {
+      const task = renderProvides.renderPage(pageIndex, scaleFactor, dpr);
       task.wait((blob) => {
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
@@ -25,7 +25,7 @@ export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...pro
       }, (reason) => {
         console.error(reason);
       });
-    }
+    } 
 
     return () => {
       if (urlRef.current) {
@@ -33,7 +33,7 @@ export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...pro
         urlRef.current = null;
       }
     };
-  }, [pageIndex, scaleFactor, dpr, renderPlugin]);
+  }, [pageIndex, scaleFactor, dpr, renderProvides]);
 
   const handleImageLoad = () => {
     if (urlRef.current) {

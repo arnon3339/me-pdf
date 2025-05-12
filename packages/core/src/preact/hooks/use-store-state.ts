@@ -7,7 +7,7 @@ import { useRegistry } from './use-registry';
  * and re-renders the component when the state changes
  */
 export function useStoreState<T = CoreState>(): StoreState<T> | null {
-  const registry = useRegistry();
+  const { registry } = useRegistry();
   const [state, setState] = useState<StoreState<T> | null>(null);
   
   useEffect(() => {

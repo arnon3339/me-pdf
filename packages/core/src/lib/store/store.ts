@@ -121,7 +121,6 @@ export class Store<CoreState, CoreAction extends Action = Action> {
   dispatch(action: CoreAction | Action): StoreState<CoreState> {
     // Keep old state to notify global listeners *once*, after all reducers run.
     const oldState = this.getState();
-
     // 1) Apply core reducer (only if action is a CoreAction)
     if (this.isCoreAction(action)) {
       this.state.core = this.coreReducer(this.state.core, action);

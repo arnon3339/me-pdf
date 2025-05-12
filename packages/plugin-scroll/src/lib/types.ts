@@ -90,4 +90,5 @@ export interface ScrollCapability {
   getState(): ScrollState;
   getScrollerLayout(): ScrollerLayout;
   setScrollStrategy(strategy: ScrollStrategy): void;
+  getPageGap(): number;
 }

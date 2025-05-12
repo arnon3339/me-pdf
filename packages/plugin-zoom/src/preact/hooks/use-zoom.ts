@@ -1,4 +1,5 @@
-import { useCapability } from "@embedpdf/core/preact";
+import { useCapability, usePlugin } from "@embedpdf/core/preact";
 import { ZoomPlugin } from "@embedpdf/plugin-zoom";
 
-export const useZoom = () => useCapability<ZoomPlugin>('zoom');
+export const useZoomCapability = () => useCapability<ZoomPlugin>(ZoomPlugin.id);
+export const useZoom = () => usePlugin<ZoomPlugin>(ZoomPlugin.id);

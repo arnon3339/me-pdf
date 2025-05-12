@@ -1,13 +1,13 @@
-import { useUI } from './use-ui';
+import { useUICapability } from './use-ui';
 import { IconIdentifier, Icon as IconType, IconRegistry } from '@embedpdf/plugin-ui';
 
 /**
  * Hook to access icon functionality in React
  */
 export function useIcon() {
-  const ui = useUI();
+  const { provides: uiProvides } = useUICapability();
   
-  if (!ui) {
+  if (!uiProvides) {
     throw new Error('useIcon must be used within a UI context');
   }
   
@@ -21,7 +21,7 @@ export function useIcon() {
     isSvgDataUri,
     dataUriToSvgString,
     svgStringToDataUri,
-  } = ui;
+  } = uiProvides;
 
   return {
     registerIcon,

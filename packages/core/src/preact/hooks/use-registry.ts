@@ -1,11 +1,11 @@
 import { useContext } from "preact/hooks";
-import { PDFContext } from "../context";
+import { PDFContext, PDFContextState } from "../context";
 
 /**
  * Hook to access the PDF registry.
  * @returns The PDF registry or null during initialization
  */
-export function useRegistry() {
+export function useRegistry(): PDFContextState {
   const contextValue = useContext(PDFContext);
   
   // Error if used outside of context
@@ -17,7 +17,7 @@ export function useRegistry() {
   
   // During initialization, return null instead of throwing an error
   if (isInitializing) {
-    return null;
+    return contextValue;
   }
   
   // At this point, initialization is complete but registry is still null, which is unexpected
@@ -25,5 +25,5 @@ export function useRegistry() {
     throw new Error('PDF registry failed to initialize properly');
   }
 
-  return registry;
+  return contextValue;
 }

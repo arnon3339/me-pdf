@@ -3,15 +3,15 @@ import { h, Fragment } from 'preact';
 import { Button } from './ui/button';
 import { Tooltip } from './ui/tooltip';
 import { useState, useRef, useEffect, useCallback } from 'preact/hooks';
-import { useUI } from "@embedpdf/plugin-ui/preact";
+import { useUICapability } from "@embedpdf/plugin-ui/preact";
 import { Dropdown } from './ui/dropdown';
-import { useZoom } from "@embedpdf/plugin-zoom/preact";
-import { useViewport } from "@embedpdf/plugin-viewport/preact";
-import { useScroll } from "@embedpdf/plugin-scroll/preact";
+import { useZoomCapability } from "@embedpdf/plugin-zoom/preact";
+import { useViewportCapability } from "@embedpdf/plugin-viewport/preact";
+import { useScrollCapability } from "@embedpdf/plugin-scroll/preact";
 import { Icon } from "./ui/icon";
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = ({commandId, onClick, active, ...props}, children, context) => {
-  const ui = useUI();
+  const {provides: ui} = useUICapability();
   const command = commandId ? ui?.getMenuOrAction(commandId) : null;
   
   const handleClick = useCallback((e: MouseEvent) => {
@@ -52,7 +52,7 @@ export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = ({co
 };
 
 export const tabButtonRenderer: ComponentRenderFunction<TabButtonProps> = ({commandId, onClick, active, ...props}, children) => {
-  const ui = useUI();
+  const {provides: ui} = useUICapability();
   const command = commandId ? ui?.getMenuOrAction(commandId) : null;
 
   const handleClick = useCallback((e: MouseEvent) => {
@@ -221,8 +221,8 @@ export interface ZoomRendererProps {
 }
 
 export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, children, context) => {
-  const zoom = useZoom();
-  const ui = useUI();
+  const {provides: zoom} = useZoomCapability();
+  const {provides: ui} = useUICapability();
 
   if(!ui) return null;
 
@@ -301,7 +301,7 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, 
 };
 
 export const pageControlsContainerRenderer: ComponentRenderFunction<FloatingComponentProps> = (props, children) => {
-  const viewport = useViewport();
+  const {provides: viewport} = useViewportCapability();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout>();
@@ -367,7 +367,7 @@ export interface PageControlsProps {
 }
 
 export const pageControlsRenderer: ComponentRenderFunction<PageControlsProps> = (props) => {
-  const scroll = useScroll();
+  const {provides: scroll} = useScrollCapability();
   const isFirstPage = props.currentPage === 1;
   const isLastPage = props.currentPage === props.pageCount;
 
@@ -431,7 +431,7 @@ export const pageControlsRenderer: ComponentRenderFunction<PageControlsProps> = 
 };
 
 export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({activeCommand, open, position, triggerElement, flatten}) => {
-  const ui = useUI();
+  const {provides: ui} = useUICapability();
   const [history, setHistory] = useState<string[]>([]);
   const lastPushRef = useRef<string | null>(null);
 
@@ -596,7 +596,7 @@ export const sidebarRender: ComponentRenderFunction<any> = (props, children) => 
 };
 
 export const selectButtonRenderer: ComponentRenderFunction<SelectButtonProps> = ({activeCommandId, menuCommandId, active}, children) => {
-  const ui = useUI();
+  const {provides: ui} = useUICapability();
   if(!ui) return null;
 
   const activeCommand = ui.getMenuOrAction(activeCommandId);

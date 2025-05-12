@@ -79,4 +79,5 @@ export interface ZoomPluginConfig extends BasePluginConfig {
 export interface ZoomState {
   zoomLevel       : ZoomLevel;   // last **requested** level
   currentZoomLevel: number;      // actual numeric factor
+  zoomReady       : boolean;     // whether the zoom is ready to be used
 }

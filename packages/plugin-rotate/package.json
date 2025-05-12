@@ -1,5 +1,5 @@
 {
-  "name": "@embedpdf/plugin-page-manager",
+  "name": "@embedpdf/plugin-rotate",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -21,22 +21,17 @@
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
   "dependencies": {
-    "@embedpdf/models": "workspace:*"
+    "@embedpdf/models": "workspace:*",
+    "@embedpdf/plugin-loader": "workspace:*"
   },
   "devDependencies": {
-    "@embedpdf/core": "workspace:*",
-    "@embedpdf/plugin-loader": "workspace:*",
-    "@embedpdf/plugin-spread": "workspace:*",
-    "@embedpdf/plugin-layer": "workspace:*",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@embedpdf/plugin-spread": "workspace:*"
   },
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",
-    "@embedpdf/plugin-loader": "workspace:*",
-    "@embedpdf/plugin-spread": "workspace:*",
-    "@embedpdf/plugin-layer": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

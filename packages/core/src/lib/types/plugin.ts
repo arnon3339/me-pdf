@@ -10,6 +10,7 @@ export interface IPlugin<TConfig = unknown> {
   destroy?(): Promise<void> | void;
   provides?(): any;
   postInitialize?(): Promise<void>;
+  ready?(): Promise<void>;
 }
 
 export interface BasePluginConfig {

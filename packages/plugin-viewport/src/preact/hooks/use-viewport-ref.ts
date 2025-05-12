@@ -1,19 +1,19 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
-import { useViewport } from "./use-viewport"; 
+import { useViewportCapability } from "./use-viewport"; 
 
 export function useViewportRef() {
-  const viewport = useViewport();
+  const { provides: viewportProvides } = useViewportCapability();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (!viewport) return;
+    if (!viewportProvides) return;
 
     const container = containerRef.current;
     if (!container) return;
 
     // Example: On scroll, call setMetrics
     const onScroll = () => {
-      viewport.setViewportScrollMetrics({
+      viewportProvides.setViewportScrollMetrics({
         scrollTop: container.scrollTop,
         scrollLeft: container.scrollLeft
       });
@@ -22,7 +22,7 @@ export function useViewportRef() {
     
     // Example: On resize, call setMetrics
     const resizeObserver = new ResizeObserver(() => {
-      viewport.setViewportMetrics({
+      viewportProvides.setViewportMetrics({
         width: container.offsetWidth,
         height: container.offsetHeight,
         clientWidth: container.clientWidth,
@@ -35,7 +35,7 @@ export function useViewportRef() {
     });
     resizeObserver.observe(container);
 
-    const unsubscribeScrollRequest = viewport.onScrollRequest(({ x, y, behavior='auto' }) => {
+    const unsubscribeScrollRequest = viewportProvides.onScrollRequest(({ x, y, behavior='auto' }) => {
       requestAnimationFrame(() => {
         container.scrollTo({ left: x, top: y, behavior });
       });
@@ -47,7 +47,7 @@ export function useViewportRef() {
       resizeObserver.disconnect();
       unsubscribeScrollRequest();
     };
-  }, [viewport]);
+  }, [viewportProvides]);
 
   // Return the ref so your React code can attach it to a div
   return containerRef;

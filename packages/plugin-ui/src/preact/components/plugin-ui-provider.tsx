@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h, JSX, ComponentChildren } from 'preact';
-import { useUI } from '../hooks';
+import { useUI, useUICapability } from '../hooks';
 import { ComponentWrapper } from './component-wrapper';
 import { UIComponent } from '@embedpdf/plugin-ui';
 
@@ -39,7 +39,7 @@ export interface PluginUIProviderProps {
  * It uses the render props pattern for maximum flexibility.
  */
 export function PluginUIProvider({ children }: PluginUIProviderProps) {
-  const ui = useUI();
+  const { provides: uiProvides } = useUICapability();
 
   // Helper function to wrap UIComponents as JSX elements
   const wrapComponents = (components: UIComponent<any>[]): JSX.Element[] => {
@@ -51,18 +51,18 @@ export function PluginUIProvider({ children }: PluginUIProviderProps) {
   // Collect and wrap all components from UI plugin
   const componentMap: UIComponentsMap = {
     headers: {
-      top: wrapComponents(ui?.getHeadersByPlacement('top') || []),
-      bottom: wrapComponents(ui?.getHeadersByPlacement('bottom') || []),
-      left: wrapComponents(ui?.getHeadersByPlacement('left') || []),
-      right: wrapComponents(ui?.getHeadersByPlacement('right') || [])
+      top: wrapComponents(uiProvides?.getHeadersByPlacement('top') || []),
+      bottom: wrapComponents(uiProvides?.getHeadersByPlacement('bottom') || []),
+      left: wrapComponents(uiProvides?.getHeadersByPlacement('left') || []),
+      right: wrapComponents(uiProvides?.getHeadersByPlacement('right') || [])
     },
     panels: {
-      left: wrapComponents(ui?.getPanelsByLocation('left') || []),
-      right: wrapComponents(ui?.getPanelsByLocation('right') || [])
+      left: wrapComponents(uiProvides?.getPanelsByLocation('left') || []),
+      right: wrapComponents(uiProvides?.getPanelsByLocation('right') || [])
     },
-    floating: wrapComponents(ui?.getFloatingComponents() || []),
-    commandMenu: ui?.getCommandMenu() 
-      ? <ComponentWrapper component={ui.getCommandMenu()!} />
+    floating: wrapComponents(uiProvides?.getFloatingComponents() || []),
+    commandMenu: uiProvides?.getCommandMenu() 
+      ? <ComponentWrapper component={uiProvides.getCommandMenu()!} />
       : null
   };
 

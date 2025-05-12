@@ -20,6 +20,7 @@ import {
 } from "./actions";
 
 export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapability, SearchState, SearchAction> {
+  static readonly id = 'search' as const;
   private loader: LoaderCapability;
   private currentDocument?: PdfDocumentObject;
   private engine: PdfEngine;
