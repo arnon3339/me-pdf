@@ -68,9 +68,6 @@ importers:
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../../packages/plugin-loader
-      '@embedpdf/plugin-page-manager':
-        specifier: workspace:*
-        version: link:../../packages/plugin-page-manager
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../../packages/plugin-scroll
@@ -386,6 +383,9 @@ importers:
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../plugin-loader
+      preact:
+        specifier: ^10.26.4
+        version: 10.26.4
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -424,9 +424,6 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
-      '@embedpdf/plugin-page-manager':
-        specifier: workspace:*
-        version: link:../plugin-page-manager
       '@embedpdf/plugin-viewport':
         specifier: workspace:*
         version: link:../plugin-viewport
@@ -573,9 +570,6 @@ importers:
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
-      '@embedpdf/plugin-page-manager':
-        specifier: workspace:*
-        version: link:../plugin-page-manager
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../plugin-scroll
@@ -627,9 +621,6 @@ importers:
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../packages/plugin-loader
-      '@embedpdf/plugin-page-manager':
-        specifier: workspace:*
-        version: link:../packages/plugin-page-manager
       '@embedpdf/plugin-render':
         specifier: workspace:*
         version: link:../packages/plugin-render
@@ -799,9 +790,6 @@ importers:
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../packages/plugin-loader
-      '@embedpdf/plugin-page-manager':
-        specifier: workspace:*
-        version: link:../packages/plugin-page-manager
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../packages/plugin-scroll

@@ -13,7 +13,6 @@
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-layer": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
-    "@embedpdf/plugin-page-manager": "workspace:*",
     "@embedpdf/plugin-search": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",

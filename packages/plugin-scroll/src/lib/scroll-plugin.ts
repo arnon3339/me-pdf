@@ -1,5 +1,5 @@
-import { BasePlugin, CoreState, PluginRegistry, SET_DOCUMENT, SET_PAGES, StoreState, createBehaviorEmitter, createEmitter } from "@embedpdf/core";
-import { PdfPageObject } from "@embedpdf/models";
+import { BasePlugin, CoreState, PluginRegistry, SET_DOCUMENT, SET_PAGES, SET_ROTATION, StoreState, createBehaviorEmitter, createEmitter, getPagesWithRotatedSize } from "@embedpdf/core";
+import { PdfPageObject, PdfPageObjectWithRotatedSize } from "@embedpdf/models";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
 import { ScrollCapability, ScrollPluginConfig, ScrollStrategy, ScrollMetrics, ScrollState, LayoutChangePayload, ScrollerLayout } from "./types";
 import { BaseScrollStrategy, ScrollStrategyConfig } from "./strategies/base-strategy";
@@ -58,10 +58,13 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       { mode: 'throttle', wait: 250 },
     );
     this.coreStore.onAction(SET_DOCUMENT, (_action, state) => 
-      this.refreshAll(state.core.pages, this.viewport.getMetrics()),
+      this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
+    );
+    this.coreStore.onAction(SET_ROTATION, (_action, state) => 
+      this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
     );
     this.coreStore.onAction(SET_PAGES, (_action, state) => 
-      this.refreshAll(state.core.pages, this.viewport.getMetrics()),
+      this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
     );
   }
 
@@ -69,7 +72,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   /*  ᴄᴏᴍᴘᴜᴛᴇʀs                                                       */
   /* ------------------------------------------------------------------ */
 
-  private computeLayout(pages: PdfPageObject[][]) {
+  private computeLayout(pages: PdfPageObjectWithRotatedSize[][]) {
     const virtualItems = this.strategy.createVirtualItems(pages);
     const totalContentSize = this.strategy.getTotalContentSize(virtualItems);
     return { virtualItems, totalContentSize };
@@ -111,7 +114,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   }
 
   /* full re-compute after page-spread or initialisation */
-  private refreshAll(pages: PdfPageObject[][], vp: ViewportMetrics) {
+  private refreshAll(pages: PdfPageObjectWithRotatedSize[][], vp: ViewportMetrics) {
     const layout = this.computeLayout(pages);
     const metrics = this.computeMetrics(vp, layout.virtualItems);
 
@@ -169,7 +172,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     );
 
     // Recalculate layout and scroll metrics
-    const pages = this.coreStore.getState().core.pages;
+    const pages = getPagesWithRotatedSize(this.coreStore.getState().core);
     this.refreshAll(pages, this.viewport.getMetrics());
   }
 

@@ -1,4 +1,4 @@
-import { PdfPageObject } from "@embedpdf/models";
+import { PdfPageObjectWithRotatedSize } from "@embedpdf/models";
 import { ViewportMetrics } from "@embedpdf/plugin-viewport";
 import { BaseScrollStrategy, ScrollStrategyConfig } from "./base-strategy";
 import { VirtualItem, PageLayout } from "../types/virtual-item";
@@ -8,7 +8,7 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     super(config);
   }
 
-  createVirtualItems(pdfPageObject: PdfPageObject[][]): VirtualItem[] {
+  createVirtualItems(pdfPageObject: PdfPageObjectWithRotatedSize[][]): VirtualItem[] {
     let xOffset = 0;
     return pdfPageObject.map((pagesInSpread, index) => {
       let pageX = 0;
@@ -20,13 +20,15 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
           y: 0,
           width: page.size.width,
           height: page.size.height,
+          rotatedWidth: page.rotatedSize.width,
+          rotatedHeight: page.rotatedSize.height,
         };
-        pageX += page.size.width + this.pageGap;
+        pageX += page.rotatedSize.width + this.pageGap;
         return layout;
       });
       const width = pagesInSpread.reduce((sum, page, i) => 
-        sum + page.size.width + (i < pagesInSpread.length - 1 ? this.pageGap : 0), 0);
-      const height = Math.max(...pagesInSpread.map(p => p.size.height));
+        sum + page.rotatedSize.width + (i < pagesInSpread.length - 1 ? this.pageGap : 0), 0);
+      const height = Math.max(...pagesInSpread.map(p => p.rotatedSize.height));
       const item: VirtualItem = {
         id: `item-${index}`,
         x: xOffset,

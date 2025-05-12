@@ -1,4 +1,4 @@
-import { PdfPageObject } from "@embedpdf/models";
+import { PdfPageObjectWithRotatedSize } from "@embedpdf/models";
 import { ViewportMetrics } from "@embedpdf/plugin-viewport";
 import { VirtualItem } from "../types/virtual-item";
 import { ScrollMetrics } from "../types";
@@ -20,7 +20,7 @@ export abstract class BaseScrollStrategy {
     this.bufferSize = config.bufferSize ?? 2;
   }
 
-  abstract createVirtualItems(pdfPageObject: PdfPageObject[][]): VirtualItem[];
+  abstract createVirtualItems(pdfPageObject: PdfPageObjectWithRotatedSize[][]): VirtualItem[];
   abstract getTotalContentSize(virtualItems: VirtualItem[]): { width: number; height: number };
   abstract getScrollPositionForPage(pageNumber: number, virtualItems: VirtualItem[], scale: number): { x: number; y: number };
   protected abstract getScrollOffset(viewport: ViewportMetrics): number;
@@ -101,8 +101,8 @@ export abstract class BaseScrollStrategy {
         const itemY = item.y * scale;
         const pageX = itemX + page.x * scale;
         const pageY = itemY + page.y * scale;
-        const pageWidth = page.width * scale;
-        const pageHeight = page.height * scale;
+        const pageWidth = page.rotatedWidth * scale;
+        const pageHeight = page.rotatedHeight * scale;
 
         const viewportLeft = viewport.scrollLeft;
         const viewportTop = viewport.scrollTop;

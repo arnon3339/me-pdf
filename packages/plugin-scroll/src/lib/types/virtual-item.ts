@@ -5,6 +5,8 @@ export interface PageLayout {
   y: number;
   width: number;
   height: number;
+  rotatedWidth: number;
+  rotatedHeight: number;
 }
 
 export interface VirtualItem {

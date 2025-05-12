@@ -25,7 +25,7 @@ export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...pro
       }, (reason) => {
         console.error(reason);
       });
-    } 
+    }
 
     return () => {
       if (urlRef.current) {

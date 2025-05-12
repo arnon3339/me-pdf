@@ -6,6 +6,8 @@ import {
   setScale,
   SET_PAGES,
   SET_DOCUMENT,
+  getPagesWithRotatedSize,
+  SET_ROTATION,
 } from "@embedpdf/core";
 
 import {
@@ -63,6 +65,7 @@ export class ZoomPlugin
     this.dispatch(setInitialZoomLevel(cfg.defaultZoomLevel));
     /* keep "automatic" modes up to date -------------------------------- */
     this.viewport.onViewportChange (() => this.recalcAuto(VerticalZoomFocus.Top), { mode:"debounce", wait:150 });
+    this.coreStore.onAction(SET_ROTATION, () => this.recalcAuto(VerticalZoomFocus.Top));
     this.coreStore.onAction(SET_PAGES, () => this.recalcAuto(VerticalZoomFocus.Top));
     this.coreStore.onAction(SET_DOCUMENT, () => this.recalcAuto(VerticalZoomFocus.Top));
     this.resetReady();
@@ -206,7 +209,7 @@ export class ZoomPlugin
 
   /** numeric zoom for Automatic / FitPage / FitWidth */
   private computeZoomForMode(mode: ZoomMode, vp: ViewportMetrics): number | false {
-    const spreads   = this.coreStore.getState().core.pages;
+    const spreads   = getPagesWithRotatedSize(this.coreStore.getState().core);
     if (!spreads.length) return false;
 
     const pgGap     = this.scroll.getPageGap();
@@ -219,8 +222,8 @@ export class ZoomPlugin
     let maxW = 0, maxH = 0;
 
     spreads.forEach(spread => {
-      const w = spread.reduce((s,p,i)=> s + p.size.width + (i?pgGap:0), 0) + 2*vpGap;
-      const h = Math.max(...spread.map(p=>p.size.height))                 + 2*vpGap;
+      const w = spread.reduce((s,p,i)=> s + p.rotatedSize.width + (i?pgGap:0), 0) + 2*vpGap;
+      const h = Math.max(...spread.map(p=>p.rotatedSize.height))                 + 2*vpGap;
       maxW = Math.max(maxW, w);
       maxH = Math.max(maxH, h);
     });

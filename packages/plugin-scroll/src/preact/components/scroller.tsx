@@ -1,15 +1,22 @@
 /** @jsxImportSource preact */
 import { JSX } from 'preact';
+import { ScrollStrategy, ScrollerLayout, PageLayout } from '@embedpdf/plugin-scroll';
+import { useRegistry } from '@embedpdf/core/preact';
+import { Rotation } from '@embedpdf/models';
 import { useScrollCapability } from '../hooks';
 import { useEffect, useState } from 'preact/hooks';
-import { ScrollStrategy, ScrollerLayout } from '@embedpdf/plugin-scroll';
+
+interface RenderPageProps extends PageLayout {
+  rotation: Rotation;
+}
 
 type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  renderPage: (pageIndex: number) => JSX.Element;
+  renderPage: (props: RenderPageProps) => JSX.Element;
 };
 
 export function Scroller({ renderPage, ...props }: ScrollerProps) {
   const { provides: scrollProvides } = useScrollCapability();
+  const { registry } = useRegistry();
   const [scrollerLayout, setScrollerLayout] = useState<ScrollerLayout | null>(
     () => scrollProvides?.getScrollerLayout() ?? null
   );
@@ -21,6 +28,9 @@ export function Scroller({ renderPage, ...props }: ScrollerProps) {
   }, [scrollProvides]);
 
   if (!scrollerLayout) return null;
+  if (!registry) return null;
+
+  const coreState = registry.getStore().getState();
 
   return <div {...props} style={{
     width : `${scrollerLayout.totalWidth}px`,
@@ -65,10 +75,13 @@ export function Scroller({ renderPage, ...props }: ScrollerProps) {
         }}>
           {item.pageLayouts.map(layout => 
             <div key={layout.pageNumber} style={{
-              width: `${layout.width}px`,
-              height: `${layout.height}px`,
+              width: `${layout.rotatedWidth}px`,
+              height: `${layout.rotatedHeight}px`,
             }}>
-              {renderPage(layout.pageIndex)}
+              {renderPage({
+                ...layout,
+                rotation: coreState.core.rotation
+              })}
             </div>
           )}
         </div>

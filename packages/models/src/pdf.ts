@@ -18,6 +18,18 @@ export interface PdfPageObject {
   size: Size;
 }
 
+/** 
+ * Representation of pdf page with rotated size
+ *
+ * @public
+ */
+export interface PdfPageObjectWithRotatedSize extends PdfPageObject {
+  /**
+   * Rotated size of this page
+   */
+  rotatedSize: Size;
+}
+
 /**
  * Representation of pdf document
  *

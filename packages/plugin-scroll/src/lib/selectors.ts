@@ -14,6 +14,8 @@ export const getScrollerLayout = (state: ScrollState, scale: number): ScrollerLa
         pageLayouts: state.virtualItems[idx].pageLayouts.map(layout => {
           return {
             ...layout,
+            rotatedWidth: layout.rotatedWidth * scale,
+            rotatedHeight: layout.rotatedHeight * scale,
             width: layout.width * scale,
             height: layout.height * scale,
           };

@@ -1,7 +1,6 @@
 import { Reducer } from "./types";
 import { CoreState } from "./initial-state";
 import { CoreAction, LOAD_DOCUMENT, SET_DOCUMENT, SET_DOCUMENT_ERROR, SET_PAGES, SET_ROTATION, SET_SCALE } from "./actions";
-import { transformSize } from "@embedpdf/models";
 
 export const coreReducer: Reducer<CoreState, CoreAction> = (
   state,
@@ -19,7 +18,7 @@ export const coreReducer: Reducer<CoreState, CoreAction> = (
       return {
         ...state,
         document: action.payload,
-        pages: action.payload.pages.map(page => [{...page, size: transformSize(page.size, state.rotation, 1)}]),
+        pages: action.payload.pages.map(page => [page]),
         loading: false,
         error: null
       };

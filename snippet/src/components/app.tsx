@@ -22,6 +22,7 @@ import { ZOOM_PLUGIN_ID, ZoomMode, ZoomPlugin, ZoomPluginPackage, ZoomState } fr
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/preact';
 import { ROTATE_PLUGIN_ID, RotatePlugin, RotatePluginPackage } from '@embedpdf/plugin-rotate';
+import { Rotate } from '@embedpdf/plugin-rotate/preact';
 // **Configuration Interface**
 export interface PDFViewerConfig {
   src: string;
@@ -1181,7 +1182,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
   // Map config values to plugin settings
   //const scrollStrategy = config.scrollStrategy === 'horizontal' ? ScrollStrategy.Horizontal : ScrollStrategy.Vertical;
   //const zoomMode = config.zoomMode === 'fitWidth' ? ZoomMode.FitWidth : ZoomMode.FitPage;
-
+ 
   return (
     <>
       <style>
@@ -1288,10 +1289,12 @@ export function PDFViewer({ config }: PDFViewerProps) {
                       }}
                     >
                       {pluginsReady && <Scroller 
-                          renderPage={(pageIndex) => 
-                            <div className="bg-white w-full h-full">
-                              <RenderLayer pageIndex={pageIndex} />
-                            </div>
+                          renderPage={({pageIndex, width, height}) => 
+                            <Rotate pageSize={{width, height}}>
+                              <div className="bg-white" style={{width, height}}>
+                                <RenderLayer pageIndex={pageIndex} />
+                              </div>
+                            </Rotate>
                           }
                         />
                       }

@@ -11,6 +11,7 @@ export interface RotateCapability {
   getRotation(): Rotation;
   rotateForward(): void;
   rotateBackward(): void;
+  getMatrix(opts?: { w?: number; h?: number; asString?: boolean }): string | [number, number, number, number, number, number];
 }
 
 export interface RotateState {

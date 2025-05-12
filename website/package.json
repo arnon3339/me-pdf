@@ -22,7 +22,6 @@
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/plugin-layer": "workspace:*",
     "@embedpdf/plugin-loader": "workspace:*",
-    "@embedpdf/plugin-page-manager": "workspace:*",
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-search": "workspace:*",
     "@embedpdf/plugin-spread": "workspace:*",
