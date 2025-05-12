@@ -23,6 +23,8 @@ import {
   ZoomCapability,
   ZoomPreset,
   ZoomRangeStep,
+  VerticalZoomFocus,
+  ZoomRequest,
 } from "./types";
 import { setInitialZoomLevel, setZoomLevel, ZoomAction }   from "./actions";
 
@@ -59,10 +61,10 @@ export class ZoomPlugin
     this.presets  = cfg.presets ?? [];
     this.zoomRanges = this.normalizeRanges(cfg.zoomRanges ?? []);
     this.dispatch(setInitialZoomLevel(cfg.defaultZoomLevel));
-    /* keep “automatic” modes up to date -------------------------------- */
-    this.viewport.onViewportChange (() => this.recalcAuto(), { mode:"debounce", wait:150 });
-    this.coreStore.onAction(SET_PAGES, () => this.recalcAuto());
-    this.coreStore.onAction(SET_DOCUMENT, () => this.recalcAuto());
+    /* keep "automatic" modes up to date -------------------------------- */
+    this.viewport.onViewportChange (() => this.recalcAuto(VerticalZoomFocus.Top), { mode:"debounce", wait:150 });
+    this.coreStore.onAction(SET_PAGES, () => this.recalcAuto(VerticalZoomFocus.Top));
+    this.coreStore.onAction(SET_DOCUMENT, () => this.recalcAuto(VerticalZoomFocus.Top));
     this.resetReady();
   }
 
@@ -74,17 +76,17 @@ export class ZoomPlugin
       onZoomChange : this.zoom$.on,
       zoomIn       : () => {
         const cur = this.getState().currentZoomLevel;
-        return this.handleRequest(cur,  this.stepFor(cur));
+        return this.handleRequest({ level: cur, delta: this.stepFor(cur) });
       },
       zoomOut      : () => {
         const cur = this.getState().currentZoomLevel;
-        return this.handleRequest(cur, -this.stepFor(cur));
+        return this.handleRequest({ level: cur, delta: -this.stepFor(cur) });
       },
-      requestZoom  : (level, c) => this.handleRequest(level, 0, c),
+      requestZoom  : (level, c) => this.handleRequest({ level, center: c }),
       requestZoomBy: (d,c)    => {
         const cur = this.getState().currentZoomLevel;
         const target = this.toZoom(cur + d);
-        return this.handleRequest(target,0,c);
+        return this.handleRequest({ level: target, center: c });
       },
       getState     : () => this.getState(),
       getPresets   : () => this.presets,
@@ -125,9 +127,12 @@ export class ZoomPlugin
   /* main entry – handles **every** zoom request                          */
   /* ------------------------------------------------------------------ */
   private handleRequest(
-    level : ZoomLevel,
-    delta : number = 0,
-    center?: Point
+    {
+      level,
+      delta = 0,
+      center,
+      focus = VerticalZoomFocus.Center
+    }: ZoomRequest
   ) {
     const state      = this.getState();
     const metrics    = this.viewport.getMetrics();
@@ -138,7 +143,7 @@ export class ZoomPlugin
     }
 
     /* ------------------------------------------------------------------ */
-    /* step 1 – resolve the **target numeric zoom**                        */
+    /* step 1 – resolve the **target numeric zoom**                        */
     /* ------------------------------------------------------------------ */
     const base =
       typeof level === "number"
@@ -152,21 +157,21 @@ export class ZoomPlugin
     const newZoom = parseFloat(clamp(base + delta, this.minZoom, this.maxZoom).toFixed(2));
 
     /* ------------------------------------------------------------------ */
-    /* step 2 – figure out the viewport point we should keep under focus   */
+    /* step 2 – figure out the viewport point we should keep under focus   */
     /* ------------------------------------------------------------------ */
-    const focus : Point = center ?? {
-      vx: metrics.clientWidth  / 2,
-      vy: metrics.clientHeight / 2,
+    const focusPoint: Point = center ?? {
+      vx: metrics.clientWidth / 2,
+      vy: focus === VerticalZoomFocus.Top ? 0 : metrics.clientHeight / 2,
     };
 
     /* ------------------------------------------------------------------ */
-    /* step 3 – translate that into desired scroll offsets                 */
+    /* step 3 – translate that into desired scroll offsets                 */
     /* ------------------------------------------------------------------ */
     const { desiredScrollLeft, desiredScrollTop } =
-      this.computeScrollForZoomChange(metrics, oldZoom, newZoom, focus);
+      this.computeScrollForZoomChange(metrics, oldZoom, newZoom, focusPoint);
 
     /* ------------------------------------------------------------------ */
-    /* step 4 – dispatch + notify                                          */
+    /* step 4 – dispatch + notify                                          */
     /* ------------------------------------------------------------------ */
 
     if(!isNaN(desiredScrollLeft) && !isNaN(desiredScrollTop)) {
@@ -187,7 +192,7 @@ export class ZoomPlugin
     });
 
     const evt: ZoomChangeEvent = {
-      oldZoom, newZoom, level, center: focus,
+      oldZoom, newZoom, level, center: focusPoint,
       desiredScrollLeft, desiredScrollTop,
       viewport: metrics,
     };
@@ -267,17 +272,17 @@ export class ZoomPlugin
 
     return {
       desiredScrollLeft: Math.max(0, desiredScrollLeft),
-      desiredScrollTop : Math.max(0, desiredScrollTop ),
+      desiredScrollTop: Math.max(0, desiredScrollTop),
     };
   }
 
   /** recalculates Automatic / Fit* when viewport or pages change */
-  private recalcAuto() {
+  private recalcAuto(focus?: VerticalZoomFocus) {
     const s = this.getState();
     if (
       s.zoomLevel === ZoomMode.Automatic ||
       s.zoomLevel === ZoomMode.FitPage   ||
       s.zoomLevel === ZoomMode.FitWidth
-    ) this.handleRequest(s.zoomLevel);
+    ) this.handleRequest({ level: s.zoomLevel, focus });
   }
 }

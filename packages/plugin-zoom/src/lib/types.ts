@@ -81,3 +81,15 @@ export interface ZoomState {
   currentZoomLevel: number;      // actual numeric factor
   zoomReady       : boolean;     // whether the zoom is ready to be used
 }
+
+export enum VerticalZoomFocus {
+  Center,
+  Top
+}
+
+export interface ZoomRequest {
+  level: ZoomLevel;
+  delta?: number;
+  center?: Point;
+  focus?: VerticalZoomFocus;
+}
