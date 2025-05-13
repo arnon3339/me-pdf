@@ -364,12 +364,18 @@ export const pageControlsContainerRenderer: ComponentRenderFunction<FloatingComp
 export interface PageControlsProps {
   currentPage: number;
   pageCount: number;
+  nextPageCommandId: string;
+  previousPageCommandId: string;
 }
 
 export const pageControlsRenderer: ComponentRenderFunction<PageControlsProps> = (props) => {
   const {provides: scroll} = useScrollCapability();
+  const {provides: ui} = useUICapability();
   const isFirstPage = props.currentPage === 1;
   const isLastPage = props.currentPage === props.pageCount;
+
+  const commandNextPage = props.nextPageCommandId ? ui?.getMenuOrAction(props.nextPageCommandId) : null;
+  const commandPreviousPage = props.previousPageCommandId ? ui?.getMenuOrAction(props.previousPageCommandId) : null;
 
   const handlePageChange = (e: Event) => {
     e.preventDefault();
@@ -383,22 +389,23 @@ export const pageControlsRenderer: ComponentRenderFunction<PageControlsProps> = 
     }
   };
 
-  const handleNextPage = () => {
-    scroll?.scrollToNextPage();
-  };
-
-  const handlePreviousPage = () => {
-    scroll?.scrollToPreviousPage();
+  const handleClick = (e: MouseEvent, command: Menu<any> | Action<any> | null | undefined) => {
+    if (command && ui) {
+      ui.executeCommand(command.id, {
+        source: 'click',
+        triggerElement: e.currentTarget as HTMLElement,
+      });
+    }
   };
 
   return <div className="flex flex-row items-center justify-between rounded-md gap-3">
     <Tooltip position={'top'} content={'Previous Page'} trigger={isFirstPage ? 'none' : 'hover'}>
       <Button 
         className={`p-1 ${isFirstPage ? 'opacity-50 cursor-not-allowed hover:ring-0' : ''}`} 
-        onClick={handlePreviousPage}
+        onClick={(e) => handleClick(e, commandPreviousPage)}
         disabled={isFirstPage}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
+        {commandPreviousPage?.icon && <Icon icon={commandPreviousPage.icon} className="w-5 h-5" />}
       </Button>
     </Tooltip>
     <form className="flex flex-row items-center gap-3" onSubmit={handlePageChange}>
@@ -421,10 +428,10 @@ export const pageControlsRenderer: ComponentRenderFunction<PageControlsProps> = 
     <Tooltip position={'top'} content={'Next Page'} trigger={isLastPage ? 'none' : 'hover'}>
       <Button 
         className={`p-1 ${isLastPage ? 'opacity-50 cursor-not-allowed hover:ring-0' : ''}`}
-        onClick={handleNextPage}
+        onClick={(e) => handleClick(e, commandNextPage)}
         disabled={isLastPage}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
+        {commandNextPage?.icon && <Icon icon={commandNextPage.icon} className="w-5 h-5" />}
       </Button>
     </Tooltip>
   </div>;

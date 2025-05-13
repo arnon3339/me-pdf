@@ -707,6 +707,36 @@ export const menuItems: Record<string, MenuItem<State>> = {
       'form'
     ],
     active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'tabOverflow'
+  },
+  nextPage: {
+    id: 'nextPage',
+    label: 'Next page',
+    icon: 'chevronRight',
+    shortcut: 'ArrowRight',
+    shortcutLabel: 'Arrow Right',
+    type: 'action',
+    action: (registry) => {
+      const scroll = registry.getPlugin<ScrollPlugin>(SCROLL_PLUGIN_ID)?.provides();
+
+      if(scroll) {
+        scroll.scrollToNextPage();
+      }
+    }
+  },
+  previousPage: {
+    id: 'previousPage',
+    label: 'Previous page',
+    icon: 'chevronLeft',
+    type: 'action',
+    shortcut: 'ArrowLeft',
+    shortcutLabel: 'Arrow Left',
+    action: (registry) => {
+      const scroll = registry.getPlugin<ScrollPlugin>(SCROLL_PLUGIN_ID)?.provides();
+
+      if(scroll) {
+        scroll.scrollToPreviousPage();
+      }
+    }     
   }
 }
 
@@ -969,7 +999,9 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     props: (initialState) => ({
       currentPage: initialState.currentPage,
-      pageCount: initialState.pageCount
+      pageCount: initialState.pageCount,
+      nextPageCommandId: 'nextPage',
+      previousPageCommandId: 'previousPage'
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
