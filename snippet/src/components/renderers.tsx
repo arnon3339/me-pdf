@@ -9,6 +9,11 @@ import { useZoomCapability } from "@embedpdf/plugin-zoom/preact";
 import { useViewportCapability } from "@embedpdf/plugin-viewport/preact";
 import { useScrollCapability } from "@embedpdf/plugin-scroll/preact";
 import { Icon } from "./ui/icon";
+import { useSearchCapability } from "@embedpdf/plugin-search/preact";
+import { useDebounce } from "@/hooks/use-debounce";
+import { SearchAllPagesResult, SearchResult } from "@embedpdf/models";
+import { MatchFlag } from "@embedpdf/models";
+import { Checkbox } from "./ui/checkbox";
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = ({commandId, onClick, active, ...props}, children, context) => {
   const {provides: ui} = useUICapability();
@@ -147,7 +152,7 @@ export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, childr
   // Determine border class based on position
   const borderClass = props.location === 'left' ? 'md:border-r' : 'md:border-l';
 
-  return <div className={`border-t md:border-t-0 w-full md:w-[250px] md:min-w-[250px] bg-white shrink-0 flex flex-col flex-none ${borderClass} border-[#cfd4da] h-full`}>
+  return <div className={`border-t md:border-t-0 w-full md:w-[300px] md:min-w-[300px] bg-white shrink-0 flex flex-col flex-none ${borderClass} border-[#cfd4da] h-full`}>
     {children({
       ...props.visibleChild && {
         filter: (childId) => childId === props.visibleChild
@@ -156,20 +161,76 @@ export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, childr
   </div>;
 };
 
-export const searchRenderer: ComponentRenderFunction<any> = (props, children) => {
+function groupByPage(results: SearchResult[]) {
+  return results.reduce<Record<number, SearchResult[]>>((map, r) => {
+    (map[r.pageIndex] ??= []).push(r);
+    return map;
+  }, {});
+}
+
+/** one hit line – click jumps to the first rect */
+function HitLine({ hit, onClick }: { hit: SearchResult, onClick: (hit: SearchResult) => void }) {
+  const { before, match, after, truncatedLeft, truncatedRight } = hit.context;
+
+  return (
+    <button
+      onClick={() => onClick(hit)}
+      className="text-left w-full text-xs leading-tight p-3 rounded hover:bg-gray-100 shadow-xs border border-[#cfd4da] text-gray-600"
+    >
+      {truncatedLeft && "… "}
+      {before}
+      <span className="text-blue-500 font-bold">{match}</span>
+      {after}
+      {truncatedRight && " …"}
+    </button>
+  );
+}
+
+interface SearchRendererProps {
+  flags: MatchFlag[];
+  results: SearchResult[];
+  total: number;
+}
+
+export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (props) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
+  const {provides: search} = useSearchCapability();
   
+  const debouncedValue = useDebounce(inputValue, 400);
+
+  console.log('results', JSON.stringify(props.results, null, 2)); 
+
   useEffect(() => {
+    // Start search session when component mounts
+    search?.startSearch();
+    
     // Focus the input element when the component mounts
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, []);
+
+    // Cleanup function to stop search when component unmounts
+    return () => {
+      search?.stopSearch();
+    };
+  }, [search]);
+
+  useEffect(() => {
+    search?.searchAllPages(debouncedValue);
+  }, [debouncedValue, search]);
   
   const handleInputChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     setInputValue(target.value);
+  };
+
+  const handleFlagChange = (flag: MatchFlag, checked: boolean) => {
+    if(checked) {
+      search?.setFlags([...props.flags, flag]);
+    } else {
+      search?.setFlags(props.flags.filter(f => f !== flag));
+    }
   };
   
   const clearInput = () => {
@@ -179,34 +240,75 @@ export const searchRenderer: ComponentRenderFunction<any> = (props, children) =>
       inputRef.current.focus();
     }
   };
+
+  const grouped = groupByPage(props.results);
   
   return (
-    <div className="w-full h-full bg-white p-4">
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <svg className="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-          </svg>
-        </div>
-        <input 
-          ref={inputRef}
-          type="text" 
-          placeholder="Search" 
-          autoFocus
-          value={inputValue}
-          onInput={handleInputChange}
-          className="w-full pl-10 pr-9 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
-        {inputValue && (
-          <div 
-            className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
-            onClick={clearInput}
-          >
-            <svg className="w-4 h-4 text-gray-500 hover:text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+    <div className="h-full flex flex-col bg-white">
+      <div className="p-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+            <svg className="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
             </svg>
           </div>
-        )}
+          <input 
+            ref={inputRef}
+            type="text" 
+            placeholder="Search" 
+            autoFocus
+            value={inputValue}
+            onInput={handleInputChange}
+            className="w-full pl-8 pr-9 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          />
+          {inputValue && (
+            <div 
+              className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+              onClick={clearInput}
+            >
+              <svg className="w-4 h-4 text-gray-500 hover:text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-row gap-4 mt-3">
+          <Checkbox
+            label="Case sensitive"
+            checked={props.flags.includes(MatchFlag.MatchCase)}
+            onChange={(checked) => handleFlagChange(MatchFlag.MatchCase, checked)}
+          />
+          <Checkbox
+            label="Whole word"
+            checked={props.flags.includes(MatchFlag.MatchWholeWord)}
+            onChange={(checked) => handleFlagChange(MatchFlag.MatchWholeWord, checked)}
+          />
+        </div>
+        <hr className="my-4 border-gray-200" />
+        <div className="flex flex-col gap-2">
+          <div className="text-xs text-gray-500">
+            {props.total} results found
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 mt-2 overflow-y-auto flex flex-col gap-2 px-4">
+        {Object.entries(grouped).map(([page, hits]) => (
+          <div key={page} className="mt-2 first:mt-0">
+            <div className="sticky top-0 bg-white/80 backdrop-blur text-xs text-gray-500
+                            tracking-wide py-2">
+              Page {Number(page) + 1}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {hits.map((hit, i) => (
+                <HitLine key={i} hit={hit} onClick={() => {
+                  console.log('hit', hit);
+                }} />
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="h-2 w-full">&nbsp;</div>
       </div>
     </div>
   );

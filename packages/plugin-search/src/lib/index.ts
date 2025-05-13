@@ -19,4 +19,5 @@ export const SearchPluginPackage: PluginPackage<
 
 export * from "./search-plugin";
 export * from "./types";
+export * from "./manifest";
 export { initialState }

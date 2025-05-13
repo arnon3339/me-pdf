@@ -72,6 +72,7 @@ import {
   PdfFileUrl,
   Task,
   PdfErrorReason,
+  TextContext,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1642,207 +1643,6 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.startSearch}
-   *
-   * @public
-   */
-  startSearch(doc: PdfDocumentObject, contextId: number) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'startSearch', doc, contextId);
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StartSearch`, 'Begin', doc.id);
-
-    if (!this.docs[doc.id]) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StartSearch`, 'End', doc.id);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StartSearch`, 'End', doc.id);
-    return PdfTaskHelper.resolve(true);
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.searchNext}
-   *
-   * @public
-   */
-  searchNext(doc: PdfDocumentObject, contextId: number, target: SearchTarget) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'searchNext',
-      doc,
-      contextId,
-      target,
-    );
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'Begin', doc.id);
-
-    if (!this.docs[doc.id]) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-      return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-    }
-
-    const { keyword, flags } = target;
-    const searchContext = this.setupSearchContext(
-      doc,
-      contextId,
-      keyword,
-      flags,
-    );
-
-    if (searchContext.currPageIndex === doc.pageCount) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-      return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-    }
-
-    const { docPtr } = this.docs[doc.id];
-    let pageIndex = searchContext.currPageIndex;
-    let startIndex = searchContext.startIndex;
-
-    const length = 2 * (keyword.length + 1);
-    const keywordPtr = this.malloc(length);
-    this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
-
-    const flag = flags.reduce((flag: MatchFlag, currFlag: MatchFlag) => {
-      return flag | currFlag;
-    }, MatchFlag.None);
-
-    while (pageIndex < doc.pageCount) {
-      const result = this.searchTextInPage(
-        docPtr,
-        doc.pages[pageIndex],
-        pageIndex,
-        startIndex,
-        keywordPtr,
-        flag,
-      );
-      if (result) {
-        searchContext.currPageIndex = result.pageIndex;
-        searchContext.startIndex = result.charIndex + result.charCount;
-        this.free(keywordPtr);
-
-        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-        return PdfTaskHelper.resolve<SearchResult | undefined>(result);
-      }
-
-      pageIndex++;
-      startIndex = 0;
-      searchContext.currPageIndex = pageIndex;
-      searchContext.startIndex = startIndex;
-    }
-    this.free(keywordPtr);
-
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-    return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.searchPrev}
-   *
-   * @public
-   */
-  searchPrev(doc: PdfDocumentObject, contextId: number, target: SearchTarget) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'searchPrev',
-      doc,
-      contextId,
-      target,
-    );
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'Begin', doc.id);
-
-    if (!this.docs[doc.id]) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'End', doc.id);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    const { keyword, flags } = target;
-    const searchContext = this.setupSearchContext(
-      doc,
-      contextId,
-      keyword,
-      flags,
-    );
-
-    if (searchContext.currPageIndex === -1) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'End', doc.id);
-      return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-    }
-
-    const { docPtr } = this.docs[doc.id];
-    let pageIndex = searchContext.currPageIndex;
-    let startIndex = searchContext.startIndex;
-
-    const length = 2 * (keyword.length + 1);
-    const keywordPtr = this.malloc(length);
-    this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
-
-    const flag = target.flags.reduce((flag: MatchFlag, currFlag: MatchFlag) => {
-      return flag | currFlag;
-    }, MatchFlag.None);
-
-    while (pageIndex < doc.pageCount) {
-      const result = this.searchTextInPage(
-        docPtr,
-        doc.pages[pageIndex],
-        pageIndex,
-        startIndex,
-        keywordPtr,
-        flag,
-      );
-      if (result) {
-        searchContext.currPageIndex = pageIndex;
-        searchContext.startIndex = result.charIndex + result.charCount;
-        this.free(keywordPtr);
-
-        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'End', doc.id);
-        return PdfTaskHelper.resolve<SearchResult | undefined>(result);
-      }
-
-      pageIndex--;
-      startIndex = 0;
-      searchContext.currPageIndex = pageIndex;
-      searchContext.startIndex = startIndex;
-    }
-
-    this.free(keywordPtr);
-
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'End', doc.id);
-    return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.stopSearch}
-   *
-   * @public
-   */
-  stopSearch(doc: PdfDocumentObject, contextId: number) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'stopSearch', doc, contextId);
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StopSearch`, 'Begin', doc.id);
-
-    if (!this.docs[doc.id]) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StopSearch`, 'End', doc.id);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    const { searchContexts } = this.docs[doc.id];
-    if (searchContexts) {
-      searchContexts.delete(contextId);
-    }
-
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StopSearch`, 'End', doc.id);
-    return PdfTaskHelper.resolve(true);
-  }
-
-  /**
    * {@inheritDoc @embedpdf/models!PdfEngine.getAttachments}
    *
    * @public
@@ -2939,64 +2739,6 @@ export class PdfiumEngine implements PdfEngine {
     searchContexts.set(contextId, searchContext);
 
     return searchContext;
-  }
-
-  /**
-   * Search text in pdf page
-   * @param docPtr - pointer to pdf document
-   * @param pageIndex - index of pdf page
-   * @param startIndex - start index of text
-   * @param keywordPtr - pointer to keyword
-   * @param flag - matching flags
-   * @returns search result
-   *
-   * @private
-   */
-  searchTextInPage(
-    docPtr: number,
-    page: PdfPageObject,
-    pageIndex: number,
-    startIndex: number,
-    keywordPtr: number,
-    flag: number,
-  ): SearchResult | undefined {
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, pageIndex);
-    const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
-
-    let result: SearchResult | undefined;
-    const searchHandle = this.pdfiumModule.FPDFText_FindStart(
-      textPagePtr,
-      keywordPtr,
-      flag,
-      startIndex,
-    );
-    const found = this.pdfiumModule.FPDFText_FindNext(searchHandle);
-    if (found) {
-      const charIndex =
-        this.pdfiumModule.FPDFText_GetSchResultIndex(searchHandle);
-      const charCount = this.pdfiumModule.FPDFText_GetSchCount(searchHandle);
-
-      const rects = this.getHighlightRects(
-        page,
-        pagePtr,
-        textPagePtr,
-        charIndex,
-        charCount,
-      );
-
-      result = {
-        pageIndex,
-        charIndex,
-        charCount,
-        rects
-      };
-    }
-
-    this.pdfiumModule.FPDFText_FindClose(searchHandle);
-    this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
-
-    return result;
   }
 
   /**
@@ -5730,6 +5472,68 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
+   * Extract word-aligned context for a search hit.
+   *
+   * @param fullText      full UTF-16 page text (fetch this once per page!)
+   * @param start         index of 1st char that matched
+   * @param count         number of chars in the match
+   * @param windowChars   minimum context chars to keep left & right
+   */
+  private buildContext(
+    fullText: string,
+    start: number,
+    count: number,
+    windowChars = 40
+  ): TextContext {
+    const WORD_BREAK = /[\s\u00A0.,;:!?()\[\]{}<>/\\\-"'`“”\u2013\u2014]/;
+
+    // Find the start of a word moving left
+    const findWordStart = (index: number): number => {
+      while (index > 0 && !WORD_BREAK.test(fullText[index - 1])) index--;
+      return index;
+    };
+
+    // Find the end of a word moving right
+    const findWordEnd = (index: number): number => {
+      while (index < fullText.length && !WORD_BREAK.test(fullText[index])) index++;
+      return index;
+    };
+
+    // Move left to build context
+    let left = start;
+    while (left > 0 && WORD_BREAK.test(fullText[left - 1])) left--; // Skip blanks
+    let collected = 0;
+    while (left > 0 && collected < windowChars) {
+      left--;
+      if (!WORD_BREAK.test(fullText[left])) collected++;
+    }
+    left = findWordStart(left);
+
+    // Move right to build context
+    let right = start + count;
+    while (right < fullText.length && WORD_BREAK.test(fullText[right])) right++; // Skip blanks
+    collected = 0;
+    while (right < fullText.length && collected < windowChars) {
+      if (!WORD_BREAK.test(fullText[right])) collected++;
+      right++;
+    }
+    right = findWordEnd(right);
+
+    // Compose the context
+    const before = fullText.slice(left, start).replace(/\s+/g, ' ').trimStart();
+    const match = fullText.slice(start, start + count);
+    const after = fullText.slice(start + count, right).replace(/\s+/g, ' ').trimEnd();
+
+    return {
+      before,
+      match,
+      after,
+      truncatedLeft: left > 0,
+      truncatedRight: right < fullText.length
+    };
+  }
+
+  /**
    * Search for all occurrences of a keyword on a single page
    * This method efficiently loads the page only once and finds all matches
    * 
@@ -5752,6 +5556,13 @@ export class PdfiumEngine implements PdfEngine {
     // Load the page and text page only once
     const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, pageIndex);
     const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
+
+    // Load the full text of the page once
+    const total = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
+    const bufPtr = this.malloc(2 * (total + 1));
+    this.pdfiumModule.FPDFText_GetText(textPagePtr, 0, total, bufPtr);
+    const fullText = this.pdfiumModule.pdfium.UTF16ToString(bufPtr);
+    this.free(bufPtr);
     
     const pageResults: SearchResult[] = [];
     
@@ -5776,11 +5587,18 @@ export class PdfiumEngine implements PdfEngine {
         charCount,
       );
 
+      const context = this.buildContext(
+        fullText,
+        charIndex,
+        charCount,
+      );
+
       pageResults.push({
         pageIndex,
         charIndex,
         charCount,
-        rects
+        rects,
+        context,
       });
     }
     

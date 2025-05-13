@@ -5,7 +5,7 @@ import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
 import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import { init, init as initPdfium } from '@embedpdf/pdfium';
-import { PdfEngine, Rotation } from '@embedpdf/models';
+import { MatchFlag, PdfEngine, Rotation } from '@embedpdf/models';
 import { VIEWPORT_PLUGIN_ID, ViewportPluginPackage, ViewportState } from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/preact';
 import { SCROLL_PLUGIN_ID, ScrollPlugin, ScrollPluginPackage, ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
@@ -23,6 +23,7 @@ import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/preact';
 import { ROTATE_PLUGIN_ID, RotatePlugin, RotatePluginPackage } from '@embedpdf/plugin-rotate';
 import { Rotate } from '@embedpdf/plugin-rotate/preact';
+import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/plugin-search';
 // **Configuration Interface**
 export interface PDFViewerConfig {
   src: string;
@@ -67,7 +68,8 @@ type State = GlobalStoreState<{
   [ZOOM_PLUGIN_ID]: ZoomState,
   [VIEWPORT_PLUGIN_ID]: ViewportState,
   [SCROLL_PLUGIN_ID]: ScrollState,
-  [SPREAD_PLUGIN_ID]: SpreadState
+  [SPREAD_PLUGIN_ID]: SpreadState,
+  [SEARCH_PLUGIN_ID]: SearchState
 }>
 
 export const icons: IconRegistry = {
@@ -182,8 +184,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'menuCtr',
     icon: 'menu',
     label: 'Menu',
-    shortcut: 'Shift+M',
-    shortcutLabel: 'M',
+    //shortcut: 'Shift+M',
+    //shortcutLabel: 'M',
     type: 'menu',
     children: [
       'download', 'enterFS', 'save', 'print', 'settings'
@@ -194,8 +196,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'download',
     icon: 'download',
     label: 'Download',
-    shortcut: 'Shift+D',
-    shortcutLabel: 'D',
+    //shortcut: 'Shift+D',
+    //shortcutLabel: 'D',
     type: 'action',
     action: () => {
       console.log('download');
@@ -205,8 +207,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'enterFS',
     icon: 'fullscreen',
     label: 'Enter full screen',
-    shortcut: 'Shift+F',
-    shortcutLabel: 'F',
+    //shortcut: 'Shift+F',
+    //shortcutLabel: 'F',
     type: 'action',
     action: () => {
       console.log('enterFS');
@@ -216,8 +218,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'save',
     icon: 'save',
     label: 'Save',
-    shortcut: 'Shift+S',
-    shortcutLabel: 'S',
+    //shortcut: 'Shift+S',
+    //shortcutLabel: 'S',
     type: 'action',
     action: () => {
       console.log('save');
@@ -227,8 +229,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'print',
     icon: 'print',
     label: 'Print',
-    shortcut: 'Shift+P',
-    shortcutLabel: 'P',
+    //shortcut: 'Shift+P',
+    //shortcutLabel: 'P',
     type: 'action',
     action: () => {
       console.log('print');
@@ -238,8 +240,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'settings',
     icon: 'settings',
     label: 'Settings',
-    shortcut: 'Shift+E',
-    shortcutLabel: 'E',
+    //shortcut: 'Shift+E',
+    //shortcutLabel: 'E',
     dividerBefore: true,
     type: 'action',
     action: () => {
@@ -251,8 +253,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id:'viewCtr',     
     icon:'viewSettings',  
     label:'View controls', 
-    shortcut: 'Shift+V',
-    shortcutLabel: 'V',
+    //shortcut: 'Shift+V',
+    //shortcutLabel: 'V',
     type: 'menu',
     children:[
       'pageOrientation', 'scrollLayout', 'pageLayout', 'enterFS'
@@ -385,8 +387,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id:'zoom',     
     icon:'zoomIn',  
     label:'Zoom Controls', 
-    shortcut: 'Shift+Z',
-    shortcutLabel: 'Z',
+    //shortcut: 'Shift+Z',
+    //shortcutLabel: 'Z',
     type: 'menu',
     children:[
       'changeZoomLevel', 'zoomIn', 'zoomOut', 'fitToWidth', 'fitToPage'
@@ -627,8 +629,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'view',
     label: 'View',
     type: 'action',
-    shortcut: 'Shift+V',
-    shortcutLabel: 'V',
+    //shortcut: 'Shift+V',
+    //shortcutLabel: 'V',
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
@@ -642,8 +644,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'annotate',
     label: 'Annotate',
     type: 'action',
-    shortcut: 'Shift+A',
-    shortcutLabel: 'A',
+    //shortcut: 'Shift+A',
+    //shortcutLabel: 'A',
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
@@ -657,8 +659,8 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'shapes',
     label: 'Shapes',
     type: 'action',
-    shortcut: 'Shift+S',
-    shortcutLabel: 'S',
+    //shortcut: 'Shift+S',
+    //shortcutLabel: 'S',
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
@@ -1113,7 +1115,13 @@ export const components: Record<string, UIComponentType<State>> = {
   search: {
     id: 'search',
     type: 'custom',
-    render: 'search'
+    render: 'search',
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      flags: storeState.plugins.search.flags,
+      results: storeState.plugins.search.results,
+      total: storeState.plugins.search.total
+    })
   },
   comment: {
     id: 'comment',
@@ -1273,6 +1281,9 @@ export function PDFViewer({ config }: PDFViewerProps) {
           }),
           createPluginRegistration(RotatePluginPackage, {
             defaultRotation: Rotation.Degree0
+          }),
+          createPluginRegistration(SearchPluginPackage, {
+
           }),
           /*
           createPluginRegistration(ZoomPluginPackage, {

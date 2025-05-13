@@ -80,9 +80,17 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
         return unsubscribe;
       },
       getFlags: () => this.getState().flags,
-      setFlags: (flags) => this.dispatch(setSearchFlags(flags)),
+      setFlags: (flags) => this.setFlags(flags),
     };
   }
+
+  private setFlags(flags: MatchFlag[]): void {
+    const state = this.getState();
+    this.dispatch(setSearchFlags(flags));
+    if (state.active) {
+      this.searchAllPages(state.query, true);
+    }
+  } 
 
   private addSearchResultHandler(
     handler: (result: SearchAllPagesResult) => void
@@ -144,25 +152,29 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
     this.notifySearchStop();
   }
 
-  private async searchAllPages(keyword: string): Promise<SearchAllPagesResult> {
+  private async searchAllPages(keyword: string, force: boolean = false): Promise<SearchAllPagesResult> {
     const trimmedKeyword = keyword.trim();
-    if (!trimmedKeyword) {
-      console.warn("Empty search keyword is not allowed");
-      return { results: [], total: 0 };
-    }
-    if (!this.currentDocument) {
-      return { results: [], total: 0 };
-    }
-
     const state = this.getState();
-    if (!state.active) {
-      this.startSearchSession();
-    }
-    if (state.query === trimmedKeyword) {
+
+    if (state.query === trimmedKeyword && !force) {
       return { results: state.results, total: state.total };
     }
 
     this.dispatch(startSearch(trimmedKeyword));
+
+    if (!trimmedKeyword) {
+      this.dispatch(setSearchResults([], 0, -1));
+      return { results: [], total: 0 };
+    }
+    if (!this.currentDocument) {
+      this.dispatch(setSearchResults([], 0, -1));
+      return { results: [], total: 0 };
+    }
+
+    if (!state.active) {
+      this.startSearchSession();
+    }
+
     return new Promise<SearchAllPagesResult>((resolve) => {
       this.engine
         .searchAllPages(this.currentDocument!, trimmedKeyword, state.flags)

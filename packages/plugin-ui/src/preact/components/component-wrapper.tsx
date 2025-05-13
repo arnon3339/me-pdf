@@ -39,15 +39,23 @@ export function ComponentWrapper({
         // If filter function is provided, use it to determine if we should include this child
         return !options?.filter || options.filter(id);
       })
-      .map(({ component: child, id, className }) => (
-        <div className={className}>
+      .map(({ component: child, id, className }) =>
+        className ? (
+          <div className={className}>
+            <ComponentWrapper
+              key={id}
+              component={child}
+              parentContext={merged}
+            />
+          </div>
+        ) : (
           <ComponentWrapper
             key={id}
             component={child}
             parentContext={merged}
           />
-        </div>
-      ));
+        )
+      );
   }
 
   // 3) Finally call the renderer with (props, childrenFn, context)

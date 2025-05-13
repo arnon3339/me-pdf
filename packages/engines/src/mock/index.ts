@@ -329,54 +329,6 @@ export function createMockPdfEngine(
         content: new ArrayBuffer(0),
       });
     },
-    startSearch: (doc: PdfDocumentObject, contextId: number) => {
-      return PdfTaskHelper.resolve(true);
-    },
-    searchNext: (
-      doc: PdfDocumentObject,
-      contextId: number,
-      target: SearchTarget,
-    ) => {
-      return PdfTaskHelper.resolve({
-        pageIndex: 0,
-        charIndex: 0,
-        charCount: 1,
-        rects: [{
-          origin: {
-            x: 0,
-            y: 0,
-          },
-          size: {
-            width: 0,
-            height: 0,
-          },
-        }],
-      } as SearchResult | undefined);
-    },
-    searchPrev: (
-      doc: PdfDocumentObject,
-      contextId: number,
-      target: SearchTarget,
-    ) => {
-      return PdfTaskHelper.resolve({
-        pageIndex: 0,
-        charIndex: 0,
-        charCount: 1,
-        rects: [{
-          origin: {
-            x: 0,
-            y: 0,
-          },
-          size: {
-            width: 0,
-            height: 0,
-          },
-        }],
-      } as SearchResult | undefined);
-    },
-    stopSearch: (doc: PdfDocumentObject, contextId: number) => {
-      return PdfTaskHelper.resolve(true);
-    },
     searchAllPages: (doc: PdfDocumentObject, keyword: string, flags?: MatchFlag[]) => {
       // Create a mock search result
       const mockResult: SearchResult = {
@@ -393,6 +345,13 @@ export function createMockPdfEngine(
             height: 20,
           },
         }],
+        context: {
+          before: '',
+          match: '',
+          after: '',
+          truncatedLeft: false,
+          truncatedRight: false,
+        },
       };
       
       // Return a mock SearchAllPagesResult with a single result

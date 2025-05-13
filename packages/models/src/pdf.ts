@@ -1115,6 +1115,20 @@ export function compareSearchTarget(
   return flagA === flagB && targetA.keyword === targetB.keyword;
 }
 
+/** Context of one hit */
+export interface TextContext {
+  /** Complete words that come *before* the hit (no ellipsis)            */
+  before: string;
+  /** Exactly the text that matched (case-preserved)                      */
+  match:  string;
+  /** Complete words that come *after* the hit (no ellipsis)             */
+  after:  string;
+  /** `true` ⇢ there were more words on the left that we cut off         */
+  truncatedLeft:  boolean;
+  /** `true` ⇢ there were more words on the right that we cut off        */
+  truncatedRight: boolean;
+}
+
 /**
  * search result
  *
@@ -1137,6 +1151,10 @@ export interface SearchResult {
    * highlight rects
    */
   rects: Rect[];
+  /**
+   * context of the hit
+   */
+  context: TextContext;
 }
 
 /**
@@ -1551,44 +1569,6 @@ export interface PdfEngine {
     rotation: Rotation,
     dpr: number,
   ) => PdfTask<Blob>;
-  /**
-   * Start searching with new context
-   * @param doc - pdf document
-   * @param contextId - id of context
-   * @returns Task contains whether search has started
-   */
-  startSearch: (doc: PdfDocumentObject, contextId: number) => PdfTask<boolean>;
-  /**
-   * Search next target
-   * @param doc - pdf document
-   * @param contextId - id of context
-   * @param target - search target
-   * @returns task contains the search result or error
-   */
-  searchNext: (
-    doc: PdfDocumentObject,
-    contextId: number,
-    target: SearchTarget,
-  ) => PdfTask<SearchResult | undefined>;
-  /**
-   * Search the previous targets
-   * @param doc - pdf document
-   * @param contextId - id of context
-   * @param target - search target
-   * @returns task contains the search result or error
-   */
-  searchPrev: (
-    doc: PdfDocumentObject,
-    contextId: number,
-    target: SearchTarget,
-  ) => PdfTask<SearchResult | undefined>;
-  /**
-   * Stop searching with new context
-   * @param doc - pdf document
-   * @param contextId - id of context
-   * @returns Task contains whether search has stopped
-   */
-  stopSearch: (doc: PdfDocumentObject, contextId: number) => PdfTask<boolean>;
   /**
    * Search across all pages in the document
    * @param doc - pdf document
