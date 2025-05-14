@@ -1,5 +1,5 @@
 import { BasePlugin, CoreState, PluginRegistry, SET_DOCUMENT, SET_PAGES, SET_ROTATION, StoreState, createBehaviorEmitter, createEmitter, getPagesWithRotatedSize } from "@embedpdf/core";
-import { PdfPageObject, PdfPageObjectWithRotatedSize } from "@embedpdf/models";
+import { PdfPageObject, PdfPageObjectWithRotatedSize, Rotation } from "@embedpdf/models";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
 import { ScrollCapability, ScrollPluginConfig, ScrollStrategy, ScrollMetrics, ScrollState, LayoutChangePayload, ScrollerLayout, ScrollToPageOptions } from "./types";
 import { BaseScrollStrategy, ScrollStrategyConfig } from "./strategies/base-strategy";
@@ -21,6 +21,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   private strategy: BaseScrollStrategy;
   private strategyConfig: ScrollStrategyConfig;
   private currentScale: number = 1;
+  private currentRotation: Rotation = Rotation.Degree0;
   private initialPage?: number;
   private currentPage: number = 1;
 
@@ -51,7 +52,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
 
     this.initialPage = this.config?.initialPage;
     this.currentScale = this.coreStore.getState().core.scale;
-
+    this.currentRotation = this.coreStore.getState().core.rotation;
     // Subscribe to viewport and page manager events
     this.viewport.onViewportChange(
       vp => this.commitMetrics(this.computeMetrics(vp)),
@@ -144,6 +145,9 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       this.currentScale = newState.core.scale;
       this.commitMetrics(this.computeMetrics(this.viewport.getMetrics()));
     }
+    if(prevState.core.rotation !== newState.core.rotation) {
+      this.currentRotation = newState.core.rotation;
+    }
   }
 
   /**
@@ -186,7 +190,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       scrollToPage: (options: ScrollToPageOptions) => {
         const { pageNumber, behavior = 'smooth', pageCoordinates, center = false } = options;
         const virtualItems = this.getVirtualItemsFromState();
-        const position = this.strategy.getScrollPositionForPage(pageNumber, virtualItems, this.currentScale, pageCoordinates);
+        const position = this.strategy.getScrollPositionForPage(pageNumber, virtualItems, this.currentScale, this.currentRotation, pageCoordinates);
         this.viewport.scrollTo({ ...position, behavior, center });
       },
       scrollToNextPage: (behavior = 'smooth') => {
@@ -199,7 +203,8 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
           const position = this.strategy.getScrollPositionForPage(
             nextItem.pageNumbers[0],
             virtualItems,
-            this.currentScale
+            this.currentScale,
+            this.currentRotation
           );
           this.viewport.scrollTo({ ...position, behavior });
         }
@@ -214,7 +219,8 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
           const position = this.strategy.getScrollPositionForPage(
             prevItem.pageNumbers[0],
             virtualItems,
-            this.currentScale
+            this.currentScale,
+            this.currentRotation
           );
           this.viewport.scrollTo({ ...position, behavior });
         }

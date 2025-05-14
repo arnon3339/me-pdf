@@ -1,4 +1,4 @@
-import { PdfPageObjectWithRotatedSize } from "@embedpdf/models";
+import { PdfPageObjectWithRotatedSize, Rotation, transformPosition } from "@embedpdf/models";
 import { ViewportMetrics } from "@embedpdf/plugin-viewport";
 import { VirtualItem } from "../types/virtual-item";
 import { ScrollMetrics } from "../types";
@@ -159,6 +159,7 @@ export abstract class BaseScrollStrategy {
     pageNumber: number, 
     virtualItems: VirtualItem[], 
     scale: number,
+    rotation: Rotation,
     pageCoordinates?: { x: number; y: number }
   ): { x: number; y: number } {
     // Find the virtual item containing the page
@@ -175,9 +176,17 @@ export abstract class BaseScrollStrategy {
 
     // If specific page coordinates are provided, add them to the base position
     if (pageCoordinates) {
+      const rotatedSize = transformPosition({
+        width: pageLayout.width,
+        height: pageLayout.height,
+      }, {
+        x: pageCoordinates.x,
+        y: pageCoordinates.y,
+      }, rotation, scale);
+
       return {
-        x: baseX + (pageCoordinates.x * scale) + this.viewportGap,
-        y: baseY + (pageCoordinates.y * scale) + this.viewportGap
+        x: baseX + rotatedSize.x + this.viewportGap,
+        y: baseY + rotatedSize.y + this.viewportGap
       };
     }
 

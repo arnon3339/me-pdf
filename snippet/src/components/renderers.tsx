@@ -227,10 +227,10 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
   }, [debouncedValue, search]);
 
   useEffect(() => {
-    if(props.activeResultIndex !== undefined) {
+    if(props.activeResultIndex !== undefined && !props.loading) {
       scrollToItem(props.activeResultIndex);
     }
-  }, [props.activeResultIndex]);
+  }, [props.activeResultIndex, props.loading, props.query, props.flags]);
   
   const handleInputChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -248,7 +248,7 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
   const scrollToItem = (index: number) => {
     const item = props.results[index];
     if(!item) return;
-    
+
     const minCoordinates = item.rects.reduce((min, rect) => ({
       x: Math.min(min.x, rect.origin.x),
       y: Math.min(min.y, rect.origin.y)

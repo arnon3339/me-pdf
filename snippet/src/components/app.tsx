@@ -276,7 +276,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const rotate = registry.getPlugin<RotatePlugin>(ROTATE_PLUGIN_ID)?.provides();
       if(rotate) {
-        rotate.rotateBackward()
+        rotate.rotateForward()
       }
     }
   },
@@ -288,7 +288,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const rotate = registry.getPlugin<RotatePlugin>(ROTATE_PLUGIN_ID)?.provides();
       if(rotate) {
-        rotate.rotateForward()
+        rotate.rotateBackward()
       }
     }
   },
