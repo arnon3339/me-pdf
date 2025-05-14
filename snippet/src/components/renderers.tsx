@@ -152,7 +152,7 @@ export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, childr
   // Determine border class based on position
   const borderClass = props.location === 'left' ? 'md:border-r' : 'md:border-l';
 
-  return <div className={`border-t md:border-t-0 w-full md:w-[300px] md:min-w-[300px] bg-white shrink-0 flex flex-col flex-none ${borderClass} border-[#cfd4da] h-full`}>
+  return <div className={`border-t md:border-t-0 w-full md:w-[275px] md:min-w-[275px] bg-white shrink-0 flex flex-col flex-none ${borderClass} border-[#cfd4da] h-full`}>
     {children({
       ...props.visibleChild && {
         filter: (childId) => childId === props.visibleChild
@@ -162,20 +162,28 @@ export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, childr
 };
 
 function groupByPage(results: SearchResult[]) {
-  return results.reduce<Record<number, SearchResult[]>>((map, r) => {
-    (map[r.pageIndex] ??= []).push(r);
+  return results.reduce<Record<number, { hit: SearchResult, index: number }[]>>((map, r, i) => {
+    (map[r.pageIndex] ??= []).push({ hit: r, index: i });
     return map;
   }, {});
 }
 
 /** one hit line – click jumps to the first rect */
-function HitLine({ hit, onClick }: { hit: SearchResult, onClick: (hit: SearchResult) => void }) {
+function HitLine({ hit, onClick, active }: { hit: SearchResult, onClick: (hit: SearchResult) => void, active: boolean }) {
   const { before, match, after, truncatedLeft, truncatedRight } = hit.context;
+  const ref = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (active && ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [active]);
 
   return (
     <button
+      ref={ref}
       onClick={() => onClick(hit)}
-      className="text-left w-full text-xs leading-tight p-3 rounded hover:bg-gray-100 shadow-xs border border-[#cfd4da] text-gray-600"
+      className={`text-left w-full text-xs leading-tight p-3 rounded shadow-xs border border-[#cfd4da] text-gray-600 cursor-pointer ${active ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-100 hover:border-[#1a466b]'}`}
     >
       {truncatedLeft && "… "}
       {before}
@@ -190,34 +198,32 @@ interface SearchRendererProps {
   flags: MatchFlag[];
   results: SearchResult[];
   total: number;
+  activeResultIndex: number;
+  active: boolean;
+  query: string;
+  loading: boolean;
 }
 
 export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (props) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(props.query || '');
   const {provides: search} = useSearchCapability();
   
   const debouncedValue = useDebounce(inputValue, 400);
 
-  console.log('results', JSON.stringify(props.results, null, 2)); 
-
   useEffect(() => {
-    // Start search session when component mounts
-    search?.startSearch();
-    
     // Focus the input element when the component mounts
     if (inputRef.current) {
       inputRef.current.focus();
     }
-
-    // Cleanup function to stop search when component unmounts
-    return () => {
-      search?.stopSearch();
-    };
   }, [search]);
 
   useEffect(() => {
-    search?.searchAllPages(debouncedValue);
+    if(debouncedValue === '') {
+      search?.stopSearch();
+    } else {
+      search?.searchAllPages(debouncedValue);
+    }
   }, [debouncedValue, search]);
   
   const handleInputChange = (e: Event) => {
@@ -284,31 +290,52 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
             onChange={(checked) => handleFlagChange(MatchFlag.MatchWholeWord, checked)}
           />
         </div>
-        <hr className="my-4 border-gray-200" />
-        <div className="flex flex-col gap-2">
+        <hr className="border-gray-200 mt-5 mb-2" />
+        {props.active && !props.loading && <div className="flex flex-row justify-between items-center h-[32px]">
           <div className="text-xs text-gray-500">
             {props.total} results found
           </div>
-        </div>
+          {props.total > 1 && <div className="flex flex-row gap-2">
+            <Button onClick={() => {
+              search?.previousResult();
+            }}>
+              <Icon icon={'chevronLeft'} className="w-4 h-4" />
+            </Button>
+            <Button onClick={() => {
+              search?.nextResult();
+            }}>
+              <Icon icon={'chevronRight'} className="w-4 h-4" />
+            </Button>
+          </div>}
+        </div>}
       </div>
-      <div className="flex-1 min-h-0 mt-2 overflow-y-auto flex flex-col gap-2 px-4">
-        {Object.entries(grouped).map(([page, hits]) => (
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 px-4">
+        {props.loading && <div className="flex flex-row justify-center items-center h-full">
+          <div className="text-xs text-gray-500">
+            Loading...
+          </div>
+        </div>}
+        {!props.loading && Object.entries(grouped).map(([page, hits]) => (
           <div key={page} className="mt-2 first:mt-0">
-            <div className="sticky top-0 bg-white/80 backdrop-blur text-xs text-gray-500
-                            tracking-wide py-2">
+            <div className="bg-white/80 backdrop-blur text-xs text-gray-500 py-2">
               Page {Number(page) + 1}
             </div>
 
             <div className="flex flex-col gap-2">
-              {hits.map((hit, i) => (
-                <HitLine key={i} hit={hit} onClick={() => {
-                  console.log('hit', hit);
-                }} />
+              {hits.map(({ hit, index }) => (
+                <HitLine 
+                  key={index} 
+                  hit={hit} 
+                  active={index === props.activeResultIndex}
+                  onClick={() => {
+                    search?.goToResult(index);
+                  }} 
+                />
               ))}
             </div>
           </div>
         ))}
-        <div className="h-2 w-full">&nbsp;</div>
+        <div />
       </div>
     </div>
   );

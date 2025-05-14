@@ -1120,7 +1120,11 @@ export const components: Record<string, UIComponentType<State>> = {
       ...ownProps,
       flags: storeState.plugins.search.flags,
       results: storeState.plugins.search.results,
-      total: storeState.plugins.search.total
+      total: storeState.plugins.search.total,
+      activeResultIndex: storeState.plugins.search.activeResultIndex,
+      active: storeState.plugins.search.active,
+      query: storeState.plugins.search.query,
+      loading: storeState.plugins.search.loading
     })
   },
   comment: {

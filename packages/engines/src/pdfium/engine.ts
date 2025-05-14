@@ -5483,7 +5483,7 @@ export class PdfiumEngine implements PdfEngine {
     fullText: string,
     start: number,
     count: number,
-    windowChars = 40
+    windowChars = 30
   ): TextContext {
     const WORD_BREAK = /[\s\u00A0.,;:!?()\[\]{}<>/\\\-"'`“”\u2013\u2014]/;
 
@@ -5525,12 +5525,31 @@ export class PdfiumEngine implements PdfEngine {
     const after = fullText.slice(start + count, right).replace(/\s+/g, ' ').trimEnd();
 
     return {
-      before,
-      match,
-      after,
+      before: this.tidy(before),
+      match: this.tidy(match),
+      after: this.tidy(after),
       truncatedLeft: left > 0,
       truncatedRight: right < fullText.length
     };
+  }
+
+  /**
+   * Tidy the text to remove any non-printable characters and whitespace
+   * @param s - text to tidy
+   * @returns tidied text
+   * 
+   * @private
+   */
+  private tidy(s: string): string {
+    return s
+      /* 1️⃣  join words split by hyphen + U+FFFE + whitespace */
+      .replace(/-\uFFFE\s*/g, '')
+  
+      /* 2️⃣  drop any remaining U+FFFE, soft-hyphen, zero-width chars */
+      .replace(/[\uFFFE\u00AD\u200B\u2060\uFEFF]/g, '')
+  
+      /* 3️⃣  collapse whitespace so we stay on one line */
+      .replace(/\s+/g, ' ')
   }
 
   /**
