@@ -1,4 +1,4 @@
-import { BasePlugin, PluginRegistry } from "@embedpdf/core";
+import { BasePlugin, createBehaviorEmitter, PluginRegistry } from "@embedpdf/core";
 import {
   MatchFlag,
   PdfDocumentObject,
@@ -6,7 +6,7 @@ import {
   TaskError,
   PdfEngine,
 } from "@embedpdf/models";
-import { SearchPluginConfig, SearchCapability, SearchState } from "./types";
+import { SearchPluginConfig, SearchCapability, SearchState, SearchResultState } from "./types";
 import { LoaderCapability, LoaderEvent, LoaderPlugin } from "@embedpdf/plugin-loader";
 import {
   startSearchSession,
@@ -24,10 +24,12 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
   private loader: LoaderCapability;
   private currentDocument?: PdfDocumentObject;
   private engine: PdfEngine;
-  private searchHandlers: ((searchResult: SearchAllPagesResult) => void)[] = [];
-  private searchStartHandlers: (() => void)[] = [];
-  private searchStopHandlers: (() => void)[] = [];
-  private activeResultChangeHandlers: ((index: number) => void)[] = [];
+
+  private readonly searchStop$ = createBehaviorEmitter();
+  private readonly searchStart$ = createBehaviorEmitter();
+  private readonly searchResult$ = createBehaviorEmitter<SearchAllPagesResult>();
+  private readonly searchActiveResultChange$ = createBehaviorEmitter<number>();
+  private readonly searchResultState$ = createBehaviorEmitter<SearchResultState>();
 
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
@@ -61,6 +63,15 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
     );
   }
 
+  override onStoreUpdated(_prevState: SearchState, newState: SearchState): void {
+    this.searchResultState$.emit({
+      results: newState.results,
+      activeResultIndex: newState.activeResultIndex,
+      showAllResults: newState.showAllResults,
+      active: newState.active,
+    });
+  }
+
   protected buildCapability(): SearchCapability {
     return {
       startSearch: this.startSearchSession.bind(this),
@@ -71,10 +82,11 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
       goToResult: this.goToResult.bind(this),
       setShowAllResults: (showAll) => this.dispatch(setShowAllResults(showAll)),
       getShowAllResults: () => this.getState().showAllResults,
-      onSearchResult: this.addSearchResultHandler.bind(this),
-      onSearchStart: this.addSearchStartHandler.bind(this),
-      onSearchStop: this.addSearchStopHandler.bind(this),
-      onActiveResultChange: this.addActiveResultChangeHandler.bind(this),
+      onSearchResult: this.searchResult$.on,
+      onSearchStart: this.searchStart$.on,
+      onSearchStop: this.searchStop$.on,
+      onActiveResultChange: this.searchActiveResultChange$.on,
+      onSearchResultStateChange: this.searchResultState$.on,
       onStateChange: (handler) => {
         const unsubscribe = this.subscribe((_, state) => handler(state));
         return unsubscribe;
@@ -92,48 +104,16 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
     }
   } 
 
-  private addSearchResultHandler(
-    handler: (result: SearchAllPagesResult) => void
-  ): () => void {
-    this.searchHandlers.push(handler);
-    return () => {
-      this.searchHandlers = this.searchHandlers.filter((h) => h !== handler);
-    };
-  }
-
-  private addSearchStartHandler(handler: () => void): () => void {
-    this.searchStartHandlers.push(handler);
-    return () => {
-      this.searchStartHandlers = this.searchStartHandlers.filter((h) => h !== handler);
-    };
-  }
-
-  private addSearchStopHandler(handler: () => void): () => void {
-    this.searchStopHandlers.push(handler);
-    return () => {
-      this.searchStopHandlers = this.searchStopHandlers.filter((h) => h !== handler);
-    };
-  }
-
-  private addActiveResultChangeHandler(handler: (index: number) => void): () => void {
-    this.activeResultChangeHandlers.push(handler);
-    return () => {
-      this.activeResultChangeHandlers = this.activeResultChangeHandlers.filter(
-        (h) => h !== handler
-      );
-    };
-  }
-
   private notifySearchStart(): void {
-    this.searchStartHandlers.forEach((handler) => handler());
+    this.searchStart$.emit();
   }
 
   private notifySearchStop(): void {
-    this.searchStopHandlers.forEach((handler) => handler());
+    this.searchStop$.emit();
   }
 
   private notifyActiveResultChange(index: number): void {
-    this.activeResultChangeHandlers.forEach((handler) => handler(index));
+    this.searchActiveResultChange$.emit(index);
   }
 
   private startSearchSession(): void {
@@ -182,7 +162,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
           (results) => {
             const activeResultIndex = results.total > 0 ? 0 : -1;
             this.dispatch(setSearchResults(results.results, results.total, activeResultIndex));
-            this.searchHandlers.forEach((handler) => handler(results));
+            this.searchResult$.emit(results);
             if (results.total > 0) {
               this.notifyActiveResultChange(0);
             }
@@ -235,9 +215,10 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
     if (this.getState().active && this.currentDocument) {
       this.stopSearchSession();
     }
-    this.searchHandlers = [];
-    this.searchStartHandlers = [];
-    this.searchStopHandlers = [];
-    this.activeResultChangeHandlers = [];
+    this.searchResult$.clear();
+    this.searchStart$.clear();
+    this.searchStop$.clear();
+    this.searchActiveResultChange$.clear();
+    this.searchResultState$.clear();
   }
 }

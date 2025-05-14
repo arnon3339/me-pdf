@@ -3,22 +3,22 @@ import { arePropsEqual } from './math';
 /* ------------------------------------------------------------------ */
 /* basic types                                                        */
 /* ------------------------------------------------------------------ */
-export type Listener<T>    = (value: T) => void;
+export type Listener<T = any>    = (value: T) => void;
 export type Unsubscribe    = () => void;
 /** A function that registers a listener and returns an unsubscribe handle */
-export type EventHook<T>   = (listener: Listener<T>) => Unsubscribe;
+export type EventHook<T = any>   = (listener: Listener<T>) => Unsubscribe;
 
 /* ------------------------------------------------------------------ */
 /* minimal “dumb” emitter (no value cache, no equality)               */
 /* ------------------------------------------------------------------ */
-export interface Emitter<T> {
-  emit(value: T): void;
+export interface Emitter<T = any> {
+  emit(value?: T): void;
   on(listener: Listener<T>): Unsubscribe;
   off(listener: Listener<T>): void;
   clear(): void;
 }
 
-export function createEmitter<T>(): Emitter<T> {
+export function createEmitter<T = any>(): Emitter<T> {
   const listeners = new Set<Listener<T>>();
 
   const on: EventHook<T> = (l) => {
@@ -27,10 +27,10 @@ export function createEmitter<T>(): Emitter<T> {
   };
 
   return {
-    emit : (v) => listeners.forEach(l => l(v)),
+    emit: (v = undefined as T) => listeners.forEach(l => l(v)),
     on,
-    off  : (l) => listeners.delete(l),
-    clear: ()  => listeners.clear(),
+    off: (l) => listeners.delete(l),
+    clear: () => listeners.clear(),
   };
 }
 
@@ -40,8 +40,8 @@ export function createEmitter<T>(): Emitter<T> {
      – distinct‑until‑changed semantics                               
      – lightweight `.select()` for derived streams                    */
 /* ------------------------------------------------------------------ */
-export interface BehaviorEmitter<T> extends Emitter<T> {
-  /** Last value that was emitted ( `undefined` until the first emit). */
+export interface BehaviorEmitter<T = any> extends Emitter<T> {
+  /** Last value that was emitted ( `undefined` until the first emit). */
   readonly value?: T;
 
   /**
@@ -49,15 +49,15 @@ export interface BehaviorEmitter<T> extends Emitter<T> {
    * `selector` maps the source value; the listener is called **only when**
    * the mapped value is truly different (as judged by `equality`).
    *
-   * No extra emitter is created – it’s just a thin wrapper around `on`.
+   * No extra emitter is created – it's just a thin wrapper around `on`.
    */
-  select<U>(
+  select<U = any>(
     selector : (v: T) => U,
     equality?: (a: U, b: U) => boolean
   ): EventHook<U>;
 }
 
-export function createBehaviorEmitter<T>(
+export function createBehaviorEmitter<T = any>(
   initial?: T,
   equality: (a: T, b: T) => boolean = arePropsEqual
 ): BehaviorEmitter<T> {
@@ -78,7 +78,7 @@ export function createBehaviorEmitter<T>(
     /* Emitter methods ------------------------------------------------ */
     get value() { return _value; },
 
-    emit(v: T) {
+    emit(v = undefined as T) {
       if (_value === undefined || !equality(_value, v)) {
         _value = v;
         notify(v);
@@ -90,7 +90,7 @@ export function createBehaviorEmitter<T>(
     clear() { listeners.clear(); },
 
     /* Derived hook --------------------------------------------------- */
-    select<U>(
+    select<U = any>(
       selector : (v: T) => U,
       eq:        (a: U, b: U) => boolean = arePropsEqual
     ): EventHook<U> {

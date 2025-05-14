@@ -24,6 +24,7 @@ import { RenderLayer } from '@embedpdf/plugin-render/preact';
 import { ROTATE_PLUGIN_ID, RotatePlugin, RotatePluginPackage } from '@embedpdf/plugin-rotate';
 import { Rotate } from '@embedpdf/plugin-rotate/preact';
 import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/plugin-search';
+import { SearchLayer } from '@embedpdf/plugin-search/preact';
 // **Configuration Interface**
 export interface PDFViewerConfig {
   src: string;
@@ -1336,10 +1337,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
                       }}
                     >
                       {pluginsReady && <Scroller 
-                          renderPage={({pageIndex, width, height}) => 
+                          renderPage={({pageIndex, scale, width, height}) => 
                             <Rotate pageSize={{width, height}}>
                               <div className="bg-white" style={{width, height}}>
-                                <RenderLayer pageIndex={pageIndex} />
+                                <RenderLayer pageIndex={pageIndex} className="absolute top-0 left-0 w-full h-full" />
+                                <SearchLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
                               </div>
                             </Rotate>
                           }

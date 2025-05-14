@@ -8,6 +8,7 @@ import { useEffect, useState } from 'preact/hooks';
 
 interface RenderPageProps extends PageLayout {
   rotation: Rotation;
+  scale: number;
 }
 
 type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
@@ -80,7 +81,8 @@ export function Scroller({ renderPage, ...props }: ScrollerProps) {
             }}>
               {renderPage({
                 ...layout,
-                rotation: coreState.core.rotation
+                rotation: coreState.core.rotation,
+                scale: coreState.core.scale
               })}
             </div>
           )}

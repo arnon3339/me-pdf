@@ -39,7 +39,8 @@
     "@embedpdf/core": "workspace:*",
     "@embedpdf/plugin-loader": "workspace:*",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "preact": "^10.26.4"
   },
   "files": [
     "dist",

@@ -295,7 +295,7 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
           <div className="text-xs text-gray-500">
             {props.total} results found
           </div>
-          {props.total > 1 && <div className="flex flex-row gap-2">
+          {props.total > 1 && <div className="flex flex-row">
             <Button onClick={() => {
               search?.previousResult();
             }}>
