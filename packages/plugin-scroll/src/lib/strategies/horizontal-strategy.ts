@@ -55,11 +55,6 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     };
   }
 
-  getScrollPositionForPage(pageNumber: number, virtualItems: VirtualItem[], scale: number): { x: number; y: number } {
-    const item = virtualItems.find(item => item.pageNumbers.includes(pageNumber));
-    return item ? { x: item.x * scale + this.viewportGap * scale, y: 0 } : { x: 0, y: 0 };
-  }
-
   protected getScrollOffset(viewport: ViewportMetrics): number {
     return viewport.scrollLeft;
   }

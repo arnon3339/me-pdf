@@ -1,5 +1,5 @@
 import { BasePlugin, PluginRegistry, EventControlOptions, EventControl, createEmitter, createBehaviorEmitter } from "@embedpdf/core";
-import { ViewportPluginConfig, ViewportState, ViewportCapability, ViewportMetrics, ViewportScrollMetrics, ViewportInputMetrics } from "./types";
+import { ViewportPluginConfig, ViewportState, ViewportCapability, ViewportMetrics, ViewportScrollMetrics, ViewportInputMetrics, ScrollToPayload } from "./types";
 import { ViewportAction, setViewportMetrics, setViewportScrollMetrics, setViewportGap } from "./actions";
 
 export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCapability, ViewportState, ViewportAction> {
@@ -36,12 +36,32 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
       setViewportScrollMetrics: (scrollMetrics: ViewportScrollMetrics) => {
         this.dispatch(setViewportScrollMetrics(scrollMetrics));
       },
-      scrollTo: (pos) => this.scrollReq$.emit({
-        behavior: 'auto',
-        ...pos
-      }),
+      scrollTo: (pos: ScrollToPayload) => this.scrollTo(pos),
       onScrollRequest : this.scrollReq$.on,
     };
+  }
+
+  private scrollTo(pos: ScrollToPayload) {
+    const { x, y, center, behavior = 'auto' } = pos;
+    
+    if (center) {
+      const metrics = this.getState().viewportMetrics;
+      // Calculate the centered position by adding half the viewport dimensions
+      const centeredX = x - (metrics.clientWidth / 2);
+      const centeredY = y - (metrics.clientHeight / 2);
+      
+      this.scrollReq$.emit({
+        x: centeredX,
+        y: centeredY,
+        behavior
+      });
+    } else {
+      this.scrollReq$.emit({
+        x,
+        y,
+        behavior
+      });
+    }
   }
 
   // Subscribe to store changes to notify onViewportChange

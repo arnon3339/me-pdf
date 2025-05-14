@@ -208,7 +208,7 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState(props.query || '');
   const {provides: search} = useSearchCapability();
-  
+  const {provides: scroll} = useScrollCapability();
   const debouncedValue = useDebounce(inputValue, 400);
 
   useEffect(() => {
@@ -225,6 +225,12 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
       search?.searchAllPages(debouncedValue);
     }
   }, [debouncedValue, search]);
+
+  useEffect(() => {
+    if(props.activeResultIndex !== undefined) {
+      scrollToItem(props.activeResultIndex);
+    }
+  }, [props.activeResultIndex]);
   
   const handleInputChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -237,6 +243,22 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
     } else {
       search?.setFlags(props.flags.filter(f => f !== flag));
     }
+  };
+
+  const scrollToItem = (index: number) => {
+    const item = props.results[index];
+    if(!item) return;
+    
+    const minCoordinates = item.rects.reduce((min, rect) => ({
+      x: Math.min(min.x, rect.origin.x),
+      y: Math.min(min.y, rect.origin.y)
+    }), { x: Infinity, y: Infinity });
+
+    scroll?.scrollToPage({
+      pageNumber: item.pageIndex + 1,
+      pageCoordinates: minCoordinates,
+      center: true
+    });
   };
   
   const clearInput = () => {
@@ -514,7 +536,9 @@ export const pageControlsRenderer: ComponentRenderFunction<PageControlsProps> = 
     const page = parseInt(pageStr);
 
     if (!isNaN(page) && page >= 1) {
-      scroll?.scrollToPage(page);
+      scroll?.scrollToPage({
+        pageNumber: page
+      });
     }
   };
 

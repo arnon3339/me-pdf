@@ -76,13 +76,20 @@ export interface ScrollPluginConfig extends BasePluginConfig {
 export type LayoutChangePayload =
   Pick<ScrollState, 'virtualItems' | 'totalContentSize'>;
 
+export interface ScrollToPageOptions {
+  pageNumber: number;
+  pageCoordinates?: { x: number; y: number };
+  behavior?: ScrollBehavior;
+  center?: boolean;
+}
+
 export interface ScrollCapability {
   onScrollerData: EventHook<ScrollerLayout>;
   onStateChange: EventHook<ScrollState>;
   onScroll      : EventHook<ScrollMetrics>;
   onPageChange  : EventHook<number>;
   onLayoutChange: EventHook<LayoutChangePayload>;
-  scrollToPage(pageNumber: number, behavior?: ScrollBehavior): void;
+  scrollToPage(options: ScrollToPageOptions): void;
   scrollToNextPage(behavior?: ScrollBehavior): void;
   scrollToPreviousPage(behavior?: ScrollBehavior): void;
   getMetrics(viewport?: ViewportMetrics): ScrollMetrics;

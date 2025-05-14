@@ -56,11 +56,6 @@ export class VerticalScrollStrategy extends BaseScrollStrategy {
     };
   }
 
-  getScrollPositionForPage(pageNumber: number, virtualItems: VirtualItem[], scale: number): { x: number; y: number } {
-    const item = virtualItems.find(item => item.pageNumbers.includes(pageNumber));
-    return item ? { x: 0, y: item.y * scale + this.viewportGap * scale } : { x: 0, y: 0 };
-  }
-
   protected getScrollOffset(viewport: ViewportMetrics): number {
     return viewport.scrollTop;
   }

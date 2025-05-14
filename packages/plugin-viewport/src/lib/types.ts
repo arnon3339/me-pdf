@@ -40,7 +40,8 @@ export interface ScrollControlOptions {
 export interface ScrollToPayload {
   x: number;
   y: number;
-  behavior?: ScrollBehavior;   // defaults to 'auto'
+  behavior?: ScrollBehavior;
+  center?: boolean;
 }
 
 export interface ViewportCapability {

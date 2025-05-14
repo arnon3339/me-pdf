@@ -22,7 +22,6 @@ export abstract class BaseScrollStrategy {
 
   abstract createVirtualItems(pdfPageObject: PdfPageObjectWithRotatedSize[][]): VirtualItem[];
   abstract getTotalContentSize(virtualItems: VirtualItem[]): { width: number; height: number };
-  abstract getScrollPositionForPage(pageNumber: number, virtualItems: VirtualItem[], scale: number): { x: number; y: number };
   protected abstract getScrollOffset(viewport: ViewportMetrics): number;
   protected abstract getClientSize(viewport: ViewportMetrics): number;
 
@@ -154,5 +153,37 @@ export abstract class BaseScrollStrategy {
     return mostVisiblePages.length === 1
       ? mostVisiblePages[0].pageNumber
       : mostVisiblePages.sort((a, b) => a.pageNumber - b.pageNumber)[0].pageNumber;
+  }
+
+  getScrollPositionForPage(
+    pageNumber: number, 
+    virtualItems: VirtualItem[], 
+    scale: number,
+    pageCoordinates?: { x: number; y: number }
+  ): { x: number; y: number } {
+    // Find the virtual item containing the page
+    const item = virtualItems.find(item => item.pageNumbers.includes(pageNumber));
+    if (!item) return { x: 0, y: 0 };
+
+    // Find the specific page layout for the requested page number
+    const pageLayout = item.pageLayouts.find(layout => layout.pageNumber === pageNumber);
+    if (!pageLayout) return { x: 0, y: 0 };
+
+    // Calculate position using the page layout
+    const baseX = (item.x + pageLayout.x) * scale;
+    const baseY = (item.y + pageLayout.y) * scale;
+
+    // If specific page coordinates are provided, add them to the base position
+    if (pageCoordinates) {
+      return {
+        x: baseX + (pageCoordinates.x * scale) + this.viewportGap,
+        y: baseY + (pageCoordinates.y * scale) + this.viewportGap
+      };
+    }
+
+    return {
+      x: baseX + this.viewportGap,
+      y: baseY + this.viewportGap
+    };
   }
 }
