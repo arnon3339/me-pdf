@@ -177,6 +177,8 @@ export const functions = {
   FPDFText_LoadPage: [['number'], 'number'],
   FPDFText_CountChars: [['number'], 'number'],
   FPDFText_CountRects: [['number', 'number', 'number'], 'number'],
+  FPDFText_GetCharAngle: [['number', 'number'], 'number'],
+  FPDFText_GetUnicode: [['number', 'number'], 'number'],
   FPDFText_GetRect: [
     ['number', 'number', 'number', 'number', 'number', 'number'],
     'boolean',

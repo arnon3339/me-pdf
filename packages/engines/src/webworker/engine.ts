@@ -30,6 +30,7 @@ import {
   MatchFlag,
   PdfUrlOptions,
   PdfFileUrl,
+  PdfGlyphObject,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -911,6 +912,29 @@ export class WebWorkerEngine implements PdfEngine {
       data: {
         name: 'extractText',
         args: [doc, pageIndexes],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.getPageGlyphs}
+   *
+   * @public
+   */
+  getPageGlyphs(doc: PdfDocumentObject, page: PdfPageObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', doc, page);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<PdfGlyphObject[]>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'getPageGlyphs',
+        args: [doc, page],
       },
     };
     this.proxy(task, request);

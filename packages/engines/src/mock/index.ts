@@ -38,6 +38,7 @@ import {
   PdfBookmarksObject,
   PdfUrlOptions,
   PdfFileUrl,
+  PdfGlyphObject,
 } from '@embedpdf/models';
 
 /**
@@ -316,6 +317,9 @@ export function createMockPdfEngine(
     },
     extractText: (pdf: PdfDocumentObject, pageIndexes: number[]) => {
       return PdfTaskHelper.resolve('');
+    },
+    getPageGlyphs: (doc: PdfDocumentObject, page: PdfPageObject) => {
+      return PdfTaskHelper.resolve([] as PdfGlyphObject[]);
     },
     merge: (files: PdfFile[]) => {
       return PdfTaskHelper.resolve({

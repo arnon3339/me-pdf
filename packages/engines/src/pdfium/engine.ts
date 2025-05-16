@@ -73,6 +73,7 @@ import {
   Task,
   PdfErrorReason,
   TextContext,
+  PdfGlyphObject,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -2972,6 +2973,171 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     return textRects;
+  }
+
+  /**
+   * Extract glyph geometry + metadata for `charIndex`
+   *
+   * Returns device–space coordinates:
+   *   x,y  → **top-left** corner (integer-pixels)
+   *   w,h  → width / height (integer-pixels, ≥ 1)
+   *
+   * And two flags:
+   *   isSpace → true if the glyph’s Unicode code-point is U+0020
+   *   angle   → counter-clock-wise radians (from FPDFText_GetCharAngle)
+   */
+  private readGlyphInfo(
+    page: PdfPageObject,
+    pagePtr: number,
+    textPagePtr: number,
+    charIndex: number,
+  ): PdfGlyphObject {
+    // ── native stack temp pointers ──────────────────────────────
+    const leftPtr   = this.malloc(8);
+    const rightPtr  = this.malloc(8);
+    const topPtr    = this.malloc(8);
+    const bottomPtr = this.malloc(8);
+    const dx1Ptr    = this.malloc(4);
+    const dy1Ptr    = this.malloc(4);
+    const dx2Ptr    = this.malloc(4);
+    const dy2Ptr    = this.malloc(4);
+
+    let x = 0,
+        y = 0,
+        width  = 0,
+        height = 0,
+        angle  = 0,
+        isSpace = false;
+
+    // ── 1) raw glyph bbox in                      page-user-space
+    if (
+      this.pdfiumModule.FPDFText_GetCharBox(
+        textPagePtr,
+        charIndex,
+        leftPtr,
+        rightPtr,
+        bottomPtr,
+        topPtr,
+      )
+    ) {
+      const left   = this.pdfiumModule.pdfium.getValue(leftPtr,   'double');
+      const right  = this.pdfiumModule.pdfium.getValue(rightPtr,  'double');
+      const top    = this.pdfiumModule.pdfium.getValue(topPtr,    'double');
+      const bottom = this.pdfiumModule.pdfium.getValue(bottomPtr, 'double');
+
+      // ── 2) map 2 opposite corners to            device-space
+      this.pdfiumModule.FPDF_PageToDevice(
+        pagePtr,
+        0,
+        0,
+        page.size.width,
+        page.size.height,
+        /*rotate=*/0,
+        left,
+        top,
+        dx1Ptr,
+        dy1Ptr,
+      );
+      this.pdfiumModule.FPDF_PageToDevice(
+        pagePtr,
+        0,
+        0,
+        page.size.width,
+        page.size.height,
+        /*rotate=*/0,
+        right,
+        bottom,
+        dx2Ptr,
+        dy2Ptr,
+      );
+
+      const x1 = this.pdfiumModule.pdfium.getValue(dx1Ptr, 'i32');
+      const y1 = this.pdfiumModule.pdfium.getValue(dy1Ptr, 'i32');
+      const x2 = this.pdfiumModule.pdfium.getValue(dx2Ptr, 'i32');
+      const y2 = this.pdfiumModule.pdfium.getValue(dy2Ptr, 'i32');
+
+      x = Math.min(x1, x2);
+      y = Math.min(y1, y2);
+      width  = Math.max(1, Math.abs(x2 - x1));
+      height = Math.max(1, Math.abs(y2 - y1));
+
+      // ── 3) extra flags ───────────────────────────────────────
+      angle   = this.pdfiumModule.FPDFText_GetCharAngle(textPagePtr, charIndex);
+      const uc = this.pdfiumModule.FPDFText_GetUnicode(textPagePtr, charIndex);
+      isSpace  = uc === 32;                    // U+0020
+    }
+
+    // ── free tmps ───────────────────────────────────────────────
+    [leftPtr, rightPtr, bottomPtr, topPtr,
+    dx1Ptr, dy1Ptr, dx2Ptr, dy2Ptr].forEach(p => this.free(p));
+
+    return {
+      origin: { x, y },
+      size:   { width, height },
+      angle,
+      isSpace,
+    };
+  }
+
+  /**
+   * Geometry-only text extraction
+   * ------------------------------------------
+   * Returns every glyph on the requested page
+   * in the logical order delivered by PDFium.
+   *
+   * The promise resolves to an array of objects:
+   *   {
+   *     idx:     number;            // glyph index on the page (0…n-1)
+   *     origin:  { x: number; y: number };
+   *     size:    { width: number;  height: number };
+   *     angle:   number;            // degrees, counter-clock-wise
+   *     isSpace: boolean;           // true  → U+0020
+   *   }
+   *
+   * No Unicode is included; front-end decides whether to hydrate it.
+   */
+  public getPageGlyphs(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+  ): PdfTask<PdfGlyphObject[]> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', doc, page);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', 'Begin', doc.id);
+
+    // ── 1) safety: document handle must be alive ───────────────
+    const docHandle = this.docs[doc.id];
+    if (!docHandle) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    // ── 2) load page + text page handles ───────────────────────
+    const pagePtr      = this.pdfiumModule.FPDF_LoadPage(docHandle.docPtr, page.index);
+    const textPagePtr  = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
+
+    // ── 3) iterate all glyphs in logical order ─────────────────
+    const total  = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
+    const glyphs = new Array(total);
+
+    for (let i = 0; i < total; i++) {
+      const g = this.readGlyphInfo(
+        page,
+        pagePtr,
+        textPagePtr,
+        i,          // charIndex
+      );
+      glyphs[i] = { ...g };
+    }
+
+    // ── 4) clean-up native handles ─────────────────────────────
+    this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
+    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', 'End', doc.id);
+
+    return PdfTaskHelper.resolve(glyphs);
   }
 
   private readCharBox(

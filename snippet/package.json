@@ -19,7 +19,6 @@
     "@embedpdf/engines": "workspace:*",
     "@embedpdf/layer-render": "workspace:*",
     "@embedpdf/layer-render-partial": "workspace:*",
-    "@embedpdf/layer-search": "workspace:*",
     "@embedpdf/layer-text": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
@@ -33,6 +32,7 @@
     "@embedpdf/plugin-zoom": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
     "@embedpdf/plugin-rotate": "workspace:*",
+    "@embedpdf/plugin-selection": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {

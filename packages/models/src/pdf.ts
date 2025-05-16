@@ -1173,6 +1173,30 @@ export interface SearchAllPagesResult {
 }
 
 /**
+ * Glyph object
+ *
+ * @public
+ */
+export interface PdfGlyphObject {
+  /**
+   * Origin of the glyph
+   */
+  origin: { x: number; y: number };
+  /**
+   * Size of the glyph
+   */
+  size: { width: number; height: number };
+  /**
+   * Angle of the glyph
+   */
+  angle: number;
+  /**
+   * Whether the glyph is a space
+   */
+  isSpace: boolean;
+}
+
+/**
  * form field value
  * @public
  */
@@ -1641,6 +1665,13 @@ export interface PdfEngine {
     doc: PdfDocumentObject,
     pageIndexes: number[],
   ) => PdfTask<string>;
+  /**
+   * Get all glyphs in the specified pdf page
+   * @param doc - pdf document
+   * @param page - pdf page
+   * @returns task contains the glyphs
+   */
+  getPageGlyphs: (doc: PdfDocumentObject, page: PdfPageObject) => PdfTask<PdfGlyphObject[]>;
   /**
    * Merge multiple pdf documents
    * @param files - all the pdf files

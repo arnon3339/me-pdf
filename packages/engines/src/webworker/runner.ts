@@ -304,6 +304,9 @@ export class EngineRunner {
       case 'extractText':
         task = this.engine[name]!(...args);
         break;
+      case 'getPageGlyphs':
+        task = this.engine[name]!(...args);
+        break;
       case 'merge':
         task = this.engine[name]!(...args);
         break;

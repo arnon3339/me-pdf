@@ -50,9 +50,6 @@ importers:
       '@embedpdf/layer-render-partial':
         specifier: workspace:*
         version: link:../../packages/layer-render-partial
-      '@embedpdf/layer-search':
-        specifier: workspace:*
-        version: link:../../packages/layer-search
       '@embedpdf/layer-text':
         specifier: workspace:*
         version: link:../../packages/layer-text
@@ -468,6 +465,37 @@ importers:
         specifier: ^5.0.0
         version: 5.8.2
 
+  packages/plugin-selection:
+    dependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../core
+      '@embedpdf/models':
+        specifier: workspace:*
+        version: link:../models
+      preact:
+        specifier: ^10.26.4
+        version: 10.26.4
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@embedpdf/plugin-viewport':
+        specifier: workspace:*
+        version: link:../plugin-viewport
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.18
+      tsup:
+        specifier: ^8.0.0
+        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.7.0)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.8.3
+
   packages/plugin-spread:
     dependencies:
       '@embedpdf/core':
@@ -606,9 +634,6 @@ importers:
       '@embedpdf/layer-render-partial':
         specifier: workspace:*
         version: link:../packages/layer-render-partial
-      '@embedpdf/layer-search':
-        specifier: workspace:*
-        version: link:../packages/layer-search
       '@embedpdf/layer-text':
         specifier: workspace:*
         version: link:../packages/layer-text
@@ -636,6 +661,9 @@ importers:
       '@embedpdf/plugin-search':
         specifier: workspace:*
         version: link:../packages/plugin-search
+      '@embedpdf/plugin-selection':
+        specifier: workspace:*
+        version: link:../packages/plugin-selection
       '@embedpdf/plugin-spread':
         specifier: workspace:*
         version: link:../packages/plugin-spread
@@ -775,9 +803,6 @@ importers:
       '@embedpdf/layer-render-partial':
         specifier: workspace:*
         version: link:../packages/layer-render-partial
-      '@embedpdf/layer-search':
-        specifier: workspace:*
-        version: link:../packages/layer-search
       '@embedpdf/layer-text':
         specifier: workspace:*
         version: link:../packages/layer-text

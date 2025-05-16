@@ -102,6 +102,8 @@ export const functions = {
   FPDFText_LoadPage: [["number"] as const, 'number'] as const,
   FPDFText_CountChars: [["number"] as const, 'number'] as const,
   FPDFText_CountRects: [["number","number","number"] as const, 'number'] as const,
+  FPDFText_GetCharAngle: [["number","number"] as const, 'number'] as const,
+  FPDFText_GetUnicode: [["number","number"] as const, 'number'] as const,
   FPDFText_GetRect: [["number","number","number","number","number","number"] as const, 'boolean'] as const,
   FPDFText_GetCharIndexAtPos: [["number","number","number","number","number"] as const, 'number'] as const,
   FPDFText_GetFontSize: [["number","number"] as const, 'number'] as const,

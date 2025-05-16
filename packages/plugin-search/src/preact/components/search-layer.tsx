@@ -44,6 +44,7 @@ export function SearchLayer({ pageIndex, scale, style, highlightColor = '#FFFF00
         backgroundColor: originalIndex === searchResultState.activeResultIndex ? activeHighlightColor : highlightColor,
         mixBlendMode: 'multiply',
         transform: 'scale(1.02)',
+        transformOrigin: 'center',
         transition: 'opacity .3s ease-in-out',
         opacity: 1,
       }}></div>

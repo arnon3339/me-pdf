@@ -25,6 +25,8 @@ import { ROTATE_PLUGIN_ID, RotatePlugin, RotatePluginPackage } from '@embedpdf/p
 import { Rotate } from '@embedpdf/plugin-rotate/preact';
 import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/plugin-search';
 import { SearchLayer } from '@embedpdf/plugin-search/preact';
+import { SELECTION_PLUGIN_ID, SelectionPlugin, SelectionPluginPackage, SelectionState } from '@embedpdf/plugin-selection';
+import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
 // **Configuration Interface**
 export interface PDFViewerConfig {
   src: string;
@@ -70,7 +72,8 @@ type State = GlobalStoreState<{
   [VIEWPORT_PLUGIN_ID]: ViewportState,
   [SCROLL_PLUGIN_ID]: ScrollState,
   [SPREAD_PLUGIN_ID]: SpreadState,
-  [SEARCH_PLUGIN_ID]: SearchState
+  [SEARCH_PLUGIN_ID]: SearchState,
+  [SELECTION_PLUGIN_ID]: SelectionState
 }>
 
 export const icons: IconRegistry = {
@@ -1290,6 +1293,9 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(SearchPluginPackage, {
 
           }),
+          createPluginRegistration(SelectionPluginPackage, {
+
+          }),
           /*
           createPluginRegistration(ZoomPluginPackage, {
             defaultZoomLevel: 1,
@@ -1342,6 +1348,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                               <div className="bg-white" style={{width, height}}>
                                 <RenderLayer pageIndex={pageIndex} className="absolute top-0 left-0 w-full h-full" />
                                 <SearchLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
+                                <SelectionLayer pageIndex={pageIndex} scale={scale} />
                               </div>
                             </Rotate>
                           }

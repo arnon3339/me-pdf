@@ -18,7 +18,6 @@
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/engines": "workspace:*",
     "@embedpdf/layer-text": "workspace:*",
-    "@embedpdf/layer-search": "workspace:*",
     "@embedpdf/layer-render": "workspace:*",
     "@embedpdf/layer-render-partial": "workspace:*"
   },
