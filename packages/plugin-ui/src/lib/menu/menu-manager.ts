@@ -175,7 +175,7 @@ export class MenuManager {
 
     if (resolved.isAction) {
       // Execute the command's action
-      (item as Action).action(this.pluginRegistry);
+      (item as Action).action(this.pluginRegistry, this.state);
       this.eventController.emit(MenuManager.EVENTS.COMMAND_EXECUTED, { 
         command: item, 
         source: options.source || 'api'

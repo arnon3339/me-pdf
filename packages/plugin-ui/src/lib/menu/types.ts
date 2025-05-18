@@ -16,7 +16,7 @@ export interface MenuItemBase<TStore = any> {
 export interface Action<TStore = any> extends MenuItemBase<TStore> {
   id: string;                                           // "zoomIn"
   type: 'action';                                      // i18n key or literal
-  action: (registry: PluginRegistry) => void;           // executed onClick                             // whether to add a divider before the command
+  action: (registry: PluginRegistry, state: TStore) => void;           // executed onClick                             // whether to add a divider before the command
 }
 
 export interface Group<TStore = any> {

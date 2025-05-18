@@ -110,6 +110,7 @@ export interface PanelProps {
   location: 'left' | 'right';
   open: boolean;
   visibleChild: string | null;
+  [name: string]: any;
 }
 
 export interface PanelComponent<TStore = any> extends BaseUIComponent<PanelProps, PanelState, TStore> {

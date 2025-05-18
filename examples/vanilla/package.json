@@ -16,10 +16,7 @@
     "@embedpdf/plugin-search": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
-    "@embedpdf/engines": "workspace:*",
-    "@embedpdf/layer-text": "workspace:*",
-    "@embedpdf/layer-render": "workspace:*",
-    "@embedpdf/layer-render-partial": "workspace:*"
+    "@embedpdf/engines": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -1,5 +1,5 @@
 // Tooltip.tsx  (patched), Fragment
-import { h, ComponentChildren, Fragment } from 'preact';
+import { h, ComponentChildren, Fragment, Component } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import {
   computePosition,
@@ -21,6 +21,14 @@ interface TooltipProps {
   trigger?: 'hover' | 'click' | 'none';
 }
 
+type PreactComponent = { base: HTMLElement } & Component;
+
+class RefWrapper extends Component<{ children: ComponentChildren; ref: any }> {
+  render() {
+    return this.props.children;
+  }
+}
+
 export function Tooltip({
   children,
   content,
@@ -30,18 +38,18 @@ export function Tooltip({
   style = 'dark',
   trigger = 'hover',
 }: TooltipProps) {
-  const reference = useRef<HTMLDivElement>(null);
-  const floating  = useRef<HTMLDivElement>(null);
-  const arrow     = useRef<HTMLDivElement>(null);
+  const reference = useRef<PreactComponent>(null);
+  const floating = useRef<HTMLDivElement>(null);
+  const arrow = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const st  = useRef<NodeJS.Timeout | null>(null);
 
   /* ── position ─────────────────────────────────────────────────────── */
   useEffect(() => {
-    if (!reference.current || !floating.current) return;
+    if (!reference.current?.base || !floating.current) return;
 
-    return autoUpdate(reference.current, floating.current, () => {
-      computePosition(reference.current!, floating.current!, {
+    return autoUpdate(reference.current.base, floating.current, () => {
+      computePosition(reference.current!.base, floating.current!, {
         placement: position,
         middleware: [
           offset(8),
@@ -56,7 +64,7 @@ export function Tooltip({
         const side = placement.split('-')[0] as 'top' | 'bottom' | 'left' | 'right';
         const staticSide = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[side];
 
-        /* --- **critical change**: clear the axis we don’t use --- */
+        /* --- **critical change**: clear the axis we don't use --- */
         Object.assign(arrow.current!.style, {
           left  : ax != null ? `${ax}px` : '',
           top   : ay != null ? `${ay}px` : '',
@@ -70,7 +78,7 @@ export function Tooltip({
 
   /* ── trigger wiring ───────────────────────────────────────────────── */
   useEffect(() => {
-    const refEl = reference.current;
+    const refEl = reference.current?.base;
     const floatEl = floating.current;
     if (!refEl || !floatEl) return;
 
@@ -92,7 +100,7 @@ export function Tooltip({
     } else if (trigger === 'click') {
       refEl.addEventListener('click', toggle);
     }
-    /* “none” ⇒ nothing attached */
+    /* "none" ⇒ nothing attached */
 
     if (trigger === 'none') {
       /* cancel any pending timers */
@@ -119,8 +127,6 @@ export function Tooltip({
   /* ── render ───────────────────────────────────────────────────────── */
   return (
     <Fragment>
-      <div ref={reference} className="inline-block">{children}</div>
-
       <div
         ref={floating}
         role="tooltip"
@@ -146,6 +152,9 @@ export function Tooltip({
           `}
         />
       </div>
+      <RefWrapper ref={reference}>
+        {children}
+      </RefWrapper> 
     </Fragment>
   );
 }

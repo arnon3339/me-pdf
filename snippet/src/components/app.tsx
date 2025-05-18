@@ -16,7 +16,7 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
 //import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { MenuItem, defineComponent, GlobalStoreState, IconRegistry, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage, hasActive, isActive, UI_PLUGIN_ID } from '@embedpdf/plugin-ui';
-import { commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, selectButtonRenderer, sidebarRender, tabButtonRenderer, zoomRenderer, ZoomRendererProps } from './renderers';
+import { attachmentsRenderer, commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, outlineRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, selectButtonRenderer, tabButtonRenderer, thumbnailsRender, zoomRenderer, ZoomRendererProps } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import { ZOOM_PLUGIN_ID, ZoomMode, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
@@ -180,6 +180,18 @@ export const icons: IconRegistry = {
   book2: {
     id: 'book2',  
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z" /><path d="M19 16h-12a2 2 0 0 0 -2 2" /><path d="M9 8h6" /></svg>'
+  },
+  squares: {
+    id: 'squares',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-squares"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 10a2 2 0 0 1 2 -2h9a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-9a2 2 0 0 1 -2 -2z" /><path d="M16 8v-3a2 2 0 0 0 -2 -2h-9a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h3" /></svg>'
+  },
+  listTree: {
+    id: 'listTree',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-list-tree"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6h11" /><path d="M12 12h8" /><path d="M15 18h5" /><path d="M5 6v.01" /><path d="M8 12v.01" /><path d="M11 18v.01" /></svg>'
+  },
+  paperclip: {
+    id: 'paperclip',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-paperclip"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" /></svg>'
   }
 }
 
@@ -620,14 +632,66 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Sidebar',
     icon: 'sidebar',
     type: 'action',
+    action: (registry, state) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if(ui) {
+        ui.togglePanel({id: 'leftPanel', visibleChild: state.plugins.ui.panel.leftPanel.visibleChild || 'thumbnails'});
+      }
+    },
+    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true
+  },
+  sidebarMenu: {
+    id:'sidebarMenu',     
+    label:'Sidebar Menu', 
+    type: 'menu',
+    children:[
+      'thumbnails',
+      'outline',
+      'attachments'
+    ]
+  },
+  thumbnails: {
+    id: 'thumbnails',
+    label: 'Thumbnails',
+    icon: 'squares',
+    type: 'action',
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
       if(ui) {
-        ui.togglePanel({id: 'leftPanel', visibleChild: 'sidebar'});
+        ui.togglePanel({id: 'leftPanel', visibleChild: 'thumbnails'});
       }
     },
-    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true && storeState.plugins.ui.panel.leftPanel.visibleChild === 'sidebar'
+    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true && storeState.plugins.ui.panel.leftPanel.visibleChild === 'thumbnails'
+  },
+  outline: {
+    id: 'outline',
+    label: 'Outline',
+    icon: 'listTree',
+    type: 'action',
+    action: (registry) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if(ui) {
+        ui.togglePanel({id: 'leftPanel', visibleChild: 'outline'});
+      }
+    },
+    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true && storeState.plugins.ui.panel.leftPanel.visibleChild === 'outline'
+  },
+  attachments: {
+    id: 'attachments',
+    label: 'Attachments',
+    icon: 'paperclip',
+    type: 'action',
+    action: (registry) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if(ui) {
+        ui.togglePanel({id: 'leftPanel', visibleChild: 'attachments'});
+      }
+    },
+    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true && storeState.plugins.ui.panel.leftPanel.visibleChild === 'attachments'
   },
   view: {
     id: 'view',
@@ -1100,7 +1164,8 @@ export const components: Record<string, UIComponentType<State>> = {
     props: (initialState) => ({
       open: initialState.open,
       visibleChild: initialState.visibleChild,
-      location: 'left'
+      location: 'left',
+      tabsCommandId: 'sidebarMenu' 
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
@@ -1108,13 +1173,25 @@ export const components: Record<string, UIComponentType<State>> = {
       visibleChild: storeState.plugins.ui.panel.leftPanel.visibleChild
     }),
     slots: [
-      { componentId: 'sidebar', priority: 0 }
+      { componentId: 'thumbnails', priority: 0 },
+      { componentId: 'outline', priority: 1 },
+      { componentId: 'attachments', priority: 2 }
     ]
   },
-  sidebar: {
-    id: 'sidebar',
+  thumbnails: {
+    id: 'thumbnails',
     type: 'custom',
-    render: 'sidebar'
+    render: 'thumbnails'
+  },
+  outline: {
+    id: 'outline',
+    type: 'custom',
+    render: 'outline'
+  },
+  attachments: {
+    id: 'attachments',
+    type: 'custom',
+    render: 'attachments'
   },
   search: {
     id: 'search',
@@ -1254,7 +1331,9 @@ export function PDFViewer({ config }: PDFViewerProps) {
             uiCapability.registerComponentRenderer('pageControls', pageControlsRenderer);
             uiCapability.registerComponentRenderer('commandMenu', commandMenuRenderer);
             uiCapability.registerComponentRenderer('comment', commentRender);
-            uiCapability.registerComponentRenderer('sidebar', sidebarRender);
+            uiCapability.registerComponentRenderer('thumbnails', thumbnailsRender);
+            uiCapability.registerComponentRenderer('outline', outlineRenderer);
+            uiCapability.registerComponentRenderer('attachments', attachmentsRenderer);
             uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
           }
         }}

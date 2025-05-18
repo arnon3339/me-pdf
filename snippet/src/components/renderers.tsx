@@ -146,13 +146,74 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
   })}</div>;
 };
 
-export const panelRenderer: ComponentRenderFunction<PanelProps> = (props, children) => {
+export const panelRenderer: ComponentRenderFunction<PanelProps & {tabsCommandId?: string}> = (props, children) => {
   if(!props.open) return null;
+
+  const {provides: ui} = useUICapability();
+  const tabsCommand = props.tabsCommandId ? ui?.getMenuOrAction(props.tabsCommandId) : null;
+  const tabChildren = tabsCommand && tabsCommand.type ==='menu' ? ui?.getItemsByIds(tabsCommand.children) : null;
 
   // Determine border class based on position
   const borderClass = props.location === 'left' ? 'md:border-r' : 'md:border-l';
 
   return <div className={`border-t md:border-t-0 w-full md:w-[275px] md:min-w-[275px] bg-white shrink-0 flex flex-col flex-none ${borderClass} border-[#cfd4da] h-full`}>
+    {tabsCommand && tabChildren && (
+      <div
+        role="tablist"
+        className="
+          inline-flex overflow-hidden
+          bg-white dark:bg-gray-900
+          m-4
+        "
+      >
+        {tabChildren
+          .filter((child) => child.type === 'action')
+          .map((child, idx, array) => {
+            const isActive = !!child.active;
+            const isFirst = idx === 0;
+            const isLast = idx === array.length - 1;
+
+            return (
+              <Tooltip
+                key={child.id}
+                content={child.label}
+                trigger="hover"
+                position="bottom"
+              >
+                <button
+                  role="tab"
+                  aria-selected={isActive}
+                  tabIndex={isActive ? 0 : -1}
+                  onClick={(e) =>
+                    ui?.executeCommand(child.id, {
+                      source: 'click',
+                      triggerElement: e.currentTarget as HTMLElement,
+                      position: 'bottom',
+                    })
+                  }
+                  className={`
+                    relative h-7 flex flex-1 items-center justify-center
+                    transition-colors outline-none border
+                    ${isFirst ? 'rounded-l-md' : ''}
+                    ${isLast ? 'rounded-r-md' : ''}
+                    ${!isLast ? 'border-r-0' : ''}
+                    ${isActive
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 border-gray-300 dark:border-gray-700'}
+                  `}
+                >
+                  {child.icon && (
+                    <Icon
+                      icon={child.icon}
+                      className="w-5 h-5 pointer-events-none block"
+                    />
+                  )}
+                </button>
+              </Tooltip>
+            );
+          })}
+      </div>
+    )}
     {children({
       ...props.visibleChild && {
         filter: (childId) => childId === props.visibleChild
@@ -749,9 +810,21 @@ export const commentRender: ComponentRenderFunction<any> = (props, children) => 
   </div>;
 };
 
-export const sidebarRender: ComponentRenderFunction<any> = (props, children) => {
+export const thumbnailsRender: ComponentRenderFunction<any> = (props, children) => {
   return <div>
-    Sidebar
+    Thumbnails
+  </div>;
+};
+
+export const outlineRenderer: ComponentRenderFunction<any> = (props, children) => {
+  return <div>
+    Outline
+  </div>;
+};
+
+export const attachmentsRenderer: ComponentRenderFunction<any> = (props, children) => {
+  return <div>
+    Attachments
   </div>;
 };
 
