@@ -34,7 +34,7 @@ ENV PATH=${PATH}:/opt/depot-tools
 FROM depot-tools AS pdfium-src
 WORKDIR /build
 RUN gclient config --unmanaged https://pdfium.googlesource.com/pdfium.git
-RUN gclient sync -r origin/chromium/6815 --no-history --shallow
+RUN gclient sync -r origin/chromium/7188 --no-history --shallow
 
 FROM pdfium-src AS pdfium-deps
 RUN bash -x ./pdfium/build/install-build-deps.sh --no-prompt
