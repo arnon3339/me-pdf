@@ -31,6 +31,7 @@ import {
   PdfUrlOptions,
   PdfFileUrl,
   PdfGlyphObject,
+  PdfPageGeometry,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -934,6 +935,29 @@ export class WebWorkerEngine implements PdfEngine {
       type: 'ExecuteRequest',
       data: {
         name: 'getPageGlyphs',
+        args: [doc, page],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.getPageGeometry}
+   *
+   * @public
+   */
+  getPageGeometry(doc: PdfDocumentObject, page: PdfPageObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageGeometry', doc, page);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<PdfPageGeometry>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'getPageGeometry',
         args: [doc, page],
       },
     };

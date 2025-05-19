@@ -74,6 +74,8 @@ import {
   PdfErrorReason,
   TextContext,
   PdfGlyphObject,
+  PdfPageGeometry,
+  PdfRun,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -2976,6 +2978,116 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
+   * Return geometric + logical text layout for one page
+   * (glyph-only implementation, no FPDFText_GetRect).
+   *
+   * @public
+   */
+  getPageGeometry(
+    doc : PdfDocumentObject,
+    page: PdfPageObject,
+  ): PdfTask<PdfPageGeometry> {
+
+    const label = 'getPageGeometry';
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, label, 'Begin', doc.id);
+
+    /* ── guards ───────────────────────────────────────────── */
+    const dh = this.docs[doc.id];
+    if (!dh) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, label, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    /* ── native handles ──────────────────────────────────── */
+    const pagePtr     = this.pdfiumModule.FPDF_LoadPage(dh.docPtr, page.index);
+    const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
+
+    /* ── 1. read ALL glyphs in logical order ─────────────── */
+    const glyphCount = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
+    const glyphs: PdfGlyphObject[] = [];
+
+    for (let i = 0; i < glyphCount; i++) {
+      const g = this.readGlyphInfo(page, pagePtr, textPagePtr, i);
+      glyphs.push(g);
+    }
+
+    /* ── 2. build visual runs from glyph stream ───────────── */
+    const runs: PdfRun[] = this.buildRunsFromGlyphs(glyphs, textPagePtr);
+
+    /* ── 3. cleanup & resolve task ───────────────────────── */
+    this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
+    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, label, 'End', doc.id);
+    return PdfTaskHelper.resolve({ runs });
+  }
+
+  /**
+   * Group consecutive glyphs that belong to the same CPDF_TextObject
+   * using FPDFText_GetTextObject(), and calculate rotation from glyph positions.
+   */
+  private buildRunsFromGlyphs(
+    glyphs: PdfGlyphObject[],
+    textPagePtr: number
+  ): PdfRun[] {
+    const runs: PdfRun[] = [];
+    let current: PdfRun | null = null;
+    let curObjPtr: number | null = null;
+
+
+    /** ── main loop ──────────────────────────────────────────── */
+    for (let i = 0; i < glyphs.length; i++) {
+      const g = glyphs[i];
+
+      /* 1 — find the CPDF_TextObject this glyph belongs to */
+      const objPtr = this.pdfiumModule.FPDFText_GetTextObject(textPagePtr, i) as number;
+
+      if(g.isEmpty) {
+        continue;
+      }
+
+      /* 2 — start a new run when the text object changes */
+      if (objPtr !== curObjPtr) {
+        curObjPtr = objPtr;
+        current = {
+          rect: {
+            x: g.origin.x,
+            y: g.origin.y,
+            width: g.size.width,
+            height: g.size.height,
+          },
+          charStart: i,
+          glyphs: [],
+        };
+        runs.push(current);
+      }
+
+      /* 3 — append the slim glyph record */
+      current!.glyphs.push({
+        x: g.origin.x,
+        y: g.origin.y,
+        width: g.size.width,
+        height: g.size.height,
+        flags: g.isSpace ? 1 : 0,
+      });
+
+      /* 4 — expand the run’s bounding rect */
+      const right  = g.origin.x + g.size.width;
+      const bottom = g.origin.y + g.size.height;
+
+      current!.rect.width  = Math.max(current!.rect.x + current!.rect.width, right) - current!.rect.x;
+      current!.rect.y      = Math.min(current!.rect.y, g.origin.y);
+      current!.rect.height = Math.max(current!.rect.y + current!.rect.height, bottom) - current!.rect.y;
+    }
+
+    return runs;
+  }
+
+
+  /**
    * Extract glyph geometry + metadata for `charIndex`
    *
    * Returns device–space coordinates:
@@ -2984,7 +3096,6 @@ export class PdfiumEngine implements PdfEngine {
    *
    * And two flags:
    *   isSpace → true if the glyph’s Unicode code-point is U+0020
-   *   angle   → counter-clock-wise radians (from FPDFText_GetCharAngle)
    */
   private readGlyphInfo(
     page: PdfPageObject,
@@ -2993,37 +3104,35 @@ export class PdfiumEngine implements PdfEngine {
     charIndex: number,
   ): PdfGlyphObject {
     // ── native stack temp pointers ──────────────────────────────
-    const leftPtr   = this.malloc(8);
-    const rightPtr  = this.malloc(8);
-    const topPtr    = this.malloc(8);
-    const bottomPtr = this.malloc(8);
     const dx1Ptr    = this.malloc(4);
     const dy1Ptr    = this.malloc(4);
     const dx2Ptr    = this.malloc(4);
     const dy2Ptr    = this.malloc(4);
+    const rectPtr = this.malloc(16);               // 4 floats = 16 bytes
 
     let x = 0,
         y = 0,
         width  = 0,
         height = 0,
-        angle  = 0,
         isSpace = false;
 
     // ── 1) raw glyph bbox in                      page-user-space
     if (
-      this.pdfiumModule.FPDFText_GetCharBox(
-        textPagePtr,
-        charIndex,
-        leftPtr,
-        rightPtr,
-        bottomPtr,
-        topPtr,
-      )
+      this.pdfiumModule.FPDFText_GetLooseCharBox(
+        textPagePtr, charIndex, rectPtr)
     ) {
-      const left   = this.pdfiumModule.pdfium.getValue(leftPtr,   'double');
-      const right  = this.pdfiumModule.pdfium.getValue(rightPtr,  'double');
-      const top    = this.pdfiumModule.pdfium.getValue(topPtr,    'double');
-      const bottom = this.pdfiumModule.pdfium.getValue(bottomPtr, 'double');
+      const left   = this.pdfiumModule.pdfium.getValue(rectPtr,      'float');
+      const top    = this.pdfiumModule.pdfium.getValue(rectPtr + 4,  'float');
+      const right  = this.pdfiumModule.pdfium.getValue(rectPtr + 8,  'float');
+      const bottom = this.pdfiumModule.pdfium.getValue(rectPtr + 12, 'float');
+
+      if(left === right || top === bottom) {
+        return {
+          origin: { x: 0, y: 0 },
+          size: { width: 0, height: 0 },
+          isEmpty: true
+        };
+      }
 
       // ── 2) map 2 opposite corners to            device-space
       this.pdfiumModule.FPDF_PageToDevice(
@@ -3062,20 +3171,17 @@ export class PdfiumEngine implements PdfEngine {
       height = Math.max(1, Math.abs(y2 - y1));
 
       // ── 3) extra flags ───────────────────────────────────────
-      angle   = this.pdfiumModule.FPDFText_GetCharAngle(textPagePtr, charIndex);
       const uc = this.pdfiumModule.FPDFText_GetUnicode(textPagePtr, charIndex);
-      isSpace  = uc === 32;                    // U+0020
+      isSpace  = uc === 32; 
     }
 
     // ── free tmps ───────────────────────────────────────────────
-    [leftPtr, rightPtr, bottomPtr, topPtr,
-    dx1Ptr, dy1Ptr, dx2Ptr, dy2Ptr].forEach(p => this.free(p));
+    [rectPtr, dx1Ptr, dy1Ptr, dx2Ptr, dy2Ptr].forEach(p => this.free(p));
 
     return {
       origin: { x, y },
       size:   { width, height },
-      angle,
-      isSpace,
+      ...(isSpace && { isSpace })
     };
   }
 
@@ -3126,8 +3232,13 @@ export class PdfiumEngine implements PdfEngine {
         page,
         pagePtr,
         textPagePtr,
-        i,          // charIndex
+        i
       );
+
+      if(g.isEmpty) {
+        continue;
+      }
+
       glyphs[i] = { ...g };
     }
 

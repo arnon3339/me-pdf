@@ -1187,13 +1187,73 @@ export interface PdfGlyphObject {
    */
   size: { width: number; height: number };
   /**
-   * Angle of the glyph
-   */
-  angle: number;
-  /**
    * Whether the glyph is a space
    */
-  isSpace: boolean;
+  isSpace?: boolean;
+  /**
+   * Whether the glyph is a empty
+   */
+  isEmpty?: boolean;
+}
+
+/**
+ * Glyph object
+ *
+ * @public
+ */
+export interface PdfGlyphSlim { 
+  /**
+   * X coordinate of the glyph
+   */
+  x: number;
+  /**
+   * Y coordinate of the glyph
+   */
+  y: number;
+  /**
+   * Width of the glyph
+   */
+  width: number;
+  /**
+   * Height of the glyph
+   */
+  height: number;
+  /**
+   * Flags of the glyph
+   */
+  flags: number;
+}
+
+/**
+ * Run object
+ *
+ * @public
+ */
+export interface PdfRun {
+  /**
+   * Rectangle of the run
+   */
+  rect: { x: number; y: number; width: number; height: number };
+  /**
+   * Start index of the run
+   */
+  charStart: number;
+  /**
+   * Glyphs of the run
+   */
+  glyphs: PdfGlyphSlim[];
+}
+
+/**
+ * Page geometry
+ *
+ * @public
+ */
+export interface PdfPageGeometry { 
+  /**
+   * Runs of the page
+   */
+  runs: PdfRun[];
 }
 
 /**
@@ -1672,6 +1732,13 @@ export interface PdfEngine {
    * @returns task contains the glyphs
    */
   getPageGlyphs: (doc: PdfDocumentObject, page: PdfPageObject) => PdfTask<PdfGlyphObject[]>;
+  /**
+   * Get the geometry of the specified pdf page
+   * @param doc - pdf document
+   * @param page - pdf page
+   * @returns task contains the geometry
+   */
+  getPageGeometry: (doc: PdfDocumentObject, page: PdfPageObject) => PdfTask<PdfPageGeometry>;
   /**
    * Merge multiple pdf documents
    * @param files - all the pdf files

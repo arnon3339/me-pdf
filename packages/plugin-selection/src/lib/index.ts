@@ -13,7 +13,7 @@ export const SelectionPluginPackage: PluginPackage<
   SelectionAction
 > = {
   manifest,
-  create: (registry, engine, config) => new SelectionPlugin(SELECTION_PLUGIN_ID, registry, engine, config),
+  create: (registry, engine) => new SelectionPlugin(SELECTION_PLUGIN_ID, registry, engine),
   reducer: selectionReducer,
   initialState
 };
@@ -21,3 +21,4 @@ export const SelectionPluginPackage: PluginPackage<
 export * from "./selection-plugin";
 export * from "./types";
 export * from './manifest';
+export * from './utils';

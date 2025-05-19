@@ -1422,12 +1422,12 @@ export function PDFViewer({ config }: PDFViewerProps) {
                       }}
                     >
                       {pluginsReady && <Scroller 
-                          renderPage={({pageIndex, scale, width, height}) => 
+                          renderPage={({pageIndex, scale, rotation, width, height, rotatedHeight, rotatedWidth}) => 
                             <Rotate pageSize={{width, height}}>
                               <div className="bg-white" style={{width, height}}>
                                 <RenderLayer pageIndex={pageIndex} className="absolute top-0 left-0 w-full h-full" />
                                 <SearchLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
-                                <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                                <SelectionLayer pageIndex={pageIndex} scale={scale} rotation={rotation} containerSize={{width: rotatedWidth, height: rotatedHeight}} />
                               </div>
                             </Rotate>
                           }

@@ -39,6 +39,7 @@ import {
   PdfUrlOptions,
   PdfFileUrl,
   PdfGlyphObject,
+  PdfPageGeometry,
 } from '@embedpdf/models';
 
 /**
@@ -320,6 +321,11 @@ export function createMockPdfEngine(
     },
     getPageGlyphs: (doc: PdfDocumentObject, page: PdfPageObject) => {
       return PdfTaskHelper.resolve([] as PdfGlyphObject[]);
+    },
+    getPageGeometry: (doc: PdfDocumentObject, page: PdfPageObject) => {
+      return PdfTaskHelper.resolve({
+        runs: []
+      } as PdfPageGeometry);
     },
     merge: (files: PdfFile[]) => {
       return PdfTaskHelper.resolve({

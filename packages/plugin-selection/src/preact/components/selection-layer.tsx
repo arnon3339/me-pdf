@@ -1,125 +1,93 @@
 /** @jsxImportSource preact */
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { PdfGlyphObject } from '@embedpdf/models';
-import { SelectionRange } from '@embedpdf/plugin-selection';
 import { useSelectionCapability } from '../hooks';
+import { glyphAt } from '@embedpdf/plugin-selection';
+import { PdfPageGeometry, restorePosition, Rotation, Size } from '@embedpdf/models';
 
-type Props = {
-  pageIndex: number;
-  scale: number;
-};
+type Props = { pageIndex: number; scale: number, rotation: Rotation, containerSize: Size };
 
-export function SelectionLayer({ pageIndex, scale }: Props) {
-  const {
-    provides: selection,
-  } = useSelectionCapability();
-  const [glyphs, setGlyphs] = useState<PdfGlyphObject[]>([]);
+export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Props) {
+  const { provides: sel } = useSelectionCapability();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [rects, setRects] = useState<Array<{x:number;y:number;width:number;height:number;}>>([]);
+  const [hoveringText, setHoveringText] = useState(false);
 
-  /* ── load glyphs once ─────────────────────────────────── */
+  /* subscribe to rect updates */
   useEffect(() => {
-    selection?.getPageGlyphs(pageIndex).then(setGlyphs);
-  }, [pageIndex]);
+    if (!sel) return;
+    return sel.onSelectionChange(() => {
+      setRects(sel.getHighlightRects(pageIndex));
+    });
+  }, [sel, pageIndex]);
 
-  /* ── geometry helpers ─────────────────────────────────── */
-  const inRect = (
-    pt: { x: number; y: number },
-    g: PdfGlyphObject,
-  ) =>
-    pt.x >= g.origin.x &&
-    pt.x <= g.origin.x + g.size.width &&
-    pt.y >= g.origin.y &&
-    pt.y <= g.origin.y + g.size.height;
-
-  const glyphAt = (pt: { x: number; y: number }) => {
-    for (let i = 0; i < glyphs.length; i++) if (inRect(pt, glyphs[i])) return i;
-    return -1;
-  };
-
-  /* ── interaction state ────────────────────────────────── */
-  const selRef = useRef<SelectionRange | null>(null);
-  const anchorRef = useRef<number | null>(null);
-  const dragging = useRef(false);
-
-  /* ── pointer handlers ─────────────────────────────────── */
+  /* pointer interaction (framework-specific, but tiny) */
   useEffect(() => {
     const wrap = wrapRef.current;
-    if (!wrap || !glyphs.length) return;
-
+    if (!wrap || !sel) return;
     const toPt = (e: PointerEvent) => {
       const r = wrap.getBoundingClientRect();
-      console.log('toPt', r);
-      console.log('e', e);
-      return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
-    };
+      const disp = { x: e.clientX - r.left, y: e.clientY - r.top };
 
+      return restorePosition(containerSize, disp, rotation, scale);
+    };
     const onDown = (e: PointerEvent) => {
       if (e.button) return;
-      console.log('onDown', toPt(e));
-      const g = glyphAt(toPt(e));
-      if (g === -1) return;
-      anchorRef.current = g;
-      dragging.current = true;
+
+      // clear the selection
+      sel.clear();
+      sel.getGeometry(pageIndex).then(geo => {
+        const g = glyphAt(geo, toPt(e));
+        if (g !== -1) sel.begin(pageIndex, g);
+      });
       wrap.setPointerCapture(e.pointerId);
     };
-
     const onMove = (e: PointerEvent) => {
-      if (!dragging.current) return;
-      const g = glyphAt(toPt(e));
-      if (g === -1) return;
-      selRef.current = {
-        start: Math.min(anchorRef.current!, g),
-        end: Math.max(anchorRef.current!, g),
-      };
-      drawSelection();
+      if (!sel) return;
+      const g = cachedGlyphAt(toPt(e));
+      setHoveringText(g !== -1);
+      if (g !== -1) sel.update(pageIndex, g);
     };
+    const onUp = () => sel.end();
 
-    const onUp = (e: PointerEvent) => {
-      if (!dragging.current) return;
-      dragging.current = false;
-      wrap.releasePointerCapture(e.pointerId);
-      selection?.setSelection(pageIndex, selRef.current);
+    /* cheap glyphAt cache for the active page */
+    let geoCache: PdfPageGeometry|undefined;
+    const cachedGlyphAt = (pt:{x:number;y:number})=>{
+      if(!geoCache) return -1;
+      return glyphAt(geoCache, pt);
     };
+    sel.getGeometry(pageIndex).then(g=> geoCache=g);
 
     wrap.addEventListener('pointerdown', onDown);
     wrap.addEventListener('pointermove', onMove);
-    wrap.addEventListener('pointerup', onUp);
+    wrap.addEventListener('pointerup',   onUp);
     return () => {
       wrap.removeEventListener('pointerdown', onDown);
       wrap.removeEventListener('pointermove', onMove);
-      wrap.removeEventListener('pointerup', onUp);
+      wrap.removeEventListener('pointerup',   onUp);
     };
-  }, [glyphs, scale]);
-
-  /* ── draw highlight via inline divs (cheap) ───────────── */
-  const [boxes, setBoxes] = useState<any[]>([]);
-  function drawSelection() {
-    const sel = selRef.current;
-    if (!sel) return setBoxes([]);
-    const out = [];
-    for (let i = sel.start; i <= sel.end; i++) {
-      const g = glyphs[i];
-      out.push({
-        x: g.origin.x,
-        y: g.origin.y,
-        w: g.size.width,
-        h: g.size.height,
-      });
-    }
-    setBoxes(out);
-  }
+  }, [sel, pageIndex, scale]);
 
   return (
-    <div ref={wrapRef} style={{ position: 'absolute', inset: 0 }}>
-      {boxes.map((b) => (
+    <div
+      ref={wrapRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        mixBlendMode: 'multiply',
+        isolation: 'isolate',
+        cursor: hoveringText ? 'text' : 'default',
+      }}
+    >
+      {rects.map((b, i) => (
         <div
+          key={i}
           style={{
             position: 'absolute',
-            left: b.x * scale,
-            top: b.y * scale,
-            width: b.w * scale,
-            height: b.h * scale,
-            background: 'rgba(33,150,243,.28)',
+            left:  b.x      * scale,
+            top:   b.y      * scale,
+            width: b.width  * scale,
+            height:b.height * scale,
+            background: 'rgba(33,150,243)',
             pointerEvents: 'none',
           }}
         />
