@@ -142,6 +142,14 @@ export enum PdfiumErrorCode {
   XFALayout = 8,
 }
 
+const PAGE_TTL = 5000; // 3 seconds
+
+type CachedPage = {
+  pagePtr: number;          // live FPDF_PAGE handle
+  refCount: number;         // callers currently using it
+  idleTimer?: ReturnType<typeof setTimeout>;
+};
+
 /**
  * Pdf engine that based on pdfium wasm
  */
@@ -149,7 +157,7 @@ export class PdfiumEngine implements PdfEngine {
   /**
    * pdf documents that opened
    */
-  docs: Record<
+  private docs: Record<
     string,
     {
       filePtr: number;
@@ -157,6 +165,7 @@ export class PdfiumEngine implements PdfEngine {
       searchContexts: Map<number, SearchContext>;
     }
   > = {};
+  private pageCaches: Record<string, Map<number, CachedPage>> = {};
 
   /**
    * Create an instance of PdfiumEngine
@@ -698,6 +707,48 @@ export class PdfiumEngine implements PdfEngine {
     return PdfTaskHelper.resolve(pdfDoc);
   }
 
+  private acquirePage(doc: PdfDocumentObject, index: number): number {
+    const cache = this.pageCaches[doc.id] ?? (this.pageCaches[doc.id] = new Map());
+  
+    let entry = cache.get(index);
+    if (!entry) {
+      const pagePtr = this.pdfiumModule.FPDF_LoadPage(this.docs[doc.id].docPtr, index);
+      entry = { pagePtr, refCount: 0 };
+      cache.set(index, entry);
+    }
+  
+    // cancel pending eviction, bump ref-count
+    if (entry.idleTimer) { clearTimeout(entry.idleTimer); entry.idleTimer = undefined; }
+    entry.refCount++;
+    return entry.pagePtr;
+  }
+  
+  /** Release what you got from `acquirePage()`. */
+  private releasePage(doc: PdfDocumentObject, index: number): void {
+    const entry = this.pageCaches[doc.id]?.get(index);
+    if (!entry) return;
+  
+    if (--entry.refCount === 0) {
+      // start idle timer
+      entry.idleTimer = setTimeout(() => {
+        this.pdfiumModule.FPDF_ClosePage(entry!.pagePtr);
+        this.pageCaches[doc.id]!.delete(index);
+      }, PAGE_TTL);
+    }
+  }
+
+  /** Immediately close *all* cached pages of a document. */
+  private forceReleasePages(doc: PdfDocumentObject): void {
+    const cache = this.pageCaches[doc.id];
+    if (!cache) return;
+
+    for (const { pagePtr, idleTimer } of cache.values()) {
+      if (idleTimer) clearTimeout(idleTimer);
+      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    }
+    cache.clear();
+  }
+
   /**
    * {@inheritDoc @embedpdf/models!PdfEngine.getMetadata}
    *
@@ -995,9 +1046,8 @@ export class PdfiumEngine implements PdfEngine {
       });
     }
 
-    const { docPtr } = this.docs[doc.id];
     const imageData = this.renderPageRectToImageData(
-      docPtr,
+      doc,
       page,
       {
         origin: { x: 0, y: 0 },
@@ -1071,9 +1121,8 @@ export class PdfiumEngine implements PdfEngine {
       });
     }
 
-    const { docPtr } = this.docs[doc.id];
     const imageData = this.renderPageRectToImageData(
-      docPtr,
+      doc,
       page,
       rect,
       scaleFactor,
@@ -1137,7 +1186,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
 
     const annotations = this.readPageAnnotations(
@@ -1150,7 +1199,7 @@ export class PdfiumEngine implements PdfEngine {
     );
 
     this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1211,7 +1260,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const annotationPtr = this.pdfiumModule.FPDFPage_CreateAnnot(
       pagePtr,
       annotation.type,
@@ -1224,7 +1273,7 @@ export class PdfiumEngine implements PdfEngine {
         'End',
         `${doc.id}-${page.index}`,
       );
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
 
       return PdfTaskHelper.reject({
         code: PdfErrorCode.CantCreateAnnot,
@@ -1234,7 +1283,7 @@ export class PdfiumEngine implements PdfEngine {
 
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
       this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -1272,7 +1321,7 @@ export class PdfiumEngine implements PdfEngine {
 
     if (!isSucceed) {
       this.pdfiumModule.FPDFPage_RemoveAnnot(pagePtr, annotationPtr);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -1290,7 +1339,7 @@ export class PdfiumEngine implements PdfEngine {
     this.pdfiumModule.FPDFPage_GenerateContent(pagePtr);
 
     this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1346,7 +1395,7 @@ export class PdfiumEngine implements PdfEngine {
 
     const { docPtr } = this.docs[doc.id];
 
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const annotationPtr = this.pdfiumModule.FPDFPage_GetAnnot(
       pagePtr,
       annotation.id,
@@ -1363,7 +1412,7 @@ export class PdfiumEngine implements PdfEngine {
     };
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, rect)) {
       this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -1382,7 +1431,7 @@ export class PdfiumEngine implements PdfEngine {
         {
           if (!this.pdfiumModule.FPDFAnnot_RemoveInkList(annotationPtr)) {
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.logger.perf(
               LOG_SOURCE,
               LOG_CATEGORY,
@@ -1413,7 +1462,7 @@ export class PdfiumEngine implements PdfEngine {
           });
           if (!this.addInkStroke(page, pagePtr, annotationPtr, inkList)) {
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.logger.perf(
               LOG_SOURCE,
               LOG_CATEGORY,
@@ -1433,7 +1482,7 @@ export class PdfiumEngine implements PdfEngine {
     this.pdfiumModule.FPDFPage_GenerateContent(pagePtr);
 
     this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(
       LOG_SOURCE,
@@ -1485,8 +1534,7 @@ export class PdfiumEngine implements PdfEngine {
       });
     }
 
-    const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     let result = false;
     result = this.pdfiumModule.FPDFPage_RemoveAnnot(pagePtr, annotation.id);
     if (!result) {
@@ -1508,7 +1556,7 @@ export class PdfiumEngine implements PdfEngine {
       }
     }
 
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(
       LOG_SOURCE,
@@ -1563,7 +1611,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
 
     const textRects = this.readPageTextRects(
@@ -1574,7 +1622,7 @@ export class PdfiumEngine implements PdfEngine {
     );
 
     this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(
       LOG_SOURCE,
@@ -1848,7 +1896,7 @@ export class PdfiumEngine implements PdfEngine {
       formFillInfoPtr,
     );
 
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
 
     this.pdfiumModule.FORM_OnAfterLoadPage(pagePtr, formHandle);
 
@@ -1873,7 +1921,7 @@ export class PdfiumEngine implements PdfEngine {
       );
       this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
       this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
       this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
       this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
 
@@ -1903,7 +1951,7 @@ export class PdfiumEngine implements PdfEngine {
             this.pdfiumModule.FORM_ForceToKillFocus(formHandle);
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
             this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
             this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
 
@@ -1945,7 +1993,7 @@ export class PdfiumEngine implements PdfEngine {
             this.pdfiumModule.FORM_ForceToKillFocus(formHandle);
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
             this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
             this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
 
@@ -1976,7 +2024,7 @@ export class PdfiumEngine implements PdfEngine {
             this.pdfiumModule.FORM_ForceToKillFocus(formHandle);
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
             this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
             this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
 
@@ -1993,7 +2041,7 @@ export class PdfiumEngine implements PdfEngine {
 
     this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
     this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
     this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
@@ -2022,10 +2070,9 @@ export class PdfiumEngine implements PdfEngine {
       });
     }
 
-    const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const result = this.pdfiumModule.FPDFPage_Flatten(pagePtr, flag);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `flattenPage`, 'End', doc.id);
 
@@ -2126,7 +2173,7 @@ export class PdfiumEngine implements PdfEngine {
     const { docPtr } = this.docs[doc.id];
     const strings: string[] = [];
     for (let i = 0; i < pageIndexes.length; i++) {
-      const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, pageIndexes[i]);
+      const pagePtr = this.acquirePage(doc, pageIndexes[i]);
       const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
       const charCount = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
       const bufferPtr = this.malloc((charCount + 1) * 2);
@@ -2135,7 +2182,7 @@ export class PdfiumEngine implements PdfEngine {
       this.free(bufferPtr);
       strings.push(text);
       this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, pageIndexes[i]);
     }
 
     const text = strings.join('\n\n');
@@ -2407,6 +2454,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     const { docPtr, filePtr } = this.docs[doc.id];
+    this.forceReleasePages(doc);
     this.pdfiumModule.FPDF_CloseDocument(docPtr);
     this.free(filePtr);
     delete this.docs[doc.id];
@@ -3002,7 +3050,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     /* ── native handles ──────────────────────────────────── */
-    const pagePtr     = this.pdfiumModule.FPDF_LoadPage(dh.docPtr, page.index);
+    const pagePtr     = this.acquirePage(doc, page.index);
     const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
 
     /* ── 1. read ALL glyphs in logical order ─────────────── */
@@ -3019,7 +3067,7 @@ export class PdfiumEngine implements PdfEngine {
 
     /* ── 3. cleanup & resolve task ───────────────────────── */
     this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, label, 'End', doc.id);
     return PdfTaskHelper.resolve({ runs });
@@ -3220,7 +3268,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     // ── 2) load page + text page handles ───────────────────────
-    const pagePtr      = this.pdfiumModule.FPDF_LoadPage(docHandle.docPtr, page.index);
+    const pagePtr      = this.acquirePage(doc, page.index);
     const textPagePtr  = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
 
     // ── 3) iterate all glyphs in logical order ─────────────────
@@ -3244,7 +3292,7 @@ export class PdfiumEngine implements PdfEngine {
 
     // ── 4) clean-up native handles ─────────────────────────────
     this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', 'End', doc.id);
 
@@ -4977,7 +5025,7 @@ export class PdfiumEngine implements PdfEngine {
    * @private
    */
   private renderPageRectToImageData(
-    docPtr: number,
+    doc: PdfDocumentObject,
     page: PdfPageObject,
     rect: Rect,
     scaleFactor: number,
@@ -5016,7 +5064,7 @@ export class PdfiumEngine implements PdfEngine {
       flags = flags | RenderFlag.ANNOT;
     }
 
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
 
     this.pdfiumModule.FPDF_RenderPageBitmap(
       bitmapPtr,
@@ -5030,7 +5078,7 @@ export class PdfiumEngine implements PdfEngine {
     );
 
     this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     const data = this.pdfiumModule.pdfium.HEAPU8.subarray(
       bitmapHeapPtr,
@@ -5698,7 +5746,6 @@ export class PdfiumEngine implements PdfEngine {
       return PdfTaskHelper.resolve<SearchAllPagesResult>({ results: [], total: 0 });
     }
 
-    const { docPtr } = this.docs[doc.id];
     const length = 2 * (keyword.length + 1);
     const keywordPtr = this.malloc(length);
     this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
@@ -5717,7 +5764,7 @@ export class PdfiumEngine implements PdfEngine {
       for (let pageIndex = 0; pageIndex < doc.pageCount; pageIndex++) {
         // Get all results for the current page efficiently (load page only once)
         const pageResults = this.searchAllInPage(
-          docPtr,
+          doc,
           doc.pages[pageIndex],
           keywordPtr,
           flag
@@ -5843,14 +5890,14 @@ export class PdfiumEngine implements PdfEngine {
    * @private
    */
   private searchAllInPage(
-    docPtr: number,
+    doc: PdfDocumentObject,
     page: PdfPageObject,
     keywordPtr: number,
     flag: number,
   ): SearchResult[] {
     const pageIndex = page.index;
     // Load the page and text page only once
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, pageIndex);
+    const pagePtr = this.acquirePage(doc, pageIndex);
     const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
 
     // Load the full text of the page once
@@ -5903,7 +5950,7 @@ export class PdfiumEngine implements PdfEngine {
     
     // Close the text page and page only once
     this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, pageIndex);
     
     return pageResults;
   }
@@ -5919,6 +5966,6 @@ export class PdfiumEngine implements PdfEngine {
   private imageDataToBlob(imageData: ImageData): Promise<Blob> {
     const off = new OffscreenCanvas(imageData.width, imageData.height);
     off.getContext('2d')!.putImageData(imageData, 0, 0);
-    return off.convertToBlob({ type: 'image/png' });
+    return off.convertToBlob({ type: 'image/webp' });
   }
 }

@@ -1,3 +1,4 @@
+import { EventControl, EventControlOptions } from './event-control';
 import { arePropsEqual } from './math';
 
 /* ------------------------------------------------------------------ */
@@ -5,9 +6,13 @@ import { arePropsEqual } from './math';
 /* ------------------------------------------------------------------ */
 export type Listener<T = any>    = (value: T) => void;
 export type Unsubscribe    = () => void;
-/** A function that registers a listener and returns an unsubscribe handle */
-export type EventHook<T = any>   = (listener: Listener<T>) => Unsubscribe;
 
+/* ------------------------------------------------------------ */
+/* helpers for typing `.on()` with an optional second argument  */
+/* ------------------------------------------------------------ */
+export type EventHook<T = any> =
+  | ((listener: Listener<T>) => Unsubscribe)
+  | ((listener: Listener<T>, options?: EventControlOptions) => Unsubscribe);
 /* ------------------------------------------------------------------ */
 /* minimal “dumb” emitter (no value cache, no equality)               */
 /* ------------------------------------------------------------------ */
@@ -21,7 +26,7 @@ export interface Emitter<T = any> {
 export function createEmitter<T = any>(): Emitter<T> {
   const listeners = new Set<Listener<T>>();
 
-  const on: EventHook<T> = (l) => {
+  const on: EventHook<T> = (l: Listener<T>) => {
     listeners.add(l);
     return () => listeners.delete(l);
   };
@@ -34,48 +39,60 @@ export function createEmitter<T = any>(): Emitter<T> {
   };
 }
 
-/* ------------------------------------------------------------------ */
-/* Behaviour emitter with                                             
-     – cached last value                                              
-     – distinct‑until‑changed semantics                               
-     – lightweight `.select()` for derived streams                    */
-/* ------------------------------------------------------------------ */
-export interface BehaviorEmitter<T = any> extends Emitter<T> {
-  /** Last value that was emitted ( `undefined` until the first emit). */
+/* ------------------------------------------------------------ */
+/* public interface                                              */
+/* ------------------------------------------------------------ */
+export interface BehaviorEmitter<T = any> extends Omit<Emitter<T>, 'on' | 'off'> {
   readonly value?: T;
-
-  /**
-   * Build a *derived* event hook.  
-   * `selector` maps the source value; the listener is called **only when**
-   * the mapped value is truly different (as judged by `equality`).
-   *
-   * No extra emitter is created – it's just a thin wrapper around `on`.
-   */
-  select<U = any>(
-    selector : (v: T) => U,
+  on: EventHook<T>;
+  off(listener: Listener<T>): void;
+  select<U>(
+    selector: (v: T) => U,
     equality?: (a: U, b: U) => boolean
   ): EventHook<U>;
 }
 
+/* ------------------------------------------------------------ */
+/* implementation                                               */
+/* ------------------------------------------------------------ */
 export function createBehaviorEmitter<T = any>(
   initial?: T,
   equality: (a: T, b: T) => boolean = arePropsEqual
 ): BehaviorEmitter<T> {
   const listeners = new Set<Listener<T>>();
-  let _value = initial;                    // cached value
+  const proxyMap = new Map<Listener<T>, { wrapped: Listener<T>; destroy: () => void }>();
+  let _value = initial;                               // cached value
 
-  /* -------- helpers ------------------------------------------------ */
+  /* -------------- helpers ----------------------------------- */
   const notify = (v: T) => listeners.forEach(l => l(v));
 
-  const baseOn: EventHook<T> = (listener) => {
-    if (_value !== undefined) listener(_value);  // replay last value
-    listeners.add(listener);
-    return () => listeners.delete(listener);
+  const baseOn: EventHook<T> = (listener: Listener<T>, options?: EventControlOptions) => {
+    /* wrap & remember if we have control options ------------------ */
+    let realListener = listener;
+    let destroy = () => {};
+
+    if (options) {
+      const ctl = new EventControl(listener, options);
+      realListener = ctl.handle as Listener<T>;
+      destroy = () => ctl.destroy();
+      proxyMap.set(listener, { wrapped: realListener, destroy });
+    }
+
+    /* immediate replay of last value ------------------------------ */
+    if (_value !== undefined) realListener(_value);
+
+    listeners.add(realListener);
+
+    return () => {
+      listeners.delete(realListener);
+      destroy();
+      proxyMap.delete(listener);
+    };
   };
 
-  /* -------- public object ------------------------------------------ */
+  /* -------------- public object ------------------------------ */
   return {
-    /* Emitter methods ------------------------------------------------ */
+    /* emitter behaviour ---------------------------------------- */
     get value() { return _value; },
 
     emit(v = undefined as T) {
@@ -86,32 +103,47 @@ export function createBehaviorEmitter<T = any>(
     },
 
     on : baseOn,
-    off: (l) => listeners.delete(l),
-    clear() { listeners.clear(); },
+    off(listener: Listener<T>) {
+      /* did we wrap this listener? */
+      const proxy = proxyMap.get(listener);
+      if (proxy) {
+        listeners.delete(proxy.wrapped);
+        proxy.destroy();
+        proxyMap.delete(listener);
+      } else {
+        listeners.delete(listener);
+      }
+    },
 
-    /* Derived hook --------------------------------------------------- */
-    select<U = any>(
-      selector : (v: T) => U,
-      eq:        (a: U, b: U) => boolean = arePropsEqual
+    clear() {
+      listeners.clear();
+      proxyMap.forEach(p => p.destroy());
+      proxyMap.clear();
+    },
+
+    /* derived hook --------------------------------------------- */
+    select<U>(
+      selector: (v: T) => U,
+      eq:       (a: U, b: U) => boolean = arePropsEqual
     ): EventHook<U> {
-      return (listener) => {
+      return (listener: Listener<U>, options?: EventControlOptions) => {
         let prev: U | undefined;
 
-        /* fire immediately if we already have a value */
+        /* replay */
         if (_value !== undefined) {
           const mapped = selector(_value);
           prev = mapped;
           listener(mapped);
         }
 
-        /* subscribe to parent stream */
+        /* subscribe to parent */
         return baseOn((next) => {
           const mapped = selector(next);
           if (prev === undefined || !eq(prev, mapped)) {
             prev = mapped;
             listener(mapped);
           }
-        });
+        }, options as EventControlOptions | undefined); // pass control opts straight through
       };
     },
   };

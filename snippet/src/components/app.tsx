@@ -27,6 +27,9 @@ import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/pl
 import { SearchLayer } from '@embedpdf/plugin-search/preact';
 import { SELECTION_PLUGIN_ID, SelectionPlugin, SelectionPluginPackage, SelectionState } from '@embedpdf/plugin-selection';
 import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
+import { TilingPlugin, TilingPluginPackage } from '@embedpdf/plugin-tiling';
+import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
+
 // **Configuration Interface**
 export interface PDFViewerConfig {
   src: string;
@@ -1361,7 +1364,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             defaultZoomLevel: ZoomMode.FitPage,
           }),
           createPluginRegistration(SpreadPluginPackage, { 
-            defaultSpreadMode: SpreadMode.None 
+            defaultSpreadMode: SpreadMode.Odd 
           }),
           createPluginRegistration(RenderPluginPackage, {
 
@@ -1374,6 +1377,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
           }),
           createPluginRegistration(SelectionPluginPackage, {
 
+          }),
+          createPluginRegistration(TilingPluginPackage, {
+            tileSize: 768,
+            overlapPx: 2,
+            extraRings: 1,
           }),
           /*
           createPluginRegistration(ZoomPluginPackage, {
@@ -1426,6 +1434,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                             <Rotate pageSize={{width, height}}>
                               <div className="bg-white" style={{width, height}}>
                                 <RenderLayer pageIndex={pageIndex} className="absolute top-0 left-0 w-full h-full" />
+                                <TilingLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
                                 <SearchLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
                                 <SelectionLayer pageIndex={pageIndex} scale={scale} rotation={rotation} containerSize={{width: rotatedWidth, height: rotatedHeight}} />
                               </div>

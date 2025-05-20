@@ -2,6 +2,7 @@
 import { ComponentChildren, Fragment, JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useRenderCapability } from '../hooks/use-render';
+import { ignore, PdfErrorCode } from '@embedpdf/models';
 
 type RenderLayoutProps = Omit<JSX.HTMLAttributes<HTMLImageElement>, 'style'> & {
   pageIndex: number;
@@ -17,22 +18,25 @@ export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...pro
 
   useEffect(() => {
     if (renderProvides) {
-      const task = renderProvides.renderPage(pageIndex, scaleFactor, dpr);
+      const task = renderProvides.renderPage({pageIndex, scaleFactor, dpr});
       task.wait((blob) => {
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
         urlRef.current = url;
-      }, (reason) => {
-        console.error(reason);
-      });
-    }
+      }, ignore);
 
-    return () => {
-      if (urlRef.current) {
-        URL.revokeObjectURL(urlRef.current);
-        urlRef.current = null;
-      }
-    };
+      return () => {
+        if (urlRef.current) {
+          URL.revokeObjectURL(urlRef.current);
+          urlRef.current = null;
+        } else {
+          task.abort({
+            code: PdfErrorCode.Cancelled,
+            message: 'canceled render task',
+          })
+        }
+      };
+    }
   }, [pageIndex, scaleFactor, dpr, renderProvides]);
 
   const handleImageLoad = () => {

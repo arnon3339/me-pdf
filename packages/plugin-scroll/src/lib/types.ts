@@ -37,12 +37,14 @@ export interface PageVisibilityMetrics {
     pageY: number;
     visibleWidth: number;
     visibleHeight: number;
+    scale: number;
   };
   scaled: {
     pageX: number;
     pageY: number;
     visibleWidth: number;
     visibleHeight: number;
+    scale: number;
   };
 }
 

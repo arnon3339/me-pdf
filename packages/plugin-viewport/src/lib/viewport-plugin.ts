@@ -1,4 +1,4 @@
-import { BasePlugin, PluginRegistry, EventControlOptions, EventControl, createEmitter, createBehaviorEmitter } from "@embedpdf/core";
+import { BasePlugin, PluginRegistry, createEmitter, createBehaviorEmitter } from "@embedpdf/core";
 import { ViewportPluginConfig, ViewportState, ViewportCapability, ViewportMetrics, ViewportScrollMetrics, ViewportInputMetrics, ScrollToPayload } from "./types";
 import { ViewportAction, setViewportMetrics, setViewportScrollMetrics, setViewportGap } from "./actions";
 
@@ -21,15 +21,7 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
       getViewportGap: () => this.getState().viewportGap,
       getMetrics: () => this.getState().viewportMetrics,
       onScrollChange: this.scrollMetrics$.on,
-      onViewportChange: (handler, options?: EventControlOptions) => {
-        if (options) {
-          const controlledHandler = new EventControl<ViewportMetrics>(handler, options).handle;
-          this.viewportMetrics$.on(controlledHandler);
-          return controlledHandler;
-        }
-        this.viewportMetrics$.on(handler);
-        return handler;
-      },
+      onViewportChange: this.viewportMetrics$.on,
       setViewportMetrics: (viewportMetrics: ViewportInputMetrics) => {
         this.dispatch(setViewportMetrics(viewportMetrics));
       },

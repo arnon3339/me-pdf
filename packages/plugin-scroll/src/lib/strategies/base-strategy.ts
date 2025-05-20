@@ -129,12 +129,14 @@ export abstract class BaseScrollStrategy {
               pageY: (intersectionTop - pageY) / scale,
               visibleWidth: visibleWidth / scale,
               visibleHeight: visibleHeight / scale,
+              scale: 1
             },
             scaled: {
               pageX: intersectionLeft - pageX,
               pageY: intersectionTop - pageY,
               visibleWidth,
               visibleHeight,
+              scale
             },
           });
         }
