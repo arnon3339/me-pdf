@@ -1,43 +1,22 @@
-import { PdfPageObject } from "@embedpdf/models";
+export interface PageLayout {
+  pageNumber: number;
+  pageIndex: number;
+  x: number; // Relative to item, in original coordinates
+  y: number;
+  width: number;
+  height: number;
+  rotatedWidth: number;
+  rotatedHeight: number;
+}
 
-export class VirtualItem {
-  public element: HTMLElement | null = null;
-  public pageElements: HTMLElement[] = [];
-
-  constructor(
-    public readonly pageNumbers: number[],
-    public readonly pages: PdfPageObject[],
-    public readonly index: number,
-    public readonly size: number,
-    public offset: number,
-    private getScaleFactor: () => number = () => 1
-  ) {}
-
-  get scaledSize(): number {
-    return this.size * this.getScaleFactor();
-  }
-
-  get scaledOffset(): number {
-    return this.offset * this.getScaleFactor();
-  }
-
-  setElement(element: HTMLElement): void {
-    this.element = element;
-  }
-
-  addPageElement(pageElement: HTMLElement): void {
-    this.pageElements.push(pageElement);
-  }
-
-  clearElements(): void {
-    if (this.element && this.element.parentNode) {
-      this.element.remove();
-    }
-    this.element = null;
-    this.pageElements = [];
-  }
-
-  isRendered(): boolean {
-    return this.element !== null;
-  }
-} 
+export interface VirtualItem {
+  id: string;
+  x: number; // In original coordinates
+  y: number;
+  offset: number;
+  width: number;
+  height: number;
+  pageLayouts: PageLayout[];
+  pageNumbers: number[];
+  index: number;
+}

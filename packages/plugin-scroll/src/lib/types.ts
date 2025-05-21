@@ -1,6 +1,26 @@
-import { BasePluginConfig } from "@embedpdf/core";
+import { BasePluginConfig, Emitter, EventHook } from "@embedpdf/core";
 import { PdfPageObject } from "@embedpdf/models";
 import { ViewportMetrics } from "@embedpdf/plugin-viewport";
+import { VirtualItem } from "./types/virtual-item";
+
+export interface ScrollState extends ScrollMetrics {
+  virtualItems: VirtualItem[];
+  totalContentSize: { width: number; height: number };
+  desiredScrollPosition: { x: number; y: number };
+  strategy: ScrollStrategy;
+  pageGap: number;
+  scale: number;
+}
+
+export interface ScrollerLayout {
+  startSpacing: number;
+  endSpacing: number;
+  totalWidth: number;
+  totalHeight: number;
+  pageGap: number;
+  strategy: ScrollState['strategy'];
+  items: VirtualItem[];
+}
 
 export enum ScrollStrategy {
   Vertical = 'vertical',
@@ -17,12 +37,14 @@ export interface PageVisibilityMetrics {
     pageY: number;
     visibleWidth: number;
     visibleHeight: number;
+    scale: number;
   };
   scaled: {
     pageX: number;
     pageY: number;
     visibleWidth: number;
     visibleHeight: number;
+    scale: number;
   };
 }
 
@@ -32,14 +54,8 @@ export interface ScrollMetrics {
   pageVisibilityMetrics: PageVisibilityMetrics[];
   renderedPageIndexes: number[];
   scrollOffset: { x: number; y: number };
-}
-
-export interface VirtualItem {
-  pageNumbers: number[];  // Can be multiple pages in case of spread
-  pages: PdfPageObject[];
-  index: number;         // Virtual index in the scroll list
-  size: number;         // Height for vertical, width for horizontal
-  offset: number;      // Position in the scroll direction
+  startSpacing: number;
+  endSpacing: number;
 }
 
 export interface ScrollStrategyInterface {
@@ -56,14 +72,32 @@ export interface ScrollPluginConfig extends BasePluginConfig {
   strategy?: ScrollStrategy;
   initialPage?: number;
   bufferSize?: number;
+  pageGap?: number;
+}
+
+export type LayoutChangePayload =
+  Pick<ScrollState, 'virtualItems' | 'totalContentSize'>;
+
+export interface ScrollToPageOptions {
+  pageNumber: number;
+  pageCoordinates?: { x: number; y: number };
+  behavior?: ScrollBehavior;
+  center?: boolean;
 }
 
 export interface ScrollCapability {
-  onScroll(handler: (metrics: ScrollMetrics) => void): void;
-  onPageChange(handler: (pageNumber: number) => void): void;
-  onScrollReady(handler: () => void): void;
-  scrollToPage(pageNumber: number, behavior?: ScrollBehavior): void;
+  onScrollerData: EventHook<ScrollerLayout>;
+  onStateChange: EventHook<ScrollState>;
+  onScroll      : EventHook<ScrollMetrics>;
+  onPageChange  : EventHook<number>;
+  onLayoutChange: EventHook<LayoutChangePayload>;
+  scrollToPage(options: ScrollToPageOptions): void;
   scrollToNextPage(behavior?: ScrollBehavior): void;
   scrollToPreviousPage(behavior?: ScrollBehavior): void;
   getMetrics(viewport?: ViewportMetrics): ScrollMetrics;
+  getLayout(): LayoutChangePayload;
+  getState(): ScrollState;
+  getScrollerLayout(): ScrollerLayout;
+  setScrollStrategy(strategy: ScrollStrategy): void;
+  getPageGap(): number;
 }

@@ -4,7 +4,8 @@ import {
   PluginBatchRegistration,
   PluginManifest,
   PluginStatus,
-  PluginPackage
+  PluginPackage,
+  PluginRegistryConfig
 } from '../types/plugin';
 import {
   PluginRegistrationError,
@@ -13,7 +14,7 @@ import {
   CapabilityNotFoundError,
   PluginConfigurationError
 } from '../types/errors';
-import { PdfEngine } from '@embedpdf/models';
+import { PdfEngine, Rotation } from '@embedpdf/models';
 import { Action, CoreState, Store, initialCoreState, Reducer } from '../store';
 import { CoreAction } from '../store/actions';
 import { coreReducer } from '../store/reducer';
@@ -40,11 +41,14 @@ export class PluginRegistry {
   private processingRegistrations: PluginRegistration[] = [];
   private initialized = false;
   private isInitializing = false;
+  private initialCoreState: CoreState;
+  private pluginsReadyPromise: Promise<void> | null = null;
 
-  constructor(engine: PdfEngine) {
+  constructor(engine: PdfEngine, config?: PluginRegistryConfig) {
     this.resolver = new DependencyResolver();
     this.engine = engine;
-    this.store = new Store<CoreState, CoreAction>(coreReducer, initialCoreState);
+    this.initialCoreState = initialCoreState(config);
+    this.store = new Store<CoreState, CoreAction>(coreReducer, this.initialCoreState);
   }
 
   /**
@@ -99,7 +103,12 @@ export class PluginRegistry {
       // We need one type assertion here since we can't fully reconcile TAction with Action
       // due to TypeScript's type system limitations with generic variance
       pluginPackage.reducer as Reducer<TState, Action>,
-      pluginPackage.initialState
+      'function' === typeof pluginPackage.initialState
+        ? (pluginPackage.initialState as (coreState: CoreState, config: TConfig) => TState)(this.initialCoreState, {
+          ...pluginPackage.manifest.defaultConfig,
+          ...config
+        })
+        : pluginPackage.initialState
     );
 
     this.pendingRegistrations.push({
@@ -116,10 +125,46 @@ export class PluginRegistry {
   }
 
   /**
+   * Get the engine instance
+   */
+  getEngine(): PdfEngine {
+    return this.engine;
+  }
+
+  /**
+   * Get a promise that resolves when all plugins are ready
+   */
+  public pluginsReady(): Promise<void> {
+    // Re-use the same promise every time it’s asked for
+    if (this.pluginsReadyPromise) {
+      return this.pluginsReadyPromise;
+    }
+
+    // Build the promise the *first* time it’s requested
+    this.pluginsReadyPromise = (async () => {
+      // 1. Wait until the registry itself has finished initialising
+      if (!this.initialized) {
+        await this.initialize();
+      }
+
+      // 2. Wait for every plugin’s ready() promise (if it has one)
+      const readyPromises = Array.from(this.plugins.values())
+        .map(p =>
+          typeof p.ready === 'function' ? p.ready() : Promise.resolve()
+        );
+
+      await Promise.all(readyPromises);     // resolves when the slowest is done
+    })();
+
+    return this.pluginsReadyPromise;
+  }
+
+  /**
    * Initialize all registered plugins in correct dependency order
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
+      console.log('initialize already initialized');
       throw new PluginRegistrationError('Registry is already initialized');
     }
 
@@ -134,6 +179,8 @@ export class PluginRegistry {
         // Move current pending registrations to processing
         this.processingRegistrations = [...this.pendingRegistrations];
         this.pendingRegistrations = [];
+
+        console.log('initialize processingRegistrations', this.processingRegistrations);
 
         // Build dependency graph for current batch
         for (const reg of this.processingRegistrations) {
@@ -232,6 +279,8 @@ export class PluginRegistry {
       }
     }
 
+    console.log('initializePlugin', manifest.id, manifest.provides);
+
     // Register provided capabilities
     for (const capability of manifest.provides) {
       if (this.capabilities.has(capability)) {
@@ -257,6 +306,7 @@ export class PluginRegistry {
       // Cleanup on initialization failure
       this.plugins.delete(manifest.id);
       this.manifests.delete(manifest.id);
+      console.log('initializePlugin failed', manifest.id, manifest.provides);
       manifest.provides.forEach(cap => this.capabilities.delete(cap));
       throw error;
     }

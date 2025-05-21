@@ -1,4 +1,4 @@
-import { BasePluginConfig } from "@embedpdf/core";
+import { BasePluginConfig, EventHook } from "@embedpdf/core";
 import { MatchFlag, SearchResult, SearchTarget, SearchAllPagesResult } from "@embedpdf/models";
 
 export interface SearchPluginConfig extends BasePluginConfig {
@@ -8,6 +8,25 @@ export interface SearchPluginConfig extends BasePluginConfig {
    * @default true
    */
   showAllResults?: boolean;
+}
+
+export interface SearchResultState {
+  /**
+   * Current search results from last search operation
+   */
+  results: SearchResult[];
+  /**
+   * Current active result index (0-based)
+   */
+  activeResultIndex: number;
+  /**
+   * Whether to show all search results or only the active one
+   */
+  showAllResults: boolean;
+  /**
+   * Whether search is currently active
+   */
+  active: boolean;
 }
 
 export interface SearchState {
@@ -96,28 +115,35 @@ export interface SearchCapability {
    * @param handler - Handler function to receive search results
    * @returns Function to unsubscribe the handler
    */
-  onSearchResult: (handler: (searchResult: SearchAllPagesResult) => void) => () => void;
+  onSearchResult: EventHook<SearchAllPagesResult>;
 
   /**
    * Subscribe to search session start events
    * @param handler - Handler function called when search session starts
    * @returns Function to unsubscribe the handler
    */
-  onSearchStart: (handler: () => void) => () => void;
+  onSearchStart: EventHook;
 
   /**
    * Subscribe to search session stop events
    * @param handler - Handler function called when search session stops
    * @returns Function to unsubscribe the handler
    */
-  onSearchStop: (handler: () => void) => () => void;
+  onSearchStop: EventHook;
 
   /**
    * Subscribe to active result change events
    * @param handler - Handler function called when active result changes
    * @returns Function to unsubscribe the handler
    */
-  onActiveResultChange: (handler: (index: number) => void) => () => void;
+  onActiveResultChange: EventHook<number>;
+
+  /**
+   * Subscribe to search result state change events
+   * @param handler - Handler function called when search state changes
+   * @returns Function to unsubscribe the handler
+   */
+  onSearchResultStateChange: EventHook<SearchResultState>;
 
   /**
    * Get the current search flags

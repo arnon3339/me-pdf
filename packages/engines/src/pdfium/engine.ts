@@ -70,6 +70,14 @@ import {
   SearchAllPagesResult,
   PdfUrlOptions,
   PdfFileUrl,
+  Task,
+  PdfErrorReason,
+  TextContext,
+  PdfGlyphObject,
+  PdfPageGeometry,
+  PdfRun,
+  toIntRect,
+  toIntSize,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -136,6 +144,14 @@ export enum PdfiumErrorCode {
   XFALayout = 8,
 }
 
+const PAGE_TTL = 5000; // 3 seconds
+
+type CachedPage = {
+  pagePtr: number;          // live FPDF_PAGE handle
+  refCount: number;         // callers currently using it
+  idleTimer?: ReturnType<typeof setTimeout>;
+};
+
 /**
  * Pdf engine that based on pdfium wasm
  */
@@ -143,7 +159,7 @@ export class PdfiumEngine implements PdfEngine {
   /**
    * pdf documents that opened
    */
-  docs: Record<
+  private docs: Record<
     string,
     {
       filePtr: number;
@@ -151,6 +167,7 @@ export class PdfiumEngine implements PdfEngine {
       searchContexts: Map<number, SearchContext>;
     }
   > = {};
+  private pageCaches: Record<string, Map<number, CachedPage>> = {};
 
   /**
    * Create an instance of PdfiumEngine
@@ -692,6 +709,48 @@ export class PdfiumEngine implements PdfEngine {
     return PdfTaskHelper.resolve(pdfDoc);
   }
 
+  private acquirePage(doc: PdfDocumentObject, index: number): number {
+    const cache = this.pageCaches[doc.id] ?? (this.pageCaches[doc.id] = new Map());
+  
+    let entry = cache.get(index);
+    if (!entry) {
+      const pagePtr = this.pdfiumModule.FPDF_LoadPage(this.docs[doc.id].docPtr, index);
+      entry = { pagePtr, refCount: 0 };
+      cache.set(index, entry);
+    }
+  
+    // cancel pending eviction, bump ref-count
+    if (entry.idleTimer) { clearTimeout(entry.idleTimer); entry.idleTimer = undefined; }
+    entry.refCount++;
+    return entry.pagePtr;
+  }
+  
+  /** Release what you got from `acquirePage()`. */
+  private releasePage(doc: PdfDocumentObject, index: number): void {
+    const entry = this.pageCaches[doc.id]?.get(index);
+    if (!entry) return;
+  
+    if (--entry.refCount === 0) {
+      // start idle timer
+      entry.idleTimer = setTimeout(() => {
+        this.pdfiumModule.FPDF_ClosePage(entry!.pagePtr);
+        this.pageCaches[doc.id]!.delete(index);
+      }, PAGE_TTL);
+    }
+  }
+
+  /** Immediately close *all* cached pages of a document. */
+  private forceReleasePages(doc: PdfDocumentObject): void {
+    const cache = this.pageCaches[doc.id];
+    if (!cache) return;
+
+    for (const { pagePtr, idleTimer } of cache.values()) {
+      if (idleTimer) clearTimeout(idleTimer);
+      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    }
+    cache.clear();
+  }
+
   /**
    * {@inheritDoc @embedpdf/models!PdfEngine.getMetadata}
    *
@@ -954,6 +1013,8 @@ export class PdfiumEngine implements PdfEngine {
     dpr: number,
     options: PdfRenderOptions,
   ) {
+    const task = new Task<Blob, PdfErrorReason>();
+
     this.logger.debug(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -987,9 +1048,8 @@ export class PdfiumEngine implements PdfEngine {
       });
     }
 
-    const { docPtr } = this.docs[doc.id];
     const imageData = this.renderPageRectToImageData(
-      docPtr,
+      doc,
       page,
       {
         origin: { x: 0, y: 0 },
@@ -1007,7 +1067,10 @@ export class PdfiumEngine implements PdfEngine {
       'End',
       `${doc.id}-${page.index}`,
     );
-    return PdfTaskHelper.resolve(imageData);
+
+    this.imageDataToBlob(imageData).then((blob) => task.resolve(blob));
+
+    return task;
   }
 
   /**
@@ -1024,6 +1087,8 @@ export class PdfiumEngine implements PdfEngine {
     rect: Rect,
     options: PdfRenderOptions,
   ) {
+    const task = new Task<Blob, PdfErrorReason>();
+
     this.logger.debug(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1058,9 +1123,8 @@ export class PdfiumEngine implements PdfEngine {
       });
     }
 
-    const { docPtr } = this.docs[doc.id];
     const imageData = this.renderPageRectToImageData(
-      docPtr,
+      doc,
       page,
       rect,
       scaleFactor,
@@ -1076,7 +1140,9 @@ export class PdfiumEngine implements PdfEngine {
       `${doc.id}-${page.index}`,
     );
 
-    return PdfTaskHelper.resolve(imageData);
+    this.imageDataToBlob(imageData).then((blob) => task.resolve(blob));
+
+    return task;
   }
 
   /**
@@ -1122,7 +1188,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
 
     const annotations = this.readPageAnnotations(
@@ -1135,7 +1201,7 @@ export class PdfiumEngine implements PdfEngine {
     );
 
     this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1196,7 +1262,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const annotationPtr = this.pdfiumModule.FPDFPage_CreateAnnot(
       pagePtr,
       annotation.type,
@@ -1209,7 +1275,7 @@ export class PdfiumEngine implements PdfEngine {
         'End',
         `${doc.id}-${page.index}`,
       );
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
 
       return PdfTaskHelper.reject({
         code: PdfErrorCode.CantCreateAnnot,
@@ -1219,7 +1285,7 @@ export class PdfiumEngine implements PdfEngine {
 
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
       this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -1257,7 +1323,7 @@ export class PdfiumEngine implements PdfEngine {
 
     if (!isSucceed) {
       this.pdfiumModule.FPDFPage_RemoveAnnot(pagePtr, annotationPtr);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -1275,7 +1341,7 @@ export class PdfiumEngine implements PdfEngine {
     this.pdfiumModule.FPDFPage_GenerateContent(pagePtr);
 
     this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1331,7 +1397,7 @@ export class PdfiumEngine implements PdfEngine {
 
     const { docPtr } = this.docs[doc.id];
 
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const annotationPtr = this.pdfiumModule.FPDFPage_GetAnnot(
       pagePtr,
       annotation.id,
@@ -1348,7 +1414,7 @@ export class PdfiumEngine implements PdfEngine {
     };
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, rect)) {
       this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -1367,7 +1433,7 @@ export class PdfiumEngine implements PdfEngine {
         {
           if (!this.pdfiumModule.FPDFAnnot_RemoveInkList(annotationPtr)) {
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.logger.perf(
               LOG_SOURCE,
               LOG_CATEGORY,
@@ -1398,7 +1464,7 @@ export class PdfiumEngine implements PdfEngine {
           });
           if (!this.addInkStroke(page, pagePtr, annotationPtr, inkList)) {
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.logger.perf(
               LOG_SOURCE,
               LOG_CATEGORY,
@@ -1418,7 +1484,7 @@ export class PdfiumEngine implements PdfEngine {
     this.pdfiumModule.FPDFPage_GenerateContent(pagePtr);
 
     this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(
       LOG_SOURCE,
@@ -1470,8 +1536,7 @@ export class PdfiumEngine implements PdfEngine {
       });
     }
 
-    const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     let result = false;
     result = this.pdfiumModule.FPDFPage_RemoveAnnot(pagePtr, annotation.id);
     if (!result) {
@@ -1493,7 +1558,7 @@ export class PdfiumEngine implements PdfEngine {
       }
     }
 
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(
       LOG_SOURCE,
@@ -1548,7 +1613,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
 
     const textRects = this.readPageTextRects(
@@ -1559,7 +1624,7 @@ export class PdfiumEngine implements PdfEngine {
     );
 
     this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(
       LOG_SOURCE,
@@ -1628,207 +1693,6 @@ export class PdfiumEngine implements PdfEngine {
     );
 
     return result;
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.startSearch}
-   *
-   * @public
-   */
-  startSearch(doc: PdfDocumentObject, contextId: number) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'startSearch', doc, contextId);
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StartSearch`, 'Begin', doc.id);
-
-    if (!this.docs[doc.id]) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StartSearch`, 'End', doc.id);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StartSearch`, 'End', doc.id);
-    return PdfTaskHelper.resolve(true);
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.searchNext}
-   *
-   * @public
-   */
-  searchNext(doc: PdfDocumentObject, contextId: number, target: SearchTarget) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'searchNext',
-      doc,
-      contextId,
-      target,
-    );
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'Begin', doc.id);
-
-    if (!this.docs[doc.id]) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-      return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-    }
-
-    const { keyword, flags } = target;
-    const searchContext = this.setupSearchContext(
-      doc,
-      contextId,
-      keyword,
-      flags,
-    );
-
-    if (searchContext.currPageIndex === doc.pageCount) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-      return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-    }
-
-    const { docPtr } = this.docs[doc.id];
-    let pageIndex = searchContext.currPageIndex;
-    let startIndex = searchContext.startIndex;
-
-    const length = 2 * (keyword.length + 1);
-    const keywordPtr = this.malloc(length);
-    this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
-
-    const flag = flags.reduce((flag: MatchFlag, currFlag: MatchFlag) => {
-      return flag | currFlag;
-    }, MatchFlag.None);
-
-    while (pageIndex < doc.pageCount) {
-      const result = this.searchTextInPage(
-        docPtr,
-        doc.pages[pageIndex],
-        pageIndex,
-        startIndex,
-        keywordPtr,
-        flag,
-      );
-      if (result) {
-        searchContext.currPageIndex = result.pageIndex;
-        searchContext.startIndex = result.charIndex + result.charCount;
-        this.free(keywordPtr);
-
-        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-        return PdfTaskHelper.resolve<SearchResult | undefined>(result);
-      }
-
-      pageIndex++;
-      startIndex = 0;
-      searchContext.currPageIndex = pageIndex;
-      searchContext.startIndex = startIndex;
-    }
-    this.free(keywordPtr);
-
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchNext`, 'End', doc.id);
-    return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.searchPrev}
-   *
-   * @public
-   */
-  searchPrev(doc: PdfDocumentObject, contextId: number, target: SearchTarget) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'searchPrev',
-      doc,
-      contextId,
-      target,
-    );
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'Begin', doc.id);
-
-    if (!this.docs[doc.id]) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'End', doc.id);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    const { keyword, flags } = target;
-    const searchContext = this.setupSearchContext(
-      doc,
-      contextId,
-      keyword,
-      flags,
-    );
-
-    if (searchContext.currPageIndex === -1) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'End', doc.id);
-      return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-    }
-
-    const { docPtr } = this.docs[doc.id];
-    let pageIndex = searchContext.currPageIndex;
-    let startIndex = searchContext.startIndex;
-
-    const length = 2 * (keyword.length + 1);
-    const keywordPtr = this.malloc(length);
-    this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
-
-    const flag = target.flags.reduce((flag: MatchFlag, currFlag: MatchFlag) => {
-      return flag | currFlag;
-    }, MatchFlag.None);
-
-    while (pageIndex < doc.pageCount) {
-      const result = this.searchTextInPage(
-        docPtr,
-        doc.pages[pageIndex],
-        pageIndex,
-        startIndex,
-        keywordPtr,
-        flag,
-      );
-      if (result) {
-        searchContext.currPageIndex = pageIndex;
-        searchContext.startIndex = result.charIndex + result.charCount;
-        this.free(keywordPtr);
-
-        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'End', doc.id);
-        return PdfTaskHelper.resolve<SearchResult | undefined>(result);
-      }
-
-      pageIndex--;
-      startIndex = 0;
-      searchContext.currPageIndex = pageIndex;
-      searchContext.startIndex = startIndex;
-    }
-
-    this.free(keywordPtr);
-
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchPrev`, 'End', doc.id);
-    return PdfTaskHelper.resolve<SearchResult | undefined>(undefined);
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.stopSearch}
-   *
-   * @public
-   */
-  stopSearch(doc: PdfDocumentObject, contextId: number) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'stopSearch', doc, contextId);
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StopSearch`, 'Begin', doc.id);
-
-    if (!this.docs[doc.id]) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StopSearch`, 'End', doc.id);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    const { searchContexts } = this.docs[doc.id];
-    if (searchContexts) {
-      searchContexts.delete(contextId);
-    }
-
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `StopSearch`, 'End', doc.id);
-    return PdfTaskHelper.resolve(true);
   }
 
   /**
@@ -2034,7 +1898,7 @@ export class PdfiumEngine implements PdfEngine {
       formFillInfoPtr,
     );
 
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
 
     this.pdfiumModule.FORM_OnAfterLoadPage(pagePtr, formHandle);
 
@@ -2059,7 +1923,7 @@ export class PdfiumEngine implements PdfEngine {
       );
       this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
       this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, page.index);
       this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
       this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
 
@@ -2089,7 +1953,7 @@ export class PdfiumEngine implements PdfEngine {
             this.pdfiumModule.FORM_ForceToKillFocus(formHandle);
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
             this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
             this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
 
@@ -2131,7 +1995,7 @@ export class PdfiumEngine implements PdfEngine {
             this.pdfiumModule.FORM_ForceToKillFocus(formHandle);
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
             this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
             this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
 
@@ -2162,7 +2026,7 @@ export class PdfiumEngine implements PdfEngine {
             this.pdfiumModule.FORM_ForceToKillFocus(formHandle);
             this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
             this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-            this.pdfiumModule.FPDF_ClosePage(pagePtr);
+            this.releasePage(doc, page.index);
             this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
             this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
 
@@ -2179,7 +2043,7 @@ export class PdfiumEngine implements PdfEngine {
 
     this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
     this.pdfiumModule.FORM_OnBeforeClosePage(pagePtr, formHandle);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.pdfiumModule.PDFiumExt_ExitFormFillEnvironment(formHandle);
     this.pdfiumModule.PDFiumExt_CloseFormFillInfo(formFillInfoPtr);
@@ -2208,10 +2072,9 @@ export class PdfiumEngine implements PdfEngine {
       });
     }
 
-    const { docPtr } = this.docs[doc.id];
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
     const result = this.pdfiumModule.FPDFPage_Flatten(pagePtr, flag);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `flattenPage`, 'End', doc.id);
 
@@ -2312,7 +2175,7 @@ export class PdfiumEngine implements PdfEngine {
     const { docPtr } = this.docs[doc.id];
     const strings: string[] = [];
     for (let i = 0; i < pageIndexes.length; i++) {
-      const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, pageIndexes[i]);
+      const pagePtr = this.acquirePage(doc, pageIndexes[i]);
       const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
       const charCount = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
       const bufferPtr = this.malloc((charCount + 1) * 2);
@@ -2321,7 +2184,7 @@ export class PdfiumEngine implements PdfEngine {
       this.free(bufferPtr);
       strings.push(text);
       this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+      this.releasePage(doc, pageIndexes[i]);
     }
 
     const text = strings.join('\n\n');
@@ -2593,6 +2456,7 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     const { docPtr, filePtr } = this.docs[doc.id];
+    this.forceReleasePages(doc);
     this.pdfiumModule.FPDF_CloseDocument(docPtr);
     this.free(filePtr);
     delete this.docs[doc.id];
@@ -2931,64 +2795,6 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
-   * Search text in pdf page
-   * @param docPtr - pointer to pdf document
-   * @param pageIndex - index of pdf page
-   * @param startIndex - start index of text
-   * @param keywordPtr - pointer to keyword
-   * @param flag - matching flags
-   * @returns search result
-   *
-   * @private
-   */
-  searchTextInPage(
-    docPtr: number,
-    page: PdfPageObject,
-    pageIndex: number,
-    startIndex: number,
-    keywordPtr: number,
-    flag: number,
-  ): SearchResult | undefined {
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, pageIndex);
-    const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
-
-    let result: SearchResult | undefined;
-    const searchHandle = this.pdfiumModule.FPDFText_FindStart(
-      textPagePtr,
-      keywordPtr,
-      flag,
-      startIndex,
-    );
-    const found = this.pdfiumModule.FPDFText_FindNext(searchHandle);
-    if (found) {
-      const charIndex =
-        this.pdfiumModule.FPDFText_GetSchResultIndex(searchHandle);
-      const charCount = this.pdfiumModule.FPDFText_GetSchCount(searchHandle);
-
-      const rects = this.getHighlightRects(
-        page,
-        pagePtr,
-        textPagePtr,
-        charIndex,
-        charCount,
-      );
-
-      result = {
-        pageIndex,
-        charIndex,
-        charCount,
-        rects
-      };
-    }
-
-    this.pdfiumModule.FPDFText_FindClose(searchHandle);
-    this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
-
-    return result;
-  }
-
-  /**
    * Read bookmarks in the pdf document
    * @param docPtr - pointer to pdf document
    * @param rootBookmarkPtr - pointer to root bookmark
@@ -3219,6 +3025,280 @@ export class PdfiumEngine implements PdfEngine {
     }
 
     return textRects;
+  }
+
+  /**
+   * Return geometric + logical text layout for one page
+   * (glyph-only implementation, no FPDFText_GetRect).
+   *
+   * @public
+   */
+  getPageGeometry(
+    doc : PdfDocumentObject,
+    page: PdfPageObject,
+  ): PdfTask<PdfPageGeometry> {
+
+    const label = 'getPageGeometry';
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, label, 'Begin', doc.id);
+
+    /* ── guards ───────────────────────────────────────────── */
+    const dh = this.docs[doc.id];
+    if (!dh) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, label, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    /* ── native handles ──────────────────────────────────── */
+    const pagePtr     = this.acquirePage(doc, page.index);
+    const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
+
+    /* ── 1. read ALL glyphs in logical order ─────────────── */
+    const glyphCount = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
+    const glyphs: PdfGlyphObject[] = [];
+
+    for (let i = 0; i < glyphCount; i++) {
+      const g = this.readGlyphInfo(page, pagePtr, textPagePtr, i);
+      glyphs.push(g);
+    }
+
+    /* ── 2. build visual runs from glyph stream ───────────── */
+    const runs: PdfRun[] = this.buildRunsFromGlyphs(glyphs, textPagePtr);
+
+    /* ── 3. cleanup & resolve task ───────────────────────── */
+    this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
+    this.releasePage(doc, page.index);
+
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, label, 'End', doc.id);
+    return PdfTaskHelper.resolve({ runs });
+  }
+
+  /**
+   * Group consecutive glyphs that belong to the same CPDF_TextObject
+   * using FPDFText_GetTextObject(), and calculate rotation from glyph positions.
+   */
+  private buildRunsFromGlyphs(
+    glyphs: PdfGlyphObject[],
+    textPagePtr: number
+  ): PdfRun[] {
+    const runs: PdfRun[] = [];
+    let current: PdfRun | null = null;
+    let curObjPtr: number | null = null;
+
+
+    /** ── main loop ──────────────────────────────────────────── */
+    for (let i = 0; i < glyphs.length; i++) {
+      const g = glyphs[i];
+
+      /* 1 — find the CPDF_TextObject this glyph belongs to */
+      const objPtr = this.pdfiumModule.FPDFText_GetTextObject(textPagePtr, i) as number;
+
+      if(g.isEmpty) {
+        continue;
+      }
+
+      /* 2 — start a new run when the text object changes */
+      if (objPtr !== curObjPtr) {
+        curObjPtr = objPtr;
+        current = {
+          rect: {
+            x: g.origin.x,
+            y: g.origin.y,
+            width: g.size.width,
+            height: g.size.height,
+          },
+          charStart: i,
+          glyphs: [],
+        };
+        runs.push(current);
+      }
+
+      /* 3 — append the slim glyph record */
+      current!.glyphs.push({
+        x: g.origin.x,
+        y: g.origin.y,
+        width: g.size.width,
+        height: g.size.height,
+        flags: g.isSpace ? 1 : 0,
+      });
+
+      /* 4 — expand the run’s bounding rect */
+      const right  = g.origin.x + g.size.width;
+      const bottom = g.origin.y + g.size.height;
+
+      current!.rect.width  = Math.max(current!.rect.x + current!.rect.width, right) - current!.rect.x;
+      current!.rect.y      = Math.min(current!.rect.y, g.origin.y);
+      current!.rect.height = Math.max(current!.rect.y + current!.rect.height, bottom) - current!.rect.y;
+    }
+
+    return runs;
+  }
+
+
+  /**
+   * Extract glyph geometry + metadata for `charIndex`
+   *
+   * Returns device–space coordinates:
+   *   x,y  → **top-left** corner (integer-pixels)
+   *   w,h  → width / height (integer-pixels, ≥ 1)
+   *
+   * And two flags:
+   *   isSpace → true if the glyph’s Unicode code-point is U+0020
+   */
+  private readGlyphInfo(
+    page: PdfPageObject,
+    pagePtr: number,
+    textPagePtr: number,
+    charIndex: number,
+  ): PdfGlyphObject {
+    // ── native stack temp pointers ──────────────────────────────
+    const dx1Ptr    = this.malloc(4);
+    const dy1Ptr    = this.malloc(4);
+    const dx2Ptr    = this.malloc(4);
+    const dy2Ptr    = this.malloc(4);
+    const rectPtr = this.malloc(16);               // 4 floats = 16 bytes
+
+    let x = 0,
+        y = 0,
+        width  = 0,
+        height = 0,
+        isSpace = false;
+
+    // ── 1) raw glyph bbox in                      page-user-space
+    if (
+      this.pdfiumModule.FPDFText_GetLooseCharBox(
+        textPagePtr, charIndex, rectPtr)
+    ) {
+      const left   = this.pdfiumModule.pdfium.getValue(rectPtr,      'float');
+      const top    = this.pdfiumModule.pdfium.getValue(rectPtr + 4,  'float');
+      const right  = this.pdfiumModule.pdfium.getValue(rectPtr + 8,  'float');
+      const bottom = this.pdfiumModule.pdfium.getValue(rectPtr + 12, 'float');
+
+      if(left === right || top === bottom) {
+        return {
+          origin: { x: 0, y: 0 },
+          size: { width: 0, height: 0 },
+          isEmpty: true
+        };
+      }
+
+      // ── 2) map 2 opposite corners to            device-space
+      this.pdfiumModule.FPDF_PageToDevice(
+        pagePtr,
+        0,
+        0,
+        page.size.width,
+        page.size.height,
+        /*rotate=*/0,
+        left,
+        top,
+        dx1Ptr,
+        dy1Ptr,
+      );
+      this.pdfiumModule.FPDF_PageToDevice(
+        pagePtr,
+        0,
+        0,
+        page.size.width,
+        page.size.height,
+        /*rotate=*/0,
+        right,
+        bottom,
+        dx2Ptr,
+        dy2Ptr,
+      );
+
+      const x1 = this.pdfiumModule.pdfium.getValue(dx1Ptr, 'i32');
+      const y1 = this.pdfiumModule.pdfium.getValue(dy1Ptr, 'i32');
+      const x2 = this.pdfiumModule.pdfium.getValue(dx2Ptr, 'i32');
+      const y2 = this.pdfiumModule.pdfium.getValue(dy2Ptr, 'i32');
+
+      x = Math.min(x1, x2);
+      y = Math.min(y1, y2);
+      width  = Math.max(1, Math.abs(x2 - x1));
+      height = Math.max(1, Math.abs(y2 - y1));
+
+      // ── 3) extra flags ───────────────────────────────────────
+      const uc = this.pdfiumModule.FPDFText_GetUnicode(textPagePtr, charIndex);
+      isSpace  = uc === 32; 
+    }
+
+    // ── free tmps ───────────────────────────────────────────────
+    [rectPtr, dx1Ptr, dy1Ptr, dx2Ptr, dy2Ptr].forEach(p => this.free(p));
+
+    return {
+      origin: { x, y },
+      size:   { width, height },
+      ...(isSpace && { isSpace })
+    };
+  }
+
+  /**
+   * Geometry-only text extraction
+   * ------------------------------------------
+   * Returns every glyph on the requested page
+   * in the logical order delivered by PDFium.
+   *
+   * The promise resolves to an array of objects:
+   *   {
+   *     idx:     number;            // glyph index on the page (0…n-1)
+   *     origin:  { x: number; y: number };
+   *     size:    { width: number;  height: number };
+   *     angle:   number;            // degrees, counter-clock-wise
+   *     isSpace: boolean;           // true  → U+0020
+   *   }
+   *
+   * No Unicode is included; front-end decides whether to hydrate it.
+   */
+  public getPageGlyphs(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+  ): PdfTask<PdfGlyphObject[]> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', doc, page);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', 'Begin', doc.id);
+
+    // ── 1) safety: document handle must be alive ───────────────
+    const docHandle = this.docs[doc.id];
+    if (!docHandle) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    // ── 2) load page + text page handles ───────────────────────
+    const pagePtr      = this.acquirePage(doc, page.index);
+    const textPagePtr  = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
+
+    // ── 3) iterate all glyphs in logical order ─────────────────
+    const total  = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
+    const glyphs = new Array(total);
+
+    for (let i = 0; i < total; i++) {
+      const g = this.readGlyphInfo(
+        page,
+        pagePtr,
+        textPagePtr,
+        i
+      );
+
+      if(g.isEmpty) {
+        continue;
+      }
+
+      glyphs[i] = { ...g };
+    }
+
+    // ── 4) clean-up native handles ─────────────────────────────
+    this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
+    this.releasePage(doc, page.index);
+
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', 'End', doc.id);
+
+    return PdfTaskHelper.resolve(glyphs);
   }
 
   private readCharBox(
@@ -4947,7 +5027,7 @@ export class PdfiumEngine implements PdfEngine {
    * @private
    */
   private renderPageRectToImageData(
-    docPtr: number,
+    doc: PdfDocumentObject,
     page: PdfPageObject,
     rect: Rect,
     scaleFactor: number,
@@ -4959,8 +5039,8 @@ export class PdfiumEngine implements PdfEngine {
     const bytesPerPixel = 4;
 
     // Round the transformed dimensions to whole pixels
-    const rectSize = transformRect(page.size, rect, rotation, scaleFactor * dpr);
-    const pageSize = transformSize(page.size, rotation, scaleFactor * dpr);
+    const rectSize = toIntRect(transformRect(page.size, rect, rotation, scaleFactor * dpr));
+    const pageSize = toIntSize(transformSize(page.size, rotation, scaleFactor * dpr));
 
     const bitmapHeapLength = rectSize.size.width * rectSize.size.height * bytesPerPixel;
     const bitmapHeapPtr = this.malloc(bitmapHeapLength);
@@ -4986,7 +5066,7 @@ export class PdfiumEngine implements PdfEngine {
       flags = flags | RenderFlag.ANNOT;
     }
 
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, page.index);
+    const pagePtr = this.acquirePage(doc, page.index);
 
     this.pdfiumModule.FPDF_RenderPageBitmap(
       bitmapPtr,
@@ -5000,7 +5080,7 @@ export class PdfiumEngine implements PdfEngine {
     );
 
     this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, page.index);
 
     const data = this.pdfiumModule.pdfium.HEAPU8.subarray(
       bitmapHeapPtr,
@@ -5668,7 +5748,6 @@ export class PdfiumEngine implements PdfEngine {
       return PdfTaskHelper.resolve<SearchAllPagesResult>({ results: [], total: 0 });
     }
 
-    const { docPtr } = this.docs[doc.id];
     const length = 2 * (keyword.length + 1);
     const keywordPtr = this.malloc(length);
     this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
@@ -5687,7 +5766,7 @@ export class PdfiumEngine implements PdfEngine {
       for (let pageIndex = 0; pageIndex < doc.pageCount; pageIndex++) {
         // Get all results for the current page efficiently (load page only once)
         const pageResults = this.searchAllInPage(
-          docPtr,
+          doc,
           doc.pages[pageIndex],
           keywordPtr,
           flag
@@ -5719,6 +5798,87 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
+   * Extract word-aligned context for a search hit.
+   *
+   * @param fullText      full UTF-16 page text (fetch this once per page!)
+   * @param start         index of 1st char that matched
+   * @param count         number of chars in the match
+   * @param windowChars   minimum context chars to keep left & right
+   */
+  private buildContext(
+    fullText: string,
+    start: number,
+    count: number,
+    windowChars = 30
+  ): TextContext {
+    const WORD_BREAK = /[\s\u00A0.,;:!?()\[\]{}<>/\\\-"'`“”\u2013\u2014]/;
+
+    // Find the start of a word moving left
+    const findWordStart = (index: number): number => {
+      while (index > 0 && !WORD_BREAK.test(fullText[index - 1])) index--;
+      return index;
+    };
+
+    // Find the end of a word moving right
+    const findWordEnd = (index: number): number => {
+      while (index < fullText.length && !WORD_BREAK.test(fullText[index])) index++;
+      return index;
+    };
+
+    // Move left to build context
+    let left = start;
+    while (left > 0 && WORD_BREAK.test(fullText[left - 1])) left--; // Skip blanks
+    let collected = 0;
+    while (left > 0 && collected < windowChars) {
+      left--;
+      if (!WORD_BREAK.test(fullText[left])) collected++;
+    }
+    left = findWordStart(left);
+
+    // Move right to build context
+    let right = start + count;
+    while (right < fullText.length && WORD_BREAK.test(fullText[right])) right++; // Skip blanks
+    collected = 0;
+    while (right < fullText.length && collected < windowChars) {
+      if (!WORD_BREAK.test(fullText[right])) collected++;
+      right++;
+    }
+    right = findWordEnd(right);
+
+    // Compose the context
+    const before = fullText.slice(left, start).replace(/\s+/g, ' ').trimStart();
+    const match = fullText.slice(start, start + count);
+    const after = fullText.slice(start + count, right).replace(/\s+/g, ' ').trimEnd();
+
+    return {
+      before: this.tidy(before),
+      match: this.tidy(match),
+      after: this.tidy(after),
+      truncatedLeft: left > 0,
+      truncatedRight: right < fullText.length
+    };
+  }
+
+  /**
+   * Tidy the text to remove any non-printable characters and whitespace
+   * @param s - text to tidy
+   * @returns tidied text
+   * 
+   * @private
+   */
+  private tidy(s: string): string {
+    return s
+      /* 1️⃣  join words split by hyphen + U+FFFE + whitespace */
+      .replace(/-\uFFFE\s*/g, '')
+  
+      /* 2️⃣  drop any remaining U+FFFE, soft-hyphen, zero-width chars */
+      .replace(/[\uFFFE\u00AD\u200B\u2060\uFEFF]/g, '')
+  
+      /* 3️⃣  collapse whitespace so we stay on one line */
+      .replace(/\s+/g, ' ')
+  }
+
+  /**
    * Search for all occurrences of a keyword on a single page
    * This method efficiently loads the page only once and finds all matches
    * 
@@ -5732,15 +5892,22 @@ export class PdfiumEngine implements PdfEngine {
    * @private
    */
   private searchAllInPage(
-    docPtr: number,
+    doc: PdfDocumentObject,
     page: PdfPageObject,
     keywordPtr: number,
     flag: number,
   ): SearchResult[] {
     const pageIndex = page.index;
     // Load the page and text page only once
-    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, pageIndex);
+    const pagePtr = this.acquirePage(doc, pageIndex);
     const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pagePtr);
+
+    // Load the full text of the page once
+    const total = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
+    const bufPtr = this.malloc(2 * (total + 1));
+    this.pdfiumModule.FPDFText_GetText(textPagePtr, 0, total, bufPtr);
+    const fullText = this.pdfiumModule.pdfium.UTF16ToString(bufPtr);
+    this.free(bufPtr);
     
     const pageResults: SearchResult[] = [];
     
@@ -5765,11 +5932,18 @@ export class PdfiumEngine implements PdfEngine {
         charCount,
       );
 
+      const context = this.buildContext(
+        fullText,
+        charIndex,
+        charCount,
+      );
+
       pageResults.push({
         pageIndex,
         charIndex,
         charCount,
-        rects
+        rects,
+        context,
       });
     }
     
@@ -5778,8 +5952,22 @@ export class PdfiumEngine implements PdfEngine {
     
     // Close the text page and page only once
     this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
-    this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    this.releasePage(doc, pageIndex);
     
     return pageResults;
+  }
+
+  /**
+   * Convert ImageData to Blob
+   * 
+   * @param imageData - ImageData
+   * @returns Blob
+   * 
+   * @private
+   */
+  private imageDataToBlob(imageData: ImageData): Promise<Blob> {
+    const off = new OffscreenCanvas(imageData.width, imageData.height);
+    off.getContext('2d')!.putImageData(imageData, 0, 0);
+    return off.convertToBlob({ type: 'image/webp' });
   }
 }

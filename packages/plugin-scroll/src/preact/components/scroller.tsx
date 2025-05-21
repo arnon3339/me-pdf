@@ -1,0 +1,103 @@
+/** @jsxImportSource preact */
+import { JSX } from 'preact';
+import { ScrollStrategy, ScrollerLayout, PageLayout } from '@embedpdf/plugin-scroll';
+import { useRegistry } from '@embedpdf/core/preact';
+import { Rotation } from '@embedpdf/models';
+import { useScrollCapability } from '../hooks';
+import { useEffect, useState } from 'preact/hooks';
+
+interface RenderPageProps extends PageLayout {
+  rotation: Rotation;
+  scale: number;
+}
+
+type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
+  renderPage: (props: RenderPageProps) => JSX.Element;
+};
+
+export function Scroller({ renderPage, ...props }: ScrollerProps) {
+  const { provides: scrollProvides } = useScrollCapability();
+  const { registry } = useRegistry();
+  const [scrollerLayout, setScrollerLayout] = useState<ScrollerLayout | null>(
+    () => scrollProvides?.getScrollerLayout() ?? null
+  );
+
+  useEffect(() => {
+    if (!scrollProvides) return;
+
+    return scrollProvides.onScrollerData(setScrollerLayout);
+  }, [scrollProvides]);
+
+  if (!scrollerLayout) return null;
+  if (!registry) return null;
+
+  const coreState = registry.getStore().getState();
+
+  return <div {...props} style={{
+    width : `${scrollerLayout.totalWidth}px`,
+    height: `${scrollerLayout.totalHeight}px`,
+    position: 'relative',
+    boxSizing: 'border-box',
+    margin: '0 auto',
+    ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) && {
+      display: 'flex',
+      flexDirection: 'row',
+    }
+  }}>
+    <div style={{ 
+      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
+        width: scrollerLayout.startSpacing,
+        height: '100%',
+        flexShrink: 0,
+      } : {
+        height: scrollerLayout.startSpacing,
+        width: '100%'
+      }
+    }} />
+    <div style={{ 
+      gap: scrollerLayout.pageGap, 
+      display: 'flex', 
+      alignItems: 'center',
+      position: 'relative',
+      boxSizing: 'border-box',
+      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
+        flexDirection: 'row',
+        minHeight: '100%'
+      } : {
+        flexDirection: 'column',
+        minWidth: 'fit-content',
+      }
+    }}>
+      {scrollerLayout.items.map(item => 
+        <div key={item.pageNumbers[0]} style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: scrollerLayout.pageGap
+        }}>
+          {item.pageLayouts.map(layout => 
+            <div key={layout.pageNumber} style={{
+              width: `${layout.rotatedWidth}px`,
+              height: `${layout.rotatedHeight}px`,
+            }}>
+              {renderPage({
+                ...layout,
+                rotation: coreState.core.rotation,
+                scale: coreState.core.scale
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+    <div style={{ 
+      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
+        width: scrollerLayout.endSpacing,
+        height: '100%',
+        flexShrink: 0,
+      } : {
+        height: scrollerLayout.endSpacing,
+        width: '100%'
+      }
+    }} />
+  </div>;
+}

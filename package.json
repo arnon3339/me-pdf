@@ -15,6 +15,7 @@
     "clean": "turbo run clean && rimraf .turbo/cache",
     "build:fresh": "pnpm clean && turbo run build",
     "build": "turbo run build",
+    "build:snippet": "turbo run build --filter=\"./packages/*\" --filter=\"./snippet\"",
     "build:watch": "ROARR_LOG=true turbowatch ./config/turbowatch.config.ts | roarr",
     "watch": "turbo watch",
     "watch:packages": "turbo watch build --filter=\"./packages/*\""

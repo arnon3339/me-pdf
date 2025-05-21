@@ -1,140 +1,259 @@
-import { IPlugin, PluginRegistry } from "@embedpdf/core";
-import { PdfPageObject } from "@embedpdf/models";
+import { BasePlugin, CoreState, PluginRegistry, SET_DOCUMENT, SET_PAGES, SET_ROTATION, StoreState, createBehaviorEmitter, createEmitter, getPagesWithRotatedSize } from "@embedpdf/core";
+import { PdfPageObject, PdfPageObjectWithRotatedSize, Rotation } from "@embedpdf/models";
 import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
-import { ScrollCapability, ScrollMetrics, ScrollPluginConfig, ScrollStrategy } from "./types";
+import { ScrollCapability, ScrollPluginConfig, ScrollStrategy, ScrollMetrics, ScrollState, LayoutChangePayload, ScrollerLayout, ScrollToPageOptions } from "./types";
+import { BaseScrollStrategy, ScrollStrategyConfig } from "./strategies/base-strategy";
 import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
 import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
-import { PageManagerCapability, PageManagerPlugin } from "@embedpdf/plugin-page-manager";
-import { ScrollStrategyConfig } from "./strategies/base-strategy";
+import { updateScrollState, ScrollAction } from "./actions";
+import { VirtualItem } from "./types/virtual-item";
+import { getScrollerLayout } from "./selectors";
 
-export class ScrollPlugin implements IPlugin<ScrollPluginConfig> {
+type PartialScroll = Partial<ScrollState>;
+type Emits = {
+  layout?: LayoutChangePayload;
+  metrics?: ScrollMetrics;
+};
+
+export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapability, ScrollState, ScrollAction> {
+  static readonly id = 'scroll' as const;
   private viewport: ViewportCapability;
-  private pageManager: PageManagerCapability;
-  private strategy: VerticalScrollStrategy | HorizontalScrollStrategy;
-  private scrollHandlers: ((metrics: ScrollMetrics) => void)[] = [];
-  private scrollReadyHandlers: (() => void)[] = [];
-  private pageChangeHandlers: ((pageNumber: number) => void)[] = [];
-  private currentZoom: number = 1;
+  private strategy: BaseScrollStrategy;
+  private strategyConfig: ScrollStrategyConfig;
+  private currentScale: number = 1;
+  private currentRotation: Rotation = Rotation.Degree0;
+  private initialPage?: number;
   private currentPage: number = 1;
-  private initialPage: number | undefined;
+
+  private readonly layout$ = createBehaviorEmitter<LayoutChangePayload>();
+  private readonly scroll$ = createBehaviorEmitter<ScrollMetrics>();
+  private readonly state$ = createBehaviorEmitter<ScrollState>();
+  private readonly scrollerLayout$ = createBehaviorEmitter<ScrollerLayout>();
+  private readonly pageChange$  = createEmitter<number>();
 
   constructor(
     public readonly id: string,
-    private registry: PluginRegistry,
+    registry: PluginRegistry,
     private config?: ScrollPluginConfig
   ) {
-    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
-    this.pageManager = this.registry.getPlugin<PageManagerPlugin>('page-manager')!.provides();
-    
-    this.currentZoom = parseFloat(this.viewport.getContainer().style.getPropertyValue('--scale-factor') || '1');
+    super(id, registry);
 
-    const strategyConfig: ScrollStrategyConfig = {
-      createPageElement: (page, pageNum) => this.pageManager.createPageElement(page, pageNum),
-      getScaleFactor: () => this.currentZoom,
-      pageGap: this.pageManager.getPageGap(),
+    this.viewport = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
+
+    this.strategyConfig = {
+      pageGap: this.config?.pageGap ?? 10,
       viewportGap: this.viewport.getViewportGap(),
-      bufferSize: this.config?.bufferSize ?? 2
+      bufferSize: this.config?.bufferSize ?? 2,
     };
 
-    // Choose strategy based on config
-    if (this.config?.strategy === ScrollStrategy.Horizontal) {
-      this.strategy = new HorizontalScrollStrategy(strategyConfig);
-    } else {
-      // Default to vertical scrolling
-      this.strategy = new VerticalScrollStrategy(strategyConfig);
-    }
+    this.strategy = this.config?.strategy === ScrollStrategy.Horizontal
+      ? new HorizontalScrollStrategy(this.strategyConfig)
+      : new VerticalScrollStrategy(this.strategyConfig);
 
-    if(this.config?.initialPage) {
-      this.initialPage = this.config.initialPage;
-    }
-    
-    this.viewport.onViewportChange(this.handleViewportChange.bind(this), { mode: 'throttle', wait: 250 });
-    this.viewport.onContainerChange(this.handleContainerChange.bind(this));
-    this.pageManager.onPagesChange(this.handlePageSpreadChange.bind(this));
-    this.pageManager.onPageManagerInitialized(this.handlePageManagerInitialized.bind(this));
+    this.initialPage = this.config?.initialPage;
+    this.currentScale = this.coreStore.getState().core.scale;
+    this.currentRotation = this.coreStore.getState().core.rotation;
+    // Subscribe to viewport and page manager events
+    this.viewport.onViewportChange(
+      vp => this.commitMetrics(this.computeMetrics(vp)),
+      { mode: 'throttle', wait: 250 },
+    );
+    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => 
+      this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
+    );
+    this.coreStore.onAction(SET_ROTATION, (_action, state) => 
+      this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
+    );
+    this.coreStore.onAction(SET_PAGES, (_action, state) => 
+      this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
+    );
   }
 
-  private handlePageManagerInitialized(pdfPageObject: PdfPageObject[][] ): void {
-    this.strategy.calculateDimensions(pdfPageObject);
+  /* ------------------------------------------------------------------ */
+  /*  ᴄᴏᴍᴘᴜᴛᴇʀs                                                       */
+  /* ------------------------------------------------------------------ */
 
-    // Trigger initial viewport update to render virtual items
-    this.strategy.handleScroll(this.viewport.getMetrics());
+  private computeLayout(pages: PdfPageObjectWithRotatedSize[][]) {
+    const virtualItems = this.strategy.createVirtualItems(pages);
+    const totalContentSize = this.strategy.getTotalContentSize(virtualItems);
+    return { virtualItems, totalContentSize };
+  }
 
-    if(this.initialPage) {
-      this.strategy.scrollToPage(this.initialPage, 'instant');
+  private computeMetrics(
+    vp: ViewportMetrics,
+    items: VirtualItem[] = this.getState().virtualItems,
+  ) {
+    return this.strategy.handleScroll(vp, items, this.currentScale);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  ᴄᴏᴍᴍɪᴛ  (single source of truth)                                  */
+  /* ------------------------------------------------------------------ */
+
+  private commit(stateDelta: PartialScroll, emit?: Emits) {
+    /* update Redux-like store */
+    this.dispatch(updateScrollState(stateDelta));
+
+    /* fire optional events */
+    if (emit?.layout) this.layout$.emit(emit.layout);
+    if (emit?.metrics) {
+      this.scroll$.emit(emit.metrics);
+
+      if (emit.metrics.currentPage !== this.currentPage) {
+        this.currentPage = emit.metrics.currentPage;
+        this.pageChange$.emit(this.currentPage);
+      }
     }
 
-    this.scrollReadyHandlers.forEach(handler => handler());
+    /* keep scroller-layout reactive */
+    this.scrollerLayout$.emit(this.getScrollerLayoutFromState());
   }
 
-  private handleContainerChange(container: HTMLElement): void {
-    const newZoom = parseFloat(container.style.getPropertyValue('--scale-factor') || '1');
-    if (newZoom !== this.currentZoom) {
-      this.currentZoom = newZoom;
+  /* convenience wrappers */
+  private commitMetrics(metrics: ScrollMetrics) {
+    this.commit(metrics, { metrics });
+  }
 
-      const metrics = this.viewport.getMetrics();
-      this.strategy.handleScroll(metrics);
+  /* full re-compute after page-spread or initialisation */
+  private refreshAll(pages: PdfPageObjectWithRotatedSize[][], vp: ViewportMetrics) {
+    const layout = this.computeLayout(pages);
+    const metrics = this.computeMetrics(vp, layout.virtualItems);
+
+    this.commit({ ...layout, ...metrics }, { layout, metrics });
+  }
+
+  private getVirtualItemsFromState(): VirtualItem[] {
+    const state = this.getState();
+    return state.virtualItems || [];
+  }
+
+  private getScrollerLayoutFromState(): ScrollerLayout {
+    const scale = this.coreStore.getState().core.scale;
+    return getScrollerLayout(this.getState(), scale);
+  }
+
+  private pushScrollLayout() {
+    this.scrollerLayout$.emit(this.getScrollerLayoutFromState());
+  }
+
+  override onStoreUpdated(_prevState: ScrollState, _newState: ScrollState): void {
+    this.pushScrollLayout();
+  }
+
+  override onCoreStoreUpdated(prevState: StoreState<CoreState>, newState: StoreState<CoreState>): void {
+    if(prevState.core.scale !== newState.core.scale) {
+      this.currentScale = newState.core.scale;
+      this.commitMetrics(this.computeMetrics(this.viewport.getMetrics()));
+    }
+    if(prevState.core.rotation !== newState.core.rotation) {
+      this.currentRotation = newState.core.rotation;
     }
   }
 
-  private handleViewportChange(metrics: ViewportMetrics): void {
-    const scrollMetrics = this.strategy.handleScroll(metrics);
-    this.handleScrollMetricsChange(scrollMetrics);
+  /**
+   * Change the scroll strategy at runtime (e.g., vertical <-> horizontal)
+   * @param newStrategy ScrollStrategy.Horizontal or ScrollStrategy.Vertical
+   */
+  private setScrollStrategy(newStrategy: ScrollStrategy) {
+    // Only update if the strategy is actually changing
+    if (
+      (newStrategy === ScrollStrategy.Horizontal && this.strategy instanceof HorizontalScrollStrategy) ||
+      (newStrategy === ScrollStrategy.Vertical && this.strategy instanceof VerticalScrollStrategy)
+    ) {
+      return;
+    }
+
+    this.strategy =
+      newStrategy === ScrollStrategy.Horizontal
+        ? new HorizontalScrollStrategy(this.strategyConfig)
+        : new VerticalScrollStrategy(this.strategyConfig);
+
+    // Update state with new strategy
+    this.dispatch(
+      updateScrollState({
+        strategy: newStrategy,
+      })
+    );
+
+    // Recalculate layout and scroll metrics
+    const pages = getPagesWithRotatedSize(this.coreStore.getState().core);
+    this.refreshAll(pages, this.viewport.getMetrics());
   }
 
-  private handlePageSpreadChange(pdfPageObject: PdfPageObject[][]): void {
-    const metrics = this.viewport.getMetrics();
-    const scrollMetrics = this.strategy.updateLayout(metrics, pdfPageObject);
-    this.handleScrollMetricsChange(scrollMetrics);
+  protected buildCapability(): ScrollCapability {
+    return {
+      onStateChange: this.state$.on,
+      onLayoutChange: this.layout$.on,
+      onScroll: this.scroll$.on,
+      onPageChange: this.pageChange$.on,
+      onScrollerData: this.scrollerLayout$.on,
+      scrollToPage: (options: ScrollToPageOptions) => {
+        const { pageNumber, behavior = 'smooth', pageCoordinates, center = false } = options;
+        const virtualItems = this.getVirtualItemsFromState();
+        const position = this.strategy.getScrollPositionForPage(pageNumber, virtualItems, this.currentScale, this.currentRotation, pageCoordinates);
+        this.viewport.scrollTo({ ...position, behavior, center });
+      },
+      scrollToNextPage: (behavior = 'smooth') => {
+        const virtualItems = this.getVirtualItemsFromState();
+        const currentItemIndex = virtualItems.findIndex(item =>
+          item.pageNumbers.includes(this.currentPage)
+        );
+        if (currentItemIndex >= 0 && currentItemIndex < virtualItems.length - 1) {
+          const nextItem = virtualItems[currentItemIndex + 1];
+          const position = this.strategy.getScrollPositionForPage(
+            nextItem.pageNumbers[0],
+            virtualItems,
+            this.currentScale,
+            this.currentRotation
+          );
+          this.viewport.scrollTo({ ...position, behavior });
+        }
+      },
+      scrollToPreviousPage: (behavior = 'smooth') => {
+        const virtualItems = this.getVirtualItemsFromState();
+        const currentItemIndex = virtualItems.findIndex(item =>
+          item.pageNumbers.includes(this.currentPage)
+        );
+        if (currentItemIndex > 0) {
+          const prevItem = virtualItems[currentItemIndex - 1];
+          const position = this.strategy.getScrollPositionForPage(
+            prevItem.pageNumbers[0],
+            virtualItems,
+            this.currentScale,
+            this.currentRotation
+          );
+          this.viewport.scrollTo({ ...position, behavior });
+        }
+      },
+      getMetrics: this.getMetrics.bind(this),
+      getLayout: this.getLayout.bind(this),
+      getState: () => this.getState(),
+      getPageGap: () => this.getState().pageGap,
+      getScrollerLayout: () => this.getScrollerLayoutFromState(),
+      setScrollStrategy: (strategy: ScrollStrategy) => this.setScrollStrategy(strategy),
+    };
   }
 
   private getMetrics(viewport?: ViewportMetrics): ScrollMetrics {
-    if (!viewport) {
-      viewport = this.viewport.getMetrics();
-    }
-
-    return this.strategy.handleScroll(viewport);
+    const metrics = viewport || this.viewport.getMetrics();
+    const virtualItems = this.getVirtualItemsFromState();
+    return this.strategy.handleScroll(metrics, virtualItems, this.currentScale);
   }
 
-  private handleScrollMetricsChange(scrollMetrics: ScrollMetrics): void {
-    this.scrollHandlers.forEach(handler => handler(scrollMetrics));
-    this.pageManager.updateVisiblePages({
-      visiblePages: scrollMetrics.visiblePages, 
-      currentPage: scrollMetrics.currentPage,
-      renderedPageIndexes: scrollMetrics.renderedPageIndexes
-    });
-
-    this.handlePageChange(scrollMetrics);
-  }
-
-  private handlePageChange(scrollMetrics: ScrollMetrics): void {
-    if (this.currentPage !== scrollMetrics.currentPage) {
-      this.pageChangeHandlers.forEach(handler => handler(scrollMetrics.currentPage));
-      this.currentPage = scrollMetrics.currentPage;
-    }
-  }
-
-  provides(): ScrollCapability {
-    return {
-      onScroll: (handler) => this.scrollHandlers.push(handler),
-      onPageChange: (handler) => this.pageChangeHandlers.push(handler),
-      scrollToPage: (pageNumber, behavior = 'smooth') => this.strategy.scrollToPage(pageNumber, behavior),
-      scrollToNextPage: (behavior = 'smooth') => this.strategy.scrollToNextPage(behavior),
-      scrollToPreviousPage: (behavior = 'smooth') => this.strategy.scrollToPreviousPage(behavior),
-      getMetrics: (viewport?: ViewportMetrics) => this.getMetrics(viewport),
-      onScrollReady: (handler) => this.scrollReadyHandlers.push(handler),
-    };
+  private getLayout(): LayoutChangePayload {
+    const state = this.getState();
+    return { virtualItems: state.virtualItems, totalContentSize: state.totalContentSize };
   }
 
   async initialize(): Promise<void> {
-    const container = this.viewport.getContainer();
-    const innerDiv = this.viewport.getInnerDiv();
-    this.strategy.initialize(container, innerDiv);
+    // No DOM initialization needed; state drives rendering
   }
 
   async destroy(): Promise<void> {
-    this.strategy.destroy();
-    this.scrollHandlers = [];
-    this.scrollReadyHandlers = [];
+    this.layout$.clear();
+    this.scroll$.clear();
+    this.pageChange$.clear();
+    this.state$.clear();
+    super.destroy();
   }
 }

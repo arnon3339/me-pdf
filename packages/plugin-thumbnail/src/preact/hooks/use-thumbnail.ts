@@ -1,0 +1,5 @@
+import { useCapability, usePlugin } from "@embedpdf/core/preact";
+import { ThumbnailPlugin } from "@embedpdf/plugin-thumbnail";
+
+export const useThumbnail = () => usePlugin<ThumbnailPlugin>(ThumbnailPlugin.id);
+export const useThumbnailCapability = () => useCapability<ThumbnailPlugin>(ThumbnailPlugin.id);

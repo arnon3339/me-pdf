@@ -12,8 +12,6 @@ export const manifest: PluginManifest<ViewportPluginConfig> = {
   optional: [],
   defaultConfig: {
     enabled: true,
-    defaultWidth: 1000,
-    defaultHeight: 1000,
     viewportGap: 10
   }
-}; 
+};

@@ -38,6 +38,8 @@ import {
   PdfBookmarksObject,
   PdfUrlOptions,
   PdfFileUrl,
+  PdfGlyphObject,
+  PdfPageGeometry,
 } from '@embedpdf/models';
 
 /**
@@ -157,9 +159,10 @@ export function createMockPdfEngine(
           array[i * 4 + 3] = alphaValue;
         }
 
-        return PdfTaskHelper.resolve(
-          new ImageData(array, imageSize.width, imageSize.height),
-        );
+        const ab = array.buffer;
+        const realBuffer = ab instanceof ArrayBuffer ? ab : new Uint8Array(array).buffer;
+        const blob = new Blob([realBuffer], { type: 'application/octet-stream' });
+        return PdfTaskHelper.resolve(blob);
       },
     ),
     renderPageRect: jest.fn(
@@ -189,9 +192,10 @@ export function createMockPdfEngine(
           array[i * 4 + 3] = alphaValue;
         }
 
-        return PdfTaskHelper.resolve(
-          new ImageData(array, imageSize.width, imageSize.height),
-        );
+        const ab = array.buffer;
+        const realBuffer = ab instanceof ArrayBuffer ? ab : new Uint8Array(array).buffer;
+        const blob = new Blob([realBuffer], { type: 'application/octet-stream' });
+        return PdfTaskHelper.resolve(blob);
       },
     ),
     renderThumbnail: jest.fn((doc: PdfDocumentObject, page: PdfPageObject) => {
@@ -209,9 +213,11 @@ export function createMockPdfEngine(
         array[i * 4 + 3] = alphaValue;
       }
 
-      return PdfTaskHelper.resolve(
-        new ImageData(array, thumbnailWidth, thumbnailHeight),
-      );
+      const ab = array.buffer;
+      const realBuffer = ab instanceof ArrayBuffer ? ab : new Uint8Array(array).buffer;
+      const blob = new Blob([realBuffer], { type: 'image/png' });
+  
+      return PdfTaskHelper.resolve(blob);
     }),
     getPageAnnotations: jest.fn(
       (
@@ -313,6 +319,14 @@ export function createMockPdfEngine(
     extractText: (pdf: PdfDocumentObject, pageIndexes: number[]) => {
       return PdfTaskHelper.resolve('');
     },
+    getPageGlyphs: (doc: PdfDocumentObject, page: PdfPageObject) => {
+      return PdfTaskHelper.resolve([] as PdfGlyphObject[]);
+    },
+    getPageGeometry: (doc: PdfDocumentObject, page: PdfPageObject) => {
+      return PdfTaskHelper.resolve({
+        runs: []
+      } as PdfPageGeometry);
+    },
     merge: (files: PdfFile[]) => {
       return PdfTaskHelper.resolve({
         id: 'id',
@@ -324,54 +338,6 @@ export function createMockPdfEngine(
         id: 'id',
         content: new ArrayBuffer(0),
       });
-    },
-    startSearch: (doc: PdfDocumentObject, contextId: number) => {
-      return PdfTaskHelper.resolve(true);
-    },
-    searchNext: (
-      doc: PdfDocumentObject,
-      contextId: number,
-      target: SearchTarget,
-    ) => {
-      return PdfTaskHelper.resolve({
-        pageIndex: 0,
-        charIndex: 0,
-        charCount: 1,
-        rects: [{
-          origin: {
-            x: 0,
-            y: 0,
-          },
-          size: {
-            width: 0,
-            height: 0,
-          },
-        }],
-      } as SearchResult | undefined);
-    },
-    searchPrev: (
-      doc: PdfDocumentObject,
-      contextId: number,
-      target: SearchTarget,
-    ) => {
-      return PdfTaskHelper.resolve({
-        pageIndex: 0,
-        charIndex: 0,
-        charCount: 1,
-        rects: [{
-          origin: {
-            x: 0,
-            y: 0,
-          },
-          size: {
-            width: 0,
-            height: 0,
-          },
-        }],
-      } as SearchResult | undefined);
-    },
-    stopSearch: (doc: PdfDocumentObject, contextId: number) => {
-      return PdfTaskHelper.resolve(true);
     },
     searchAllPages: (doc: PdfDocumentObject, keyword: string, flags?: MatchFlag[]) => {
       // Create a mock search result
@@ -389,6 +355,13 @@ export function createMockPdfEngine(
             height: 20,
           },
         }],
+        context: {
+          before: '',
+          match: '',
+          after: '',
+          truncatedLeft: false,
+          truncatedRight: false,
+        },
       };
       
       // Return a mock SearchAllPagesResult with a single result

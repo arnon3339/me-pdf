@@ -4,7 +4,7 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
   public componentConfig: T;
   public props: T['id'] extends string ? (T extends BaseUIComponent<infer P, any, any> ? P & { id: string } : any) : any;
   public type: string;
-  private children: Array<{ id: string,component: UIComponent<any>, priority: number }> = [];
+  private children: Array<{ id: string,component: UIComponent<any>, priority: number, className?: string }> = [];
   private registry: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any>;
   private updateCallbacks: (() => void)[] = [];
   private hadUpdateBeforeListeners = false;
@@ -25,8 +25,8 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
     this.registry = registry;
   }
 
-  addChild(id: string, child: UIComponent<any>, priority: number = 0) {
-    this.children.push({ id, component: child, priority });
+  addChild(id: string, child: UIComponent<any>, priority: number = 0, className?: string) {
+    this.children.push({ id, component: child, priority, className });
     // Sort children by priority
     this.sortChildren();
   }
@@ -44,12 +44,12 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
     this.children = [];
   }
 
+  get getRenderType() {
+    return this.componentConfig.render || this.type;
+  }
+
   public getRenderer() {
-    if(this.componentConfig.render) {
-      return this.registry[this.componentConfig.render];
-    }
-    
-    return this.registry[this.type];
+    return this.registry[this.getRenderType];
   }
 
   public getChildren() {

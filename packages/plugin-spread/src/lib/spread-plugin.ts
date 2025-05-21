@@ -1,20 +1,31 @@
-import { BasePlugin, PluginRegistry } from '@embedpdf/core';
-import { PdfPageObject } from '@embedpdf/models';
+import { BasePlugin, PluginRegistry, setPages } from '@embedpdf/core';
+import { PdfDocumentObject, PdfPageObject } from '@embedpdf/models';
+import { LoaderPlugin } from '@embedpdf/plugin-loader';
 import { SpreadCapability, SpreadMode, SpreadPluginConfig, SpreadState } from './types';
 import { setSpreadMode } from './actions';
 import { SpreadAction } from './actions';
 
-export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadState, SpreadAction> {
+export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadCapability, SpreadState, SpreadAction> {
+  static readonly id = 'spread' as const; 
   private spreadHandlers: ((spreadMode: SpreadMode) => void)[] = [];
 
-  constructor(id: string, registry: PluginRegistry) {
+  constructor(id: string, registry: PluginRegistry, cfg: SpreadPluginConfig) {
     super(id, registry);
+    this.resetReady();
+    this.dispatch(setSpreadMode(cfg.defaultSpreadMode ?? SpreadMode.None));
+    const loaderPlugin = registry.getPlugin<LoaderPlugin>('loader');
+    loaderPlugin!.provides().onDocumentLoaded((document) => this.documentLoaded(document));
   }
 
   async initialize(config: SpreadPluginConfig): Promise<void> {
     if(config.defaultSpreadMode) {
       this.dispatch(setSpreadMode(config.defaultSpreadMode));
     }
+  }
+
+  private documentLoaded(document: PdfDocumentObject): void {
+    this.dispatchCoreAction(setPages(this.getSpreadPagesObjects(document.pages)));
+    this.markReady();
   }
 
   getSpreadPagesObjects(pages: PdfPageObject[]): PdfPageObject[][] {
@@ -45,8 +56,13 @@ export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadState, Sp
 
   setSpreadMode(mode: SpreadMode): void {
     const currentMode = this.getState().spreadMode;
+    const document = this.getCoreState().core.document;
+    if (!document) {
+      throw new Error('Document not loaded');
+    }
     if (currentMode !== mode) {
       this.dispatch(setSpreadMode(mode));
+      this.dispatchCoreAction(setPages(this.getSpreadPagesObjects(document.pages)));
       this.notifySpreadChange(mode);
     }
   }
@@ -55,7 +71,7 @@ export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadState, Sp
     this.spreadHandlers.forEach((handler) => handler(spreadMode));
   }
 
-  provides(): SpreadCapability {
+  protected buildCapability(): SpreadCapability {
     return {
       onSpreadChange: (handler) => this.spreadHandlers.push(handler),
       setSpreadMode: (mode) => this.setSpreadMode(mode),

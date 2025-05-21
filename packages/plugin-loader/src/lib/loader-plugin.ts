@@ -4,7 +4,8 @@ import { PDFDocumentLoader } from "./loader";
 import { PDFLoadingOptions } from "./loader/strategies/loading-strategy";
 import { LoaderCapability, LoaderEvent, LoaderPluginConfig } from "./types";
 
-export class LoaderPlugin extends BasePlugin<LoaderPluginConfig> {
+export class LoaderPlugin extends BasePlugin<LoaderPluginConfig, LoaderCapability> {
+  static readonly id = 'loader' as const;
   private loaderHandlers: ((loaderEvent: LoaderEvent) => void)[] = [];
   private documentLoadedHandlers: ((document: PdfDocumentObject) => void)[] = [];
   private documentLoader: PDFDocumentLoader;
@@ -20,7 +21,7 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig> {
     this.documentLoader = new PDFDocumentLoader();
   }
 
-  provides(): LoaderCapability {
+  protected buildCapability(): LoaderCapability {
     return {
       onLoaderEvent: (handler) => this.loaderHandlers.push(handler),
       loadDocument: (options) => this.loadDocument(options),
@@ -53,9 +54,9 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig> {
   private async loadDocument(options: Omit<PDFLoadingOptions, 'engine'>): Promise<PdfDocumentObject> {
     try {
       this.notifyHandlers({ type: 'start', documentId: options.pdfFile.id });
-      this.coreStore.dispatch(loadDocument())
+      this.dispatchCoreAction(loadDocument())
       const document = await this.documentLoader.loadDocument({...options, engine: this.engine} as PDFLoadingOptions);
-      this.coreStore.dispatch(setDocument(document))
+      this.dispatchCoreAction(setDocument(document))
       this.loadedDocument = document;
       
       this.notifyHandlers({ type: 'complete', documentId: options.pdfFile.id });

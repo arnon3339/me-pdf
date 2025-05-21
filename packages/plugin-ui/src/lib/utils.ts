@@ -1,125 +1,87 @@
-/**
- * Deeply compares two values (objects, arrays, primitives)
- * with the following rules:
- *  - Objects are compared ignoring property order.
- *  - Arrays are compared ignoring element order (multiset comparison).
- *  - Primitives are compared by strict equality.
- *  - null/undefined are treated as normal primitives.
- * 
- * @param a First value
- * @param b Second value
- * @param visited Used internally to detect cycles
- */
-export function arePropsEqual(a: any, b: any, visited?: Set<any>): boolean {
-  // Quick path for reference equality or same primitive
-  if (a === b) {
-    return true;
-  }
+import type { CustomComponent } from './types';
 
-  // Handle null/undefined mismatch
-  if (a == null || b == null) {
-    // If one is null/undefined and the other isn't, no match
-    return a === b;
-  }
-
-  // Check types
-  const aType = typeof a;
-  const bType = typeof b;
-  if (aType !== bType) return false;
-
-  // If they are both objects or arrays, handle recursively
-  if (aType === 'object') {
-    // Optionally handle cyclical references
-    if (!visited) visited = new Set();
-    const pairId = getPairId(a, b);
-    if (visited.has(pairId)) {
-      // Already compared these two objects => assume true to avoid infinite recursion
-      // or return false if you want to treat cycles as inequality
-      return true;
+export function defineComponent<
+  TInit,
+  TProps,
+  TStore = any
+>() {
+  return <
+    C extends CustomComponent<TStore> & {
+      initialState: TInit;
+      props: (init: TInit) => TProps;
+      mapStateToProps: (storeState: TStore, ownProps: TProps) => TProps;
     }
-    visited.add(pairId);
-
-    const aIsArray = Array.isArray(a);
-    const bIsArray = Array.isArray(b);
-    if (aIsArray && bIsArray) {
-      // Compare as arrays ignoring order
-      return arraysEqualUnordered(a, b, visited);
-    } else if (!aIsArray && !bIsArray) {
-      // Compare as plain objects (order of properties doesn't matter)
-      return objectsEqual(a, b, visited);
-    } else {
-      // One is array, the other is object => not equal
-      return false;
-    }
-  }
-
-  // If both are function, symbol, etc. - typically we might say false
-  // But you can decide your own logic for function or symbol equality
-  return false;
-}
-
-function getPairId(a: any, b: any) {
-  // Could do something more advanced. This is a cheap approach:
-  // e.g. use the memory reference or an object identity approach
-  return `${objectId(a)}__${objectId(b)}`;
+  >(c: C) => c;
 }
 
 /**
- * If you want stable object IDs, you'd need a WeakMap to store them.
- * This simplistic approach just calls toString on the object.
+ * Type definition for event callbacks
  */
-let objectIdCounter = 0;
-const objectIds = new WeakMap<object, number>();
+export type EventCallback = (data: any) => void;
 
-function objectId(obj: object): number {
-  if (!objectIds.has(obj)) {
-    objectIds.set(obj, ++objectIdCounter);
-  }
-  return objectIds.get(obj)!;
+/**
+ * Interface for the event controller
+ */
+export interface EventController {
+  /**
+   * Emit an event of the specified type with the given data
+   */
+  emit(eventType: string, data: any): void;
+  
+  /**
+   * Subscribe to events of the specified type
+   * Returns a function that can be called to unsubscribe
+   */
+  on(eventType: string, callback: EventCallback): () => void;
+  
+  /**
+   * Unsubscribe a specific callback from events of the specified type
+   */
+  off(eventType: string, callback: EventCallback): void;
 }
 
-function arraysEqualUnordered(a: any[], b: any[], visited?: Set<any>): boolean {
-  if (a.length !== b.length) return false;
-
-  const used = new Array<boolean>(b.length).fill(false);
-
-  // For each element in a, find an unused matching element in b
-  outer: for (let i = 0; i < a.length; i++) {
-    const elemA = a[i];
-    for (let j = 0; j < b.length; j++) {
-      if (used[j]) continue; // already used that slot
-      if (arePropsEqual(elemA, b[j], visited)) {
-        used[j] = true;
-        continue outer; // found match for a[i], proceed
+/**
+ * Creates an event controller that manages event subscriptions and dispatching
+ * This is a lightweight pub/sub implementation for typed events
+ */
+export function createEventController(): EventController {
+  // Map of event types to sets of callbacks
+  const eventMap = new Map<string, Set<EventCallback>>();
+  
+  return {
+    emit(eventType: string, data: any): void {
+      const callbacks = eventMap.get(eventType);
+      if (callbacks) {
+        // Call each callback with the event data
+        callbacks.forEach(callback => callback(data));
+      }
+    },
+    
+    on(eventType: string, callback: EventCallback): () => void {
+      // Create a set for this event type if it doesn't exist
+      if (!eventMap.has(eventType)) {
+        eventMap.set(eventType, new Set());
+      }
+      
+      // Add the callback to the set
+      const callbacks = eventMap.get(eventType)!;
+      callbacks.add(callback);
+      
+      // Return a function that removes this specific callback
+      return () => this.off(eventType, callback);
+    },
+    
+    off(eventType: string, callback: EventCallback): void {
+      const callbacks = eventMap.get(eventType);
+      if (callbacks) {
+        // Remove the callback from the set
+        callbacks.delete(callback);
+        
+        // Clean up empty sets
+        if (callbacks.size === 0) {
+          eventMap.delete(eventType);
+        }
       }
     }
-    // If we never found a match
-    return false;
-  }
-
-  return true;
-}
-
-function objectsEqual(a: object, b: object, visited?: Set<any>): boolean {
-  // Get all prop keys
-  const aKeys = Object.keys(a).sort();
-  const bKeys = Object.keys(b).sort();
-  if (aKeys.length !== bKeys.length) return false;
-
-  // Compare each property name
-  for (let i = 0; i < aKeys.length; i++) {
-    if (aKeys[i] !== bKeys[i]) return false;
-  }
-
-  // Compare each property value
-  for (const key of aKeys) {
-    // @ts-ignore
-    const valA = a[key];
-    // @ts-ignore
-    const valB = b[key];
-    if (!arePropsEqual(valA, valB, visited)) {
-      return false;
-    }
-  }
-  return true;
+  };
 }

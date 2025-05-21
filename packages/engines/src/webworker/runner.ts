@@ -277,18 +277,6 @@ export class EngineRunner {
       case 'getPageTextRects':
         task = this.engine[name]!(...args);
         break;
-      case 'startSearch':
-        task = this.engine[name]!(...args);
-        break;
-      case 'searchNext':
-        task = this.engine[name]!(...args);
-        break;
-      case 'searchPrev':
-        task = this.engine[name]!(...args);
-        break;
-      case 'stopSearch':
-        task = this.engine[name]!(...args);
-        break;
       case 'searchAllPages':
         task = this.engine[name]!(...args);
         break;
@@ -314,6 +302,12 @@ export class EngineRunner {
         task = this.engine[name]!(...args);
         break;
       case 'extractText':
+        task = this.engine[name]!(...args);
+        break;
+      case 'getPageGlyphs':
+        task = this.engine[name]!(...args);
+        break;
+      case 'getPageGeometry':
         task = this.engine[name]!(...args);
         break;
       case 'merge':

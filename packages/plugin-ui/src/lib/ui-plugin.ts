@@ -1,11 +1,13 @@
-import { BasePlugin, CoreState, PluginRegistry, StoreState } from "@embedpdf/core";
-import { childrenFunctionOptions, FlyOutComponent, GroupedItemsComponent, HeaderComponent, PanelComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
+import { BasePlugin, CoreState, PluginRegistry, StoreState, arePropsEqual } from "@embedpdf/core";
+import { childrenFunctionOptions, CommandMenuComponent, FloatingComponent, GroupedItemsComponent, HeaderComponent, PanelComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
 import { UIComponent } from "./ui-component";
-import { arePropsEqual } from "./utils";
 import { initialState } from "./reducer";
-import { uiInitComponents, uiInitFlyout, uiSetHeaderVisible, uiToggleFlyout, uiTogglePanel } from "./actions";
+import { uiInitComponents, UIPluginAction, uiSetHeaderVisible, uiShowCommandMenu, uiTogglePanel, uiHideCommandMenu, TogglePanelPayload, SetHeaderVisiblePayload } from "./actions";
+import { MenuManager } from "./menu/menu-manager";
+import { IconManager } from "./icons/icon-manager";
 
-export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
+export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginState, UIPluginAction> {
+  static readonly id = 'ui' as const;
   private componentRenderers: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any> = {};
   private components: Record<string, UIComponent<UIComponentType<any>>> = {};
   private config: UIPluginConfig;
@@ -13,10 +15,21 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
     [componentId: string]: (storeState: any, ownProps: any) => any;
   } = {};
   private globalStoreSubscription: () => void = () => {};
+  private menuManager: MenuManager; // Add this
+  private iconManager: IconManager;
 
   constructor(id: string, registry: PluginRegistry, config: UIPluginConfig) {
     super(id, registry);
     this.config = config;
+
+    // Initialize command center
+    this.menuManager = new MenuManager(config.menuItems || {}, this.registry);
+
+    // Initialize icon registry
+    this.iconManager = new IconManager(config.icons || []);
+
+    // Subscribe to command events
+    this.setupCommandEventHandlers();
 
     // Subscribe exactly once to the global store
     this.globalStoreSubscription = this.registry.getStore().subscribe((_action, newState) => {
@@ -33,6 +46,27 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
 
     // Step 3: Set initial state for UI components
     this.setInitialStateUIComponents();
+  }
+
+  // Set up handlers for command events
+  private setupCommandEventHandlers(): void {
+    // Handle command menu requests
+    this.menuManager.on(MenuManager.EVENTS.MENU_REQUESTED, (data) => {
+      const { menuId, triggerElement, position, flatten } = data;
+
+      const uiState = this.getState();
+      const isOpen = uiState.commandMenu.commandMenu?.activeCommand === menuId;
+      if (isOpen) {
+        return this.dispatch(uiHideCommandMenu({id: 'commandMenu'}));
+      }
+      
+      this.dispatch(uiShowCommandMenu({id: 'commandMenu', commandId: menuId, triggerElement, position, flatten}));
+    });
+
+    // Optional: Track command execution for analytics or other purposes
+    this.menuManager.on(MenuManager.EVENTS.COMMAND_EXECUTED, (data) => {
+      console.log('Command executed:', data.command.id, 'source:', data.source);
+    });
   }
 
   private addComponent(id: string, componentConfig: UIComponentType<any>) {
@@ -64,7 +98,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
         props.slots.forEach(slot => {
           const child = this.components[slot.componentId];
           if (child) {
-            component.addChild(slot.componentId, child, slot.priority);
+            component.addChild(slot.componentId, child, slot.priority, slot.className);
           } else {
             console.warn(`Child component ${slot.componentId} not found for GroupedItems ${props.id}`);
           }
@@ -95,7 +129,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
 
       // ownProps is the UIComponent's current props
       const {id: _id, ...ownProps} = uiComponent.props
-  
+
       const partial = mapFn(state, ownProps);
       // If partial is non-empty or changes from old, do update
       const merged = { ...ownProps, ...partial };
@@ -106,7 +140,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
     }
   }
 
-  private addSlot(parentId: string, slotId: string, priority?: number) {
+  private addSlot(parentId: string, slotId: string, priority?: number, className?: string) {
     // 1. Get the parent component
     const parentComponent = this.components[parentId];
     
@@ -144,10 +178,10 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
     
     // 6. Add the child to the parent component with the appropriate priority
     // The UIComponent will handle sorting and avoid duplicates
-    parentComponent.addChild(slotId, childComponent, slotPriority);
+    parentComponent.addChild(slotId, childComponent, slotPriority, className);
   }
 
-  provides(): UICapability {
+  protected buildCapability(): UICapability {
     return {
       registerComponentRenderer: (type: string, renderer: (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any) => {
         this.componentRenderers[type] = renderer;
@@ -156,7 +190,9 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
         return this.components[id] as T | undefined;
       },
       registerComponent: this.addComponent.bind(this),
-      getFlyOuts: () => Object.values(this.components).filter(component => isFlyOutComponent(component)),
+      getCommandMenu: () => Object.values(this.components).find(component => isCommandMenuComponent(component)),
+      hideCommandMenu: () => this.debouncedDispatch(uiHideCommandMenu({id: 'commandMenu'}), 100),
+      getFloatingComponents: () => Object.values(this.components).filter(component => isFloatingComponent(component)),
       getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => 
         Object.values(this.components)
           .filter(component => isHeaderComponent(component))
@@ -166,18 +202,14 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
           .filter(component => isPanelComponent(component))
           .filter(component => component.props.location === location),
       addSlot: this.addSlot.bind(this),
-      initFlyout: (id: string, triggerElement: HTMLElement) => {
-        this.dispatch(uiInitFlyout(id, triggerElement));
+      togglePanel: (payload: TogglePanelPayload) => {
+        this.dispatch(uiTogglePanel(payload));
       },
-      toggleFlyout: (id: string, open?: boolean) => {
-        this.debouncedDispatch(uiToggleFlyout(id, open), 100);
+      setHeaderVisible: (payload: SetHeaderVisiblePayload) => {
+        this.dispatch(uiSetHeaderVisible(payload));
       },
-      togglePanel: (id: string, open?: boolean) => {
-        this.dispatch(uiTogglePanel(id, open));
-      },
-      setHeaderVisible: (id: string, visible: boolean, visibleChild?: string | null) => {
-        this.dispatch(uiSetHeaderVisible(id, visible, visibleChild));
-      }
+      ...this.iconManager.capabilities(),
+      ...this.menuManager.capabilities(),
     };
   }
 
@@ -189,8 +221,8 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UIPluginState> {
   }
 }
 
-function isItemWithSlots(component: UIComponent<UIComponentType<any>>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<FlyOutComponent> | UIComponent<PanelComponent> {
-  return isGroupedItemsComponent(component) || isHeaderComponent(component) || isFlyOutComponent(component) || isPanelComponent(component);
+function isItemWithSlots(component: UIComponent<UIComponentType<any>>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<PanelComponent> | UIComponent<FloatingComponent> {
+  return isGroupedItemsComponent(component) || isHeaderComponent(component) || isPanelComponent(component) || isFloatingComponent(component);
 }
 
 // Type guard function
@@ -202,10 +234,14 @@ function isHeaderComponent(component: UIComponent<UIComponentType>): component i
   return component.type === 'header';
 }
 
-function isFlyOutComponent(component: UIComponent<UIComponentType>): component is UIComponent<FlyOutComponent> {
-  return component.type === 'flyOut';
-}
-
 function isPanelComponent(component: UIComponent<UIComponentType>): component is UIComponent<PanelComponent> {
   return component.type === 'panel';
+}
+
+function isFloatingComponent(component: UIComponent<UIComponentType>): component is UIComponent<FloatingComponent> {
+  return component.type === 'floating';
+}
+
+function isCommandMenuComponent(component: UIComponent<UIComponentType>): component is UIComponent<CommandMenuComponent> {
+  return component.type === 'commandMenu';
 }

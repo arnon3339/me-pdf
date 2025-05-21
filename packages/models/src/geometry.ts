@@ -9,14 +9,22 @@ export enum Rotation {
   Degree270 = 3,
 }
 
-/**
- * Utility function to ensure integer coordinates
- * @param value - number to be rounded
- * @returns floored integer value
- * @internal
- */
-function ensureInteger(value: number): number {
-  return Math.floor(value);
+/** Clamp a Position to device-pixel integers (floor) */
+export function toIntPos(p: Position): Position {
+  return { x: Math.floor(p.x), y: Math.floor(p.y) };
+}
+
+/** Clamp a Size so it never truncates right / bottom (ceil) */
+export function toIntSize(s: Size): Size {
+  return { width: Math.ceil(s.width), height: Math.ceil(s.height) };
+}
+
+/** Apply both rules to a Rect */
+export function toIntRect(r: Rect): Rect {
+  return {
+    origin: toIntPos(r.origin),
+    size  : toIntSize(r.size),
+  };
 }
 
 /**
@@ -78,8 +86,8 @@ export function swap(size: Size): Size {
   const { width, height } = size;
 
   return {
-    width: ensureInteger(height),
-    height: ensureInteger(width),
+    width: height,
+    height: width,
   };
 }
 
@@ -96,12 +104,12 @@ export function transformSize(
   size: Size,
   rotation: Rotation,
   scaleFactor: number,
-) {
+): Size {
   size = rotation % 2 === 0 ? size : swap(size);
 
   return {
-    width: ensureInteger(size.width * scaleFactor),
-    height: ensureInteger(size.height * scaleFactor),
+    width: size.width * scaleFactor,
+    height: size.height * scaleFactor,
   };
 }
 
@@ -160,8 +168,8 @@ export function rotatePosition(
   }
 
   return {
-    x: ensureInteger(x),
-    y: ensureInteger(y),
+    x,
+    y,
   };
 }
 
@@ -178,8 +186,8 @@ export function scalePosition(
   scaleFactor: number,
 ): Position {
   return {
-    x: ensureInteger(position.x * scaleFactor),
-    y: ensureInteger(position.y * scaleFactor),
+    x: position.x * scaleFactor,
+    y: position.y * scaleFactor,
   };
 }
 
@@ -283,12 +291,12 @@ export function rotateRect(
 
   return {
     origin: {
-      x: ensureInteger(x),
-      y: ensureInteger(y),
+      x,
+      y,
     },
     size: {
-      width: ensureInteger(size.width),
-      height: ensureInteger(size.height),
+      width: size.width,
+      height: size.height,
     },
   };
 }
@@ -301,15 +309,15 @@ export function rotateRect(
  *
  * @public
  */
-export function scaleRect(rect: Rect, scaleFactor: number) {
+export function scaleRect(rect: Rect, scaleFactor: number): Rect {
   return {
     origin: {
-      x: ensureInteger(rect.origin.x * scaleFactor),
-      y: ensureInteger(rect.origin.y * scaleFactor),
+      x: rect.origin.x * scaleFactor,
+      y: rect.origin.y * scaleFactor,
     },
     size: {
-      width: ensureInteger(rect.size.width * scaleFactor),
-      height: ensureInteger(rect.size.height * scaleFactor),
+      width: rect.size.width * scaleFactor,
+      height: rect.size.height * scaleFactor,
     },
   };
 }
@@ -329,7 +337,7 @@ export function transformRect(
   rect: Rect,
   rotation: Rotation,
   scaleFactor: number,
-) {
+): Rect {
   return scaleRect(rotateRect(containerSize, rect, rotation), scaleFactor);
 }
 
@@ -348,7 +356,7 @@ export function restoreRect(
   rect: Rect,
   rotation: Rotation,
   scaleFactor: number,
-) {
+): Rect {
   return scaleRect(
     rotateRect(containerSize, rect, (4 - rotation) % 4),
     1 / scaleFactor,
@@ -368,7 +376,7 @@ export function restoreOffset(
   offset: Position,
   rotation: Rotation,
   scaleFactor: number,
-) {
+): Position {
   let offsetX = offset.x;
   let offsetY = offset.y;
   switch (rotation) {
@@ -391,7 +399,7 @@ export function restoreOffset(
   }
 
   return {
-    x: ensureInteger(offsetX),
-    y: ensureInteger(offsetY),
+    x: offsetX,
+    y: offsetY,
   };
 }

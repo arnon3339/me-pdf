@@ -30,6 +30,8 @@ import {
   MatchFlag,
   PdfUrlOptions,
   PdfFileUrl,
+  PdfGlyphObject,
+  PdfPageGeometry,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -431,7 +433,7 @@ export class WebWorkerEngine implements PdfEngine {
       options,
     );
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<ImageData>(this.worker, requestId);
+    const task = new WorkerTask<Blob>(this.worker, requestId);
 
     const request: ExecuteRequest = {
       id: requestId,
@@ -473,7 +475,7 @@ export class WebWorkerEngine implements PdfEngine {
       options,
     );
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<ImageData>(this.worker, requestId);
+    const task = new WorkerTask<Blob>(this.worker, requestId);
 
     const request: ExecuteRequest = {
       id: requestId,
@@ -687,7 +689,7 @@ export class WebWorkerEngine implements PdfEngine {
       dpr,
     );
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<ImageData>(this.worker, requestId);
+    const task = new WorkerTask<Blob>(this.worker, requestId);
 
     const request: ExecuteRequest = {
       id: requestId,
@@ -695,118 +697,6 @@ export class WebWorkerEngine implements PdfEngine {
       data: {
         name: 'renderThumbnail',
         args: [doc, page, scaleFactor, rotation, dpr],
-      },
-    };
-    this.proxy(task, request);
-
-    return task;
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.startSearch}
-   *
-   * @public
-   */
-  startSearch(doc: PdfDocumentObject, contextId: number) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'startSearch', doc, contextId);
-    const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<boolean>(this.worker, requestId);
-
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'startSearch',
-        args: [doc, contextId],
-      },
-    };
-    this.proxy(task, request);
-
-    return task;
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.searchNext}
-   *
-   * @public
-   */
-  searchNext(doc: PdfDocumentObject, contextId: number, target: SearchTarget) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'searchNext',
-      doc,
-      contextId,
-      target,
-    );
-    const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<SearchResult | undefined>(
-      this.worker,
-      requestId,
-    );
-
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'searchNext',
-        args: [doc, contextId, target],
-      },
-    };
-    this.proxy(task, request);
-
-    return task;
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.searchPrev}
-   *
-   * @public
-   */
-  searchPrev(doc: PdfDocumentObject, contextId: number, target: SearchTarget) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'searchPrev',
-      doc,
-      contextId,
-      target,
-    );
-    const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<SearchResult | undefined>(
-      this.worker,
-      requestId,
-    );
-
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'searchPrev',
-        args: [doc, contextId, target],
-      },
-    };
-    this.proxy(task, request);
-
-    return task;
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.stopSearch}
-   *
-   * @public
-   */
-  stopSearch(doc: PdfDocumentObject, contextId: number) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'stopSearch', doc, contextId);
-    const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<boolean>(this.worker, requestId);
-
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'stopSearch',
-        args: [doc, contextId],
       },
     };
     this.proxy(task, request);
@@ -1023,6 +913,52 @@ export class WebWorkerEngine implements PdfEngine {
       data: {
         name: 'extractText',
         args: [doc, pageIndexes],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.getPageGlyphs}
+   *
+   * @public
+   */
+  getPageGlyphs(doc: PdfDocumentObject, page: PdfPageObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageGlyphs', doc, page);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<PdfGlyphObject[]>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'getPageGlyphs',
+        args: [doc, page],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.getPageGeometry}
+   *
+   * @public
+   */
+  getPageGeometry(doc: PdfDocumentObject, page: PdfPageObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageGeometry', doc, page);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<PdfPageGeometry>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'getPageGeometry',
+        args: [doc, page],
       },
     };
     this.proxy(task, request);

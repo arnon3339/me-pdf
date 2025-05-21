@@ -1,9 +1,9 @@
-import { h, ComponentChildren, Ref } from 'preact';
+import { h, ComponentChildren, Ref, JSX } from 'preact';
 
-interface ButtonProps {
+type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
   id?: string;
   children: ComponentChildren;
-  onClick?: () => void;
+  onClick?: h.JSX.MouseEventHandler<HTMLButtonElement> | undefined;
   active?: boolean;
   className?: string;
   tooltip?: string;
@@ -19,10 +19,10 @@ export function Button({ id, children, onClick, active = false, className = '', 
       className={`
         w-auto min-w-[32px] h-[32px] p-[5px]
         flex items-center justify-center
-        rounded-md transition-colors
+        rounded-md transition-colors cursor-pointer
         ${active 
-          ? 'border-none shadow ring-1 ring-blue-500 text-blue-500 bg-blue-50' 
-          : 'hover:bg-gray-100'
+          ? 'border-none shadow ring ring-blue-500 text-blue-500 bg-blue-50' 
+          : 'hover:bg-gray-100 hover:ring hover:ring-[#1a466b]'
         }
         ${className}
       `}

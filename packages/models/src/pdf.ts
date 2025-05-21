@@ -18,6 +18,18 @@ export interface PdfPageObject {
   size: Size;
 }
 
+/** 
+ * Representation of pdf page with rotated size
+ *
+ * @public
+ */
+export interface PdfPageObjectWithRotatedSize extends PdfPageObject {
+  /**
+   * Rotated size of this page
+   */
+  rotatedSize: Size;
+}
+
 /**
  * Representation of pdf document
  *
@@ -1103,6 +1115,20 @@ export function compareSearchTarget(
   return flagA === flagB && targetA.keyword === targetB.keyword;
 }
 
+/** Context of one hit */
+export interface TextContext {
+  /** Complete words that come *before* the hit (no ellipsis)            */
+  before: string;
+  /** Exactly the text that matched (case-preserved)                      */
+  match:  string;
+  /** Complete words that come *after* the hit (no ellipsis)             */
+  after:  string;
+  /** `true` ⇢ there were more words on the left that we cut off         */
+  truncatedLeft:  boolean;
+  /** `true` ⇢ there were more words on the right that we cut off        */
+  truncatedRight: boolean;
+}
+
 /**
  * search result
  *
@@ -1125,6 +1151,10 @@ export interface SearchResult {
    * highlight rects
    */
   rects: Rect[];
+  /**
+   * context of the hit
+   */
+  context: TextContext;
 }
 
 /**
@@ -1140,6 +1170,90 @@ export interface SearchAllPagesResult {
    * Total number of results found
    */
   total: number;
+}
+
+/**
+ * Glyph object
+ *
+ * @public
+ */
+export interface PdfGlyphObject {
+  /**
+   * Origin of the glyph
+   */
+  origin: { x: number; y: number };
+  /**
+   * Size of the glyph
+   */
+  size: { width: number; height: number };
+  /**
+   * Whether the glyph is a space
+   */
+  isSpace?: boolean;
+  /**
+   * Whether the glyph is a empty
+   */
+  isEmpty?: boolean;
+}
+
+/**
+ * Glyph object
+ *
+ * @public
+ */
+export interface PdfGlyphSlim { 
+  /**
+   * X coordinate of the glyph
+   */
+  x: number;
+  /**
+   * Y coordinate of the glyph
+   */
+  y: number;
+  /**
+   * Width of the glyph
+   */
+  width: number;
+  /**
+   * Height of the glyph
+   */
+  height: number;
+  /**
+   * Flags of the glyph
+   */
+  flags: number;
+}
+
+/**
+ * Run object
+ *
+ * @public
+ */
+export interface PdfRun {
+  /**
+   * Rectangle of the run
+   */
+  rect: { x: number; y: number; width: number; height: number };
+  /**
+   * Start index of the run
+   */
+  charStart: number;
+  /**
+   * Glyphs of the run
+   */
+  glyphs: PdfGlyphSlim[];
+}
+
+/**
+ * Page geometry
+ *
+ * @public
+ */
+export interface PdfPageGeometry { 
+  /**
+   * Runs of the page
+   */
+  runs: PdfRun[];
 }
 
 /**
@@ -1435,7 +1549,7 @@ export interface PdfEngine {
     rotation: Rotation,
     dpr: number,
     options: PdfRenderOptions,
-  ) => PdfTask<ImageData>;
+  ) => PdfTask<Blob>;
   /**
    * Render the specified rect of pdf page
    * @param doc - pdf document
@@ -1455,7 +1569,7 @@ export interface PdfEngine {
     dpr: number,
     rect: Rect,
     options: PdfRenderOptions,
-  ) => PdfTask<ImageData>;
+  ) => PdfTask<Blob>;
   /**
    * Get annotations of pdf page
    * @param doc - pdf document
@@ -1538,45 +1652,7 @@ export interface PdfEngine {
     scaleFactor: number,
     rotation: Rotation,
     dpr: number,
-  ) => PdfTask<ImageData>;
-  /**
-   * Start searching with new context
-   * @param doc - pdf document
-   * @param contextId - id of context
-   * @returns Task contains whether search has started
-   */
-  startSearch: (doc: PdfDocumentObject, contextId: number) => PdfTask<boolean>;
-  /**
-   * Search next target
-   * @param doc - pdf document
-   * @param contextId - id of context
-   * @param target - search target
-   * @returns task contains the search result or error
-   */
-  searchNext: (
-    doc: PdfDocumentObject,
-    contextId: number,
-    target: SearchTarget,
-  ) => PdfTask<SearchResult | undefined>;
-  /**
-   * Search the previous targets
-   * @param doc - pdf document
-   * @param contextId - id of context
-   * @param target - search target
-   * @returns task contains the search result or error
-   */
-  searchPrev: (
-    doc: PdfDocumentObject,
-    contextId: number,
-    target: SearchTarget,
-  ) => PdfTask<SearchResult | undefined>;
-  /**
-   * Stop searching with new context
-   * @param doc - pdf document
-   * @param contextId - id of context
-   * @returns Task contains whether search has stopped
-   */
-  stopSearch: (doc: PdfDocumentObject, contextId: number) => PdfTask<boolean>;
+  ) => PdfTask<Blob>;
   /**
    * Search across all pages in the document
    * @param doc - pdf document
@@ -1649,6 +1725,20 @@ export interface PdfEngine {
     doc: PdfDocumentObject,
     pageIndexes: number[],
   ) => PdfTask<string>;
+  /**
+   * Get all glyphs in the specified pdf page
+   * @param doc - pdf document
+   * @param page - pdf page
+   * @returns task contains the glyphs
+   */
+  getPageGlyphs: (doc: PdfDocumentObject, page: PdfPageObject) => PdfTask<PdfGlyphObject[]>;
+  /**
+   * Get the geometry of the specified pdf page
+   * @param doc - pdf document
+   * @param page - pdf page
+   * @returns task contains the geometry
+   */
+  getPageGeometry: (doc: PdfDocumentObject, page: PdfPageObject) => PdfTask<PdfPageGeometry>;
   /**
    * Merge multiple pdf documents
    * @param files - all the pdf files

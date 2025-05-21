@@ -1,121 +1,144 @@
-import { useEffect, useRef } from 'preact/hooks';
-import { ComponentChildren, Fragment, h } from 'preact';
-import { Dropdown as FlowbiteDropdown, DropdownOptions } from 'flowbite';
+import { h, ComponentChildren } from 'preact';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import {
+  computePosition,
+  offset,
+  flip,
+  shift,
+  autoUpdate,
+  Placement,
+} from '@floating-ui/dom';
 
-interface DropdownProps {
-  id: string;
+export interface DropdownProps {
+  /** Controlled visibility — `true` shows, `false` hides */
   open: boolean;
-  trigger: HTMLElement;
+  /** Reference element that anchors the menu (button, icon, …) */
+  trigger?: HTMLElement;
+  /** Menu items / JSX content */
   children: ComponentChildren;
-  placement?: 'top' | 'right' | 'bottom' | 'left';
+  /** Preferred placement (Floating‑UI keywords). Default `"bottom-start"` */
+  placement?: string;
+  /** Horizontal offset (skidding) */
   offsetSkidding?: number;
+  /** Vertical offset (distance) */
   offsetDistance?: number;
+  /** Optional fade‑out delay when hiding (ms) */
   delay?: number;
+  /** Callbacks */
   onShow?: () => void;
-  onHide?: () => void;
+  onHide?: () => void;      // should set `open=false` in parent
+  className?: string;
+}
+
+function resolvePlacement(p: string | undefined): Placement {
+  const map: Record<string, Placement> = {
+    top: 'top-start',
+    bottom: 'bottom-start',
+    left: 'left-start',
+    right: 'right-start',
+  };
+  return (p && map[p]) || (p as Placement) || 'bottom-start';
 }
 
 export function Dropdown({
-  id,
   open,
   trigger,
   children,
-  placement = 'right',
-  offsetSkidding = 0,
+  placement = 'bottom-start',
+  offsetSkidding = -2,
   offsetDistance = 5,
-  delay = 300,
+  delay = 0,
   onShow,
-  onHide
+  onHide,
+  className
 }: DropdownProps) {
-  const targetRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<FlowbiteDropdown | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const resolvedPlacement = resolvePlacement(placement);
 
+  /* ───────── Position & lifecycle ─────────────────────────────────── */
   useEffect(() => {
-    // Initialize Flowbite dropdown
-    if (targetRef.current && trigger) {
-      const options: DropdownOptions = {
-        placement,
-        triggerType: 'none',
-        offsetSkidding,
-        offsetDistance,
-        delay,
-        ignoreClickOutsideClass: 'header',
-        onShow,
-        onHide
-      };
+    const reference = trigger;
+    const floating = menuRef.current;
+    if (!floating) return;
 
-      const instanceOptions = {
-        id,
-        override: true
-      };
-
-      dropdownRef.current = new FlowbiteDropdown(
-        targetRef.current,
-        trigger,
-        options,
-        instanceOptions
-      );
-    }
-
-    // Cleanup
-    return () => {
-      console.log('cleanup');
-    };
-  }, [placement, offsetSkidding, offsetDistance, delay]);
-
-  useEffect(() => {
-    if (dropdownRef.current) {
-      if (open && !dropdownRef.current.isVisible()) {
-        dropdownRef.current.show();
-      } else if (!open && dropdownRef.current.isVisible()) {
-        dropdownRef.current.hide();
+    if (open) {
+      floating.style.display = 'block';
+      onShow?.();
+    } else {
+      if (delay) {
+        setTimeout(() => (floating.style.display = 'none'), delay);
+      } else {
+        floating.style.display = 'none';
       }
+      onHide?.();
     }
-  }, [open]);
 
+    if( !reference) return;
+    if (!open) return;
+
+    const cleanup = autoUpdate(reference, floating, () => {
+      computePosition(reference, floating, {
+        placement: resolvedPlacement,
+        strategy: 'absolute',
+        middleware: [
+          offset({ mainAxis: offsetDistance, crossAxis: offsetSkidding }),
+          flip(),
+          shift({ padding: 8 }),
+        ],
+      }).then(({ x, y }) => {
+        setPosition({ x, y });
+      });
+    });
+
+    return () => cleanup();
+  }, [open, trigger, placement, offsetSkidding, offsetDistance, delay]);
+
+  /* ───── Global click‑outside detector ─────────────────────────────── */
+  useEffect(() => {
+    if (!open) return;                         // only while menu is visible
+    const floating = menuRef.current;
+    if (!floating) return;
+
+    const handlePointer = (ev: PointerEvent) => {
+      const path = ev.composedPath?.() ?? [ev.target as Node];
+
+      // click inside trigger OR inside menu → ignore
+      if (
+        (trigger && path.includes(trigger)) ||
+        path.includes(floating)
+      ) {
+        return;
+      }
+
+      onHide?.();                              // tell parent to close
+    };
+
+    window.addEventListener('pointerdown', handlePointer, true); // capture phase
+    return () => window.removeEventListener('pointerdown', handlePointer, true);
+  }, [open, trigger, onHide]);
+
+  /* ───────── Render ───────────────────────────────────────────────── */
   return (
-    <div 
-      id={id}
-      ref={targetRef}
-      className="z-10 hidden border border-[#cfd4da] bg-white divide-y divide-gray-100 rounded-lg shadow-sm"
+    <div
+      ref={menuRef}
+      style={{ 
+        ...(trigger && {
+          display: 'none',
+          left: `${position.x}px`,
+          top: `${position.y}px`
+        }),
+      }}
+      className={`
+        absolute z-50 min-w-[8rem] rounded-lg border border-[#cfd4da] bg-white
+        shadow-sm divide-y divide-gray-100 focus:outline-none
+        transition-opacity duration-150
+        ${open ? 'opacity-100' : 'opacity-0'}
+        ${!trigger && 'bottom-0 left-0 right-0'}
+        ${className}
+      `}
     >
-      {children}
+      <div className="py-2 flex flex-col">{children}</div>
     </div>
   );
 }
-
-// Subcomponents for better organization
-export function DropdownItems({ children }: { children: ComponentChildren }) {
-  return (
-    <div className="py-2 flex flex-col ">
-      {children}
-    </div>
-  );
-}
-
-export function DropdownItem({ 
-  children, 
-  onClick 
-}: { 
-  children: ComponentChildren;
-  onClick?: () => void;
-}) {
-  return (
-    <li>
-      <a 
-        href="#" 
-        className="block px-4 py-2 hover:bg-gray-100"
-        onClick={(e) => {
-          e.preventDefault();
-          onClick?.();
-        }}
-      >
-        {children}
-      </a>
-    </li>
-  );
-}
-
-export function DropdownDivider() {
-  return <hr className="my-1 border-gray-100" />;
-} 
