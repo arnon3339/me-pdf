@@ -31,13 +31,6 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
       wait: 500, 
       throttleMode: 'trailing' 
     });
-    
-    /*
-    this.viewportCapability.onViewportChange((viewportMetrics) => 
-      this.onScroll(this.scrollCapability.getMetrics(viewportMetrics)), 
-      { mode: 'throttle', wait: 300, throttleMode: 'trailing' }
-    );
-    */
   }
 
   async initialize(): Promise<void> {

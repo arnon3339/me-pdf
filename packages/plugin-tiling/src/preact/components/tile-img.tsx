@@ -4,14 +4,14 @@ import { Tile } from '@embedpdf/plugin-tiling';
 import { useTilingCapability } from '../hooks/use-tiling';
 import { ignore, PdfErrorCode } from '@embedpdf/models';
 
-interface Props {
+interface TileImgProps {
   pageIndex: number;
-  tile     : Tile;
-  dpr      : number;
-  scale    : number;
+  tile: Tile;
+  dpr: number;
+  scale: number;
 }
 
-export function TileImg({ pageIndex, tile, dpr, scale }: Props) {
+export function TileImg({ pageIndex, tile, dpr, scale }: TileImgProps) {
   const { provides: tilingCapability } = useTilingCapability();
   const [url, setUrl]  = useState<string>();
   const urlRef = useRef<string | null>(null)
@@ -56,10 +56,11 @@ export function TileImg({ pageIndex, tile, dpr, scale }: Props) {
       onLoad={handleImageLoad}
       style={{
         position:'absolute',
-        left  : tile.screenRect.origin.x * relativeScale,
-        top   : tile.screenRect.origin.y * relativeScale,
-        width : tile.screenRect.size.width * relativeScale,
+        left: tile.screenRect.origin.x * relativeScale,
+        top: tile.screenRect.origin.y * relativeScale,
+        width: tile.screenRect.size.width * relativeScale,
         height: tile.screenRect.size.height * relativeScale,
+        display: 'block'
       }}
     />
   );
