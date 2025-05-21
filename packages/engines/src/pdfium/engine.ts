@@ -76,6 +76,8 @@ import {
   PdfGlyphObject,
   PdfPageGeometry,
   PdfRun,
+  toIntRect,
+  toIntSize,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -5037,8 +5039,8 @@ export class PdfiumEngine implements PdfEngine {
     const bytesPerPixel = 4;
 
     // Round the transformed dimensions to whole pixels
-    const rectSize = transformRect(page.size, rect, rotation, scaleFactor * dpr);
-    const pageSize = transformSize(page.size, rotation, scaleFactor * dpr);
+    const rectSize = toIntRect(transformRect(page.size, rect, rotation, scaleFactor * dpr));
+    const pageSize = toIntSize(transformSize(page.size, rotation, scaleFactor * dpr));
 
     const bitmapHeapLength = rectSize.size.width * rectSize.size.height * bytesPerPixel;
     const bitmapHeapPtr = this.malloc(bitmapHeapLength);

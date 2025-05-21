@@ -13,7 +13,7 @@ export const manifest: PluginManifest<TilingPluginConfig> = {
   defaultConfig: {
     enabled: true,
     tileSize: 768,
-    overlapPx: 2,
-    extraRings: 1,
+    overlapPx: 2.5,
+    extraRings: 0,
   }
 };

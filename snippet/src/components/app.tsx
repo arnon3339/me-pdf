@@ -1380,8 +1380,8 @@ export function PDFViewer({ config }: PDFViewerProps) {
           }),
           createPluginRegistration(TilingPluginPackage, {
             tileSize: 768,
-            overlapPx: 2,
-            extraRings: 1,
+            overlapPx: 2.5,
+            extraRings: 0,
           }),
           /*
           createPluginRegistration(ZoomPluginPackage, {

@@ -7,11 +7,11 @@ import { CalculateTilesForPageOptions, Tile } from './types';
  * are rounded to **integers** to avoid sub-pixel seams.
  */
 export function calculateTilesForPage(
-  { tileSize = 768, overlapPx = 2, extraRings = 1, scale, page, metric }: CalculateTilesForPageOptions
+  { tileSize = 768, overlapPx = 2.5, extraRings = 0, scale, page, metric }: CalculateTilesForPageOptions
 ): Tile[] {
   /* ---- work in screen-pixel space -------------------------------- */
-  const pageW = Math.round(page.size.width  * scale);   // px
-  const pageH = Math.round(page.size.height * scale);   // px
+  const pageW = page.size.width  * scale;   // px
+  const pageH = page.size.height * scale;   // px
 
   const step  = tileSize - overlapPx;                   // shift between tiles
 
