@@ -1163,7 +1163,7 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'panel',
     initialState: {
       open: false,
-      visibleChild: null
+      visibleChild: 'thumbnails'
     },
     props: (initialState) => ({
       open: initialState.open,
@@ -1369,7 +1369,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             defaultZoomLevel: ZoomMode.FitPage,
           }),
           createPluginRegistration(SpreadPluginPackage, { 
-            defaultSpreadMode: SpreadMode.Odd 
+            defaultSpreadMode: SpreadMode.None 
           }),
           createPluginRegistration(RenderPluginPackage, {
 
