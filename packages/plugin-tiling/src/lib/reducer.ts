@@ -26,13 +26,17 @@ export const tilingReducer: Reducer<TilingState, TilingAction> = (state, action)
         const zoomChanged = prevScale !== undefined && prevScale !== newScale;
     
         if (zoomChanged) {
-          /* ── 1. promote ready tiles from old zoom ── */
+          /* 1️⃣  ready tiles from the old zoom → new fallback */
           const promoted = prevTiles
             .filter(t => !t.isFallback && t.status === 'ready')
             .map(t => ({ ...t, isFallback: true }));
-    
-          /* ── 2. drop every old fallback tile ── */
-          nextPages[pageIndex] = [...promoted, ...newTiles];
+
+          /* 2️⃣  decide which fallback tiles to keep           */
+          const fallbackToCarry =
+            promoted.length > 0 ? [] : prevTiles.filter(t => t.isFallback);
+
+          /* 3️⃣  final list = (maybe-kept fallback) + promoted + newTiles */
+          nextPages[pageIndex] = [...fallbackToCarry, ...promoted, ...newTiles];
         } else {
           /* same zoom → keep current fallback, replace visible */
           const newIds   = new Set(newTiles.map(t => t.id));
