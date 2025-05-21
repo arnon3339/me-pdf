@@ -8,7 +8,7 @@ export const ThumbnailPluginPackage: PluginPackage<
   ThumbnailPluginConfig
 > = {
   manifest,
-  create: (registry) => new ThumbnailPlugin(THUMBNAIL_PLUGIN_ID, registry),
+  create: (registry, _engine, config) => new ThumbnailPlugin(THUMBNAIL_PLUGIN_ID, registry, config),
   reducer: () => {},
   initialState: {},
 };

@@ -8,9 +8,13 @@ export const manifest: PluginManifest<ThumbnailPluginConfig> = {
   name: 'Thumbnail Plugin',
   version: '1.0.0',
   provides: ['thumbnail'],
-  requires: ['loader'],
+  requires: ['render'],
   optional: [],
   defaultConfig: {
-    enabled: true
+    enabled: true,
+    width: 150,
+    gap: 10,
+    buffer: 3,
+    labelHeight: 16
   }
 }; 

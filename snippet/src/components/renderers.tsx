@@ -10,6 +10,7 @@ import { useViewportCapability } from "@embedpdf/plugin-viewport/preact";
 import { useScrollCapability } from "@embedpdf/plugin-scroll/preact";
 import { Icon } from "./ui/icon";
 import { useSearchCapability } from "@embedpdf/plugin-search/preact";
+import { ThumbImg, ThumbnailsPane } from "@embedpdf/plugin-thumbnail/preact";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SearchAllPagesResult, SearchResult } from "@embedpdf/models";
 import { MatchFlag } from "@embedpdf/models";
@@ -79,7 +80,7 @@ export const tabButtonRenderer: ComponentRenderFunction<TabButtonProps> = ({comm
   return (
     <Button 
       key={props.id} 
-      className={`text-sm px-2 py-1 rounded-none hover:bg-transparent ${active ? 'border-b-2 border-b-blue-500 text-blue-500' : 'border-b-2 border-b-transparent'} hover:ring-transparent`} 
+      className={`text-sm px-2 py-1 rounded-none hover:bg-transparent ${active ? 'border-b-2 border-b-blue-500 text-blue-500' : 'border-b-2 border-b-transparent hover:border-b-gray-500'} hover:ring-transparent`} 
       onClick={handleClick}
     >
       {props.label}
@@ -161,7 +162,7 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & {tabsCommandId?
       <div
         role="tablist"
         className="
-          inline-flex overflow-hidden
+          inline-flex flex-shrink-0 overflow-hidden
           bg-white dark:bg-gray-900
           m-4
         "
@@ -193,7 +194,7 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & {tabsCommandId?
                   }
                   className={`
                     relative h-7 flex flex-1 items-center justify-center
-                    transition-colors outline-none border
+                    transition-colors outline-none border cursor-pointer
                     ${isFirst ? 'rounded-l-md' : ''}
                     ${isLast ? 'rounded-r-md' : ''}
                     ${!isLast ? 'border-r-0' : ''}
@@ -810,10 +811,40 @@ export const commentRender: ComponentRenderFunction<any> = (props, children) => 
   </div>;
 };
 
-export const thumbnailsRender: ComponentRenderFunction<any> = (props, children) => {
-  return <div>
-    Thumbnails
-  </div>;
+export interface ThumbnailsRenderProps {
+  currentPage: number;
+}
+
+export const thumbnailsRender: ComponentRenderFunction<ThumbnailsRenderProps> = (props, children) => {
+  const {provides: scroll} = useScrollCapability();
+
+  return <ThumbnailsPane className="flex-1">
+    {m =>   
+      <div
+        key={m.pageIndex}
+        className="absolute flex flex-col items-center w-full cursor-pointer"
+        style={{ height: m.wrapperHeight, top: m.top }}
+        onClick={() => {
+          scroll?.scrollToPage({
+            pageNumber: m.pageIndex + 1
+          });
+        }}
+      >
+        {/* thumbnail box */}
+        <div style={{ width: m.width, height: m.height }} className={`outline outline-2 -outline-offset-2 ${props.currentPage === m.pageIndex + 1 ? 'outline-blue-500' : 'outline-gray-300'}`}>
+          <ThumbImg meta={m} className="w-full h-full object-contain" />
+        </div>
+
+        {/* label box with fixed height = labelHeight */}
+        <div
+          className="text-xs text-gray-500 flex items-center justify-center"
+          style={{ height: m.labelHeight }}
+        >
+          {m.pageIndex + 1}
+        </div>
+      </div>
+    }
+  </ThumbnailsPane>;
 };
 
 export const outlineRenderer: ComponentRenderFunction<any> = (props, children) => {

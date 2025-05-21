@@ -30,6 +30,7 @@
     "@embedpdf/plugin-rotate": "workspace:*",
     "@embedpdf/plugin-selection": "workspace:*",
     "@embedpdf/plugin-tiling": "workspace:*",
+    "@embedpdf/plugin-thumbnail": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {

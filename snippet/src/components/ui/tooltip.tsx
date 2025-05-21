@@ -133,7 +133,7 @@ export function Tooltip({
         className={`
           absolute z-100 px-3 py-2 rounded-lg text-sm shadow-md
           pointer-events-none select-none transition-opacity duration-150
-          whitespace-nowrap                       /* <── NEW */
+          whitespace-nowrap
           ${style === 'dark'
             ? 'bg-gray-900 text-white'
             : 'bg-white text-gray-900 border border-gray-200'}

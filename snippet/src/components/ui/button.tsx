@@ -19,7 +19,7 @@ export function Button({ id, children, onClick, active = false, className = '', 
       className={`
         w-auto min-w-[32px] h-[32px] p-[5px]
         flex items-center justify-center
-        rounded-md transition-colors
+        rounded-md transition-colors cursor-pointer
         ${active 
           ? 'border-none shadow ring ring-blue-500 text-blue-500 bg-blue-50' 
           : 'hover:bg-gray-100 hover:ring hover:ring-[#1a466b]'

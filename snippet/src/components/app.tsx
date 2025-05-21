@@ -29,6 +29,7 @@ import { SELECTION_PLUGIN_ID, SelectionPlugin, SelectionPluginPackage, Selection
 import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
 import { TilingPlugin, TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
+import { THUMBNAIL_PLUGIN_ID, ThumbnailPlugin, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -1184,7 +1185,11 @@ export const components: Record<string, UIComponentType<State>> = {
   thumbnails: {
     id: 'thumbnails',
     type: 'custom',
-    render: 'thumbnails'
+    render: 'thumbnails',
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      currentPage: storeState.plugins.scroll.currentPage
+    })
   },
   outline: {
     id: 'outline',
@@ -1382,6 +1387,12 @@ export function PDFViewer({ config }: PDFViewerProps) {
             tileSize: 768,
             overlapPx: 2.5,
             extraRings: 0,
+          }),
+          createPluginRegistration(ThumbnailPluginPackage, {
+            width: 150,
+            gap: 10,
+            buffer: 3,
+            labelHeight: 30
           }),
           /*
           createPluginRegistration(ZoomPluginPackage, {
