@@ -1,4 +1,4 @@
-import { PdfPageObjectWithRotatedSize, Rotation, transformPosition } from "@embedpdf/models";
+import { PdfPageObjectWithRotatedSize, Position, Rect, Rotation, scalePosition, transformPosition, transformRect } from "@embedpdf/models";
 import { ViewportMetrics } from "@embedpdf/plugin-viewport";
 import { VirtualItem } from "../types/virtual-item";
 import { ScrollMetrics } from "../types";
@@ -157,44 +157,88 @@ export abstract class BaseScrollStrategy {
       : mostVisiblePages.sort((a, b) => a.pageNumber - b.pageNumber)[0].pageNumber;
   }
 
+  private getRectLocationForPage(
+    pageNumber: number, 
+    virtualItems: VirtualItem[]
+  ): Rect | null {
+    // Find the virtual item containing the page
+    const item = virtualItems.find(item => item.pageNumbers.includes(pageNumber));
+    if (!item) return null;
+
+    // Find the specific page layout for the requested page number
+    const pageLayout = item.pageLayouts.find(layout => layout.pageNumber === pageNumber);
+    if (!pageLayout) return null;
+
+    return {
+      origin: {
+        x: (item.x + pageLayout.x),
+        y: (item.y + pageLayout.y)
+      },
+      size: {
+        width: pageLayout.width,
+        height: pageLayout.height
+      }
+    };
+  }
+
   getScrollPositionForPage(
     pageNumber: number, 
     virtualItems: VirtualItem[], 
     scale: number,
     rotation: Rotation,
-    pageCoordinates?: { x: number; y: number }
-  ): { x: number; y: number } {
+    pageCoordinates?: { x: number; y: number },
+  ): Position | null {
     // Find the virtual item containing the page
-    const item = virtualItems.find(item => item.pageNumbers.includes(pageNumber));
-    if (!item) return { x: 0, y: 0 };
+    const pageRect = this.getRectLocationForPage(pageNumber, virtualItems);
+    if (!pageRect) return null;
 
-    // Find the specific page layout for the requested page number
-    const pageLayout = item.pageLayouts.find(layout => layout.pageNumber === pageNumber);
-    if (!pageLayout) return { x: 0, y: 0 };
-
-    // Calculate position using the page layout
-    const baseX = (item.x + pageLayout.x) * scale;
-    const baseY = (item.y + pageLayout.y) * scale;
+    const scaledBasePosition = scalePosition(pageRect.origin, scale);
 
     // If specific page coordinates are provided, add them to the base position
     if (pageCoordinates) {
       const rotatedSize = transformPosition({
-        width: pageLayout.width,
-        height: pageLayout.height,
+        width: pageRect.size.width,
+        height: pageRect.size.height,
       }, {
         x: pageCoordinates.x,
         y: pageCoordinates.y,
       }, rotation, scale);
 
       return {
-        x: baseX + rotatedSize.x + this.viewportGap,
-        y: baseY + rotatedSize.y + this.viewportGap
+        x: scaledBasePosition.x + rotatedSize.x + this.viewportGap,
+        y: scaledBasePosition.y + rotatedSize.y + this.viewportGap
       };
     }
 
     return {
-      x: baseX + this.viewportGap,
-      y: baseY + this.viewportGap
+      x: scaledBasePosition.x + this.viewportGap,
+      y: scaledBasePosition.y + this.viewportGap
+    };
+  }
+
+  getRectPositionForPage(
+    pageNumber: number, 
+    virtualItems: VirtualItem[], 
+    scale: number,
+    rotation: Rotation,
+    rect: Rect
+  ): Rect | null {
+    const pageRect = this.getRectLocationForPage(pageNumber, virtualItems);
+    if (!pageRect) return null;
+
+    const scaledBasePosition = scalePosition(pageRect.origin, scale);
+
+    const rotatedSize = transformRect({
+      width: pageRect.size.width,
+      height: pageRect.size.height,
+    }, rect, rotation, scale);
+
+    return {
+      origin: {
+        x: scaledBasePosition.x + rotatedSize.origin.x,
+        y: scaledBasePosition.y + rotatedSize.origin.y
+      },
+      size: rotatedSize.size
     };
   }
 }

@@ -16,7 +16,7 @@ import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
 //import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import { MenuItem, defineComponent, GlobalStoreState, IconRegistry, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage, hasActive, isActive, UI_PLUGIN_ID } from '@embedpdf/plugin-ui';
-import { attachmentsRenderer, commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, outlineRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, selectButtonRenderer, tabButtonRenderer, thumbnailsRender, zoomRenderer, ZoomRendererProps } from './renderers';
+import { attachmentsRenderer, commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, outlineRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, selectButtonRenderer, tabButtonRenderer, textSelectionMenuRenderer, thumbnailsRender, zoomRenderer, ZoomRendererProps } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import { ZOOM_PLUGIN_ID, ZoomMode, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
@@ -196,6 +196,26 @@ export const icons: IconRegistry = {
   paperclip: {
     id: 'paperclip',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-paperclip"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" /></svg>'
+  },
+  copy: {
+    id: 'copy',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-copy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>'
+  },
+  underline: {
+    id: 'underline',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h16" stroke="#e44234" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /></svg>'
+  },
+  squiggly: {
+    id: 'squiggly',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-wavy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /><path d="M4 20c1.5 -1.5 3.5 -1.5 5 0s3.5 1.5 5 0 3.5 -1.5 5 0" stroke="#e44234" /></svg>'
+  },
+  strikethrough: {
+    id: 'strikethrough',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M4 10h16" stroke="#e44234" /></svg>'
+  },
+  highlight: {
+    id: 'highlight',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="#ffcd45" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor"/><path d="M8 10h8" stroke="currentColor"/></svg>'
   }
 }
 
@@ -811,7 +831,53 @@ export const menuItems: Record<string, MenuItem<State>> = {
         scroll.scrollToPreviousPage();
       }
     }     
-  }
+  },
+  copy: {
+    id: 'copy',
+    label: 'Copy',
+    icon: 'copy',
+    type: 'action',
+    action: (registry) => {
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      
+    }
+  },
+  underline: {
+    id: 'underline',
+    label: 'Underline',
+    type: 'action',
+    icon: 'underline',
+    action: (registry) => {
+  
+    }
+  },
+  squiggly: {
+    id: 'squiggly',
+    label: 'Squiggly',
+    type: 'action',
+    icon: 'squiggly',
+    action: (registry) => {
+
+    }
+  },
+  strikethrough: {
+    id: 'strikethrough',
+    label: 'Strikethrough',
+    type: 'action',
+    icon: 'strikethrough',
+    action: (registry) => {
+
+    }
+  },
+  highlight: {
+    id: 'highlight',
+    label: 'Highlight',
+    type: 'action',
+    icon: 'highlight',
+    action: (registry) => {
+
+    }
+  } 
 }
 
 // Define components
@@ -828,6 +894,47 @@ export const components: Record<string, UIComponentType<State>> = {
       ...ownProps,
       active: isActive(menuItems.menuCtr, storeState)
     })
+  },
+  copyButton: {
+    type: 'iconButton',
+    id: 'copyButton',
+    props: {
+      commandId: 'copy',
+      active: false,
+      label: 'Copy'
+    },   
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.copy, storeState)
+    })
+  },
+  underlineButton: {
+    type: 'iconButton',
+    id: 'underlineButton',
+    props: {
+      commandId: 'underline',
+    }
+  },
+  squigglyButton: {
+    type: 'iconButton',
+    id: 'squigglyButton',
+    props: {
+      commandId: 'squiggly',
+    }
+  },
+  strikethroughButton: {
+    type: 'iconButton',
+    id: 'strikethroughButton',
+    props: {
+      commandId: 'strikethrough',
+    }
+  },
+  highlightButton: {
+    type: 'iconButton',
+    id: 'highlightButton',
+    props: {
+      commandId: 'highlight',
+    }
   },
   viewCtrButton: {
     type: 'iconButton',
@@ -1086,20 +1193,52 @@ export const components: Record<string, UIComponentType<State>> = {
   pageControlsContainer: {
     id: 'pageControlsContainer',
     type: 'floating',
-    render: 'pageControlsContainer',
-    initialState: {
-      open: false
+    props: {
+      scrollerPosition: 'outside',
     },
-    props: (initialState) => ({
-      open: initialState.open
-    }),
-    mapStateToProps: (storeState, ownProps) => ({
-      ...ownProps,
-      open: storeState.plugins.ui.floating.pageControlsContainer.open
-    }),
+    render: 'pageControlsContainer',
     slots: [
       { componentId: 'pageControls', priority: 0 }
     ]
+  },
+  textSelectionMenuButtons: {
+    id: 'textSelectionMenuButtons',
+    type: 'groupedItems',
+    slots: [
+      { componentId: 'copyButton', priority: 0 },
+      { componentId: 'highlightButton', priority: 1 },
+      { componentId: 'underlineButton', priority: 2 },
+      { componentId: 'strikethroughButton', priority: 3 },
+      { componentId: 'squigglyButton', priority: 4 }
+    ],
+    props: {
+      gap: 10
+    }
+  },
+  textSelectionMenu: {
+    id: 'textSelectionMenu',
+    type: 'floating',
+    render: 'textSelectionMenu',
+    props: {
+      open: false,
+      scrollerPosition: 'inside',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      isScolling: storeState.plugins.viewport.isScrolling,
+      scale: storeState.core.scale,
+      rotation: storeState.core.rotation,
+      spread: storeState.plugins[SPREAD_PLUGIN_ID].spreadMode,
+      open: 
+        storeState.plugins[SELECTION_PLUGIN_ID].active 
+        && !storeState.plugins[SELECTION_PLUGIN_ID].selecting
+    }), 
+    slots: [
+      { componentId: 'textSelectionMenuButtons', priority: 0 }
+    ],
+    getChildContext: {
+      direction: 'horizontal'
+    }
   },
   topHeader: {
     type: 'header',
@@ -1124,7 +1263,10 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'annotationTools',
     type: 'groupedItems',
     slots: [
-      { componentId: 'downloadButton', priority: 0 }
+      { componentId: 'highlightButton', priority: 1 },
+      { componentId: 'underlineButton', priority: 2 },
+      { componentId: 'strikethroughButton', priority: 3 },
+      { componentId: 'squigglyButton', priority: 4 }
     ],
     props: {
       gap: 10
@@ -1343,6 +1485,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             uiCapability.registerComponentRenderer('outline', outlineRenderer);
             uiCapability.registerComponentRenderer('attachments', attachmentsRenderer);
             uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
+            uiCapability.registerComponentRenderer('textSelectionMenu', textSelectionMenuRenderer);
           }
         }}
         plugins={[
@@ -1451,10 +1594,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
                               </div>
                             </Rotate>
                           }
+                          overlayElements={floating.insideScroller}
                         />
                       }
+                      {floating.outsideScroller}
                     </Viewport>
-                    {floating}
                   </div>
                   {panels.right.length > 0 && (
                     <Fragment>

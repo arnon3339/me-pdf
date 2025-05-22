@@ -20,13 +20,13 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
       this.dispatch(setViewportGap(config.viewportGap));
     }
 
-    this.scrollEndDelay = config.scrollEndDelay || 150;
+    this.scrollEndDelay = config.scrollEndDelay || 300;
   }
 
   protected buildCapability(): ViewportCapability {
     return {
-      getViewportGap: () => this.getState().viewportGap,
-      getMetrics: () => this.getState().viewportMetrics,
+      getViewportGap: () => this.state.viewportGap,
+      getMetrics: () => this.state.viewportMetrics,
       onScrollChange: this.scrollMetrics$.on,
       onViewportChange: this.viewportMetrics$.on,
       setViewportMetrics: (viewportMetrics: ViewportInputMetrics) => {
@@ -35,7 +35,7 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
       setViewportScrollMetrics: this.setViewportScrollMetrics.bind(this),
       scrollTo: (pos: ScrollToPayload) => this.scrollTo(pos),
       onScrollRequest : this.scrollReq$.on,
-      isScrolling: () => this.getState().isScrolling,
+      isScrolling: () => this.state.isScrolling,
       onScrollActivity: this.scrollActivity$.on
     };
   }
@@ -45,17 +45,15 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
     this.scrollEndTimer = window.setTimeout(() => {
       this.dispatch(setScrollActivity(false));
       this.scrollEndTimer = undefined;
-      this.scrollActivity$.emit(false);
     }, this.scrollEndDelay);
   }
 
   private setViewportScrollMetrics(scrollMetrics: ViewportScrollMetrics) {
     if(
-      scrollMetrics.scrollTop !== this.getState().viewportMetrics.scrollTop || 
-      scrollMetrics.scrollLeft !== this.getState().viewportMetrics.scrollLeft
+      scrollMetrics.scrollTop !== this.state.viewportMetrics.scrollTop || 
+      scrollMetrics.scrollLeft !== this.state.viewportMetrics.scrollLeft
     ) {
       this.dispatch(setViewportScrollMetrics(scrollMetrics));
-      this.scrollActivity$.emit(true);
       this.bumpScrollActivity();
     }
   }
@@ -64,7 +62,7 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
     const { x, y, center, behavior = 'auto' } = pos;
     
     if (center) {
-      const metrics = this.getState().viewportMetrics;
+      const metrics = this.state.viewportMetrics;
       // Calculate the centered position by adding half the viewport dimensions
       const centeredX = x - (metrics.clientWidth / 2);
       const centeredY = y - (metrics.clientHeight / 2);
@@ -91,6 +89,9 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
         scrollTop: newState.viewportMetrics.scrollTop,
         scrollLeft: newState.viewportMetrics.scrollLeft
       });
+      if (prevState.isScrolling !== newState.isScrolling) {
+        this.scrollActivity$.emit(newState.isScrolling);
+      }
     }
   }
   
@@ -104,5 +105,7 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
     this.viewportMetrics$.clear();
     this.scrollMetrics$.clear();
     this.scrollReq$.clear();
+    this.scrollActivity$.clear();
+    if (this.scrollEndTimer) clearTimeout(this.scrollEndTimer);
   }
 }

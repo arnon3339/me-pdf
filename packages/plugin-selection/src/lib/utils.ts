@@ -1,4 +1,4 @@
-import { PdfPageGeometry } from '@embedpdf/models';
+import { PdfPageGeometry, Rect } from '@embedpdf/models';
 
 /**
  * Hit-test helper using runs

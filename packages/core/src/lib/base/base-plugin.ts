@@ -68,14 +68,28 @@ export abstract class BasePlugin<
   abstract initialize(config: TConfig): Promise<void>;
   
   /**
-   * Get a copy of the current state
+   *  Get a copy of the current state
+   */
+  protected get state(): Readonly<TState> {
+    return this.pluginStore.getState();
+  }
+
+  /**
+   *  Get a copy of the current core state
+   */
+  protected get coreState(): Readonly<StoreState<CoreState>> {
+    return this.coreStore.getState();
+  }
+
+  /**
+   * @deprecated  use `this.state` Get a copy of the current state
    */
   protected getState(): TState {
     return this.pluginStore.getState();
   }
 
   /**
-   * Get a copy of the current core state
+   * @deprecated  use `this.coreState` Get a copy of the current core state
    */
   protected getCoreState(): StoreState<CoreState> {
     return this.coreStore.getState();

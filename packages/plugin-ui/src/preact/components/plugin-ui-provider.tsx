@@ -18,7 +18,10 @@ export interface UIComponentsMap {
     left: JSX.Element[];
     right: JSX.Element[];
   };
-  floating: JSX.Element[];
+  floating: {
+    insideScroller: JSX.Element[];
+    outsideScroller: JSX.Element[];
+  };
   commandMenu: JSX.Element | null;
 }
 
@@ -60,7 +63,10 @@ export function PluginUIProvider({ children }: PluginUIProviderProps) {
       left: wrapComponents(uiProvides?.getPanelsByLocation('left') || []),
       right: wrapComponents(uiProvides?.getPanelsByLocation('right') || [])
     },
-    floating: wrapComponents(uiProvides?.getFloatingComponents() || []),
+    floating: {
+      insideScroller: wrapComponents(uiProvides?.getFloatingComponents('inside') || []),
+      outsideScroller: wrapComponents(uiProvides?.getFloatingComponents('outside') || [])
+    },
     commandMenu: uiProvides?.getCommandMenu() 
       ? <ComponentWrapper component={uiProvides.getCommandMenu()!} />
       : null

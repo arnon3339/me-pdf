@@ -1,5 +1,5 @@
 import { BasePluginConfig, Emitter, EventHook } from "@embedpdf/core";
-import { PdfPageObject } from "@embedpdf/models";
+import { PdfPageObject, Rect, Rotation } from "@embedpdf/models";
 import { ViewportMetrics } from "@embedpdf/plugin-viewport";
 import { VirtualItem } from "./types/virtual-item";
 
@@ -96,8 +96,8 @@ export interface ScrollCapability {
   scrollToPreviousPage(behavior?: ScrollBehavior): void;
   getMetrics(viewport?: ViewportMetrics): ScrollMetrics;
   getLayout(): LayoutChangePayload;
-  getState(): ScrollState;
   getScrollerLayout(): ScrollerLayout;
+  getRectPositionForPage(page: number, rect: Rect, scale?: number, rotation?: Rotation): Rect | null;
   setScrollStrategy(strategy: ScrollStrategy): void;
   getPageGap(): number;
 }

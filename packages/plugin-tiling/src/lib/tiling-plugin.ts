@@ -49,12 +49,12 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
       return;
     }
 
-    const scale = this.getCoreState().core.scale; // Current zoom level
+    const scale = this.coreState.core.scale; // Current zoom level
     const visibleTiles: { [pageIndex: number]: Tile[] } = {};
 
     for (const scrollMetric of scrollMetrics.pageVisibilityMetrics) {
       const pageIndex = scrollMetric.pageNumber - 1; // Convert to 0-based index
-      const page = this.getCoreState().core.document?.pages[pageIndex];
+      const page = this.coreState.core.document?.pages[pageIndex];
       if (!page) continue;
 
       // Calculate tiles for the page using the utility function

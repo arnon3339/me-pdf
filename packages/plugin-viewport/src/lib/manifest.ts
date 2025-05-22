@@ -13,6 +13,6 @@ export const manifest: PluginManifest<ViewportPluginConfig> = {
   defaultConfig: {
     enabled: true,
     viewportGap: 10,
-    scrollEndDelay: 150
+    scrollEndDelay: 300
   }
 };
