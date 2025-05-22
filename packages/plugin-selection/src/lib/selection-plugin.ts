@@ -8,6 +8,8 @@ import {
   cachePageGeometry,
   setSelection,
   SelectionAction,
+  endSelection,
+  startSelection,
 } from './actions';
 import {
   PdfEngine,
@@ -56,7 +58,7 @@ export class SelectionPlugin extends BasePlugin<
 
       begin:   (p,i)=> this.beginSelection(p,i),
       update:  (p,i)=> this.updateSelection(p,i),
-      end:     ()=>   { this.selecting = false; this.anchor = undefined; },
+      end:     ()=>   this.endSelection(),
       clear:   ()=>   this.clearSelection(),
 
       onSelectionChange: this.selChange$.on,
@@ -86,7 +88,13 @@ export class SelectionPlugin extends BasePlugin<
   private beginSelection(page: number, index: number) {
     this.selecting = true;
     this.anchor    = { page, index };
-    this.dispatch(setSelection(null));
+    this.dispatch(startSelection());
+  }
+
+  private endSelection() {
+    this.selecting = false; 
+    this.anchor = undefined;
+    this.dispatch(endSelection());
   }
 
   private clearSelection() {

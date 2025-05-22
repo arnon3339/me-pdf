@@ -126,6 +126,8 @@ export const functions = {
   FPDF_ClosePage: [['number'], null],
   FPDFAnnot_GetSubtype: [['number'], 'number'],
   FPDFAnnot_GetAP: [['number', 'number', 'number', 'number'], 'number'],
+  FPDFAnnot_CountAttachmentPoints: [['number'], 'number'],
+  FPDFAnnot_GetAttachmentPoints: [['number', 'number', 'number'], 'boolean'],
   FPDFAnnot_GetObjectCount: [['number'], 'number'],
   FPDFAnnot_GetObject: [['number', 'number'], 'number'],
   FPDFAnnot_AppendObject: [['number', 'number'], 'boolean'],

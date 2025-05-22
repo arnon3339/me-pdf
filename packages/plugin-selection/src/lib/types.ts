@@ -19,6 +19,8 @@ export interface SelectionState {
   geometry: Record<number, PdfPageGeometry>;
   /** current selection or null */
   selection: SelectionRangeX | null;
+  active: boolean;
+  selecting: boolean;
 }
 
 export interface SelectionCapability {
