@@ -13,9 +13,10 @@ interface RenderPageProps extends PageLayout {
 
 type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
   renderPage: (props: RenderPageProps) => JSX.Element;
+  overlayElements?: JSX.Element[];  // Add this new prop
 };
 
-export function Scroller({ renderPage, ...props }: ScrollerProps) {
+export function Scroller({ renderPage, overlayElements, ...props }: ScrollerProps) {
   const { provides: scrollProvides } = useScrollCapability();
   const { registry } = useRegistry();
   const [scrollerLayout, setScrollerLayout] = useState<ScrollerLayout | null>(
@@ -99,5 +100,6 @@ export function Scroller({ renderPage, ...props }: ScrollerProps) {
         width: '100%'
       }
     }} />
+    {overlayElements}
   </div>;
 }

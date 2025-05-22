@@ -1,5 +1,5 @@
 import { BasePluginConfig } from '@embedpdf/core';
-import { PdfPageGeometry } from '@embedpdf/models';
+import { PdfPageGeometry, Rect } from '@embedpdf/models';
 
 export interface SelectionPluginConfig extends BasePluginConfig {}
 
@@ -18,15 +18,19 @@ export interface SelectionState {
   /** page → geometry cache */
   geometry: Record<number, PdfPageGeometry>;
   /** current selection or null */
+  rects    : Record<number, Rect[]>;
   selection: SelectionRangeX | null;
+  active: boolean;
+  selecting: boolean;
 }
 
 export interface SelectionCapability {
   /* geometry (cached) */
   getGeometry(page: number): Promise<PdfPageGeometry>;
   /* highlight rectangles for one page at given scale */
-  getHighlightRects(page: number):
-    { x: number; y: number; width: number; height: number; }[];
+  getHighlightRects(page: number): Rect[];
+  getBoundingRect (page: number): Rect | null;
+  getBoundingRects(): { page: number; rect: Rect }[];
   /* imperative API used by framework layers */
   begin(page: number, glyphIdx: number): void;
   update(page: number, glyphIdx: number): void;

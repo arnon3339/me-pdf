@@ -2,14 +2,14 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useSelectionCapability } from '../hooks';
 import { glyphAt } from '@embedpdf/plugin-selection';
-import { PdfPageGeometry, restorePosition, Rotation, Size } from '@embedpdf/models';
+import { PdfPageGeometry, Rect, restorePosition, Rotation, Size } from '@embedpdf/models';
 
 type Props = { pageIndex: number; scale: number, rotation: Rotation, containerSize: Size };
 
 export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Props) {
   const { provides: sel } = useSelectionCapability();
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [rects, setRects] = useState<Array<{x:number;y:number;width:number;height:number;}>>([]);
+  const [rects, setRects] = useState<Array<Rect>>([]);
   const [hoveringText, setHoveringText] = useState(false);
 
   /* subscribe to rect updates */
@@ -83,10 +83,10 @@ export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Pr
           key={i}
           style={{
             position: 'absolute',
-            left:  b.x      * scale,
-            top:   b.y      * scale,
-            width: b.width  * scale,
-            height:b.height * scale,
+            left:  b.origin.x * scale,
+            top:   b.origin.y * scale,
+            width: b.size.width * scale,
+            height:b.size.height * scale,
             background: 'rgba(33,150,243)',
             pointerEvents: 'none',
           }}

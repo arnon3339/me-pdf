@@ -403,3 +403,40 @@ export function restoreOffset(
     y: offsetY,
   };
 }
+
+
+/**
+ * Return the smallest rectangle that encloses *all* `rects`.
+ * If the array is empty, returns `null`.
+ * 
+ * @param rects - array of rectangles
+ * @returns smallest rectangle that encloses all the rectangles
+ *
+ * @public
+ */
+export function boundingRect(rects: Rect[]): Rect | null {
+  if (rects.length === 0) return null;
+
+  let minX = rects[0].origin.x,
+      minY = rects[0].origin.y,
+      maxX = rects[0].origin.x + rects[0].size.width,
+      maxY = rects[0].origin.y + rects[0].size.height;
+
+  for (const r of rects) {
+    minX = Math.min(minX, r.origin.x);
+    minY = Math.min(minY, r.origin.y);
+    maxX = Math.max(maxX, r.origin.x + r.size.width);
+    maxY = Math.max(maxY, r.origin.y + r.size.height);
+  }
+
+  return { 
+    origin: {
+      x: minX, 
+      y: minY
+    },
+    size: {
+      width: maxX - minX, 
+      height: maxY - minY 
+    }
+  }
+}

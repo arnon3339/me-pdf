@@ -59,7 +59,7 @@ export type UICapability = IconCapabilities & MenuManagerCapabilities & {
   hideCommandMenu: () => void;
   getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => UIComponent<HeaderComponent<any>>[];
   getPanelsByLocation: (location: 'left' | 'right') => UIComponent<PanelComponent<any>>[];
-  getFloatingComponents: () => UIComponent<FloatingComponent>[];
+  getFloatingComponents: (viewportPosition?: 'inside' | 'outside') => UIComponent<FloatingComponent>[];
   addSlot: (parentId: string, slotId: string, priority?: number) => void;
   registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
   togglePanel: (payload: TogglePanelPayload) => void;
@@ -190,11 +190,12 @@ export interface CustomComponent<TStore = any> extends BaseUIComponent<any, any,
 }
 
 export interface FloatingState {
-  open: boolean;
+  [name: string]: any;
 }
 
 export interface FloatingComponentProps {
-  open: boolean;
+  scrollerPosition: 'inside' | 'outside';
+  [name: string]: any;
 }
 
 export interface FloatingComponent<TStore = any> extends BaseUIComponent<FloatingComponentProps, FloatingState, TStore> {

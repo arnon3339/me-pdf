@@ -192,7 +192,10 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
       registerComponent: this.addComponent.bind(this),
       getCommandMenu: () => Object.values(this.components).find(component => isCommandMenuComponent(component)),
       hideCommandMenu: () => this.debouncedDispatch(uiHideCommandMenu({id: 'commandMenu'}), 100),
-      getFloatingComponents: () => Object.values(this.components).filter(component => isFloatingComponent(component)),
+      getFloatingComponents: (scrollerPosition?: 'inside' | 'outside') => 
+        Object.values(this.components)
+          .filter(component => isFloatingComponent(component))
+          .filter(component => !scrollerPosition || component.props.scrollerPosition === scrollerPosition),
       getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => 
         Object.values(this.components)
           .filter(component => isHeaderComponent(component))

@@ -4,6 +4,7 @@ import { ViewportInputMetrics, ViewportScrollMetrics } from "./types";
 export const SET_VIEWPORT_METRICS = "SET_VIEWPORT_METRICS";
 export const SET_VIEWPORT_SCROLL_METRICS = "SET_VIEWPORT_SCROLL_METRICS";
 export const SET_VIEWPORT_GAP = "SET_VIEWPORT_GAP";
+export const SET_SCROLL_ACTIVITY = "SET_SCROLL_ACTIVITY";
 
 export interface SetViewportMetricsAction extends Action {
   type: typeof SET_VIEWPORT_METRICS;
@@ -20,7 +21,16 @@ export interface SetViewportGapAction extends Action {
   payload: number;
 }
 
-export type ViewportAction = SetViewportMetricsAction | SetViewportScrollMetricsAction | SetViewportGapAction;
+export interface SetScrollActivityAction extends Action {
+  type: typeof SET_SCROLL_ACTIVITY;
+  payload: boolean;
+}
+
+export type ViewportAction = 
+  | SetViewportMetricsAction 
+  | SetViewportScrollMetricsAction 
+  | SetViewportGapAction 
+  | SetScrollActivityAction;
 
 export function setViewportGap(
   viewportGap: number
@@ -47,4 +57,10 @@ export function setViewportScrollMetrics(
     type: SET_VIEWPORT_SCROLL_METRICS,
     payload: scrollMetrics
   };
+}
+
+export function setScrollActivity(
+  isScrolling: boolean
+): SetScrollActivityAction {
+  return { type: SET_SCROLL_ACTIVITY, payload: isScrolling };
 }

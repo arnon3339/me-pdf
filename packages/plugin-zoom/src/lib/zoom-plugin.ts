@@ -78,20 +78,20 @@ export class ZoomPlugin
     return {
       onZoomChange : this.zoom$.on,
       zoomIn       : () => {
-        const cur = this.getState().currentZoomLevel;
+        const cur = this.state.currentZoomLevel;
         return this.handleRequest({ level: cur, delta: this.stepFor(cur) });
       },
       zoomOut      : () => {
-        const cur = this.getState().currentZoomLevel;
+        const cur = this.state.currentZoomLevel;
         return this.handleRequest({ level: cur, delta: -this.stepFor(cur) });
       },
       requestZoom  : (level, c) => this.handleRequest({ level, center: c }),
       requestZoomBy: (d,c)    => {
-        const cur = this.getState().currentZoomLevel;
+        const cur = this.state.currentZoomLevel;
         const target = this.toZoom(cur + d);
         return this.handleRequest({ level: target, center: c });
       },
-      getState     : () => this.getState(),
+      getState     : () => this.state,
       getPresets   : () => this.presets,
     };
   }
@@ -137,9 +137,8 @@ export class ZoomPlugin
       focus = VerticalZoomFocus.Center
     }: ZoomRequest
   ) {
-    const state      = this.getState();
     const metrics    = this.viewport.getMetrics();
-    const oldZoom    = state.currentZoomLevel;
+    const oldZoom    = this.state.currentZoomLevel;
 
     if(metrics.clientWidth === 0 || metrics.clientHeight === 0) {
       return;
@@ -209,7 +208,7 @@ export class ZoomPlugin
 
   /** numeric zoom for Automatic / FitPage / FitWidth */
   private computeZoomForMode(mode: ZoomMode, vp: ViewportMetrics): number | false {
-    const spreads   = getPagesWithRotatedSize(this.coreStore.getState().core);
+    const spreads   = getPagesWithRotatedSize(this.coreState.core);
     if (!spreads.length) return false;
 
     const pgGap     = this.scroll.getPageGap();
@@ -281,7 +280,7 @@ export class ZoomPlugin
 
   /** recalculates Automatic / Fit* when viewport or pages change */
   private recalcAuto(focus?: VerticalZoomFocus) {
-    const s = this.getState();
+    const s = this.state;
     if (
       s.zoomLevel === ZoomMode.Automatic ||
       s.zoomLevel === ZoomMode.FitPage   ||

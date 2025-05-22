@@ -12,9 +12,11 @@ import { Icon } from "./ui/icon";
 import { useSearchCapability } from "@embedpdf/plugin-search/preact";
 import { ThumbImg, ThumbnailsPane } from "@embedpdf/plugin-thumbnail/preact";
 import { useDebounce } from "@/hooks/use-debounce";
-import { SearchAllPagesResult, SearchResult } from "@embedpdf/models";
+import { Rotation, SearchAllPagesResult, SearchResult } from "@embedpdf/models";
 import { MatchFlag } from "@embedpdf/models";
 import { Checkbox } from "./ui/checkbox";
+import { useSelectionCapability } from "@embedpdf/plugin-selection/preact";
+import { menuPositionForSelection } from "./utils";
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = ({commandId, onClick, active, ...props}, children, context) => {
   const {provides: ui} = useUICapability();
@@ -42,7 +44,7 @@ export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = ({co
   }, [command, commandId, ui, onClick]);
 
   return (
-    <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={props.label!} trigger={active ? 'none' : 'hover'} delay={500}>
+    <Tooltip position={context?.direction === 'horizontal' ? 'bottom' : 'right'} content={props.label || command?.label || ''} trigger={active ? 'none' : 'hover'} delay={500}>
       <Button
         active={active}
         onClick={handleClick}
@@ -510,6 +512,33 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, 
         {commandZoomIn?.icon && <Icon icon={commandZoomIn.icon} className="w-5 h-5" />}
       </Button>
     </Tooltip>
+  </div>;
+};
+
+interface TextSelectionMenuProps extends FloatingComponentProps {
+  open: boolean;
+  scale?: number;
+  rotation?: Rotation;
+}
+
+export const textSelectionMenuRenderer: ComponentRenderFunction<TextSelectionMenuProps> = (props, children) => {
+  const { provides: selection} = useSelectionCapability();
+  const { provides: scroll} = useScrollCapability();
+  const { provides: viewport} = useViewportCapability();
+
+  if (!props.open || !selection || !scroll || !viewport) return null;
+
+  const bounding = selection.getBoundingRects();        // one per page
+  const coords   = menuPositionForSelection(bounding, scroll, viewport, 10, 42);
+  if (!coords) return null;                       // nothing visible yet
+
+  return <div style={{
+    left: `${coords.left}px`,
+    top : `${coords.top }px`,
+    transform: 'translate(-50%, 0%)',
+    zIndex: 2000,
+  }} className="absolute bg-[#f8f9fa] rounded-md border border-[#cfd4da] p-1">
+    {children()}
   </div>;
 };
 

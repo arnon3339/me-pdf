@@ -2,20 +2,27 @@ import { BasePlugin, CoreState, PluginRegistry, StoreState } from '@embedpdf/cor
 import {
   SelectionCapability,
   SelectionPluginConfig,
+  SelectionRangeX,
   SelectionState,
 } from './types';
 import {
   cachePageGeometry,
   setSelection,
   SelectionAction,
+  endSelection,
+  startSelection,
+  setRects,
+  clearSelection,
 } from './actions';
 import {
   PdfEngine,
   PdfDocumentObject,
   PdfPageGeometry,
   TaskError,
+  Rect,
 } from '@embedpdf/models';
 import { createBehaviorEmitter } from '@embedpdf/core';
+import * as selector from './selectors';
 
 export class SelectionPlugin extends BasePlugin<
   SelectionPluginConfig,
@@ -52,11 +59,12 @@ export class SelectionPlugin extends BasePlugin<
   buildCapability(): SelectionCapability {
     return {
       getGeometry:        p   => this.getOrLoadGeometry(p),
-      getHighlightRects: (p)=> this.buildRectsForPage(p),
-
+      getHighlightRects: (p)=> selector.selectRectsForPage(this.state, p),
+      getBoundingRect : p => selector.selectBoundingRectForPage(this.state, p),
+      getBoundingRects: () => selector.selectBoundingRectsForAllPages(this.state),
       begin:   (p,i)=> this.beginSelection(p,i),
       update:  (p,i)=> this.updateSelection(p,i),
-      end:     ()=>   { this.selecting = false; this.anchor = undefined; },
+      end:     ()=>   this.endSelection(),
       clear:   ()=>   this.clearSelection(),
 
       onSelectionChange: this.selChange$.on,
@@ -65,7 +73,7 @@ export class SelectionPlugin extends BasePlugin<
 
   /* ── geometry cache ───────────────────────────────────── */
   private getOrLoadGeometry(pageIdx: number): Promise<PdfPageGeometry> {
-    const cached = this.getState().geometry[pageIdx];
+    const cached = this.state.geometry[pageIdx];
     if (cached) return Promise.resolve(cached);
 
     if (!this.doc) return Promise.reject('doc closed');
@@ -86,14 +94,27 @@ export class SelectionPlugin extends BasePlugin<
   private beginSelection(page: number, index: number) {
     this.selecting = true;
     this.anchor    = { page, index };
-    this.dispatch(setSelection(null));
+    this.dispatch(startSelection());
+  }
+
+  private endSelection() {
+    this.selecting = false; 
+    this.anchor = undefined;
+    this.dispatch(endSelection());
   }
 
   private clearSelection() {
     this.selecting = false;
     this.anchor    = undefined;
-    this.dispatch(setSelection(null));
+    this.dispatch(clearSelection());
     this.selChange$.emit(null);
+  }
+
+  private updateRectsForRange(range: SelectionRangeX) {
+    for (let p = range.start.page; p <= range.end.page; p++) {
+      const rects = this.buildRectsForPage(p);          // existing pure fn
+      this.dispatch(setRects(p, rects));
+    }
   }
 
   private updateSelection(page: number, index: number) {
@@ -107,18 +128,19 @@ export class SelectionPlugin extends BasePlugin<
 
     const range = { start, end };
     this.dispatch(setSelection(range));
+    this.updateRectsForRange(range);
     this.selChange$.emit(range);
   }
 
   /* ── rect builder: 1 div per run slice ─────────────────── */
-  private buildRectsForPage(page: number) {
-    const sel = this.getState().selection;
+  private buildRectsForPage(page: number): Rect[] {
+    const sel = this.state.selection;
     if (!sel) return [];
 
     /* page not covered by the current selection */
     if (page < sel.start.page || page > sel.end.page) return [];
 
-    const geo = this.getState().geometry[page];
+    const geo = this.state.geometry[page];
     if (!geo) return [];
 
     const from = page === sel.start.page ? sel.start.index : 0;
@@ -140,10 +162,8 @@ export class SelectionPlugin extends BasePlugin<
       const bottom = run.glyphs[eIdx].y + run.glyphs[eIdx].height;
 
       rects.push({
-        x:      left,
-        y:      top,
-        width:  (right - left),
-        height: bottom - top
+        origin: { x: left, y: top },
+        size:   { width: right - left, height: bottom - top }
       });
     }
     return rects;

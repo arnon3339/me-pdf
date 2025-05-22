@@ -4,7 +4,8 @@ import {
   SET_VIEWPORT_METRICS, 
   SET_VIEWPORT_SCROLL_METRICS, 
   SET_VIEWPORT_GAP,
-  ViewportAction 
+  ViewportAction, 
+  SET_SCROLL_ACTIVITY
 } from "./actions";
 
 export const initialState: ViewportState = {
@@ -22,7 +23,8 @@ export const initialState: ViewportState = {
       x: 0,
       y: 0
     }
-  }
+  },
+  isScrolling: false
 };
 
 export const viewportReducer: Reducer<ViewportState, ViewportAction> = (
@@ -57,8 +59,11 @@ export const viewportReducer: Reducer<ViewportState, ViewportAction> = (
           ...state.viewportMetrics,
           scrollTop: action.payload.scrollTop,
           scrollLeft: action.payload.scrollLeft
-        }
+        },
+        isScrolling: true
       };
+    case SET_SCROLL_ACTIVITY:
+      return { ...state, isScrolling: action.payload };
     default:
       return state;
   }

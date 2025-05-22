@@ -3,10 +3,12 @@ import { BasePluginConfig, EventControlOptions, EventHook } from "@embedpdf/core
 export interface ViewportState {
   viewportGap: number;
   viewportMetrics: ViewportMetrics;
+  isScrolling: boolean;
 }
 
 export interface ViewportPluginConfig extends BasePluginConfig {  
   viewportGap?: number;
+  scrollEndDelay?: number;
 }
 
 export interface ViewportInputMetrics {
@@ -56,4 +58,6 @@ export interface ViewportCapability {
   scrollTo(position: ScrollToPayload): void;
   onScrollRequest: EventHook<ScrollToPayload>;
   onScrollChange: EventHook<ViewportScrollMetrics>;
+  onScrollActivity: EventHook<boolean>;
+  isScrolling: () => boolean;
 }
