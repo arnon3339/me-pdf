@@ -78,6 +78,12 @@ import {
   PdfRun,
   toIntRect,
   toIntSize,
+  Quad,
+  PdfAlphaColor,
+  PdfAnnotationState,
+  PdfAnnotationStateModel,
+  PdfAnnotationObjectBase,
+  quadToRect,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -3639,6 +3645,232 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
+   * Return the colour stored directly in the annotation dictionary’s `/C` entry.
+   *
+   * Most PDFs created by Acrobat, Microsoft Office, LaTeX, etc. include this entry.
+   * When the key is absent (common in macOS Preview, Chrome, Drawboard) the call
+   * fails and the function returns `undefined`.
+   *
+   * @param annotationPtr - pointer to an `FPDF_ANNOTATION`
+   * @returns An RGBA tuple (0-255 channels) or `undefined` if no `/C` entry exists
+   *
+   * @private
+   */
+  private readAnnotationColor(
+    annotationPtr: number,
+  ): PdfAlphaColor | undefined {
+    const rPtr = this.malloc(4);
+    const gPtr = this.malloc(4);
+    const bPtr = this.malloc(4);
+    const aPtr = this.malloc(4);
+
+    // colourType 0 = "colour" (stroke/fill); other types are interior/border
+    const ok = this.pdfiumModule.FPDFAnnot_GetColor(
+      annotationPtr,
+      /* colorType = */ 0,
+      rPtr,
+      gPtr,
+      bPtr,
+      aPtr,
+    );
+
+    let colour: PdfAlphaColor | undefined;
+
+    if (ok) {
+      colour = {
+        red:   this.pdfiumModule.pdfium.getValue(rPtr, 'i32') & 0xff,
+        green: this.pdfiumModule.pdfium.getValue(gPtr, 'i32') & 0xff,
+        blue:  this.pdfiumModule.pdfium.getValue(bPtr, 'i32') & 0xff,
+        alpha: this.pdfiumModule.pdfium.getValue(aPtr, 'i32') & 0xff, // 0 = transparent, 255 = opaque
+      };
+    }
+
+    this.free(rPtr);
+    this.free(gPtr);
+    this.free(bPtr);
+    this.free(aPtr);
+
+    return colour;
+  }
+
+  /* --------------------------------------------------------------------------- */
+  /**
+   * Extract the fill (or, if absent, the stroke) colour from a **path object**
+   * inside an appearance stream.
+   *
+   * Works for simple highlights produced by Chrome, Preview, etc. that paint a
+   * single filled rectangle with the desired tint.
+   *
+   * @param pathPtr - pointer to a `FPDF_PAGEOBJECT` of type **PATH**
+   * @returns RGBA tuple or `undefined` when no colour is set on the path
+   *
+   * @private
+   */
+  private getColorFromPath(pathPtr: number): PdfAlphaColor | undefined {
+    const r=this.malloc(4),g=this.malloc(4),b=this.malloc(4),a=this.malloc(4);
+  
+    const fillOk   = this.pdfiumModule.FPDFPageObj_GetFillColor(pathPtr, r,g,b,a);
+    const strokeOk = !fillOk &&                        // try stroke only if fill failed
+                     this.pdfiumModule.FPDFPageObj_GetStrokeColor(pathPtr,r,g,b,a);
+  
+    const ok = fillOk || strokeOk;
+    let c: PdfAlphaColor | undefined;
+    if (ok) {
+      c = {
+        red  : this.pdfiumModule.pdfium.getValue(r,'i32') & 0xFF,
+        green: this.pdfiumModule.pdfium.getValue(g,'i32') & 0xFF,
+        blue : this.pdfiumModule.pdfium.getValue(b,'i32') & 0xFF,
+        alpha: this.pdfiumModule.pdfium.getValue(a,'i32') & 0xFF,
+      };
+    }
+    this.free(r); this.free(g); this.free(b); this.free(a);
+    return c;
+  }
+
+
+  /* --------------------------------------------------------------------------- */
+  /**
+   * Recursively walk a page-object tree (PATHs and nested FORM XObjects) until
+   * a colour can be extracted.
+   *
+   * Acrobat often wraps its highlight rectangle in a Form XObject referenced by
+   * the “Do” operator, so this function drills down unlimited depth.
+   *
+   * @param objPtr - pointer to a `FPDF_PAGEOBJECT`
+   * @returns First RGBA tint found, or `undefined` if none of the descendants
+   *          carry an explicit fill/stroke colour
+   *
+   * @private
+   */
+  private walkPageObjTree(objPtr: number): PdfAlphaColor | undefined {
+    const type = this.pdfiumModule.FPDFPageObj_GetType(objPtr);
+
+    if (type === PdfPageObjectType.PATH)  return this.getColorFromPath(objPtr);
+    if (type !== PdfPageObjectType.FORM)  return undefined;
+  
+    const cnt = this.pdfiumModule.FPDFFormObj_CountObjects(objPtr);
+    for (let i = 0; i < cnt; i++) {
+      const child = this.pdfiumModule.FPDFFormObj_GetObject(objPtr, i);
+      if (!child) continue;
+      const c = this.walkPageObjTree(child);
+      if (c) return c;
+    }
+    return undefined;
+  }
+
+  /* --------------------------------------------------------------------------- */
+  /**
+   * Iterate over every top-level object in the annotation’s **appearance stream**
+   * and invoke {@link walkPageObjTree} to locate a usable tint.
+   *
+   * Catches:
+   *   • Simple filled path (Preview, Chrome)  
+   *   • Form XObject containing the path (Acrobat)  
+   *
+   * @param annotPtr - pointer to an `FPDF_ANNOTATION`
+   * @returns RGBA tuple or `undefined` when no colour can be resolved from AP
+   *
+   * @private
+   */
+  private colorFromAppearance(annotPtr: number): PdfAlphaColor | undefined {
+    const n = this.pdfiumModule.FPDFAnnot_GetObjectCount(annotPtr);
+    for (let i = 0; i < n; i++) {
+      const obj = this.pdfiumModule.FPDFAnnot_GetObject(annotPtr, i);
+      if (!obj) continue;
+      const c = this.walkPageObjTree(obj);
+      if (c) return c;
+    }
+    return undefined;
+  }
+
+  /* --------------------------------------------------------------------------- */
+  /**
+   * Resolve the visible fill colour for **Highlight / Underline / StrikeOut /
+   * Squiggly** markup annotations.
+   *
+   * Resolution order (first non-`undefined` wins):
+   *  1. `/C` dictionary entry – fast, present in Acrobat / Office PDFs  
+   *  2. Appearance-stream objects – drills into paths & nested forms  
+   *  3. Hard-coded fallback (Acrobat-style opaque yellow)
+   *
+   * @param annotationPtr - pointer to an `FPDF_ANNOTATION`
+   * @param fallback      - colour to use when the PDF stores no tint at all
+   * @returns Guaranteed RGBA tuple (never `undefined`)
+   *
+   * @private
+   */
+  private resolveAnnotationColor(
+    annotationPtr: number,
+    fallback: PdfAlphaColor = { red: 255, green: 245, blue: 155, alpha: 255 },
+  ): PdfAlphaColor {
+    return (
+      this.readAnnotationColor(annotationPtr)    // 1 – /C entry
+      ?? this.colorFromAppearance(annotationPtr) // 2 – AP stream walk
+      ?? fallback                                // 3 – default
+    );
+  }
+
+  /**
+   * Read `/QuadPoints` from any annotation and convert each quadrilateral to
+   * device-space coordinates.
+   *
+   * The four points are returned in natural reading order:
+   *   `p1 → p2` (top edge) and `p4 → p3` (bottom edge).  
+   * This preserves the true shape for rotated / skewed text, whereas callers
+   * that only need axis-aligned boxes can collapse each quad themselves.
+   *
+   * @param page          - logical page info object (`PdfPageObject`)
+   * @param annotationPtr - pointer to the annotation whose quads are needed
+   * @returns Array of `Quad` objects (`[]` if the annotation has no quads)
+   *
+   * @private
+   */
+  private readAnnotationQuads(
+    page: PdfPageObject,
+    annotationPtr: number,
+  ): Quad[] {
+    const quadCount =
+      this.pdfiumModule.FPDFAnnot_CountAttachmentPoints(annotationPtr);
+    if (quadCount === 0) return [];
+
+    const FS_QUADPOINTSF_SIZE = 8 * 4; // eight floats, 32 bytes
+    const quads: Quad[] = [];
+
+    for (let qi = 0; qi < quadCount; qi++) {
+      const quadPtr = this.malloc(FS_QUADPOINTSF_SIZE);
+
+      const ok = this.pdfiumModule.FPDFAnnot_GetAttachmentPoints(
+        annotationPtr,
+        qi,
+        quadPtr,
+      );
+
+      if (ok) {
+        // read the eight floats
+        const xs: number[] = [];
+        const ys: number[] = [];
+        for (let i = 0; i < 4; i++) {
+          const base = quadPtr + i * 8;      // 8 bytes per point (x+y)
+          xs.push(this.pdfiumModule.pdfium.getValue(base, 'float'));
+          ys.push(this.pdfiumModule.pdfium.getValue(base + 4, 'float'));
+        }
+
+        // convert to device-space
+        const p1 = this.convertPagePointToDevicePoint(page, { x: xs[0], y: ys[0] });
+        const p2 = this.convertPagePointToDevicePoint(page, { x: xs[1], y: ys[1] });
+        const p3 = this.convertPagePointToDevicePoint(page, { x: xs[2], y: ys[2] });
+        const p4 = this.convertPagePointToDevicePoint(page, { x: xs[3], y: ys[3] });
+
+        quads.push({ p1, p2, p3, p4 });
+      }
+
+      this.free(quadPtr);
+    }
+
+    return quads;
+  }
+
+  /**
    * Read pdf text annotation
    * @param page  - pdf page infor
    * @param pagePtr - pointer to pdf page object
@@ -3657,53 +3889,22 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const annoRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, annoRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
 
-    const utf16Length = this.pdfiumModule.FPDFAnnot_GetStringValue(
-      annotationPtr,
-      'Contents',
-      0,
-      0,
-    );
-    const bytesCount = (utf16Length + 1) * 2; // include NIL
-    const contentBufferPtr = this.malloc(bytesCount);
-    this.pdfiumModule.FPDFAnnot_GetStringValue(
-      annotationPtr,
-      'Contents',
-      contentBufferPtr,
-      bytesCount,
-    );
-    const contents = this.pdfiumModule.pdfium.UTF16ToString(contentBufferPtr);
-    this.free(contentBufferPtr);
+    const contents = this.getAnnotString(annotationPtr, "Contents") || "";
+    const state = this.getAnnotString(annotationPtr, "State") as PdfAnnotationState;
+    const stateModel = this.getAnnotString(annotationPtr, "StateModel") as PdfAnnotationStateModel;
+    const color = this.resolveAnnotationColor(annotationPtr);
+    const inReplyToId = this.getInReplyToId(pagePtr, annotationPtr);
 
-    const redPtr = this.malloc(4);
-    const greenPtr = this.malloc(4);
-    const bluePtr = this.malloc(4);
-    const alphaPtr = this.malloc(4);
-
-    this.pdfiumModule.FPDFAnnot_GetColor(
-      annotationPtr,
-      0,
-      redPtr,
-      greenPtr,
-      bluePtr,
-      alphaPtr,
-    );
-    const red = this.pdfiumModule.pdfium.getValue(redPtr, 'i32');
-    const green = this.pdfiumModule.pdfium.getValue(redPtr, 'i32');
-    const blue = this.pdfiumModule.pdfium.getValue(redPtr, 'i32');
-    const alpha = this.pdfiumModule.pdfium.getValue(redPtr, 'i32');
-
-    this.free(redPtr);
-    this.free(greenPtr);
-    this.free(bluePtr);
-    this.free(alphaPtr);
-
-    const popup = this.readPdfAnnoLinkedPopup(
+    const popup = !inReplyToId ? this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
       annotationPtr,
       index,
-    );
+    ) : undefined;
 
     return {
       status: PdfAnnotationObjectStatus.Committed,
@@ -3711,15 +3912,15 @@ export class PdfiumEngine implements PdfEngine {
       id: index,
       type: PdfAnnotationSubtype.TEXT,
       contents,
-      color: {
-        red,
-        green,
-        blue,
-        alpha,
-      },
+      color,
       rect,
       popup,
       appearances,
+      inReplyToId,
+      author,
+      modified,
+      state,
+      stateModel,
     };
   }
 
@@ -3742,23 +3943,10 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const annoRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, annoRect);
-
-    const utf16Length = this.pdfiumModule.FPDFAnnot_GetStringValue(
-      annotationPtr,
-      'Contents',
-      0,
-      0,
-    );
-    const bytesCount = (utf16Length + 1) * 2; // include NIL
-    const contentBufferPtr = this.malloc(bytesCount);
-    this.pdfiumModule.FPDFAnnot_GetStringValue(
-      annotationPtr,
-      'Contents',
-      contentBufferPtr,
-      bytesCount,
-    );
-    const contents = this.pdfiumModule.pdfium.UTF16ToString(contentBufferPtr);
-    this.free(contentBufferPtr);
+    const contents = this.getAnnotString(annotationPtr, "Contents") || "";
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
 
     const popup = this.readPdfAnnoLinkedPopup(
       page,
@@ -3773,6 +3961,8 @@ export class PdfiumEngine implements PdfEngine {
       id: index,
       type: PdfAnnotationSubtype.FREETEXT,
       contents,
+      author,
+      modified,
       rect,
       popup,
       appearances,
@@ -3808,6 +3998,9 @@ export class PdfiumEngine implements PdfEngine {
     const annoRect = this.readPageAnnoRect(annotationPtr);
     const { left, top, right, bottom } = annoRect;
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, annoRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
 
     const utf16Length = this.pdfiumModule.FPDFText_GetBoundedText(
       textPagePtr,
@@ -3858,6 +4051,8 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -3882,6 +4077,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -3900,6 +4098,8 @@ export class PdfiumEngine implements PdfEngine {
       field,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -3922,6 +4122,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -3937,6 +4140,8 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -3959,6 +4164,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4018,6 +4226,8 @@ export class PdfiumEngine implements PdfEngine {
       popup,
       inkList,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4040,6 +4250,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4057,6 +4270,8 @@ export class PdfiumEngine implements PdfEngine {
       popup,
       vertices,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4079,6 +4294,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4096,6 +4314,8 @@ export class PdfiumEngine implements PdfEngine {
       popup,
       vertices,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4118,6 +4338,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4169,6 +4392,8 @@ export class PdfiumEngine implements PdfEngine {
       startPoint,
       endPoint,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4191,12 +4416,18 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const quads = this.readAnnotationQuads(page, annotationPtr);
+    const color = this.resolveAnnotationColor(annotationPtr);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
       annotationPtr,
       index,
     );
+
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
 
     return {
       status: PdfAnnotationObjectStatus.Committed,
@@ -4206,6 +4437,10 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      segmentRects: quads.map(quadToRect),
+      color,
+      author,
+      modified,
     };
   }
 
@@ -4228,6 +4463,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4243,6 +4481,8 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4265,6 +4505,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4280,6 +4523,8 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4302,6 +4547,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4317,6 +4565,8 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4339,6 +4589,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4354,6 +4607,8 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4378,6 +4633,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4409,6 +4667,8 @@ export class PdfiumEngine implements PdfEngine {
       popup,
       contents,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4648,6 +4908,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4663,6 +4926,8 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4685,6 +4950,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4700,6 +4968,8 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
   }
 
@@ -4724,6 +4994,9 @@ export class PdfiumEngine implements PdfEngine {
     const appearances = this.readPageAnnoAppearanceStreams(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
     const popup = this.readPdfAnnoLinkedPopup(
       page,
       pagePtr,
@@ -4739,7 +5012,83 @@ export class PdfiumEngine implements PdfEngine {
       rect,
       popup,
       appearances,
+      author,
+      modified,
     };
+  }
+
+  /**
+   * Resolve `/IRT` → parent-annotation index on the same page.
+   *
+   * @param pagePtr        - pointer to FPDF_PAGE
+   * @param annotationPtr  - pointer to FPDF_ANNOTATION
+   * @returns index (`0…count-1`) or `undefined` when the annotation is *not* a reply
+   *
+   * @private
+   */
+  private getInReplyToId(
+    pagePtr: number,
+    annotationPtr: number,
+  ): number | undefined {
+    const parentPtr = this.pdfiumModule.FPDFAnnot_GetLinkedAnnot(
+      annotationPtr,
+      "IRT",
+    );
+    if (!parentPtr) return;
+
+    // PDFium ≥ 5100 – returns −1 when annot not found on page
+    const idx = this.pdfiumModule.FPDFPage_GetAnnotIndex(pagePtr, parentPtr);
+    return idx >= 0 ? idx : undefined;
+  }
+
+  /**
+   * Parse a PDF date string **D:YYYYMMDDHHmmSSOHH'mm'** to ISO-8601.
+   *
+   * Returns `undefined` if the input is malformed.
+   *
+   * @private
+   */
+  private toIsoDate(pdfDate?: string): string | undefined {
+    if (!pdfDate?.startsWith("D:")) return;
+
+    // Minimal parse – ignore timezone for brevity
+    const y = pdfDate.substring(2, 6);
+    const m = pdfDate.substring(6, 8) || "01";
+    const d = pdfDate.substring(8,10) || "01";
+    const H = pdfDate.substring(10,12) || "00";
+    const M = pdfDate.substring(12,14) || "00";
+    const S = pdfDate.substring(14,16) || "00";
+
+    return `${y}-${m}-${d}T${H}:${M}:${S}`;
+  }
+
+  /**
+   * Fetch a string value (`/T`, `/M`, `/State`, …) from an annotation.
+   *
+   * @returns decoded UTF-8 string or `undefined` when the key is absent
+   *
+   * @private
+   */
+  private getAnnotString(
+    annotationPtr: number,
+    key: string,
+  ): string | undefined {
+    const len = this.pdfiumModule.FPDFAnnot_GetStringValue(
+      annotationPtr,
+      key,
+      0,
+      0,
+    );
+    if (len === 0) return;
+
+    const bytes = (len + 1) * 2;
+    const ptr   = this.malloc(bytes);
+
+    this.pdfiumModule.FPDFAnnot_GetStringValue(annotationPtr, key, ptr, bytes);
+    const value = this.pdfiumModule.pdfium.UTF16ToString(ptr);
+    this.free(ptr);
+
+    return value || undefined;
   }
 
   /**
@@ -4769,40 +5118,11 @@ export class PdfiumEngine implements PdfEngine {
 
     const pageRect = this.readPageAnnoRect(popupAnnotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
-
-    const contentsLength = this.pdfiumModule.FPDFAnnot_GetStringValue(
-      annotationPtr,
-      'Contents',
-      0,
-      0,
-    );
-    const contentsBytesCount = (contentsLength + 1) * 2; // include NIL
-    const contentsPtr = this.malloc(contentsBytesCount);
-    this.pdfiumModule.FPDFAnnot_GetStringValue(
-      annotationPtr,
-      'Contents',
-      contentsPtr,
-      contentsBytesCount,
-    );
-    const contents = this.pdfiumModule.pdfium.UTF16ToString(contentsPtr);
-    this.free(contentsPtr);
-
-    const openLength = this.pdfiumModule.FPDFAnnot_GetStringValue(
-      popupAnnotationPtr,
-      'Open',
-      0,
-      0,
-    );
-    const openBytesCount = (openLength + 1) * 2; // include NIL
-    const openPtr = this.malloc(openBytesCount);
-    this.pdfiumModule.FPDFAnnot_GetStringValue(
-      popupAnnotationPtr,
-      'Open',
-      openPtr,
-      openBytesCount,
-    );
-    const open = this.pdfiumModule.pdfium.UTF16ToString(openPtr);
-    this.free(openPtr);
+    const author = this.getAnnotString(annotationPtr, "T");
+    const modifiedRaw = this.getAnnotString(annotationPtr, "M");
+    const modified = this.toIsoDate(modifiedRaw);
+    const contents = this.getAnnotString(annotationPtr, "Contents") || "";
+    const open = this.getAnnotString(annotationPtr, "Open") || "false";
 
     this.pdfiumModule.FPDFPage_CloseAnnot(popupAnnotationPtr);
 
@@ -4815,6 +5135,8 @@ export class PdfiumEngine implements PdfEngine {
       contents,
       open: open === 'true',
       appearances,
+      author,
+      modified,
     };
   }
 

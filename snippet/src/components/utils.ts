@@ -17,7 +17,7 @@ function edgeVisible(
     return vr.origin.y + vpGap >= menuHeight + margin;
   } else {
     // For bottom position, check if there's enough space below the rect including margin
-    return vr.origin.y + vpGap + vr.size.height + vpGap + menuHeight + margin <= vp.scrollTop + vp.clientHeight;
+    return vr.origin.y + vpGap + vr.size.height + menuHeight + margin <= vp.scrollTop + vp.clientHeight;
   }
 }
 

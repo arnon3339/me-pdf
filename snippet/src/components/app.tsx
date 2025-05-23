@@ -30,6 +30,8 @@ import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
 import { TilingPlugin, TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
 import { THUMBNAIL_PLUGIN_ID, ThumbnailPlugin, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
+import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation';
+import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -1514,18 +1516,12 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(SpreadPluginPackage, { 
             defaultSpreadMode: SpreadMode.None 
           }),
-          createPluginRegistration(RenderPluginPackage, {
-
-          }),
+          createPluginRegistration(RenderPluginPackage, {}),
           createPluginRegistration(RotatePluginPackage, {
             defaultRotation: Rotation.Degree0
           }),
-          createPluginRegistration(SearchPluginPackage, {
-
-          }),
-          createPluginRegistration(SelectionPluginPackage, {
-
-          }),
+          createPluginRegistration(SearchPluginPackage, {}),
+          createPluginRegistration(SelectionPluginPackage, {}),
           createPluginRegistration(TilingPluginPackage, {
             tileSize: 768,
             overlapPx: 2.5,
@@ -1537,16 +1533,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             buffer: 3,
             labelHeight: 30
           }),
-          /*
-          createPluginRegistration(ZoomPluginPackage, {
-            defaultZoomLevel: 1,
-          }),
-          createPluginRegistration(LayerPluginPackage, {
-            layers: [createLayerRegistration(RenderLayerPackage, { 
-              maxScale: 2 
-            })],
-          }),
-          */
+          createPluginRegistration(AnnotationPluginPackage, {}),
         ]}
       > 
        {({pluginsReady}) => (
@@ -1591,6 +1578,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                 <TilingLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
                                 <SearchLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
                                 <SelectionLayer pageIndex={pageIndex} scale={scale} rotation={rotation} containerSize={{width: rotatedWidth, height: rotatedHeight}} />
+                                <AnnotationLayer pageIndex={pageIndex} className="absolute" />
                               </div>
                             </Rotate>
                           }

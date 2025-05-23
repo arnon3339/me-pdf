@@ -1,4 +1,4 @@
-import { Size, Rect, Position, Rotation } from './geometry';
+import { Size, Rect, Position, Rotation, Quad } from './geometry';
 import { Task, TaskError } from './task';
 
 /**
@@ -321,6 +321,30 @@ export interface PdfTextRectObject {
 }
 
 /**
+ * Color
+ *
+ * @public
+ */
+export interface PdfAlphaColor {
+  /**
+   * red
+   */
+  red: number;
+  /**
+   * green
+   */
+  green: number;
+  /**
+   * blue
+   */
+  blue: number;
+  /**
+   * alpha
+   */
+  alpha: number;
+}
+
+/**
  * Annotation type
  *
  * @public
@@ -422,11 +446,73 @@ export enum AppearanceMode {
 }
 
 /**
+ * State of pdf annotation
+ *
+ * @public
+ */
+export enum PdfAnnotationState {
+  /**   
+   * Annotation is active
+   */
+  Marked = 'Marked',
+  /**
+   * Annotation is unmarked
+   */
+  Unmarked = 'Unmarked',
+  /**
+   * Annotation is ink
+   */
+  Accepted = 'Accepted',
+  /**
+   * Annotation is rejected
+   */
+  Rejected = 'Rejected',
+  /**
+   * Annotation is complete
+   */
+  Complete = 'Complete',
+  /**
+   * Annotation is cancelled
+   */
+  Cancelled = 'Cancelled',
+  /**
+   * Annotation is none
+   */
+  None = 'None',
+}
+
+/**
+ * State model of pdf annotation
+ *
+ * @public
+ */
+export enum PdfAnnotationStateModel {
+  /**
+   * Annotation is marked
+   */
+  Marked = 'Marked',
+  /**
+   * Annotation is reviewed
+   */
+  Reviewed = 'Reviewed',
+}
+
+/**
  * Basic information of pdf annotation
  *
  * @public
  */
 export interface PdfAnnotationObjectBase {
+  /**
+   * Author of the annotation
+   */
+  author?: string;
+
+  /**
+   * Modified date of the annotation
+   */
+  modified?: string;
+
   /**
    * Sub type of annotation
    */
@@ -520,12 +606,22 @@ export interface PdfTextAnnoObject extends PdfAnnotationObjectBase {
   /**
    * Color of the text
    */
-  color: {
-    red: number;
-    green: number;
-    blue: number;
-    alpha: number;
-  };
+  color: PdfAlphaColor;
+
+  /**
+   * In reply to id
+   */
+  inReplyToId?: number;
+
+  /**
+   * State of the text annotation
+   */
+  state?: PdfAnnotationState;
+
+  /**
+   * State model of the text annotation
+   */
+  stateModel?: PdfAnnotationStateModel;
 }
 
 /**
@@ -779,11 +875,12 @@ export interface PdfHighlightAnnoObject extends PdfAnnotationObjectBase {
   /**
    * color of highlight area
    */
-  color?: {
-    red: number;
-    gree: number;
-    blue: number;
-  };
+  color?: PdfAlphaColor;
+
+  /**
+   * quads of highlight area
+   */
+  segmentRects: Rect[];
 }
 
 /**

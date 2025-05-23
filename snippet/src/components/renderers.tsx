@@ -485,6 +485,7 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (props, 
         pattern="\d*"
         className="border-0 bg-transparent text-sm text-right p-0 h-6 w-8"
         aria-label="Set zoom"
+        autoFocus={false}
         value={zoomPercentage}
         onInput={e => {
           // Only allow numbers

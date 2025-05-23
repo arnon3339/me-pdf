@@ -76,6 +76,33 @@ export interface Size {
 }
 
 /**
+ * Represents a rectangle defined by its left, top, right, and bottom edges
+ *
+ * @public
+ */
+export interface Box {
+  /**
+   * The x-coordinate of the left edge
+   */
+  left: number;
+
+  /**
+   * The y-coordinate of the top edge
+   */
+  top: number;
+
+  /**
+   * The x-coordinate of the right edge
+   */
+  right: number;
+
+  /**
+   * The y-coordinate of the bottom edge
+   */
+  bottom: number;
+}
+
+/**
  * Swap the width and height of the size object
  * @param size - the original size
  * @returns swapped size
@@ -128,6 +155,38 @@ export interface Position {
    * y coordinate
    */
   y: number;
+}
+
+/**
+ * Quadrilateral
+ *
+ * @public
+ */
+export interface Quad {
+  p1: Position;
+  p2: Position;
+  p3: Position;
+  p4: Position;
+}
+
+/**
+ * Convert quadrilateral to rectangle
+ * @param q - quadrilateral
+ * @returns rectangle
+ *
+ * @public
+ */
+export function quadToRect(q: Quad): Rect {
+  const xs = [q.p1.x, q.p2.x, q.p3.x, q.p4.x];
+  const ys = [q.p1.y, q.p2.y, q.p3.y, q.p4.y];
+
+  return {
+    origin: { x: Math.min(...xs), y: Math.min(...ys) },
+    size:   {
+      width:  Math.max(...xs) - Math.min(...xs),
+      height: Math.max(...ys) - Math.min(...ys),
+    },
+  };
 }
 
 /**
