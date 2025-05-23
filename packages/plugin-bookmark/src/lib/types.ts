@@ -1,7 +1,5 @@
-import { BasePluginConfig } from "@embedpdf/core";
+import { BasePluginConfig } from '@embedpdf/core';
 
 export interface BookmarkPluginConfig extends BasePluginConfig {}
 
-export interface BookmarkCapability {
-
-}
+export interface BookmarkCapability {}

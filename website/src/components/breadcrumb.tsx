@@ -13,25 +13,28 @@ export const Breadcrumb: FC<{
     <div className="nextra-breadcrumb mt-1.5 flex items-center gap-1 overflow-hidden text-sm text-gray-500 contrast-more:text-current">
       {activePath.map((item, index, arr) => {
         const nextItem = arr[index + 1]
-        
+
         // Check if this item has an index page
-        const hasIndexPage = item.children?.some(child => child.name === 'index')
-        
+        const hasIndexPage = item.children?.some(
+          (child) => child.name === 'index',
+        )
+
         // Determine the href for this breadcrumb item
         let href = ''
-        
+
         if (hasIndexPage) {
           // If it has an index page, use the item's own route
           href = item.route
         } else if (nextItem) {
           // Otherwise use the original logic for non-index items
-          href = 'frontMatter' in item
-            ? item.route
-            : // @ts-expect-error -- fixme
-              item.children?.[0]?.route === nextItem.route
-              ? ''
+          href =
+            'frontMatter' in item
+              ? item.route
               : // @ts-expect-error -- fixme
-                item.children?.[0]?.route || ''
+                item.children?.[0]?.route === nextItem.route
+                ? ''
+                : // @ts-expect-error -- fixme
+                  item.children?.[0]?.route || ''
         }
 
         const ComponentToUse = href ? NextLink : 'span'
@@ -39,10 +42,7 @@ export const Breadcrumb: FC<{
         return (
           <Fragment key={item.route + item.name}>
             {index > 0 && (
-              <ArrowRightIcon
-                height="14"
-                className="shrink-0 rtl:rotate-180"
-              />
+              <ArrowRightIcon height="14" className="shrink-0 rtl:rotate-180" />
             )}
             <ComponentToUse
               className={cn(
@@ -51,7 +51,7 @@ export const Breadcrumb: FC<{
                   ? 'min-w-6 overflow-hidden text-ellipsis'
                   : 'font-medium text-gray-700',
                 href &&
-                  'focus-visible:nextra-focus ring-inset hover:text-gray-900'
+                  'focus-visible:nextra-focus ring-inset hover:text-gray-900',
               )}
               title={item.title}
               {...(href && ({ href } as any))}

@@ -1,4 +1,4 @@
-import { EmbedPdfContainer } from "./web-components/container";
+import { EmbedPdfContainer } from './web-components/container';
 import { PDFViewerConfig } from './components/app';
 
 type ContainerConfig = PDFViewerConfig & {
@@ -19,12 +19,12 @@ function initContainer(config: ContainerConfig) {
 
 export type ReturnContainerType = ReturnType<typeof initContainer>;
 
-export default { 
-  init: (config: ContainerConfig): ReturnType<typeof initContainer> 
-    | ReturnContainerType 
-    | undefined => {
+export default {
+  init: (
+    config: ContainerConfig,
+  ): ReturnType<typeof initContainer> | ReturnContainerType | undefined => {
     if (config.type === 'container') {
       return initContainer(config as ContainerConfig);
     }
-  }
-}
+  },
+};

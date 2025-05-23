@@ -1,14 +1,14 @@
-import { Action } from "@embedpdf/core";
-import { UIPluginState } from "./types";
+import { Action } from '@embedpdf/core';
+import { UIPluginState } from './types';
 
-export const UI_INIT_COMPONENTS = "UI_INIT_COMPONENTS";
-export const UI_INIT_FLYOUT = "UI_INIT_FLYOUT";
-export const UI_TOGGLE_FLYOUT = "UI_TOGGLE_FLYOUT";
-export const UI_SET_HEADER_VISIBLE = "UI_SET_HEADER_VISIBLE";
-export const UI_TOGGLE_PANEL = "UI_TOGGLE_PANEL";
-export const UI_SHOW_COMMAND_MENU = "UI_SHOW_COMMAND_MENU";
-export const UI_HIDE_COMMAND_MENU = "UI_HIDE_COMMAND_MENU";
-export const UI_UPDATE_COMMAND_MENU = "UI_UPDATE_COMMAND_MENU";
+export const UI_INIT_COMPONENTS = 'UI_INIT_COMPONENTS';
+export const UI_INIT_FLYOUT = 'UI_INIT_FLYOUT';
+export const UI_TOGGLE_FLYOUT = 'UI_TOGGLE_FLYOUT';
+export const UI_SET_HEADER_VISIBLE = 'UI_SET_HEADER_VISIBLE';
+export const UI_TOGGLE_PANEL = 'UI_TOGGLE_PANEL';
+export const UI_SHOW_COMMAND_MENU = 'UI_SHOW_COMMAND_MENU';
+export const UI_HIDE_COMMAND_MENU = 'UI_HIDE_COMMAND_MENU';
+export const UI_UPDATE_COMMAND_MENU = 'UI_UPDATE_COMMAND_MENU';
 
 export interface InitFlyoutPayload {
   id: string;
@@ -86,39 +86,39 @@ export type UIPluginAction =
   | UiSetHeaderVisibleAction
   | UiTogglePanelAction
   | UiShowCommandMenuAction
-  | UiHideCommandMenuAction
+  | UiHideCommandMenuAction;
 
 export const uiInitComponents = (state: UIPluginState): UiInitComponentsAction => ({
   type: UI_INIT_COMPONENTS,
-  payload: state
+  payload: state,
 });
 
 export const uiInitFlyout = (payload: InitFlyoutPayload): UiInitFlyoutAction => ({
   type: UI_INIT_FLYOUT,
-  payload
+  payload,
 });
 
 export const uiToggleFlyout = (payload: ToggleFlyoutPayload): UiToggleFlyoutAction => ({
   type: UI_TOGGLE_FLYOUT,
-  payload
+  payload,
 });
 
 export const uiTogglePanel = (payload: TogglePanelPayload): UiTogglePanelAction => ({
   type: UI_TOGGLE_PANEL,
-  payload
+  payload,
 });
 
 export const uiSetHeaderVisible = (payload: SetHeaderVisiblePayload): UiSetHeaderVisibleAction => ({
   type: UI_SET_HEADER_VISIBLE,
-  payload
+  payload,
 });
 
 export const uiShowCommandMenu = (payload: ShowCommandMenuPayload): UiShowCommandMenuAction => ({
   type: UI_SHOW_COMMAND_MENU,
-  payload
+  payload,
 });
 
 export const uiHideCommandMenu = (payload: HideCommandMenuPayload): UiHideCommandMenuAction => ({
   type: UI_HIDE_COMMAND_MENU,
-  payload
+  payload,
 });

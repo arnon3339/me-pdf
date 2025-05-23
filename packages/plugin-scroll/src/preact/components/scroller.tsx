@@ -13,14 +13,14 @@ interface RenderPageProps extends PageLayout {
 
 type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
   renderPage: (props: RenderPageProps) => JSX.Element;
-  overlayElements?: JSX.Element[];  // Add this new prop
+  overlayElements?: JSX.Element[]; // Add this new prop
 };
 
 export function Scroller({ renderPage, overlayElements, ...props }: ScrollerProps) {
   const { provides: scrollProvides } = useScrollCapability();
   const { registry } = useRegistry();
   const [scrollerLayout, setScrollerLayout] = useState<ScrollerLayout | null>(
-    () => scrollProvides?.getScrollerLayout() ?? null
+    () => scrollProvides?.getScrollerLayout() ?? null,
   );
 
   useEffect(() => {
@@ -34,72 +34,95 @@ export function Scroller({ renderPage, overlayElements, ...props }: ScrollerProp
 
   const coreState = registry.getStore().getState();
 
-  return <div {...props} style={{
-    width : `${scrollerLayout.totalWidth}px`,
-    height: `${scrollerLayout.totalHeight}px`,
-    position: 'relative',
-    boxSizing: 'border-box',
-    margin: '0 auto',
-    ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) && {
-      display: 'flex',
-      flexDirection: 'row',
-    }
-  }}>
-    <div style={{ 
-      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
-        width: scrollerLayout.startSpacing,
-        height: '100%',
-        flexShrink: 0,
-      } : {
-        height: scrollerLayout.startSpacing,
-        width: '100%'
-      }
-    }} />
-    <div style={{ 
-      gap: scrollerLayout.pageGap, 
-      display: 'flex', 
-      alignItems: 'center',
-      position: 'relative',
-      boxSizing: 'border-box',
-      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
-        flexDirection: 'row',
-        minHeight: '100%'
-      } : {
-        flexDirection: 'column',
-        minWidth: 'fit-content',
-      }
-    }}>
-      {scrollerLayout.items.map(item => 
-        <div key={item.pageNumbers[0]} style={{
+  return (
+    <div
+      {...props}
+      style={{
+        width: `${scrollerLayout.totalWidth}px`,
+        height: `${scrollerLayout.totalHeight}px`,
+        position: 'relative',
+        boxSizing: 'border-box',
+        margin: '0 auto',
+        ...(scrollerLayout.strategy === ScrollStrategy.Horizontal && {
           display: 'flex',
-          justifyContent: 'center',
-          gap: scrollerLayout.pageGap
-        }}>
-          {item.pageLayouts.map(layout => 
-            <div key={layout.pageNumber} style={{
-              width: `${layout.rotatedWidth}px`,
-              height: `${layout.rotatedHeight}px`,
-            }}>
-              {renderPage({
-                ...layout,
-                rotation: coreState.core.rotation,
-                scale: coreState.core.scale
-              })}
-            </div>
-          )}
-        </div>
-      )}
+          flexDirection: 'row',
+        }),
+      }}
+    >
+      <div
+        style={{
+          ...(scrollerLayout.strategy === ScrollStrategy.Horizontal
+            ? {
+                width: scrollerLayout.startSpacing,
+                height: '100%',
+                flexShrink: 0,
+              }
+            : {
+                height: scrollerLayout.startSpacing,
+                width: '100%',
+              }),
+        }}
+      />
+      <div
+        style={{
+          gap: scrollerLayout.pageGap,
+          display: 'flex',
+          alignItems: 'center',
+          position: 'relative',
+          boxSizing: 'border-box',
+          ...(scrollerLayout.strategy === ScrollStrategy.Horizontal
+            ? {
+                flexDirection: 'row',
+                minHeight: '100%',
+              }
+            : {
+                flexDirection: 'column',
+                minWidth: 'fit-content',
+              }),
+        }}
+      >
+        {scrollerLayout.items.map((item) => (
+          <div
+            key={item.pageNumbers[0]}
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: scrollerLayout.pageGap,
+            }}
+          >
+            {item.pageLayouts.map((layout) => (
+              <div
+                key={layout.pageNumber}
+                style={{
+                  width: `${layout.rotatedWidth}px`,
+                  height: `${layout.rotatedHeight}px`,
+                }}
+              >
+                {renderPage({
+                  ...layout,
+                  rotation: coreState.core.rotation,
+                  scale: coreState.core.scale,
+                })}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div
+        style={{
+          ...(scrollerLayout.strategy === ScrollStrategy.Horizontal
+            ? {
+                width: scrollerLayout.endSpacing,
+                height: '100%',
+                flexShrink: 0,
+              }
+            : {
+                height: scrollerLayout.endSpacing,
+                width: '100%',
+              }),
+        }}
+      />
+      {overlayElements}
     </div>
-    <div style={{ 
-      ...(scrollerLayout.strategy === ScrollStrategy.Horizontal) ? {
-        width: scrollerLayout.endSpacing,
-        height: '100%',
-        flexShrink: 0,
-      } : {
-        height: scrollerLayout.endSpacing,
-        width: '100%'
-      }
-    }} />
-    {overlayElements}
-  </div>;
+  );
 }

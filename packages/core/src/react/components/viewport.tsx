@@ -19,7 +19,7 @@ export function Viewport({ style, className }: ViewportProps) {
   // Combine default style with user-provided styles
   const defaultStyle = {
     '--scale-factor': '1',
-    ...style
+    ...style,
   } as React.CSSProperties;
 
   return <div ref={viewportRef} style={defaultStyle} className={className} />;

@@ -5,10 +5,7 @@ import { CopyToClipboard } from './copy-to-clipboard'
 import { ToggleWordWrapButton } from './toggle-word-wrap-button'
 
 export const classes = {
-  border: cn(
-    'border border-gray-300',
-    'contrast-more:border-gray-900'
-  )
+  border: cn('border border-gray-300', 'contrast-more:border-gray-900'),
 }
 
 export type PreProps = ComponentProps<'pre'> & {
@@ -38,16 +35,16 @@ export const Pre: FC<PreProps> = ({
   return (
     <div
       data-pagefind-ignore={pagefindIgnore}
-      className="nextra-code relative not-first:mt-6"
+      className="nextra-code not-first:mt-6 relative"
     >
       {filename && (
         <div
           className={cn(
             'px-4 text-xs text-gray-700',
             'bg-gray-100',
-            'flex items-center h-12 gap-2 rounded-t-md',
+            'flex h-12 items-center gap-2 rounded-t-md',
             classes.border,
-            'border-b-0'
+            'border-b-0',
           )}
         >
           {icon}
@@ -59,14 +56,14 @@ export const Pre: FC<PreProps> = ({
         className={cn(
           'group',
           'focus-visible:nextra-focus',
-          'overflow-x-auto subpixel-antialiased text-[.9em]',
+          'overflow-x-auto text-[.9em] subpixel-antialiased',
           'bg-white py-4',
           'ring-1 ring-inset ring-gray-300',
           'contrast-more:ring-gray-900',
           'contrast-more:contrast-150',
           filename ? 'rounded-b-md' : 'rounded-md',
           'not-prose', // for nextra-theme-blog
-          className
+          className,
         )}
         {...props}
       >
@@ -75,8 +72,8 @@ export const Pre: FC<PreProps> = ({
             'group-hover:opacity-100',
             'group-focus:opacity-100',
             'opacity-0 transition focus-within:opacity-100',
-            'flex gap-1 absolute right-4',
-            filename ? 'top-14' : 'top-2'
+            'absolute right-4 flex gap-1',
+            filename ? 'top-14' : 'top-2',
           )}
         >
           {hasWordWrap === '' && (

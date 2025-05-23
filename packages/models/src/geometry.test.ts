@@ -142,12 +142,7 @@ describe('Geometry', () => {
     };
     const rotation = Rotation.Degree90;
     const scaleFactor = 2;
-    const transformedRect = transformRect(
-      container.size,
-      rect,
-      Rotation.Degree90,
-      scaleFactor,
-    );
+    const transformedRect = transformRect(container.size, rect, Rotation.Degree90, scaleFactor);
     expect(transformedRect).toStrictEqual({
       origin: {
         x: 80,

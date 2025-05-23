@@ -5,14 +5,14 @@ import {
   PluginManifest,
   PluginStatus,
   PluginPackage,
-  PluginRegistryConfig
+  PluginRegistryConfig,
 } from '../types/plugin';
 import {
   PluginRegistrationError,
   PluginNotFoundError,
   CircularDependencyError,
   CapabilityNotFoundError,
-  PluginConfigurationError
+  PluginConfigurationError,
 } from '../types/errors';
 import { PdfEngine, Rotation } from '@embedpdf/models';
 import { Action, CoreState, Store, initialCoreState, Reducer } from '../store';
@@ -36,7 +36,7 @@ export class PluginRegistry {
   private engine: PdfEngine;
   private engineInitialized = false;
   private store: Store<CoreState, CoreAction>;
-  
+
   private pendingRegistrations: PluginRegistration[] = [];
   private processingRegistrations: PluginRegistration[] = [];
   private initialized = false;
@@ -71,7 +71,7 @@ export class PluginRegistry {
               reject(new Error('Engine initialization failed'));
             }
           },
-          (error) => reject(new Error(`Engine initialization error: ${error.reason.message}`))
+          (error) => reject(new Error(`Engine initialization error: ${error.reason.message}`)),
         );
       });
     } else {
@@ -86,10 +86,10 @@ export class PluginRegistry {
     TPlugin extends IPlugin<TConfig>,
     TConfig = unknown,
     TState = unknown,
-    TAction extends Action = Action
+    TAction extends Action = Action,
   >(
     pluginPackage: PluginPackage<TPlugin, TConfig, TState, TAction>,
-    config?: Partial<TConfig>
+    config?: Partial<TConfig>,
   ): void {
     if (this.initialized && !this.isInitializing) {
       throw new PluginRegistrationError('Cannot register plugins after initialization');
@@ -104,16 +104,19 @@ export class PluginRegistry {
       // due to TypeScript's type system limitations with generic variance
       pluginPackage.reducer as Reducer<TState, Action>,
       'function' === typeof pluginPackage.initialState
-        ? (pluginPackage.initialState as (coreState: CoreState, config: TConfig) => TState)(this.initialCoreState, {
-          ...pluginPackage.manifest.defaultConfig,
-          ...config
-        })
-        : pluginPackage.initialState
+        ? (pluginPackage.initialState as (coreState: CoreState, config: TConfig) => TState)(
+            this.initialCoreState,
+            {
+              ...pluginPackage.manifest.defaultConfig,
+              ...config,
+            },
+          )
+        : pluginPackage.initialState,
     );
 
     this.pendingRegistrations.push({
       package: pluginPackage,
-      config
+      config,
     });
   }
 
@@ -148,12 +151,11 @@ export class PluginRegistry {
       }
 
       // 2. Wait for every plugin’s ready() promise (if it has one)
-      const readyPromises = Array.from(this.plugins.values())
-        .map(p =>
-          typeof p.ready === 'function' ? p.ready() : Promise.resolve()
-        );
+      const readyPromises = Array.from(this.plugins.values()).map((p) =>
+        typeof p.ready === 'function' ? p.ready() : Promise.resolve(),
+      );
 
-      await Promise.all(readyPromises);     // resolves when the slowest is done
+      await Promise.all(readyPromises); // resolves when the slowest is done
     })();
 
     return this.pluginsReadyPromise;
@@ -186,10 +188,13 @@ export class PluginRegistry {
         for (const reg of this.processingRegistrations) {
           const dependsOn = new Set<string>();
           // Consider both required and optional capabilities for load order
-          const allDependencies = [...reg.package.manifest.requires, ...reg.package.manifest.optional];
+          const allDependencies = [
+            ...reg.package.manifest.requires,
+            ...reg.package.manifest.optional,
+          ];
           for (const capability of allDependencies) {
-            const provider = this.processingRegistrations.find(r =>
-              r.package.manifest.provides.includes(capability)
+            const provider = this.processingRegistrations.find((r) =>
+              r.package.manifest.provides.includes(capability),
             );
             if (provider) {
               dependsOn.add(provider.package.manifest.id);
@@ -202,13 +207,13 @@ export class PluginRegistry {
         const loadOrder = this.resolver.resolveLoadOrder();
         for (const pluginId of loadOrder) {
           const registration = this.processingRegistrations.find(
-            r => r.package.manifest.id === pluginId
+            (r) => r.package.manifest.id === pluginId,
           );
           if (registration) {
             await this.initializePlugin(
               registration.package.manifest,
               registration.package.create,
-              registration.config as Partial<unknown>
+              registration.config as Partial<unknown>,
             );
           }
         }
@@ -217,7 +222,7 @@ export class PluginRegistry {
         this.processingRegistrations = [];
         this.resolver = new DependencyResolver();
       }
-      
+
       // Call postInitialize on all plugins after everything is initialized
       for (const plugin of this.plugins.values()) {
         if (plugin.postInitialize) {
@@ -234,7 +239,7 @@ export class PluginRegistry {
     } catch (error) {
       if (error instanceof Error) {
         throw new CircularDependencyError(
-          `Failed to resolve plugin dependencies: ${error.message}`
+          `Failed to resolve plugin dependencies: ${error.message}`,
         );
       }
       throw error;
@@ -248,12 +253,16 @@ export class PluginRegistry {
    */
   private async initializePlugin<TConfig>(
     manifest: PluginManifest<TConfig>,
-    packageCreator: (registry: PluginRegistry, engine: PdfEngine, config?: TConfig) => IPlugin<TConfig>,
-    config?: Partial<TConfig>
+    packageCreator: (
+      registry: PluginRegistry,
+      engine: PdfEngine,
+      config?: TConfig,
+    ) => IPlugin<TConfig>,
+    config?: Partial<TConfig>,
   ): Promise<void> {
     const finalConfig = {
       ...manifest.defaultConfig,
-      ...config
+      ...config,
     };
 
     this.validateConfig(manifest.id, finalConfig, manifest.defaultConfig);
@@ -266,7 +275,7 @@ export class PluginRegistry {
     for (const capability of manifest.requires) {
       if (!this.capabilities.has(capability)) {
         throw new PluginRegistrationError(
-          `Missing required capability: ${capability} for plugin ${manifest.id}`
+          `Missing required capability: ${capability} for plugin ${manifest.id}`,
         );
       }
     }
@@ -285,7 +294,7 @@ export class PluginRegistry {
     for (const capability of manifest.provides) {
       if (this.capabilities.has(capability)) {
         throw new PluginRegistrationError(
-          `Capability ${capability} is already provided by plugin ${this.capabilities.get(capability)}`
+          `Capability ${capability} is already provided by plugin ${this.capabilities.get(capability)}`,
         );
       }
       this.capabilities.set(capability, manifest.id);
@@ -307,7 +316,7 @@ export class PluginRegistry {
       this.plugins.delete(manifest.id);
       this.manifests.delete(manifest.id);
       console.log('initializePlugin failed', manifest.id, manifest.provides);
-      manifest.provides.forEach(cap => this.capabilities.delete(cap));
+      manifest.provides.forEach((cap) => this.capabilities.delete(cap));
       throw error;
     }
   }
@@ -320,21 +329,14 @@ export class PluginRegistry {
     return config as TConfig;
   }
 
-
-  private validateConfig(
-    pluginId: string,
-    config: unknown,
-    defaultConfig: unknown
-  ): void {
+  private validateConfig(pluginId: string, config: unknown, defaultConfig: unknown): void {
     // Check all required fields exist
     const requiredKeys = Object.keys(defaultConfig as object);
-    const missingKeys = requiredKeys.filter(
-      key => !(config as object).hasOwnProperty(key)
-    );
+    const missingKeys = requiredKeys.filter((key) => !(config as object).hasOwnProperty(key));
 
     if (missingKeys.length > 0) {
       throw new PluginConfigurationError(
-        `Missing required configuration keys for plugin ${pluginId}: ${missingKeys.join(', ')}`
+        `Missing required configuration keys for plugin ${pluginId}: ${missingKeys.join(', ')}`,
       );
     }
 
@@ -345,10 +347,7 @@ export class PluginRegistry {
     // etc.
   }
 
-  async updatePluginConfig<TConfig>(
-    pluginId: string,
-    config: Partial<TConfig>
-  ): Promise<void> {
+  async updatePluginConfig<TConfig>(pluginId: string, config: Partial<TConfig>): Promise<void> {
     const plugin = this.getPlugin(pluginId);
 
     if (!plugin) {
@@ -365,7 +364,7 @@ export class PluginRegistry {
     // Merge new config with current
     const newConfig = {
       ...currentConfig,
-      ...config
+      ...config,
     };
 
     // Validate new configuration
@@ -400,22 +399,20 @@ export class PluginRegistry {
 
     const manifest = this.manifests.get(pluginId);
     if (!manifest) {
-      throw new PluginNotFoundError(
-        `Manifest for plugin ${pluginId} not found`
-      );
+      throw new PluginNotFoundError(`Manifest for plugin ${pluginId} not found`);
     }
 
     // Check if any other plugins depend on this one
     for (const [otherId, otherManifest] of this.manifests.entries()) {
       if (otherId === pluginId) continue;
 
-      const dependsOnThis = [...otherManifest.requires, ...otherManifest.optional].some(cap =>
-        manifest.provides.includes(cap)
+      const dependsOnThis = [...otherManifest.requires, ...otherManifest.optional].some((cap) =>
+        manifest.provides.includes(cap),
       );
 
       if (dependsOnThis) {
         throw new PluginRegistrationError(
-          `Cannot unregister plugin ${pluginId}: plugin ${otherId} depends on it`
+          `Cannot unregister plugin ${pluginId}: plugin ${otherId} depends on it`,
         );
       }
     }
@@ -437,9 +434,7 @@ export class PluginRegistry {
       this.status.delete(pluginId);
     } catch (error) {
       if (error instanceof Error) {
-        throw new Error(
-          `Failed to unregister plugin ${pluginId}: ${error.message}`
-        );
+        throw new Error(`Failed to unregister plugin ${pluginId}: ${error.message}`);
       }
       throw error;
     }

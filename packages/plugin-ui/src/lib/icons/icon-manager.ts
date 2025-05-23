@@ -25,7 +25,7 @@ export class IconManager {
    */
   public registerIcons(icons: Icon[] | IconRegistry): void {
     if (Array.isArray(icons)) {
-      icons.forEach(icon => this.registerIcon(icon));
+      icons.forEach((icon) => this.registerIcon(icon));
     } else {
       Object.entries(icons).forEach(([id, icon]) => this.registerIcon(icon));
     }

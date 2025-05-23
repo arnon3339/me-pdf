@@ -1,7 +1,5 @@
 import cn from 'clsx'
-import {
-  withIcons
-} from 'nextra/components'
+import { withIcons } from 'nextra/components'
 import { useMDXComponents as getNextraMDXComponents } from 'nextra/mdx-components'
 import type { MDXComponents } from 'nextra/mdx-components'
 import { removeLinks } from 'nextra/remove-links'
@@ -17,11 +15,11 @@ import { Pre } from './pre'
 import { PdfMergeTool } from '../tools/pdf-merge'
 import ToolsOverview from '../tools-overview'
 
-const Blockquote: FC<ComponentProps<'blockquote'>> = props => (
+const Blockquote: FC<ComponentProps<'blockquote'>> = (props) => (
   <blockquote
     className={cn(
       'not-first:mt-6 border-gray-300 italic text-gray-700',
-      'border-s-2 ps-6'
+      'border-s-2 ps-6',
     )}
     {...props}
   />
@@ -37,15 +35,15 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
   h4: H4,
   h5: H5,
   h6: H6,
-  hr: props => <hr className="my-8 nextra-border" {...props} />,
-  li: props => <li className="my-2" {...props} />,
-  ol: props => (
+  hr: (props) => <hr className="nextra-border my-8" {...props} />,
+  li: (props) => <li className="my-2" {...props} />,
+  ol: (props) => (
     <ol
-      className="[is(ol,ul)_&]:my-3 not-first:mt-6 list-decimal ms-6"
+      className="not-first:mt-6 ms-6 list-decimal [is(ol,ul)_&]:my-3"
       {...props}
     />
   ),
-  p: props => <p className="not-first:mt-6 leading-7" {...props} />,
+  p: (props) => <p className="not-first:mt-6 leading-7" {...props} />,
   pre: withIcons(Pre),
   table: ({ className, ...props }) => (
     <Table
@@ -56,23 +54,20 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
   td: Table.Td,
   th: Table.Th,
   tr: Table.Tr,
-  ul: props => (
+  ul: (props) => (
     <ul
-      className="[is(ol,ul)_&]:my-3 not-first:mt-6 list-disc ms-6"
+      className="not-first:mt-6 ms-6 list-disc [is(ol,ul)_&]:my-3"
       {...props}
     />
   ),
   wrapper({ toc, children, metadata, bottomContent, ...props }) {
     // @ts-expect-error fixme
-    toc = toc.map(item => ({
+    toc = toc.map((item) => ({
       ...item,
-      value: removeLinks(item.value)
+      value: removeLinks(item.value),
     }))
     return (
-      <div
-        className="flex max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-        {...props}
-      >
+      <div className="mx-auto flex max-w-7xl px-4 sm:px-6 lg:px-8" {...props}>
         <Sidebar toc={toc} floatTOC={true} />
 
         <ClientWrapper
@@ -98,6 +93,6 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
 export const useMDXComponents = (components?: Readonly<MDXComponents>) => {
   return {
     ...DEFAULT_COMPONENTS,
-    ...components
+    ...components,
   } satisfies MDXComponents
 }

@@ -24,7 +24,6 @@ export interface IconRenderOptions {
   title?: string;
 }
 
-
 /**
  * Capabilities for the IconManager
  */

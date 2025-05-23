@@ -23,7 +23,7 @@ export function toIntSize(s: Size): Size {
 export function toIntRect(r: Rect): Rect {
   return {
     origin: toIntPos(r.origin),
-    size  : toIntSize(r.size),
+    size: toIntSize(r.size),
   };
 }
 
@@ -127,11 +127,7 @@ export function swap(size: Size): Size {
  *
  * @public
  */
-export function transformSize(
-  size: Size,
-  rotation: Rotation,
-  scaleFactor: number,
-): Size {
+export function transformSize(size: Size, rotation: Rotation, scaleFactor: number): Size {
   size = rotation % 2 === 0 ? size : swap(size);
 
   return {
@@ -182,8 +178,8 @@ export function quadToRect(q: Quad): Rect {
 
   return {
     origin: { x: Math.min(...xs), y: Math.min(...ys) },
-    size:   {
-      width:  Math.max(...xs) - Math.min(...xs),
+    size: {
+      width: Math.max(...xs) - Math.min(...xs),
       height: Math.max(...ys) - Math.min(...ys),
     },
   };
@@ -240,10 +236,7 @@ export function rotatePosition(
  *
  * @public
  */
-export function scalePosition(
-  position: Position,
-  scaleFactor: number,
-): Position {
+export function scalePosition(position: Position, scaleFactor: number): Position {
   return {
     x: position.x * scaleFactor,
     y: position.y * scaleFactor,
@@ -266,10 +259,7 @@ export function transformPosition(
   rotation: Rotation,
   scaleFactor: number,
 ): Position {
-  return scalePosition(
-    rotatePosition(containerSize, position, rotation),
-    scaleFactor,
-  );
+  return scalePosition(rotatePosition(containerSize, position, rotation), scaleFactor);
 }
 
 /**
@@ -320,11 +310,7 @@ export interface Rect {
  *
  * @public
  */
-export function rotateRect(
-  containerSize: Size,
-  rect: Rect,
-  rotation: Rotation,
-): Rect {
+export function rotateRect(containerSize: Size, rect: Rect, rotation: Rotation): Rect {
   let x = rect.origin.x;
   let y = rect.origin.y;
   let size = rect.size;
@@ -416,10 +402,7 @@ export function restoreRect(
   rotation: Rotation,
   scaleFactor: number,
 ): Rect {
-  return scaleRect(
-    rotateRect(containerSize, rect, (4 - rotation) % 4),
-    1 / scaleFactor,
-  );
+  return scaleRect(rotateRect(containerSize, rect, (4 - rotation) % 4), 1 / scaleFactor);
 }
 
 /**
@@ -431,11 +414,7 @@ export function restoreRect(
  *
  * @public
  */
-export function restoreOffset(
-  offset: Position,
-  rotation: Rotation,
-  scaleFactor: number,
-): Position {
+export function restoreOffset(offset: Position, rotation: Rotation, scaleFactor: number): Position {
   let offsetX = offset.x;
   let offsetY = offset.y;
   switch (rotation) {
@@ -463,11 +442,10 @@ export function restoreOffset(
   };
 }
 
-
 /**
  * Return the smallest rectangle that encloses *all* `rects`.
  * If the array is empty, returns `null`.
- * 
+ *
  * @param rects - array of rectangles
  * @returns smallest rectangle that encloses all the rectangles
  *
@@ -477,9 +455,9 @@ export function boundingRect(rects: Rect[]): Rect | null {
   if (rects.length === 0) return null;
 
   let minX = rects[0].origin.x,
-      minY = rects[0].origin.y,
-      maxX = rects[0].origin.x + rects[0].size.width,
-      maxY = rects[0].origin.y + rects[0].size.height;
+    minY = rects[0].origin.y,
+    maxX = rects[0].origin.x + rects[0].size.width,
+    maxY = rects[0].origin.y + rects[0].size.height;
 
   for (const r of rects) {
     minX = Math.min(minX, r.origin.x);
@@ -488,14 +466,14 @@ export function boundingRect(rects: Rect[]): Rect | null {
     maxY = Math.max(maxY, r.origin.y + r.size.height);
   }
 
-  return { 
+  return {
     origin: {
-      x: minX, 
-      y: minY
+      x: minX,
+      y: minY,
     },
     size: {
-      width: maxX - minX, 
-      height: maxY - minY 
-    }
-  }
+      width: maxX - minX,
+      height: maxY - minY,
+    },
+  };
 }

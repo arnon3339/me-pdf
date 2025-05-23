@@ -1,5 +1,5 @@
-import type { BasePlugin } from "@embedpdf/core";
-import { useRegistry } from "./use-registry";
+import type { BasePlugin } from '@embedpdf/core';
+import { useRegistry } from './use-registry';
 
 type PluginState<T extends BasePlugin> = {
   plugin: T | null;
@@ -15,28 +15,26 @@ type PluginState<T extends BasePlugin> = {
  * // Get zoom plugin
  * const zoom = usePlugin<ZoomPlugin>(ZoomPlugin.id);
  */
-export function usePlugin<T extends BasePlugin>(
-  pluginId: T['id']
-): PluginState<T> {
+export function usePlugin<T extends BasePlugin>(pluginId: T['id']): PluginState<T> {
   const { registry } = useRegistry();
-  
+
   if (registry === null) {
     return {
       plugin: null,
       isLoading: true,
-      ready: new Promise(() => {})
+      ready: new Promise(() => {}),
     };
   }
 
   const plugin = registry.getPlugin<T>(pluginId);
 
-  if(!plugin) {
+  if (!plugin) {
     throw new Error(`Plugin ${pluginId} not found`);
   }
 
   return {
     plugin,
     isLoading: false,
-    ready: plugin.ready()
+    ready: plugin.ready(),
   };
 }

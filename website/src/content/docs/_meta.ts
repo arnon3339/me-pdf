@@ -1,13 +1,13 @@
 export default {
   pdfium: {
     title: 'PDFium JavaScript API',
-    type: 'page'
+    type: 'page',
   },
   index: {
     title: 'Introduction',
     type: 'page',
     theme: {
-      timestamp: false
-    }
-  }
+      timestamp: false,
+    },
+  },
 }

@@ -14,13 +14,7 @@ import {
   setRects,
   clearSelection,
 } from './actions';
-import {
-  PdfEngine,
-  PdfDocumentObject,
-  PdfPageGeometry,
-  TaskError,
-  Rect,
-} from '@embedpdf/models';
+import { PdfEngine, PdfDocumentObject, PdfPageGeometry, TaskError, Rect } from '@embedpdf/models';
 import { createBehaviorEmitter } from '@embedpdf/core';
 import * as selector from './selectors';
 
@@ -37,8 +31,7 @@ export class SelectionPlugin extends BasePlugin<
   private selecting = false;
   private anchor?: { page: number; index: number };
 
-  private readonly selChange$ =
-    createBehaviorEmitter<SelectionState['selection']>();
+  private readonly selChange$ = createBehaviorEmitter<SelectionState['selection']>();
 
   constructor(
     id: string,
@@ -49,23 +42,28 @@ export class SelectionPlugin extends BasePlugin<
   }
 
   /* ── life-cycle ────────────────────────────────────────── */
-  override onCoreStoreUpdated(_prevState: StoreState<CoreState>, newState: StoreState<CoreState>): void {
+  override onCoreStoreUpdated(
+    _prevState: StoreState<CoreState>,
+    newState: StoreState<CoreState>,
+  ): void {
     this.doc = newState.core.document ?? undefined;
   }
   async initialize() {}
-  async destroy() { this.selChange$.clear(); }
+  async destroy() {
+    this.selChange$.clear();
+  }
 
   /* ── capability exposed to UI / other plugins ─────────── */
   buildCapability(): SelectionCapability {
     return {
-      getGeometry:        p   => this.getOrLoadGeometry(p),
-      getHighlightRects: (p)=> selector.selectRectsForPage(this.state, p),
-      getBoundingRect : p => selector.selectBoundingRectForPage(this.state, p),
+      getGeometry: (p) => this.getOrLoadGeometry(p),
+      getHighlightRects: (p) => selector.selectRectsForPage(this.state, p),
+      getBoundingRect: (p) => selector.selectBoundingRectForPage(this.state, p),
       getBoundingRects: () => selector.selectBoundingRectsForAllPages(this.state),
-      begin:   (p,i)=> this.beginSelection(p,i),
-      update:  (p,i)=> this.updateSelection(p,i),
-      end:     ()=>   this.endSelection(),
-      clear:   ()=>   this.clearSelection(),
+      begin: (p, i) => this.beginSelection(p, i),
+      update: (p, i) => this.updateSelection(p, i),
+      end: () => this.endSelection(),
+      clear: () => this.clearSelection(),
 
       onSelectionChange: this.selChange$.on,
     };
@@ -77,11 +75,11 @@ export class SelectionPlugin extends BasePlugin<
     if (cached) return Promise.resolve(cached);
 
     if (!this.doc) return Promise.reject('doc closed');
-    const page = this.doc.pages.find(p => p.index === pageIdx)!;
+    const page = this.doc.pages.find((p) => p.index === pageIdx)!;
 
     return new Promise((res, rej) => {
       this.engine.getPageGeometry(this.doc!, page).wait(
-        geo => {
+        (geo) => {
           this.dispatch(cachePageGeometry(pageIdx, geo));
           res(geo);
         },
@@ -93,26 +91,26 @@ export class SelectionPlugin extends BasePlugin<
   /* ── selection state updates ───────────────────────────── */
   private beginSelection(page: number, index: number) {
     this.selecting = true;
-    this.anchor    = { page, index };
+    this.anchor = { page, index };
     this.dispatch(startSelection());
   }
 
   private endSelection() {
-    this.selecting = false; 
+    this.selecting = false;
     this.anchor = undefined;
     this.dispatch(endSelection());
   }
 
   private clearSelection() {
     this.selecting = false;
-    this.anchor    = undefined;
+    this.anchor = undefined;
     this.dispatch(clearSelection());
     this.selChange$.emit(null);
   }
 
   private updateRectsForRange(range: SelectionRangeX) {
     for (let p = range.start.page; p <= range.end.page; p++) {
-      const rects = this.buildRectsForPage(p);          // existing pure fn
+      const rects = this.buildRectsForPage(p); // existing pure fn
       this.dispatch(setRects(p, rects));
     }
   }
@@ -121,10 +119,10 @@ export class SelectionPlugin extends BasePlugin<
     if (!this.selecting || !this.anchor) return;
 
     const a = this.anchor;
-    const forward = (page > a.page) || (page === a.page && index >= a.index);
+    const forward = page > a.page || (page === a.page && index >= a.index);
 
-    const start = forward ? a               : { page, index };
-    const end   = forward ? { page, index } : a;
+    const start = forward ? a : { page, index };
+    const end = forward ? { page, index } : a;
 
     const range = { start, end };
     this.dispatch(setSelection(range));
@@ -144,26 +142,27 @@ export class SelectionPlugin extends BasePlugin<
     if (!geo) return [];
 
     const from = page === sel.start.page ? sel.start.index : 0;
-    const to   = page === sel.end.page   ? sel.end.index   :
-                 geo.runs[geo.runs.length - 1].charStart +
-                 geo.runs[geo.runs.length - 1].glyphs.length - 1;
+    const to =
+      page === sel.end.page
+        ? sel.end.index
+        : geo.runs[geo.runs.length - 1].charStart + geo.runs[geo.runs.length - 1].glyphs.length - 1;
 
     const rects = [];
     for (const run of geo.runs) {
       const runStart = run.charStart;
-      const runEnd   = runStart + run.glyphs.length - 1;
+      const runEnd = runStart + run.glyphs.length - 1;
       if (runEnd < from || runStart > to) continue;
 
-      const sIdx  = Math.max(from, runStart) - runStart;
-      const eIdx  = Math.min(to,   runEnd  ) - runStart;
-      const left  = run.glyphs[sIdx].x;
+      const sIdx = Math.max(from, runStart) - runStart;
+      const eIdx = Math.min(to, runEnd) - runStart;
+      const left = run.glyphs[sIdx].x;
       const right = run.glyphs[eIdx].x + run.glyphs[eIdx].width;
-      const top   = run.glyphs[sIdx].y;
+      const top = run.glyphs[sIdx].y;
       const bottom = run.glyphs[eIdx].y + run.glyphs[eIdx].height;
 
       rects.push({
         origin: { x: left, y: top },
-        size:   { width: right - left, height: bottom - top }
+        size: { width: right - left, height: bottom - top },
       });
     }
     return rects;

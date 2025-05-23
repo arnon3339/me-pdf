@@ -8,7 +8,7 @@ const SRC_PATH = path.join(PACKAGE_ROOT_PATH, 'src');
 function getFrameworkEntries() {
   const entries: Record<string, string> = {};
   const frameworks = ['react', 'preact', 'vue', 'svelte'];
-  frameworks.forEach(framework => {
+  frameworks.forEach((framework) => {
     const frameworkEntry = path.join(SRC_PATH, framework, 'index.ts');
     if (fs.existsSync(frameworkEntry)) {
       entries[`${framework}/index`] = frameworkEntry;
@@ -25,9 +25,9 @@ function getPackageName() {
 
 const PACKAGE_NAME = getPackageName();
 
-export default defineConfig(options => {
+export default defineConfig((options) => {
   const entries = getFrameworkEntries();
-  
+
   // If no framework entries found, return an empty config
   // This prevents tsup from erroring when no frameworks are present
   if (Object.keys(entries).length === 0) {

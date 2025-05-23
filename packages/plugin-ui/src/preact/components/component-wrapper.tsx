@@ -3,7 +3,7 @@ import { childrenFunctionOptions, UIComponent } from '@embedpdf/plugin-ui';
 
 export function ComponentWrapper({
   component,
-  parentContext = {}
+  parentContext = {},
 }: {
   component: UIComponent<any>;
   parentContext?: Record<string, any>;
@@ -34,7 +34,8 @@ export function ComponentWrapper({
   // 2) Build a function that returns child wrappers
   function renderChildrenFn(options?: childrenFunctionOptions) {
     const merged = options?.context ? { ...childContext, ...options.context } : childContext;
-    return component.getChildren()
+    return component
+      .getChildren()
       .filter(({ id }) => {
         // If filter function is provided, use it to determine if we should include this child
         return !options?.filter || options.filter(id);
@@ -42,19 +43,11 @@ export function ComponentWrapper({
       .map(({ component: child, id, className }) =>
         className ? (
           <div className={className}>
-            <ComponentWrapper
-              key={id}
-              component={child}
-              parentContext={merged}
-            />
+            <ComponentWrapper key={id} component={child} parentContext={merged} />
           </div>
         ) : (
-          <ComponentWrapper
-            key={id}
-            component={child}
-            parentContext={merged}
-          />
-        )
+          <ComponentWrapper key={id} component={child} parentContext={merged} />
+        ),
       );
   }
 

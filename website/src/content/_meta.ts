@@ -3,12 +3,12 @@ export default {
     title: 'Home',
     type: 'page',
     theme: {
-      timestamp: false
-    }
+      timestamp: false,
+    },
   },
   docs: {
     title: 'Docs',
-    type: 'page'
+    type: 'page',
   },
   blog: {
     title: 'Blog',
@@ -18,8 +18,8 @@ export default {
       typesetting: 'article',
       breadcrumb: false,
       pagination: false,
-      timestamp: false
-    }
+      timestamp: false,
+    },
   },
   tools: {
     title: 'Tools',
@@ -29,7 +29,7 @@ export default {
     title: 'Viewer',
     type: 'page',
     theme: {
-      timestamp: false
-    }
-  }
+      timestamp: false,
+    },
+  },
 }

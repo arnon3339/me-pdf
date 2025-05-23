@@ -1,24 +1,23 @@
 import { SelectionState } from './types';
-import { SelectionAction,
-         CACHE_PAGE_GEOMETRY,
-         SET_SELECTION,
-         START_SELECTION,
-         END_SELECTION, 
-         SET_RECTS,
-         CLEAR_SELECTION} from './actions';
+import {
+  SelectionAction,
+  CACHE_PAGE_GEOMETRY,
+  SET_SELECTION,
+  START_SELECTION,
+  END_SELECTION,
+  SET_RECTS,
+  CLEAR_SELECTION,
+} from './actions';
 
 export const initialState: SelectionState = {
   geometry: {},
   rects: {},
   selection: null,
   active: false,
-  selecting: false
+  selecting: false,
 };
 
-export const selectionReducer = (
-  state = initialState,
-  action: SelectionAction,
-): SelectionState => {
+export const selectionReducer = (state = initialState, action: SelectionAction): SelectionState => {
   switch (action.type) {
     case CACHE_PAGE_GEOMETRY: {
       const { page, geo } = action.payload;

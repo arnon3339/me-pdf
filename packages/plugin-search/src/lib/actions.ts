@@ -1,14 +1,14 @@
-import { Action } from "@embedpdf/core";
-import { MatchFlag, SearchResult } from "@embedpdf/models";
+import { Action } from '@embedpdf/core';
+import { MatchFlag, SearchResult } from '@embedpdf/models';
 
 // Action Types
-export const START_SEARCH_SESSION = "START_SEARCH_SESSION";
-export const STOP_SEARCH_SESSION = "STOP_SEARCH_SESSION";
-export const SET_SEARCH_FLAGS = "SET_SEARCH_FLAGS";
-export const SET_SHOW_ALL_RESULTS = "SET_SHOW_ALL_RESULTS";
-export const START_SEARCH = "START_SEARCH";
-export const SET_SEARCH_RESULTS = "SET_SEARCH_RESULTS";
-export const SET_ACTIVE_RESULT_INDEX = "SET_ACTIVE_RESULT_INDEX";
+export const START_SEARCH_SESSION = 'START_SEARCH_SESSION';
+export const STOP_SEARCH_SESSION = 'STOP_SEARCH_SESSION';
+export const SET_SEARCH_FLAGS = 'SET_SEARCH_FLAGS';
+export const SET_SHOW_ALL_RESULTS = 'SET_SHOW_ALL_RESULTS';
+export const START_SEARCH = 'START_SEARCH';
+export const SET_SEARCH_RESULTS = 'SET_SEARCH_RESULTS';
+export const SET_ACTIVE_RESULT_INDEX = 'SET_ACTIVE_RESULT_INDEX';
 
 // Action Interfaces
 export interface StartSearchSessionAction extends Action {
@@ -82,7 +82,7 @@ export function startSearch(query: string): StartSearchAction {
 export function setSearchResults(
   results: SearchResult[],
   total: number,
-  activeResultIndex: number
+  activeResultIndex: number,
 ): SetSearchResultsAction {
   return { type: SET_SEARCH_RESULTS, payload: { results, total, activeResultIndex } };
 }

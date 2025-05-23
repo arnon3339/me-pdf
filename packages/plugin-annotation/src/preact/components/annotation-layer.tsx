@@ -13,7 +13,7 @@ export function AnnotationLayer({ pageIndex, style, ...props }: AnnotationLayerP
   const { provides: annotationProvides } = useAnnotationCapability();
 
   useEffect(() => {
-    if(annotationProvides) {
+    if (annotationProvides) {
       const task = annotationProvides.getPageAnnotations({ pageIndex });
       task.wait((annotations) => {
         console.log(annotations);
@@ -21,9 +21,12 @@ export function AnnotationLayer({ pageIndex, style, ...props }: AnnotationLayerP
     }
   }, [annotationProvides]);
 
-  return <div  style={{
-    ...style
-  }} {...props}>
-    
-  </div>;
+  return (
+    <div
+      style={{
+        ...style,
+      }}
+      {...props}
+    ></div>
+  );
 }

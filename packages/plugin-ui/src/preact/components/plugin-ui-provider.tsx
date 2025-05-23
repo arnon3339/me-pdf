@@ -38,7 +38,7 @@ export interface PluginUIProviderProps {
 /**
  * PluginUIProvider collects all components from the UI plugin system
  * and provides them to a render function without imposing any structure.
- * 
+ *
  * It uses the render props pattern for maximum flexibility.
  */
 export function PluginUIProvider({ children }: PluginUIProviderProps) {
@@ -46,7 +46,7 @@ export function PluginUIProvider({ children }: PluginUIProviderProps) {
 
   // Helper function to wrap UIComponents as JSX elements
   const wrapComponents = (components: UIComponent<any>[]): JSX.Element[] => {
-    return components.map(component => (
+    return components.map((component) => (
       <ComponentWrapper key={component.props.id} component={component} />
     ));
   };
@@ -57,19 +57,19 @@ export function PluginUIProvider({ children }: PluginUIProviderProps) {
       top: wrapComponents(uiProvides?.getHeadersByPlacement('top') || []),
       bottom: wrapComponents(uiProvides?.getHeadersByPlacement('bottom') || []),
       left: wrapComponents(uiProvides?.getHeadersByPlacement('left') || []),
-      right: wrapComponents(uiProvides?.getHeadersByPlacement('right') || [])
+      right: wrapComponents(uiProvides?.getHeadersByPlacement('right') || []),
     },
     panels: {
       left: wrapComponents(uiProvides?.getPanelsByLocation('left') || []),
-      right: wrapComponents(uiProvides?.getPanelsByLocation('right') || [])
+      right: wrapComponents(uiProvides?.getPanelsByLocation('right') || []),
     },
     floating: {
       insideScroller: wrapComponents(uiProvides?.getFloatingComponents('inside') || []),
-      outsideScroller: wrapComponents(uiProvides?.getFloatingComponents('outside') || [])
+      outsideScroller: wrapComponents(uiProvides?.getFloatingComponents('outside') || []),
     },
-    commandMenu: uiProvides?.getCommandMenu() 
-      ? <ComponentWrapper component={uiProvides.getCommandMenu()!} />
-      : null
+    commandMenu: uiProvides?.getCommandMenu() ? (
+      <ComponentWrapper component={uiProvides.getCommandMenu()!} />
+    ) : null,
   };
 
   // Let the consumer determine the layout structure through the render prop

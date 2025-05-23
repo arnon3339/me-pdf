@@ -20,34 +20,34 @@ const TreeState: Record<string, boolean> = Object.create(null)
 const classes = {
   link: cn(
     'flex rounded px-2 py-1.5 text-sm transition-colors [word-break:break-word]',
-    'cursor-pointer contrast-more:border'
+    'cursor-pointer contrast-more:border',
   ),
   inactive: cn(
     'text-gray-500 hover:bg-gray-100 hover:text-gray-900',
     'contrast-more:text-gray-900',
-    'contrast-more:border-transparent contrast-more:hover:border-gray-900'
+    'contrast-more:border-transparent contrast-more:hover:border-gray-900',
   ),
   active: cn(
     'bg-primary-100 font-semibold text-primary-800',
-    'contrast-more:border-primary-500!'
+    'contrast-more:border-primary-500!',
   ),
   list: cn('grid gap-1'),
   border: cn(
     'relative before:absolute before:inset-y-1',
     'before:w-px before:bg-gray-200 before:content-[""]',
-    'ps-3 before:start-0 pt-1 ms-3'
+    'ps-3 before:start-0 pt-1 ms-3',
   ),
   wrapper: cn('x:p-4 x:overflow-y-auto nextra-scrollbar nextra-mask'),
   footer: cn(
-    'nextra-sidebar-footer x:border-t nextra-border x:flex x:items-center x:gap-2 x:py-4 x:mx-4'
-  )
+    'nextra-sidebar-footer x:border-t nextra-border x:flex x:items-center x:gap-2 x:py-4 x:mx-4',
+  ),
 }
 
 type FolderProps = {
   item: PageItem | MenuItem | Item
   anchors: Heading[]
   onFocus: FocusEventHandler
-  level: number;
+  level: number
 }
 
 const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
@@ -57,7 +57,7 @@ const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
   const item = {
     ..._item,
     children:
-      _item.type === 'menu' ? getMenuChildren(_item as any) : _item.children
+      _item.type === 'menu' ? getMenuChildren(_item as any) : _item.children,
   }
 
   const hasRoute = !!item.route // for item.type === 'menu' will be ''
@@ -87,7 +87,7 @@ const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
 
   const handleClick: MouseEventHandler<
     HTMLAnchorElement | HTMLButtonElement
-  > = event => {
+  > = (event) => {
     const el = event.currentTarget
     const isClickOnIcon =
       el /* will be always <a> or <button> */ !==
@@ -133,9 +133,9 @@ const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
         data-href={isLink ? undefined : item.route}
         className={cn(
           'items-center justify-between gap-2',
-          !isLink && 'text-start w-full',
+          !isLink && 'w-full text-start',
           classes.link,
-          active ? classes.active : classes.inactive
+          active ? classes.active : classes.inactive,
         )}
         onClick={handleClick}
         onFocus={onFocus}
@@ -146,8 +146,8 @@ const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
           className={cn(
             'shrink-0',
             'rounded-sm p-0.5 hover:bg-gray-800/5',
-            'motion-reduce:*:transition-none origin-center transition-transform rtl:-rotate-180',
-            open && 'ltr:rotate-90 rtl:-rotate-270'
+            'origin-center transition-transform motion-reduce:*:transition-none rtl:-rotate-180',
+            open && 'rtl:-rotate-270 ltr:rotate-90',
           )}
         />
       </ComponentToUse>
@@ -167,12 +167,12 @@ const Folder: FC<FolderProps> = ({ item: _item, anchors, onFocus, level }) => {
 
 function getMenuChildren(menu: MenuItem) {
   const routes = Object.fromEntries(
-    (menu.children || []).map(route => [route.name, route])
+    (menu.children || []).map((route) => [route.name, route]),
   )
   return Object.entries(menu.items || {}) // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- fixme
     .map(([key, item]) => ({
       ...(routes[key] || { name: key /* for React key prop */ }),
-      ...(item as object)
+      ...(item as object),
     }))
 }
 
@@ -183,10 +183,10 @@ const Separator: FC<{ title: string }> = ({ title }) => {
         '[word-break:break-word]',
         title
           ? 'not-first:mt-5 mb-2 px-2 py-1.5 text-sm font-semibold text-gray-900'
-          : 'my-4'
+          : 'my-4',
       )}
     >
-      {title || <hr className="mx-2 border-t nextra-border" />}
+      {title || <hr className="nextra-border mx-2 border-t" />}
     </li>
   )
 }
@@ -228,7 +228,7 @@ const File: FC<{
                 className={cn(
                   classes.link,
                   'focus-visible:nextra-focus flex gap-2 before:opacity-25 before:content-["#"]',
-                  id === activeSlug ? classes.active : classes.inactive
+                  id === activeSlug ? classes.active : classes.inactive,
                 )}
                 onClick={handleClick}
               >
@@ -249,7 +249,7 @@ interface MenuProps {
   level: number
 }
 
-const handleFocus: FocusEventHandler<HTMLAnchorElement> = event => {
+const handleFocus: FocusEventHandler<HTMLAnchorElement> = (event) => {
   const route =
     event.target.getAttribute('href') || event.target.dataset.href || ''
   setFocusedRoute(route)
@@ -258,7 +258,7 @@ const handleFocus: FocusEventHandler<HTMLAnchorElement> = event => {
 const Menu = forwardRef<HTMLUListElement, MenuProps>(
   ({ directories, anchors, className, level }, forwardedRef) => (
     <ul className={cn(classes.list, className)} ref={forwardedRef}>
-      {directories.map(item => {
+      {directories.map((item) => {
         const ComponentToUse =
           item.type === 'menu' || item.children?.length ? Folder : File
 
@@ -273,16 +273,19 @@ const Menu = forwardRef<HTMLUListElement, MenuProps>(
         )
       })}
     </ul>
-  )
+  ),
 )
 Menu.displayName = 'Menu'
 
 interface MobileNavProps {
-  showAnchors?: boolean;
-  route?: string;
+  showAnchors?: boolean
+  route?: string
 }
 
-export const MobileNav: FC<MobileNavProps> = ({ showAnchors = false, route }) => {
+export const MobileNav: FC<MobileNavProps> = ({
+  showAnchors = false,
+  route,
+}) => {
   const { directories } = useConfig().normalizePagesResult
   const toc = useToc()
 
@@ -292,11 +295,11 @@ export const MobileNav: FC<MobileNavProps> = ({ showAnchors = false, route }) =>
 
   const getFilteredDirectories = () => {
     if (!route) return filterOutIndexPages(directories)
-    
+
     // Find the directory matching the route
-    const routeDirectory = directories.find(dir => dir.route === route)
+    const routeDirectory = directories.find((dir) => dir.route === route)
     if (!routeDirectory) return []
-    
+
     // If found, return only its children
     return filterOutIndexPages(routeDirectory.children || [])
   }
@@ -304,22 +307,23 @@ export const MobileNav: FC<MobileNavProps> = ({ showAnchors = false, route }) =>
   // Add recursive filter function
   const filterOutIndexPages = (items: any[]): any[] => {
     return items
-      .filter(item => item.name !== 'index')
-      .map(item => ({
+      .filter((item) => item.name !== 'index')
+      .map((item) => ({
         ...item,
-        children: item.children ? filterOutIndexPages(item.children) : undefined
+        children: item.children
+          ? filterOutIndexPages(item.children)
+          : undefined,
       }))
   }
 
   // Filter the directories
   const filteredDirectories = getFilteredDirectories()
 
-
   useEffect(() => {
     //setMenu(false)
   }, [pathname, hash])
 
-  const anchors = toc.filter(v => v.depth === 2)
+  const anchors = toc.filter((v) => v.depth === 2)
   const sidebarRef = useRef<HTMLUListElement>(null!)
 
   useEffect(() => {
@@ -331,7 +335,7 @@ export const MobileNav: FC<MobileNavProps> = ({ showAnchors = false, route }) =>
         block: 'center',
         inline: 'center',
         scrollMode: 'always',
-        boundary: sidebar.parentNode as HTMLElement
+        boundary: sidebar.parentNode as HTMLElement,
       })
     }
   }, [menu])
@@ -343,7 +347,7 @@ export const MobileNav: FC<MobileNavProps> = ({ showAnchors = false, route }) =>
         'flex flex-col',
         '[contain:layout_style]',
         'md:hidden',
-        'bg-nextra-bg'
+        'bg-nextra-bg',
       )}
     >
       <Menu
@@ -358,7 +362,10 @@ export const MobileNav: FC<MobileNavProps> = ({ showAnchors = false, route }) =>
   )
 }
 
-export const Sidebar: FC<{ toc: Heading[], floatTOC?: boolean }> = ({ toc, floatTOC = false }) => {
+export const Sidebar: FC<{ toc: Heading[]; floatTOC?: boolean }> = ({
+  toc,
+  floatTOC = false,
+}) => {
   const { normalizePagesResult, hideSidebar } = useConfig()
   const [showToggleAnimation, setToggleAnimation] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
@@ -376,45 +383,45 @@ export const Sidebar: FC<{ toc: Heading[], floatTOC?: boolean }> = ({ toc, float
         block: 'center',
         inline: 'center',
         scrollMode: 'always',
-        boundary: sidebarRef.current!.parentNode as HTMLDivElement
+        boundary: sidebarRef.current!.parentNode as HTMLDivElement,
       })
     }
   }, [])
 
-  const anchors = floatTOC ? [] : toc.filter(v => v.depth === 2);
+  const anchors = floatTOC ? [] : toc.filter((v) => v.depth === 2)
 
-  return (      
+  return (
     <aside
       id={sidebarControlsId}
       className={cn(
         'nextra-sidebar print:hidden',
         'transition-all ease-in-out',
-        'max-md:hidden flex flex-col',
+        'flex flex-col max-md:hidden',
         'h-[calc(100dvh-var(--nextra-menu-height))]',
         'top-(--nextra-navbar-height) shrink-0',
         'w-64',
-        hideSidebar ? 'hidden' : 'sticky'
+        hideSidebar ? 'hidden' : 'sticky',
       )}
     >
-        <div
-          className={cn(
-            'p-4 overflow-y-auto nextra-scrollbar nextra-mask grow',
-            !isExpanded && 'no-scrollbar'
-          )}
-          ref={sidebarRef}
-        >
-          {/* without !hideSidebar check <Collapse />'s inner.clientWidth on `layout: "raw"` will be 0 and element will not have width on initial loading */}
-          {(!hideSidebar || !isExpanded) && (
-            <Collapse isOpen={isExpanded} horizontal>
-              <Menu
-                // The sidebar menu, shows only the docs directories.
-                directories={docsDirectories}
-                anchors={anchors}
-                level={0}
-              />
-            </Collapse>
-          )}
-        </div>
+      <div
+        className={cn(
+          'nextra-scrollbar nextra-mask grow overflow-y-auto p-4',
+          !isExpanded && 'no-scrollbar',
+        )}
+        ref={sidebarRef}
+      >
+        {/* without !hideSidebar check <Collapse />'s inner.clientWidth on `layout: "raw"` will be 0 and element will not have width on initial loading */}
+        {(!hideSidebar || !isExpanded) && (
+          <Collapse isOpen={isExpanded} horizontal>
+            <Menu
+              // The sidebar menu, shows only the docs directories.
+              directories={docsDirectories}
+              anchors={anchors}
+              level={0}
+            />
+          </Collapse>
+        )}
+      </div>
     </aside>
   )
 }

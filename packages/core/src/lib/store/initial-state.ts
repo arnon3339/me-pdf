@@ -1,5 +1,5 @@
-import { PdfDocumentObject, PdfPageObject, Rotation } from "@embedpdf/models";
-import { PluginRegistryConfig } from "../types/plugin";
+import { PdfDocumentObject, PdfPageObject, Rotation } from '@embedpdf/models';
+import { PluginRegistryConfig } from '../types/plugin';
 
 export interface CoreState {
   scale: number;
@@ -16,5 +16,5 @@ export const initialCoreState: (config?: PluginRegistryConfig) => CoreState = (c
   document: null,
   pages: [],
   loading: false,
-  error: null
+  error: null,
 });

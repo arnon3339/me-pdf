@@ -1,4 +1,9 @@
-import { PDFUrlLoadingOptions, PDFBufferLoadingOptions, PDFLoadingStrategy, PDFLoadingOptions } from './strategies/loading-strategy';
+import {
+  PDFUrlLoadingOptions,
+  PDFBufferLoadingOptions,
+  PDFLoadingStrategy,
+  PDFLoadingOptions,
+} from './strategies/loading-strategy';
 import { UrlStrategy } from './strategies/url-strategy';
 import { BufferStrategy } from './strategies/buffer-strategy';
 import { PdfDocumentObject } from '@embedpdf/models';
@@ -58,12 +63,16 @@ export class PDFDocumentLoader {
     }
     return undefined;
   }
-} 
+}
 
-export function isPdfUrlLoadingOptions(options: PDFLoadingOptions): options is PDFUrlLoadingOptions {
+export function isPdfUrlLoadingOptions(
+  options: PDFLoadingOptions,
+): options is PDFUrlLoadingOptions {
   return options.type === 'url';
 }
 
-export function isPdfBufferLoadingOptions(options: PDFLoadingOptions): options is PDFBufferLoadingOptions {
+export function isPdfBufferLoadingOptions(
+  options: PDFLoadingOptions,
+): options is PDFBufferLoadingOptions {
   return options.type === 'buffer';
 }

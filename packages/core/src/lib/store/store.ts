@@ -33,7 +33,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
   addPluginReducer<PluginState>(
     pluginId: string,
     reducer: Reducer<PluginState, Action>,
-    initialState: PluginState
+    initialState: PluginState,
   ) {
     this.state.plugins[pluginId] = initialState;
     this.pluginReducers[pluginId] = reducer;
@@ -57,7 +57,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
 
     const newState = this.getState();
     // Notify all main-store subscribers
-    this.listeners.forEach(listener => listener(action, newState, oldState));
+    this.listeners.forEach((listener) => listener(action, newState, oldState));
 
     return newState;
   }
@@ -75,7 +75,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
   dispatchToPlugin<PluginAction extends Action>(
     pluginId: string,
     action: PluginAction,
-    notifyGlobal: boolean = true
+    notifyGlobal: boolean = true,
   ): any {
     const oldGlobalState = this.getState();
 
@@ -96,12 +96,12 @@ export class Store<CoreState, CoreAction extends Action = Action> {
 
     // If we are notifying the main store subscribers about plugin changes
     if (notifyGlobal) {
-      this.listeners.forEach(listener => listener(action, newGlobalState, oldGlobalState));
+      this.listeners.forEach((listener) => listener(action, newGlobalState, oldGlobalState));
     }
 
     // Notify plugin-specific listeners
     if (this.pluginListeners[pluginId]) {
-      this.pluginListeners[pluginId].forEach(listener => {
+      this.pluginListeners[pluginId].forEach((listener) => {
         listener(action, newPluginState, oldPluginState);
       });
     }
@@ -140,7 +140,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
 
     // 3) Notify global listeners *once* with the final new state
     const newState = this.getState();
-    this.listeners.forEach(listener => listener(action, newState, oldState));
+    this.listeners.forEach((listener) => listener(action, newState, oldState));
 
     // 4) Return the new global store state
     return newState;
@@ -153,7 +153,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
   getState(): StoreState<CoreState> {
     return {
       core: { ...this.state.core },
-      plugins: { ...this.state.plugins }
+      plugins: { ...this.state.plugins },
     };
   }
 
@@ -167,7 +167,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
   subscribe(listener: StoreListener<CoreState>) {
     this.listeners.push(listener);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
@@ -182,7 +182,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
   subscribeToPlugin(pluginId: string, listener: PluginListener) {
     if (!(pluginId in this.state.plugins)) {
       throw new Error(
-        `Plugin state not found for plugin "${pluginId}". Did you forget to call addPluginReducer?`
+        `Plugin state not found for plugin "${pluginId}". Did you forget to call addPluginReducer?`,
       );
     }
 
@@ -192,7 +192,7 @@ export class Store<CoreState, CoreAction extends Action = Action> {
     this.pluginListeners[pluginId].push(listener);
 
     return () => {
-      this.pluginListeners[pluginId] = this.pluginListeners[pluginId].filter(l => l !== listener);
+      this.pluginListeners[pluginId] = this.pluginListeners[pluginId].filter((l) => l !== listener);
       if (this.pluginListeners[pluginId].length === 0) {
         delete this.pluginListeners[pluginId];
       }
@@ -209,7 +209,11 @@ export class Store<CoreState, CoreAction extends Action = Action> {
    */
   onAction<T extends CoreAction['type']>(
     type: T,
-    handler: (action: Extract<CoreAction, { type: T }>, state: StoreState<CoreState>, oldState: StoreState<CoreState>) => void
+    handler: (
+      action: Extract<CoreAction, { type: T }>,
+      state: StoreState<CoreState>,
+      oldState: StoreState<CoreState>,
+    ) => void,
   ) {
     return this.subscribe((action, newState, oldState) => {
       if (action.type === type) {
@@ -224,10 +228,12 @@ export class Store<CoreState, CoreAction extends Action = Action> {
    * @returns A PluginStore instance for the plugin.
    */
   getPluginStore<PluginState, PluginAction extends Action>(
-    pluginId: string
+    pluginId: string,
   ): PluginStore<PluginState, PluginAction> {
     if (!(pluginId in this.state.plugins)) {
-      throw new Error(`Plugin state not found for plugin "${pluginId}". Did you forget to call addPluginReducer?`);
+      throw new Error(
+        `Plugin state not found for plugin "${pluginId}". Did you forget to call addPluginReducer?`,
+      );
     }
     return new PluginStore<PluginState, PluginAction>(this, pluginId);
   }

@@ -12,13 +12,13 @@ export const Steps: FC<ComponentProps<'div'>> = ({
   return (
     <div
       className={cn(
-        'nextra-steps ms-4 mb-12 border-s border-gray-200 ps-6',
-        className
+        'nextra-steps mb-12 ms-4 border-s border-gray-200 ps-6',
+        className,
       )}
       style={{
         ...style,
         // @ts-expect-error -- fixme
-        '--counter-id': id
+        '--counter-id': id,
       }}
       {...props}
     >

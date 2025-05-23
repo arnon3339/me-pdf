@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { SpreadPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { SpreadPluginConfig } from './types';
 
 export const SPREAD_PLUGIN_ID = 'spread';
 
@@ -11,6 +11,6 @@ export const manifest: PluginManifest<SpreadPluginConfig> = {
   requires: ['loader'],
   optional: [],
   defaultConfig: {
-    enabled: true
-  }
-}; 
+    enabled: true,
+  },
+};

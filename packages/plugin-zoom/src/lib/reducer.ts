@@ -1,6 +1,7 @@
-import { Reducer } from "@embedpdf/core";
-import { ZoomState, ZoomMode } from "./types";
-import { SET_INITIAL_ZOOM_LEVEL, SET_ZOOM_LEVEL, ZoomAction } from "./actions";
+import { Reducer } from '@embedpdf/core';
+
+import { SET_INITIAL_ZOOM_LEVEL, SET_ZOOM_LEVEL, ZoomAction } from './actions';
+import { ZoomState, ZoomMode } from './types';
 
 export const initialState: ZoomState = {
   zoomLevel: ZoomMode.Automatic,
@@ -20,7 +21,7 @@ export const zoomReducer: Reducer<ZoomState, ZoomAction> = (state = initialState
     case SET_INITIAL_ZOOM_LEVEL:
       return {
         ...state,
-        zoomLevel: action.payload.zoomLevel
+        zoomLevel: action.payload.zoomLevel,
       };
     default:
       return state;

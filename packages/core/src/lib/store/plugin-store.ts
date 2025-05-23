@@ -44,10 +44,14 @@ export class PluginStore<PluginState, PluginAction extends Action> {
    * @returns A function to unsubscribe the listener.
    */
   subscribeToState(
-    listener: (action: PluginAction, newState: PluginState, oldState: PluginState) => void
+    listener: (action: PluginAction, newState: PluginState, oldState: PluginState) => void,
   ) {
     return this.store.subscribeToPlugin(this.pluginId, (action, newPluginState, oldPluginState) => {
-      listener(action as PluginAction, newPluginState as PluginState, oldPluginState as PluginState);
+      listener(
+        action as PluginAction,
+        newPluginState as PluginState,
+        oldPluginState as PluginState,
+      );
     });
   }
 
@@ -63,10 +67,18 @@ export class PluginStore<PluginState, PluginAction extends Action> {
    */
   onAction<T extends PluginAction['type']>(
     type: T,
-    handler: (action: Extract<PluginAction, { type: T }>, state: PluginState, oldState: PluginState) => void
+    handler: (
+      action: Extract<PluginAction, { type: T }>,
+      state: PluginState,
+      oldState: PluginState,
+    ) => void,
   ) {
     return this.store.onAction(type, (action, state, oldState) => {
-      handler(action as Extract<PluginAction, { type: T }>, state.plugins[this.pluginId] as PluginState, oldState.plugins[this.pluginId] as PluginState);
+      handler(
+        action as Extract<PluginAction, { type: T }>,
+        state.plugins[this.pluginId] as PluginState,
+        oldState.plugins[this.pluginId] as PluginState,
+      );
     });
   }
 }

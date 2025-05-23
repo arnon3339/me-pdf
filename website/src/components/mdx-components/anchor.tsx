@@ -11,7 +11,7 @@ export const Anchor: FC<ComponentPropsWithoutRef<'a'>> = ({
 }) => {
   props = {
     ...props,
-    className: cn('focus-visible:nextra-focus', props.className)
+    className: cn('focus-visible:nextra-focus', props.className),
   }
   if (EXTERNAL_URL_RE.test(href)) {
     const { children } = props
@@ -24,7 +24,7 @@ export const Anchor: FC<ComponentPropsWithoutRef<'a'>> = ({
             <LinkArrowIcon
               // based on font-size
               height="1em"
-              className="inline align-baseline shrink-0"
+              className="inline shrink-0 align-baseline"
             />
           </>
         )}

@@ -1,12 +1,12 @@
-import { Reducer } from "@embedpdf/core";
-import { ViewportState } from "./types";
-import { 
-  SET_VIEWPORT_METRICS, 
-  SET_VIEWPORT_SCROLL_METRICS, 
+import { Reducer } from '@embedpdf/core';
+import { ViewportState } from './types';
+import {
+  SET_VIEWPORT_METRICS,
+  SET_VIEWPORT_SCROLL_METRICS,
   SET_VIEWPORT_GAP,
-  ViewportAction, 
-  SET_SCROLL_ACTIVITY
-} from "./actions";
+  ViewportAction,
+  SET_SCROLL_ACTIVITY,
+} from './actions';
 
 export const initialState: ViewportState = {
   viewportGap: 0,
@@ -21,22 +21,22 @@ export const initialState: ViewportState = {
     scrollHeight: 0,
     relativePosition: {
       x: 0,
-      y: 0
-    }
+      y: 0,
+    },
   },
-  isScrolling: false
+  isScrolling: false,
 };
 
 export const viewportReducer: Reducer<ViewportState, ViewportAction> = (
   state = initialState,
-  action
+  action,
 ) => {
   switch (action.type) {
     case SET_VIEWPORT_GAP:
       return { ...state, viewportGap: action.payload };
     case SET_VIEWPORT_METRICS:
-      return { 
-        ...state, 
+      return {
+        ...state,
         viewportMetrics: {
           width: action.payload.width,
           height: action.payload.height,
@@ -47,10 +47,18 @@ export const viewportReducer: Reducer<ViewportState, ViewportAction> = (
           scrollWidth: action.payload.scrollWidth,
           scrollHeight: action.payload.scrollHeight,
           relativePosition: {
-            x: action.payload.scrollWidth <= action.payload.clientWidth ? 0 : action.payload.scrollLeft / (action.payload.scrollWidth - action.payload.clientWidth),
-            y: action.payload.scrollHeight <= action.payload.clientHeight ? 0 : action.payload.scrollTop / (action.payload.scrollHeight - action.payload.clientHeight)
-          }
-        }
+            x:
+              action.payload.scrollWidth <= action.payload.clientWidth
+                ? 0
+                : action.payload.scrollLeft /
+                  (action.payload.scrollWidth - action.payload.clientWidth),
+            y:
+              action.payload.scrollHeight <= action.payload.clientHeight
+                ? 0
+                : action.payload.scrollTop /
+                  (action.payload.scrollHeight - action.payload.clientHeight),
+          },
+        },
       };
     case SET_VIEWPORT_SCROLL_METRICS:
       return {
@@ -58,9 +66,9 @@ export const viewportReducer: Reducer<ViewportState, ViewportAction> = (
         viewportMetrics: {
           ...state.viewportMetrics,
           scrollTop: action.payload.scrollTop,
-          scrollLeft: action.payload.scrollLeft
+          scrollLeft: action.payload.scrollLeft,
         },
-        isScrolling: true
+        isScrolling: true,
       };
     case SET_SCROLL_ACTIVITY:
       return { ...state, isScrolling: action.payload };

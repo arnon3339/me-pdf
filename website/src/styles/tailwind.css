@@ -5,7 +5,7 @@ html {
   --nextra-navbar-height: 64px;
   --nextra-menu-height: 3.75rem;
 
-  @apply antialiased text-base;
+  @apply text-base antialiased;
   font-feature-settings:
     'rlig' 1,
     'calt' 1,
@@ -31,10 +31,9 @@ code.nextra-code {
   @apply text-sm;
 
   :not(pre) > &:not([class*='twoslash-']) {
-    @apply border-black/[0.04] bg-black/[0.03] break-words rounded-md border py-0.5 px-[.25em] text-[.9em];
+    @apply break-words rounded-md border border-black/[0.04] bg-black/[0.03] px-[.25em] py-0.5 text-[.9em];
   }
 }
-
 
 pre code.nextra-code:not([class*='twoslash-']) {
   @apply grid;
@@ -46,7 +45,7 @@ pre code.nextra-code:not([class*='twoslash-']) {
     &::before {
       counter-increment: line;
       content: counter(line);
-      @apply inline-block pr-4 text-right min-w-[2.6rem] text-gray-500;
+      @apply inline-block min-w-[2.6rem] pr-4 text-right text-gray-500;
     }
   }
 
@@ -54,7 +53,7 @@ pre code.nextra-code:not([class*='twoslash-']) {
     @apply px-4;
 
     &[data-highlighted-line] {
-      @apply bg-primary-600/10 text-primary-600/80! shadow-[2px_0_currentColor_inset];
+      @apply text-primary-600/80! bg-primary-600/10 shadow-[2px_0_currentColor_inset];
     }
 
     [data-highlighted-chars] {
@@ -126,7 +125,7 @@ pre code.nextra-code:not([class*='twoslash-']) {
 }
 
 .twoslash-popup-container {
-  @apply inline-flex flex-col absolute transition-opacity duration-300 z-10 mt-1.5 rounded;
+  @apply absolute z-10 mt-1.5 inline-flex flex-col rounded transition-opacity duration-300;
   transform: translateY(1.1em);
   background: var(--twoslash-popup-bg) !important;
   color: var(--twoslash-popup-color);
@@ -141,7 +140,7 @@ pre code.nextra-code:not([class*='twoslash-']) {
 }
 
 .twoslash-popup-arrow {
-  @apply absolute -top-1 border-t border-r size-1.5 -rotate-45;
+  @apply absolute -top-1 size-1.5 -rotate-45 border-r border-t;
   @apply border-(--twoslash-border-color) bg-(--twoslash-popup-bg);
   left: 1em;
   pointer-events: none;
@@ -192,14 +191,14 @@ pre code.nextra-code:not([class*='twoslash-']) {
 }
 
 .twoslash-completion-cursor .twoslash-completion-list {
-  @apply absolute left-0 border top-1 rounded;
+  @apply absolute left-0 top-1 rounded border;
   transform: translate(0, 1.2em);
   background: var(--twoslash-popup-bg);
   border-color: var(--twoslash-border-color);
 }
 
 .twoslash-completion-list {
-  @apply py-1 px-2 w-60;
+  @apply w-60 px-2 py-1;
 }
 
 .twoslash-completion-list::before {
@@ -290,13 +289,13 @@ pre code.nextra-code:not([class*='twoslash-']) {
   h6 {
     counter-increment: var(--counter-id);
     /* Resets from nextra-theme-docs */
-    @apply border-0 pb-0 font-semibold tracking-tight mt-8 text-2xl;
+    @apply mt-8 border-0 pb-0 text-2xl font-semibold tracking-tight;
     /* https://github.com/tailwindlabs/tailwindcss/issues/15597#issuecomment-2582673546 */
     @apply before:bg-gray-100;
     &:before {
       @apply absolute size-[33px];
       @apply border-4;
-      @apply rounded-full text-neutral-400 text-base font-normal text-center -indent-px;
+      @apply rounded-full text-center -indent-px text-base font-normal text-neutral-400;
       @apply ms-[-41px];
       content: counter(var(--counter-id));
     }
@@ -304,16 +303,30 @@ pre code.nextra-code:not([class*='twoslash-']) {
 }
 
 @keyframes blob {
-  0% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-  100% { transform: translate(0px, 0px) scale(1); }
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
 }
 
 @keyframes float {
-  0% { transform: translateY(0px) rotate(var(--rotate, 0deg)); }
-  50% { transform: translateY(-10px) rotate(var(--rotate, 0deg)); }
-  100% { transform: translateY(0px) rotate(var(--rotate, 0deg)); }
+  0% {
+    transform: translateY(0px) rotate(var(--rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-10px) rotate(var(--rotate, 0deg));
+  }
+  100% {
+    transform: translateY(0px) rotate(var(--rotate, 0deg));
+  }
 }
 
 .animate-blob {
@@ -338,7 +351,7 @@ pre code.nextra-code:not([class*='twoslash-']) {
 }
 
 .bg-grid-pattern {
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(127, 127, 127, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(127, 127, 127, 0.1) 1px, transparent 1px);
   background-size: 24px 24px;
@@ -349,7 +362,14 @@ pre code.nextra-code:not([class*='twoslash-']) {
 }
 
 .custom-gradient-text {
-  background: linear-gradient(135deg, #ef3d55 0%, #765ba7 25%, #8caedc 50%, #f79151 75%, #ef3d55 100%);
+  background: linear-gradient(
+    135deg,
+    #ef3d55 0%,
+    #765ba7 25%,
+    #8caedc 50%,
+    #f79151 75%,
+    #ef3d55 100%
+  );
   background-size: 200% auto;
   animation: gradient 5s linear infinite;
   -webkit-background-clip: text;
@@ -357,8 +377,12 @@ pre code.nextra-code:not([class*='twoslash-']) {
 }
 
 @keyframes gradient {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 .pseudo-terminal:before {
@@ -382,7 +406,9 @@ pre code.nextra-code:not([class*='twoslash-']) {
   height: 8px;
   border-radius: 50%;
   background: #ff5f56;
-  box-shadow: 16px 0 0 #ffbd2e, 32px 0 0 #27c93f;
+  box-shadow:
+    16px 0 0 #ffbd2e,
+    32px 0 0 #27c93f;
 }
 
 .mesh-gradient {

@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import EmbedPDF from "@embedpdf/snippet";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
+import EmbedPDF from '@embedpdf/snippet'
 
 export default function PDFViewer() {
   const viewerRef = useCallback((node: HTMLDivElement) => {
@@ -13,9 +13,7 @@ export default function PDFViewer() {
         wasmUrl: '/wasm/pdfium.wasm',
       })
     }
-  }, []);
+  }, [])
 
-  return (
-    <div id="pdf-viewer" style={{ height: '500px' }} ref={viewerRef} />
-  )
+  return <div id="pdf-viewer" style={{ height: '500px' }} ref={viewerRef} />
 }

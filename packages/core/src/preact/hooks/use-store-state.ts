@@ -9,20 +9,20 @@ import { useRegistry } from './use-registry';
 export function useStoreState<T = CoreState>(): StoreState<T> | null {
   const { registry } = useRegistry();
   const [state, setState] = useState<StoreState<T> | null>(null);
-  
+
   useEffect(() => {
     if (!registry) return;
-    
+
     // Get initial state
     setState(registry.getStore().getState() as StoreState<T>);
-    
+
     // Subscribe to store changes
     const unsubscribe = registry.getStore().subscribe((_action, newState) => {
       setState(newState as StoreState<T>);
     });
-    
+
     return () => unsubscribe();
   }, [registry]);
-  
+
   return state;
 }

@@ -92,10 +92,7 @@ export class Task<R, D> {
    * @param resolvedCallback - callback for resolved value
    * @param rejectedCallback - callback for rejected value
    */
-  wait(
-    resolvedCallback: ResolvedCallback<R>,
-    rejectedCallback: RejectedCallback<D>,
-  ) {
+  wait(resolvedCallback: ResolvedCallback<R>, rejectedCallback: RejectedCallback<D>) {
     switch (this.state.stage) {
       case TaskStage.Pending:
         this.resolvedCallbacks.push(resolvedCallback);

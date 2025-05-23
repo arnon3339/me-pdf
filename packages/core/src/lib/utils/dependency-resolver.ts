@@ -1,6 +1,6 @@
 export class DependencyResolver {
   private dependencyGraph = new Map<string, Set<string>>();
-  
+
   addNode(id: string, dependencies: string[] = []) {
     this.dependencyGraph.set(id, new Set(dependencies));
   }

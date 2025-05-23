@@ -1,6 +1,6 @@
-import { BasePluginConfig, EventHook } from "@embedpdf/core";
-import { PdfErrorReason, PdfPageObject, Rect, Task } from "@embedpdf/models";
-import { PageVisibilityMetrics } from "@embedpdf/plugin-scroll";
+import { BasePluginConfig, EventHook } from '@embedpdf/core';
+import { PdfErrorReason, PdfPageObject, Rect, Task } from '@embedpdf/models';
+import { PageVisibilityMetrics } from '@embedpdf/plugin-scroll';
 
 export interface TilingPluginConfig extends BasePluginConfig {
   tileSize: number;
@@ -22,7 +22,7 @@ export interface Tile {
   screenRect: Rect;
   pageRect: Rect;
   isFallback: boolean;
-  srcScale: number;  
+  srcScale: number;
   col: number;
   row: number;
   id: string;

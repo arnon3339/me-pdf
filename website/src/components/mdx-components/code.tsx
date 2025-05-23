@@ -11,7 +11,7 @@ export const Code: FC<
       className={cn(
         'nextra-code',
         'data-line-numbers' in props && '[counter-reset:line]',
-        className
+        className,
       )}
       // always show code blocks in ltr
       dir="ltr"

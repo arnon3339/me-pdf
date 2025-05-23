@@ -1,6 +1,13 @@
-import { Reducer } from "@embedpdf/core";
-import { UIPluginState } from "./types";
-import { UI_HIDE_COMMAND_MENU, UI_INIT_COMPONENTS, UI_SET_HEADER_VISIBLE, UI_SHOW_COMMAND_MENU, UI_TOGGLE_PANEL, UIPluginAction } from "./actions";
+import { Reducer } from '@embedpdf/core';
+import { UIPluginState } from './types';
+import {
+  UI_HIDE_COMMAND_MENU,
+  UI_INIT_COMPONENTS,
+  UI_SET_HEADER_VISIBLE,
+  UI_SHOW_COMMAND_MENU,
+  UI_TOGGLE_PANEL,
+  UIPluginAction,
+} from './actions';
 
 export const initialState: UIPluginState = {
   panel: {},
@@ -12,18 +19,15 @@ export const initialState: UIPluginState = {
   selectButton: {},
   custom: {},
   floating: {},
-  commandMenu: {}
+  commandMenu: {},
 };
 
-export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (
-  state = initialState,
-  action
-) => {
+export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (state = initialState, action) => {
   switch (action.type) {
     case UI_INIT_COMPONENTS:
-      return { 
-        ...state, 
-        ...action.payload 
+      return {
+        ...state,
+        ...action.payload,
       };
     case UI_TOGGLE_PANEL: {
       const prevPanel = state.panel[action.payload.id] || {};
@@ -50,8 +54,8 @@ export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (
             ...prevPanel,
             open,
             visibleChild,
-          }
-        }
+          },
+        },
       };
     }
     case UI_SET_HEADER_VISIBLE:
@@ -62,9 +66,9 @@ export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (
           [action.payload.id]: {
             ...state.header[action.payload.id],
             visible: action.payload.visible,
-            visibleChild: action.payload.visibleChild
-          }
-        }
+            visibleChild: action.payload.visibleChild,
+          },
+        },
       };
     case UI_SHOW_COMMAND_MENU:
       return {
@@ -76,9 +80,9 @@ export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (
             triggerElement: action.payload.triggerElement,
             position: action.payload.position,
             open: true,
-            flatten: action.payload.flatten
-          }
-        }
+            flatten: action.payload.flatten,
+          },
+        },
       };
     case UI_HIDE_COMMAND_MENU:
       return {
@@ -91,11 +95,11 @@ export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (
             activeCommand: null,
             triggerElement: undefined,
             position: undefined,
-            flatten: false
-          }
-        }
+            flatten: false,
+          },
+        },
       };
-      
+
     default:
       return state;
   }

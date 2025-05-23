@@ -12,7 +12,7 @@ export interface PDFBufferLoadingOptions {
   pdfFile: PdfFile;
   options?: {
     password?: string;
-  }
+  };
   engine: PdfEngine;
 }
 
@@ -20,4 +20,4 @@ export type PDFLoadingOptions = PDFUrlLoadingOptions | PDFBufferLoadingOptions;
 
 export interface PDFLoadingStrategy {
   load(options?: PDFLoadingOptions): Promise<PdfDocumentObject>;
-} 
+}

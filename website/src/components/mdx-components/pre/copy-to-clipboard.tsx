@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '../../button'
 import { CopyIcon, CheckIcon } from 'nextra/icons'
 
-export const CopyToClipboard: FC<ComponentProps<'button'>> = props => {
+export const CopyToClipboard: FC<ComponentProps<'button'>> = (props) => {
   const [isCopied, setCopied] = useState(false)
 
   useEffect(() => {

@@ -26,4 +26,4 @@ export type MergeDocPage = {
 export type DocumentWithPages = {
   doc: PdfDocumentObject
   pages: DocumentPage[]
-} 
+}

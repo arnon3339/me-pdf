@@ -4,8 +4,8 @@ import { arePropsEqual } from './math';
 /* ------------------------------------------------------------------ */
 /* basic types                                                        */
 /* ------------------------------------------------------------------ */
-export type Listener<T = any>    = (value: T) => void;
-export type Unsubscribe    = () => void;
+export type Listener<T = any> = (value: T) => void;
+export type Unsubscribe = () => void;
 
 /* ------------------------------------------------------------ */
 /* helpers for typing `.on()` with an optional second argument  */
@@ -32,7 +32,7 @@ export function createEmitter<T = any>(): Emitter<T> {
   };
 
   return {
-    emit: (v = undefined as T) => listeners.forEach(l => l(v)),
+    emit: (v = undefined as T) => listeners.forEach((l) => l(v)),
     on,
     off: (l) => listeners.delete(l),
     clear: () => listeners.clear(),
@@ -46,10 +46,7 @@ export interface BehaviorEmitter<T = any> extends Omit<Emitter<T>, 'on' | 'off'>
   readonly value?: T;
   on: EventHook<T>;
   off(listener: Listener<T>): void;
-  select<U>(
-    selector: (v: T) => U,
-    equality?: (a: U, b: U) => boolean
-  ): EventHook<U>;
+  select<U>(selector: (v: T) => U, equality?: (a: U, b: U) => boolean): EventHook<U>;
 }
 
 /* ------------------------------------------------------------ */
@@ -57,14 +54,14 @@ export interface BehaviorEmitter<T = any> extends Omit<Emitter<T>, 'on' | 'off'>
 /* ------------------------------------------------------------ */
 export function createBehaviorEmitter<T = any>(
   initial?: T,
-  equality: (a: T, b: T) => boolean = arePropsEqual
+  equality: (a: T, b: T) => boolean = arePropsEqual,
 ): BehaviorEmitter<T> {
   const listeners = new Set<Listener<T>>();
   const proxyMap = new Map<Listener<T>, { wrapped: Listener<T>; destroy: () => void }>();
-  let _value = initial;                               // cached value
+  let _value = initial; // cached value
 
   /* -------------- helpers ----------------------------------- */
-  const notify = (v: T) => listeners.forEach(l => l(v));
+  const notify = (v: T) => listeners.forEach((l) => l(v));
 
   const baseOn: EventHook<T> = (listener: Listener<T>, options?: EventControlOptions) => {
     /* wrap & remember if we have control options ------------------ */
@@ -93,7 +90,9 @@ export function createBehaviorEmitter<T = any>(
   /* -------------- public object ------------------------------ */
   return {
     /* emitter behaviour ---------------------------------------- */
-    get value() { return _value; },
+    get value() {
+      return _value;
+    },
 
     emit(v = undefined as T) {
       if (_value === undefined || !equality(_value, v)) {
@@ -102,7 +101,7 @@ export function createBehaviorEmitter<T = any>(
       }
     },
 
-    on : baseOn,
+    on: baseOn,
     off(listener: Listener<T>) {
       /* did we wrap this listener? */
       const proxy = proxyMap.get(listener);
@@ -117,15 +116,12 @@ export function createBehaviorEmitter<T = any>(
 
     clear() {
       listeners.clear();
-      proxyMap.forEach(p => p.destroy());
+      proxyMap.forEach((p) => p.destroy());
       proxyMap.clear();
     },
 
     /* derived hook --------------------------------------------- */
-    select<U>(
-      selector: (v: T) => U,
-      eq:       (a: U, b: U) => boolean = arePropsEqual
-    ): EventHook<U> {
+    select<U>(selector: (v: T) => U, eq: (a: U, b: U) => boolean = arePropsEqual): EventHook<U> {
       return (listener: Listener<U>, options?: EventControlOptions) => {
         let prev: U | undefined;
 
@@ -137,13 +133,16 @@ export function createBehaviorEmitter<T = any>(
         }
 
         /* subscribe to parent */
-        return baseOn((next) => {
-          const mapped = selector(next);
-          if (prev === undefined || !eq(prev, mapped)) {
-            prev = mapped;
-            listener(mapped);
-          }
-        }, options as EventControlOptions | undefined); // pass control opts straight through
+        return baseOn(
+          (next) => {
+            const mapped = selector(next);
+            if (prev === undefined || !eq(prev, mapped)) {
+              prev = mapped;
+              listener(mapped);
+            }
+          },
+          options as EventControlOptions | undefined,
+        ); // pass control opts straight through
       };
     },
   };

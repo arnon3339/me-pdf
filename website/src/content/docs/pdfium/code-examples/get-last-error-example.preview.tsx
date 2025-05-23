@@ -1,57 +1,57 @@
-'use client';
-import React, { useState } from 'react';
-import { openProtectedPdf } from './get-last-error-example';
-import { Preview } from '@/components/preview';
+'use client'
+import React, { useState } from 'react'
+import { openProtectedPdf } from './get-last-error-example'
+import { Preview } from '@/components/preview'
 
 export default function GetLastErrorDemo() {
   const [result, setResult] = useState<{
-    success: boolean;
-    errorCode?: number;
-    errorMessage?: string;
-    pageCount?: number;
-  } | null>(null);
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+    success: boolean
+    errorCode?: number
+    errorMessage?: string
+    pageCount?: number
+  } | null>(null)
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleOpenWithoutPassword = async () => {
     try {
-      setIsLoading(true);
-      setResult(null);
-      
-      const response = await fetch('/demo_protected.pdf');
-      const buffer = await response.arrayBuffer();
-      const result = await openProtectedPdf(new Uint8Array(buffer));
-      
-      setResult(result);
+      setIsLoading(true)
+      setResult(null)
+
+      const response = await fetch('/demo_protected.pdf')
+      const buffer = await response.arrayBuffer()
+      const result = await openProtectedPdf(new Uint8Array(buffer))
+
+      setResult(result)
     } catch (err) {
       setResult({
         success: false,
-        errorMessage: err instanceof Error ? err.message : 'Unknown error'
-      });
+        errorMessage: err instanceof Error ? err.message : 'Unknown error',
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleOpenWithPassword = async () => {
     try {
-      setIsLoading(true);
-      setResult(null);
-      
-      const response = await fetch('/demo_protected.pdf');
-      const buffer = await response.arrayBuffer();
-      const result = await openProtectedPdf(new Uint8Array(buffer), password);
-      
-      setResult(result);
+      setIsLoading(true)
+      setResult(null)
+
+      const response = await fetch('/demo_protected.pdf')
+      const buffer = await response.arrayBuffer()
+      const result = await openProtectedPdf(new Uint8Array(buffer), password)
+
+      setResult(result)
     } catch (err) {
       setResult({
         success: false,
-        errorMessage: err instanceof Error ? err.message : 'Unknown error'
-      });
+        errorMessage: err instanceof Error ? err.message : 'Unknown error',
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Preview title="Handle PDF Password Error">
@@ -60,7 +60,7 @@ export default function GetLastErrorDemo() {
           <button
             onClick={handleOpenWithoutPassword}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-violet-800 rounded-md hover:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:bg-gray-400"
+            className="rounded-md bg-violet-800 px-4 py-2 text-sm font-medium text-white hover:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:bg-gray-400"
           >
             Open Protected PDF (No Password)
           </button>
@@ -68,10 +68,10 @@ export default function GetLastErrorDemo() {
 
         {result && !result.success && result.errorCode === 4 && (
           <div className="mt-4">
-            <p className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <p className="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">
               Error: {result.errorMessage} (Code: {result.errorCode})
             </p>
-            <p className="bg-blue-100 border rounded-md border-blue-500 text-blue-700 px-4 py-3 mb-4">
+            <p className="mb-4 rounded-md border border-blue-500 bg-blue-100 px-4 py-3 text-blue-700">
               Hint: The password is "embedpdf"
             </p>
             <div className="flex space-x-2">
@@ -80,12 +80,12 @@ export default function GetLastErrorDemo() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter PDF password"
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 onClick={handleOpenWithPassword}
                 disabled={isLoading || !password}
-                className="px-4 py-2 text-sm font-medium text-white bg-violet-800 rounded-md hover:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:bg-gray-400"
+                className="rounded-md bg-violet-800 px-4 py-2 text-sm font-medium text-white hover:bg-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:bg-gray-400"
               >
                 Try with Password
               </button>
@@ -94,14 +94,14 @@ export default function GetLastErrorDemo() {
         )}
 
         {result && result.success && (
-          <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-md border border-green-500">
+          <div className="mt-4 rounded-md border border-green-500 bg-green-50 p-4 text-green-700">
             <p>PDF opened successfully!</p>
             <p>Number of pages: {result.pageCount}</p>
           </div>
         )}
 
         {result && !result.success && result.errorCode !== 4 && (
-          <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-md">
+          <div className="mt-4 rounded-md bg-red-50 p-4 text-red-700">
             <p>
               Error: {result.errorMessage} (Code: {result.errorCode})
             </p>
@@ -115,5 +115,5 @@ export default function GetLastErrorDemo() {
         )}
       </div>
     </Preview>
-  );
-} 
+  )
+}

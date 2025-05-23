@@ -42,7 +42,7 @@ export function Tooltip({
   const floating = useRef<HTMLDivElement>(null);
   const arrow = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
-  const st  = useRef<NodeJS.Timeout | null>(null);
+  const st = useRef<NodeJS.Timeout | null>(null);
 
   /* ── position ─────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -66,9 +66,9 @@ export function Tooltip({
 
         /* --- **critical change**: clear the axis we don't use --- */
         Object.assign(arrow.current!.style, {
-          left  : ax != null ? `${ax}px` : '',
-          top   : ay != null ? `${ay}px` : '',
-          right : '',
+          left: ax != null ? `${ax}px` : '',
+          top: ay != null ? `${ay}px` : '',
+          right: '',
           bottom: '',
           [staticSide!]: '-4px',
         });
@@ -86,9 +86,15 @@ export function Tooltip({
     const clear = () => {
       if (st.current) clearTimeout(st.current);
     };
-    const show   = () => { clear(); st.current = setTimeout(() => setVisible(true ), delay); };
-    const hide = () => { clear(); setVisible(false); };
-    const toggle = () => setVisible(v => !v);
+    const show = () => {
+      clear();
+      st.current = setTimeout(() => setVisible(true), delay);
+    };
+    const hide = () => {
+      clear();
+      setVisible(false);
+    };
+    const toggle = () => setVisible((v) => !v);
 
     /* attach based on *current* trigger prop */
     if (trigger === 'hover') {
@@ -122,7 +128,7 @@ export function Tooltip({
         refEl.removeEventListener('click', toggle);
       }
     };
-  }, [trigger, delay]);  
+  }, [trigger, delay]);
 
   /* ── render ───────────────────────────────────────────────────────── */
   return (
@@ -130,31 +136,21 @@ export function Tooltip({
       <div
         ref={floating}
         role="tooltip"
-        className={`
-          absolute z-100 px-3 py-2 rounded-lg text-sm shadow-md
-          pointer-events-none select-none transition-opacity duration-150
-          whitespace-nowrap
-          ${style === 'dark'
+        className={`z-100 pointer-events-none absolute select-none whitespace-nowrap rounded-lg px-3 py-2 text-sm shadow-md transition-opacity duration-150 ${
+          style === 'dark'
             ? 'bg-gray-900 text-white'
-            : 'bg-white text-gray-900 border border-gray-200'}
-          ${visible ? 'opacity-100' : 'opacity-0'}
-          ${className}
-        `}
+            : 'border border-gray-200 bg-white text-gray-900'
+        } ${visible ? 'opacity-100' : 'opacity-0'} ${className} `}
         style={{ visibility: visible ? 'visible' : 'hidden' }}
       >
         {content}
         {/* the arrow inherits background so it never mismatches */}
         <div
           ref={arrow}
-          className={`
-            absolute h-2 w-2 rotate-45 bg-inherit
-            ${style === 'light' ? 'border border-gray-200' : ''}
-          `}
+          className={`absolute h-2 w-2 rotate-45 bg-inherit ${style === 'light' ? 'border border-gray-200' : ''} `}
         />
       </div>
-      <RefWrapper ref={reference}>
-        {children}
-      </RefWrapper> 
+      <RefWrapper ref={reference}>{children}</RefWrapper>
     </Fragment>
   );
 }

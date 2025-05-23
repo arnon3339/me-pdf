@@ -1,14 +1,46 @@
-import { BasePlugin, CoreState, PluginRegistry, StoreState, arePropsEqual } from "@embedpdf/core";
-import { childrenFunctionOptions, CommandMenuComponent, FloatingComponent, GroupedItemsComponent, HeaderComponent, PanelComponent, UICapability, UIComponentType, UIPluginConfig, UIPluginState } from "./types";
-import { UIComponent } from "./ui-component";
-import { initialState } from "./reducer";
-import { uiInitComponents, UIPluginAction, uiSetHeaderVisible, uiShowCommandMenu, uiTogglePanel, uiHideCommandMenu, TogglePanelPayload, SetHeaderVisiblePayload } from "./actions";
-import { MenuManager } from "./menu/menu-manager";
-import { IconManager } from "./icons/icon-manager";
+import { BasePlugin, CoreState, PluginRegistry, StoreState, arePropsEqual } from '@embedpdf/core';
+import {
+  childrenFunctionOptions,
+  CommandMenuComponent,
+  FloatingComponent,
+  GroupedItemsComponent,
+  HeaderComponent,
+  PanelComponent,
+  UICapability,
+  UIComponentType,
+  UIPluginConfig,
+  UIPluginState,
+} from './types';
+import { UIComponent } from './ui-component';
+import { initialState } from './reducer';
+import {
+  uiInitComponents,
+  UIPluginAction,
+  uiSetHeaderVisible,
+  uiShowCommandMenu,
+  uiTogglePanel,
+  uiHideCommandMenu,
+  TogglePanelPayload,
+  SetHeaderVisiblePayload,
+} from './actions';
+import { MenuManager } from './menu/menu-manager';
+import { IconManager } from './icons/icon-manager';
 
-export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginState, UIPluginAction> {
+export class UIPlugin extends BasePlugin<
+  UIPluginConfig,
+  UICapability,
+  UIPluginState,
+  UIPluginAction
+> {
   static readonly id = 'ui' as const;
-  private componentRenderers: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any> = {};
+  private componentRenderers: Record<
+    string,
+    (
+      props: any,
+      children: (options?: childrenFunctionOptions) => any[],
+      context?: Record<string, any>,
+    ) => any
+  > = {};
   private components: Record<string, UIComponent<UIComponentType<any>>> = {};
   private config: UIPluginConfig;
   private mapStateCallbacks: {
@@ -57,10 +89,18 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
       const uiState = this.getState();
       const isOpen = uiState.commandMenu.commandMenu?.activeCommand === menuId;
       if (isOpen) {
-        return this.dispatch(uiHideCommandMenu({id: 'commandMenu'}));
+        return this.dispatch(uiHideCommandMenu({ id: 'commandMenu' }));
       }
-      
-      this.dispatch(uiShowCommandMenu({id: 'commandMenu', commandId: menuId, triggerElement, position, flatten}));
+
+      this.dispatch(
+        uiShowCommandMenu({
+          id: 'commandMenu',
+          commandId: menuId,
+          triggerElement,
+          position,
+          flatten,
+        }),
+      );
     });
 
     // Optional: Track command execution for analytics or other purposes
@@ -92,15 +132,17 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
   }
 
   private linkGroupedItems() {
-    Object.values(this.components).forEach(component => {
+    Object.values(this.components).forEach((component) => {
       if (isItemWithSlots(component)) {
         const props = component.componentConfig;
-        props.slots.forEach(slot => {
+        props.slots.forEach((slot) => {
           const child = this.components[slot.componentId];
           if (child) {
             component.addChild(slot.componentId, child, slot.priority, slot.className);
           } else {
-            console.warn(`Child component ${slot.componentId} not found for GroupedItems ${props.id}`);
+            console.warn(
+              `Child component ${slot.componentId} not found for GroupedItems ${props.id}`,
+            );
           }
         });
       }
@@ -128,7 +170,7 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
       if (!mapFn) continue; // no mapping
 
       // ownProps is the UIComponent's current props
-      const {id: _id, ...ownProps} = uiComponent.props
+      const { id: _id, ...ownProps } = uiComponent.props;
 
       const partial = mapFn(state, ownProps);
       // If partial is non-empty or changes from old, do update
@@ -143,39 +185,38 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
   private addSlot(parentId: string, slotId: string, priority?: number, className?: string) {
     // 1. Get the parent component
     const parentComponent = this.components[parentId];
-    
+
     if (!parentComponent) {
       console.error(`Parent component ${parentId} not found`);
       return;
     }
-    
+
     // 2. Check if parent has slots (is a container type)
     if (!isItemWithSlots(parentComponent)) {
       console.error(`Parent component ${parentId} does not support slots`);
       return;
     }
-    
+
     // 3. Get the component to add to the slot
     const childComponent = this.components[slotId];
-    
+
     if (!childComponent) {
       console.error(`Child component ${slotId} not found`);
       return;
     }
-    
+
     const parentChildren = parentComponent.getChildren();
-    
+
     // 4. Determine priority for the new slot
     let slotPriority = priority;
-    
+
     if (slotPriority === undefined) {
       // If no priority is specified, add it at the end with a reasonable gap
-      const maxPriority = parentChildren.length > 0 
-        ? Math.max(...parentChildren.map(child => child.priority)) 
-        : 0;
+      const maxPriority =
+        parentChildren.length > 0 ? Math.max(...parentChildren.map((child) => child.priority)) : 0;
       slotPriority = maxPriority + 10; // Add a gap of 10
     }
-    
+
     // 6. Add the child to the parent component with the appropriate priority
     // The UIComponent will handle sorting and avoid duplicates
     parentComponent.addChild(slotId, childComponent, slotPriority, className);
@@ -183,27 +224,38 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
 
   protected buildCapability(): UICapability {
     return {
-      registerComponentRenderer: (type: string, renderer: (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any) => {
+      registerComponentRenderer: (
+        type: string,
+        renderer: (
+          props: any,
+          children: (options?: childrenFunctionOptions) => any[],
+          context?: Record<string, any>,
+        ) => any,
+      ) => {
         this.componentRenderers[type] = renderer;
       },
       getComponent: <T>(id: string): T | undefined => {
         return this.components[id] as T | undefined;
       },
       registerComponent: this.addComponent.bind(this),
-      getCommandMenu: () => Object.values(this.components).find(component => isCommandMenuComponent(component)),
-      hideCommandMenu: () => this.debouncedDispatch(uiHideCommandMenu({id: 'commandMenu'}), 100),
-      getFloatingComponents: (scrollerPosition?: 'inside' | 'outside') => 
+      getCommandMenu: () =>
+        Object.values(this.components).find((component) => isCommandMenuComponent(component)),
+      hideCommandMenu: () => this.debouncedDispatch(uiHideCommandMenu({ id: 'commandMenu' }), 100),
+      getFloatingComponents: (scrollerPosition?: 'inside' | 'outside') =>
         Object.values(this.components)
-          .filter(component => isFloatingComponent(component))
-          .filter(component => !scrollerPosition || component.props.scrollerPosition === scrollerPosition),
-      getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => 
+          .filter((component) => isFloatingComponent(component))
+          .filter(
+            (component) =>
+              !scrollerPosition || component.props.scrollerPosition === scrollerPosition,
+          ),
+      getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') =>
         Object.values(this.components)
-          .filter(component => isHeaderComponent(component))
-          .filter(component => component.props.placement === placement),
-      getPanelsByLocation: (location: 'left' | 'right') => 
+          .filter((component) => isHeaderComponent(component))
+          .filter((component) => component.props.placement === placement),
+      getPanelsByLocation: (location: 'left' | 'right') =>
         Object.values(this.components)
-          .filter(component => isPanelComponent(component))
-          .filter(component => component.props.location === location),
+          .filter((component) => isPanelComponent(component))
+          .filter((component) => component.props.location === location),
       addSlot: this.addSlot.bind(this),
       togglePanel: (payload: TogglePanelPayload) => {
         this.dispatch(uiTogglePanel(payload));
@@ -224,27 +276,48 @@ export class UIPlugin extends BasePlugin<UIPluginConfig, UICapability, UIPluginS
   }
 }
 
-function isItemWithSlots(component: UIComponent<UIComponentType<any>>): component is UIComponent<GroupedItemsComponent> | UIComponent<HeaderComponent> | UIComponent<PanelComponent> | UIComponent<FloatingComponent> {
-  return isGroupedItemsComponent(component) || isHeaderComponent(component) || isPanelComponent(component) || isFloatingComponent(component);
+function isItemWithSlots(
+  component: UIComponent<UIComponentType<any>>,
+): component is
+  | UIComponent<GroupedItemsComponent>
+  | UIComponent<HeaderComponent>
+  | UIComponent<PanelComponent>
+  | UIComponent<FloatingComponent> {
+  return (
+    isGroupedItemsComponent(component) ||
+    isHeaderComponent(component) ||
+    isPanelComponent(component) ||
+    isFloatingComponent(component)
+  );
 }
 
 // Type guard function
-function isGroupedItemsComponent(component: UIComponent<UIComponentType>): component is UIComponent<GroupedItemsComponent> {
+function isGroupedItemsComponent(
+  component: UIComponent<UIComponentType>,
+): component is UIComponent<GroupedItemsComponent> {
   return component.type === 'groupedItems';
 }
 
-function isHeaderComponent(component: UIComponent<UIComponentType>): component is UIComponent<HeaderComponent> {
+function isHeaderComponent(
+  component: UIComponent<UIComponentType>,
+): component is UIComponent<HeaderComponent> {
   return component.type === 'header';
 }
 
-function isPanelComponent(component: UIComponent<UIComponentType>): component is UIComponent<PanelComponent> {
+function isPanelComponent(
+  component: UIComponent<UIComponentType>,
+): component is UIComponent<PanelComponent> {
   return component.type === 'panel';
 }
 
-function isFloatingComponent(component: UIComponent<UIComponentType>): component is UIComponent<FloatingComponent> {
+function isFloatingComponent(
+  component: UIComponent<UIComponentType>,
+): component is UIComponent<FloatingComponent> {
   return component.type === 'floating';
 }
 
-function isCommandMenuComponent(component: UIComponent<UIComponentType>): component is UIComponent<CommandMenuComponent> {
+function isCommandMenuComponent(
+  component: UIComponent<UIComponentType>,
+): component is UIComponent<CommandMenuComponent> {
   return component.type === 'commandMenu';
 }

@@ -11,14 +11,20 @@ type RenderLayoutProps = Omit<JSX.HTMLAttributes<HTMLImageElement>, 'style'> & {
   style?: JSX.CSSProperties;
 };
 
-export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...props }: RenderLayoutProps) {
+export function RenderLayer({
+  pageIndex,
+  scaleFactor = 1,
+  dpr = 1,
+  style,
+  ...props
+}: RenderLayoutProps) {
   const { provides: renderProvides } = useRenderCapability();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (renderProvides) {
-      const task = renderProvides.renderPage({pageIndex, scaleFactor, dpr});
+      const task = renderProvides.renderPage({ pageIndex, scaleFactor, dpr });
       task.wait((blob) => {
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
@@ -33,7 +39,7 @@ export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...pro
           task.abort({
             code: PdfErrorCode.Cancelled,
             message: 'canceled render task',
-          })
+          });
         }
       };
     }
@@ -46,18 +52,20 @@ export function RenderLayer({ pageIndex, scaleFactor = 1, dpr = 1, style, ...pro
     }
   };
 
-  return <Fragment>
-    {imageUrl && (
-      <img
-        src={imageUrl}
-        onLoad={handleImageLoad}
-        {...props}
-        style={{
-          width: '100%',
-          height: '100%',
-          ...((style) || {})
-        }}
-      />
-    )}
-  </Fragment>;
+  return (
+    <Fragment>
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          onLoad={handleImageLoad}
+          {...props}
+          style={{
+            width: '100%',
+            height: '100%',
+            ...(style || {}),
+          }}
+        />
+      )}
+    </Fragment>
+  );
 }

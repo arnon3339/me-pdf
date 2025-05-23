@@ -1,67 +1,72 @@
-import { BasePlugin, CoreState, createBehaviorEmitter, PluginRegistry, SET_DOCUMENT, StoreState } from '@embedpdf/core';
+import {
+  BasePlugin,
+  CoreState,
+  createBehaviorEmitter,
+  PluginRegistry,
+  SET_DOCUMENT,
+  StoreState,
+} from '@embedpdf/core';
 import { ThumbMeta, ThumbnailPluginConfig, WindowState } from './types';
 import { ThumbnailCapability } from './types';
 import { PdfErrorReason, Task } from '@embedpdf/models';
 import { RenderCapability, RenderPlugin } from '@embedpdf/plugin-render';
 
-export class ThumbnailPlugin
-  extends BasePlugin<ThumbnailPluginConfig, ThumbnailCapability>
-{
+export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, ThumbnailCapability> {
   static readonly id = 'thumbnail' as const;
 
   private renderCapability: RenderCapability;
   private thumbs: ThumbMeta[] = [];
   private window: WindowState | null = null;
   private readonly emitWindow = createBehaviorEmitter<WindowState>();
-  private readonly taskCache  = new Map<number, Task<Blob,PdfErrorReason>>();
+  private readonly taskCache = new Map<number, Task<Blob, PdfErrorReason>>();
 
-  constructor(id: string, registry: PluginRegistry, private cfg: ThumbnailPluginConfig) {
+  constructor(
+    id: string,
+    registry: PluginRegistry,
+    private cfg: ThumbnailPluginConfig,
+  ) {
     super(id, registry);
-    
-    this.renderCapability = this.registry.getPlugin<RenderPlugin>("render")!.provides();
 
-    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => 
-      this.setWindowState(state),
-    );
+    this.renderCapability = this.registry.getPlugin<RenderPlugin>('render')!.provides();
+
+    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => this.setWindowState(state));
   }
 
   /* ------------ init ------------------------------------------------ */
-  async initialize(): Promise<void> {
-
-  }
+  async initialize(): Promise<void> {}
 
   private setWindowState(state: StoreState<CoreState>) {
     const core = state.core;
 
     if (!core.document) return;
 
-    const W   = this.cfg.width        ?? 120;
-    const L   = this.cfg.labelHeight  ?? 16;   // label
-    const GAP = this.cfg.gap          ?? 8;
-    
+    const W = this.cfg.width ?? 120;
+    const L = this.cfg.labelHeight ?? 16; // label
+    const GAP = this.cfg.gap ?? 8;
+
     let offset = 0;
-    this.thumbs = core.document.pages.map(p => {
-      const ratio   = p.size.height / p.size.width;
-      const thumbH  = Math.round(W * ratio);
-      const wrapH   = thumbH + L;          // no GAP here
-    
+    this.thumbs = core.document.pages.map((p) => {
+      const ratio = p.size.height / p.size.width;
+      const thumbH = Math.round(W * ratio);
+      const wrapH = thumbH + L; // no GAP here
+
       const meta: ThumbMeta = {
         pageIndex: p.index,
-        width : W,
+        width: W,
         height: thumbH,
         wrapperHeight: wrapH,
         top: offset,
-        labelHeight: L
+        labelHeight: L,
       };
-      offset += wrapH + GAP;               // GAP added *after* wrapper
+      offset += wrapH + GAP; // GAP added *after* wrapper
       return meta;
     });
-    
+
     this.window = {
       start: 0,
-      end  : 0,
+      end: 0,
       items: [],
-      totalHeight: offset - GAP,           // last item has no gap below
+      totalHeight: offset - GAP, // last item has no gap below
     };
     this.emitWindow.emit(this.window);
   }
@@ -69,7 +74,7 @@ export class ThumbnailPlugin
   /* ------------ capability ----------------------------------------- */
   protected buildCapability(): ThumbnailCapability {
     return {
-      onWindow : this.emitWindow.on,
+      onWindow: this.emitWindow.on,
       setViewport: (y, h) => this.updateWindow(y, h),
       renderThumb: (idx, dpr) => this.renderThumb(idx, dpr),
     };
@@ -78,29 +83,30 @@ export class ThumbnailPlugin
   /* ------------ windowing math ------------------------------------- */
   private updateWindow(scrollY: number, viewportH: number) {
     const BUF = this.cfg.buffer ?? 3;
-  
+
     /* -------- find first visible wrapper ---------- */
-    let low = 0, high = this.thumbs.length - 1, first = 0;
+    let low = 0,
+      high = this.thumbs.length - 1,
+      first = 0;
     while (low <= high) {
       const mid = (low + high) >> 1;
-      const m   = this.thumbs[mid];
-      if (m.top + m.wrapperHeight < scrollY)
-        low = mid + 1;
-      else { first = mid; high = mid - 1; }
+      const m = this.thumbs[mid];
+      if (m.top + m.wrapperHeight < scrollY) low = mid + 1;
+      else {
+        first = mid;
+        high = mid - 1;
+      }
     }
-  
+
     /* -------- find last visible + buffer ---------- */
     let last = first;
     const limit = scrollY + viewportH;
-    while (
-      last + 1 < this.thumbs.length &&
-      this.thumbs[last].top < limit
-    ) last++;
+    while (last + 1 < this.thumbs.length && this.thumbs[last].top < limit) last++;
     last = Math.min(this.thumbs.length - 1, last + BUF);
-  
+
     const start = Math.max(0, first - BUF);
     if (this.window && start === this.window.start && last === this.window.end) return;
-  
+
     this.window = {
       start,
       end: last,
@@ -118,11 +124,11 @@ export class ThumbnailPlugin
     const page = core.document!.pages[idx];
     const scale = (this.cfg.width ?? 120) / page.size.width;
 
-    const task = this.renderCapability.renderPageRect({ 
-      pageIndex: idx, 
-      rect: { origin:{x:0,y:0}, size: page.size }, 
-      scaleFactor: scale, 
-      dpr 
+    const task = this.renderCapability.renderPageRect({
+      pageIndex: idx,
+      rect: { origin: { x: 0, y: 0 }, size: page.size },
+      scaleFactor: scale,
+      dpr,
     });
 
     this.taskCache.set(idx, task);

@@ -1,4 +1,4 @@
-import { PdfDocumentObject, PdfPageObject, Rotation } from "@embedpdf/models";
+import { PdfDocumentObject, PdfPageObject, Rotation } from '@embedpdf/models';
 
 export const LOAD_DOCUMENT = 'LOAD_DOCUMENT';
 export const SET_DOCUMENT = 'SET_DOCUMENT';
@@ -49,8 +49,20 @@ export type DocumentAction =
 export type CoreAction = DocumentAction;
 
 export const loadDocument = (): CoreAction => ({ type: LOAD_DOCUMENT });
-export const setDocument = (document: PdfDocumentObject): CoreAction => ({ type: SET_DOCUMENT, payload: document });
-export const setDocumentError = (error: string): CoreAction => ({ type: SET_DOCUMENT_ERROR, payload: error });
+export const setDocument = (document: PdfDocumentObject): CoreAction => ({
+  type: SET_DOCUMENT,
+  payload: document,
+});
+export const setDocumentError = (error: string): CoreAction => ({
+  type: SET_DOCUMENT_ERROR,
+  payload: error,
+});
 export const setScale = (scale: number): CoreAction => ({ type: SET_SCALE, payload: scale });
-export const setRotation = (rotation: Rotation): CoreAction => ({ type: SET_ROTATION, payload: rotation });
-export const setPages = (pages: PdfPageObject[][]): CoreAction => ({ type: SET_PAGES, payload: pages });
+export const setRotation = (rotation: Rotation): CoreAction => ({
+  type: SET_ROTATION,
+  payload: rotation,
+});
+export const setPages = (pages: PdfPageObject[][]): CoreAction => ({
+  type: SET_PAGES,
+  payload: pages,
+});

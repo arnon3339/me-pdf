@@ -128,12 +128,7 @@ export class EngineRunner {
    * Handle post message
    */
   handle(evt: MessageEvent<Request>) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'webworker receive message event: ',
-      evt.data,
-    );
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'webworker receive message event: ', evt.data);
     try {
       const request = evt.data as Request;
       switch (request.type) {

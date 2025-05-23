@@ -9,7 +9,7 @@ type ThumbnailsProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
   children: (m: ThumbMeta) => ComponentChildren;
 };
 
-export function ThumbnailsPane({style, ...props}: ThumbnailsProps) {
+export function ThumbnailsPane({ style, ...props }: ThumbnailsProps) {
   const { provides: thumbs } = useThumbnailCapability();
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -24,7 +24,7 @@ export function ThumbnailsPane({style, ...props}: ThumbnailsProps) {
     if (!vp) return;
 
     const onScroll = () => thumbs?.setViewport(vp.scrollTop, vp.clientHeight);
-    onScroll();                          // first call
+    onScroll(); // first call
     vp.addEventListener('scroll', onScroll);
     return () => vp.removeEventListener('scroll', onScroll);
   }, []);
@@ -32,12 +32,12 @@ export function ThumbnailsPane({style, ...props}: ThumbnailsProps) {
   return (
     <div
       ref={viewportRef}
-      style={{ overflowY:'auto', height:'100%', position:'relative', ...style }}
+      style={{ overflowY: 'auto', height: '100%', position: 'relative', ...style }}
       {...props}
     >
       {/* spacer keeps correct scroll height even before first window arrives */}
       <div style={{ height: window?.totalHeight ?? 0, position: 'relative' }}>
-        {window?.items.map(m => props.children(m))}
+        {window?.items.map((m) => props.children(m))}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-import { Reducer } from "@embedpdf/core";
-import { SearchState } from "./types";
+import { Reducer } from '@embedpdf/core';
+import { SearchState } from './types';
 import {
   START_SEARCH_SESSION,
   STOP_SEARCH_SESSION,
@@ -9,7 +9,7 @@ import {
   SET_SEARCH_RESULTS,
   SET_ACTIVE_RESULT_INDEX,
   SearchAction,
-} from "./actions";
+} from './actions';
 
 export const initialState: SearchState = {
   flags: [],
@@ -17,15 +17,12 @@ export const initialState: SearchState = {
   total: 0,
   activeResultIndex: -1,
   showAllResults: true,
-  query: "",
+  query: '',
   loading: false,
   active: false,
 };
 
-export const searchReducer: Reducer<SearchState, SearchAction> = (
-  state = initialState,
-  action
-) => {
+export const searchReducer: Reducer<SearchState, SearchAction> = (state = initialState, action) => {
   switch (action.type) {
     case START_SEARCH_SESSION:
       return { ...state, active: true };
@@ -36,7 +33,7 @@ export const searchReducer: Reducer<SearchState, SearchAction> = (
         results: [],
         total: 0,
         activeResultIndex: -1,
-        query: "",
+        query: '',
         loading: false,
         active: false,
       };

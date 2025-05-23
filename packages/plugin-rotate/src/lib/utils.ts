@@ -18,19 +18,36 @@ export function rotationMatrix(
   h: number,
   asString = true,
 ): [number, number, number, number, number, number] | string {
-  let a = 1, b = 0, c = 0, d = 1, e = 0, f = 0;
+  let a = 1,
+    b = 0,
+    c = 0,
+    d = 1,
+    e = 0,
+    f = 0;
 
   switch (rotation) {
     case 1: // 90°
-      a = 0;  b = 1;  c = -1; d = 0;  e = h;
+      a = 0;
+      b = 1;
+      c = -1;
+      d = 0;
+      e = h;
       break;
     case 2: // 180°
-      a = -1; b = 0;  c = 0;  d = -1; e = w; f = h;
+      a = -1;
+      b = 0;
+      c = 0;
+      d = -1;
+      e = w;
+      f = h;
       break;
     case 3: // 270°
-      a = 0;  b = -1; c = 1;  d = 0;  f = w;
+      a = 0;
+      b = -1;
+      c = 1;
+      d = 0;
+      f = w;
       break;
   }
-  return asString ? `matrix(${a},${b},${c},${d},${e},${f})`
-                  : [a, b, c, d, e, f];
+  return asString ? `matrix(${a},${b},${c},${d},${e},${f})` : [a, b, c, d, e, f];
 }

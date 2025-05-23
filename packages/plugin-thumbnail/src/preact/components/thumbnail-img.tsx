@@ -17,7 +17,7 @@ export function ThumbImg({ meta, style, ...props }: ThumbnailImgProps) {
 
   useEffect(() => {
     const task = thumbs?.renderThumb(meta.pageIndex, window.devicePixelRatio);
-    task?.wait(blob => {
+    task?.wait((blob) => {
       const objectUrl = URL.createObjectURL(blob);
       urlRef.current = objectUrl;
       setUrl(objectUrl);
@@ -31,7 +31,7 @@ export function ThumbImg({ meta, style, ...props }: ThumbnailImgProps) {
         task?.abort({
           code: PdfErrorCode.Cancelled,
           message: 'canceled render task',
-        })
+        });
       }
     };
   }, [meta.pageIndex]);
@@ -43,12 +43,5 @@ export function ThumbImg({ meta, style, ...props }: ThumbnailImgProps) {
     }
   };
 
-  return url ? (
-    <img
-      src={url}
-      onLoad={handleImageLoad}
-      style={style}
-      {...props}
-    />
-  ) : null;
+  return url ? <img src={url} onLoad={handleImageLoad} style={style} {...props} /> : null;
 }

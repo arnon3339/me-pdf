@@ -1,13 +1,6 @@
 import { h, ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import {
-  computePosition,
-  offset,
-  flip,
-  shift,
-  autoUpdate,
-  Placement,
-} from '@floating-ui/dom';
+import { computePosition, offset, flip, shift, autoUpdate, Placement } from '@floating-ui/dom';
 
 export interface DropdownProps {
   /** Controlled visibility — `true` shows, `false` hides */
@@ -26,7 +19,7 @@ export interface DropdownProps {
   delay?: number;
   /** Callbacks */
   onShow?: () => void;
-  onHide?: () => void;      // should set `open=false` in parent
+  onHide?: () => void; // should set `open=false` in parent
   className?: string;
 }
 
@@ -50,7 +43,7 @@ export function Dropdown({
   delay = 0,
   onShow,
   onHide,
-  className
+  className,
 }: DropdownProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -74,7 +67,7 @@ export function Dropdown({
       onHide?.();
     }
 
-    if( !reference) return;
+    if (!reference) return;
     if (!open) return;
 
     const cleanup = autoUpdate(reference, floating, () => {
@@ -96,7 +89,7 @@ export function Dropdown({
 
   /* ───── Global click‑outside detector ─────────────────────────────── */
   useEffect(() => {
-    if (!open) return;                         // only while menu is visible
+    if (!open) return; // only while menu is visible
     const floating = menuRef.current;
     if (!floating) return;
 
@@ -104,14 +97,11 @@ export function Dropdown({
       const path = ev.composedPath?.() ?? [ev.target as Node];
 
       // click inside trigger OR inside menu → ignore
-      if (
-        (trigger && path.includes(trigger)) ||
-        path.includes(floating)
-      ) {
+      if ((trigger && path.includes(trigger)) || path.includes(floating)) {
         return;
       }
 
-      onHide?.();                              // tell parent to close
+      onHide?.(); // tell parent to close
     };
 
     window.addEventListener('pointerdown', handlePointer, true); // capture phase
@@ -122,23 +112,16 @@ export function Dropdown({
   return (
     <div
       ref={menuRef}
-      style={{ 
+      style={{
         ...(trigger && {
           display: 'none',
           left: `${position.x}px`,
-          top: `${position.y}px`
+          top: `${position.y}px`,
         }),
       }}
-      className={`
-        absolute z-50 min-w-[8rem] rounded-lg border border-[#cfd4da] bg-white
-        shadow-sm divide-y divide-gray-100 focus:outline-none
-        transition-opacity duration-150
-        ${open ? 'opacity-100' : 'opacity-0'}
-        ${!trigger && 'bottom-0 left-0 right-0'}
-        ${className}
-      `}
+      className={`absolute z-50 min-w-[8rem] divide-y divide-gray-100 rounded-lg border border-[#cfd4da] bg-white shadow-sm transition-opacity duration-150 focus:outline-none ${open ? 'opacity-100' : 'opacity-0'} ${!trigger && 'bottom-0 left-0 right-0'} ${className} `}
     >
-      <div className="py-2 flex flex-col">{children}</div>
+      <div className="flex flex-col py-2">{children}</div>
     </div>
   );
 }

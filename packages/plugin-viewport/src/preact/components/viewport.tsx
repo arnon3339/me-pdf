@@ -15,13 +15,21 @@ export function Viewport({ children, ...props }: ViewportProps) {
 
   useEffect(() => {
     if (viewportProvides) {
-      setViewportGap(viewportProvides.getViewportGap())
+      setViewportGap(viewportProvides.getViewportGap());
     }
   }, [viewportProvides]);
 
   const { style, ...restProps } = props;
-  return <div {...restProps} ref={viewportRef} style={{
-    ...(typeof style === 'object' ? style : {}),
-    padding: `${viewportGap}px`,
-  }}>{children}</div>;
+  return (
+    <div
+      {...restProps}
+      ref={viewportRef}
+      style={{
+        ...(typeof style === 'object' ? style : {}),
+        padding: `${viewportGap}px`,
+      }}
+    >
+      {children}
+    </div>
+  );
 }

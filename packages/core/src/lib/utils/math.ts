@@ -17,7 +17,7 @@ export function clamp(value: number, min: number, max: number): number {
  *  - Arrays are compared ignoring element order (multiset comparison).
  *  - Primitives are compared by strict equality.
  *  - null/undefined are treated as normal primitives.
- * 
+ *
  * @param a First value
  * @param b Second value
  * @param visited Used internally to detect cycles

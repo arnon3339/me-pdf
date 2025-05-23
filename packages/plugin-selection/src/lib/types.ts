@@ -6,19 +6,19 @@ export interface SelectionPluginConfig extends BasePluginConfig {}
 /* ---- user-selection cross-page -------------------------------------- */
 export interface GlyphPointer {
   page: number;
-  index: number;              // glyph index within that page
+  index: number; // glyph index within that page
 }
 
 export interface SelectionRangeX {
   start: GlyphPointer;
-  end:   GlyphPointer;        // inclusive
+  end: GlyphPointer; // inclusive
 }
 
 export interface SelectionState {
   /** page → geometry cache */
   geometry: Record<number, PdfPageGeometry>;
   /** current selection or null */
-  rects    : Record<number, Rect[]>;
+  rects: Record<number, Rect[]>;
   selection: SelectionRangeX | null;
   active: boolean;
   selecting: boolean;
@@ -29,7 +29,7 @@ export interface SelectionCapability {
   getGeometry(page: number): Promise<PdfPageGeometry>;
   /* highlight rectangles for one page at given scale */
   getHighlightRects(page: number): Rect[];
-  getBoundingRect (page: number): Rect | null;
+  getBoundingRect(page: number): Rect | null;
   getBoundingRects(): { page: number; rect: Rect }[];
   /* imperative API used by framework layers */
   begin(page: number, glyphIdx: number): void;
@@ -37,5 +37,5 @@ export interface SelectionCapability {
   end(): void;
   clear(): void;
 
-  onSelectionChange(cb: (r: SelectionRangeX|null)=>void): ()=>void;
+  onSelectionChange(cb: (r: SelectionRangeX | null) => void): () => void;
 }

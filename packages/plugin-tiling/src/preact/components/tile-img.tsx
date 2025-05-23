@@ -13,17 +13,17 @@ interface TileImgProps {
 
 export function TileImg({ pageIndex, tile, dpr, scale }: TileImgProps) {
   const { provides: tilingCapability } = useTilingCapability();
-  const [url, setUrl]  = useState<string>();
-  const urlRef = useRef<string | null>(null)
-  
+  const [url, setUrl] = useState<string>();
+  const urlRef = useRef<string | null>(null);
+
   const relativeScale = scale / tile.srcScale;
 
   /* kick off render exactly once per tile */
   useEffect(() => {
-    if (tile.status === 'ready' && urlRef.current) return;   // already done
+    if (tile.status === 'ready' && urlRef.current) return; // already done
     if (!tilingCapability) return;
     const task = tilingCapability.renderTile({ pageIndex, tile, dpr });
-    task.wait(blob => {
+    task.wait((blob) => {
       const objectUrl = URL.createObjectURL(blob);
       urlRef.current = objectUrl;
       setUrl(objectUrl);
@@ -37,10 +37,10 @@ export function TileImg({ pageIndex, tile, dpr, scale }: TileImgProps) {
         task.abort({
           code: PdfErrorCode.Cancelled,
           message: 'canceled render task',
-        })
+        });
       }
-    }
-  }, [pageIndex, tile.id]);          // id includes scale, so unique
+    };
+  }, [pageIndex, tile.id]); // id includes scale, so unique
 
   const handleImageLoad = () => {
     if (urlRef.current) {
@@ -49,18 +49,18 @@ export function TileImg({ pageIndex, tile, dpr, scale }: TileImgProps) {
     }
   };
 
-  if (!url) return null;             // could render a placeholder
+  if (!url) return null; // could render a placeholder
   return (
     <img
       src={url}
       onLoad={handleImageLoad}
       style={{
-        position:'absolute',
+        position: 'absolute',
         left: tile.screenRect.origin.x * relativeScale,
         top: tile.screenRect.origin.y * relativeScale,
         width: tile.screenRect.size.width * relativeScale,
         height: tile.screenRect.size.height * relativeScale,
-        display: 'block'
+        display: 'block',
       }}
     />
   );

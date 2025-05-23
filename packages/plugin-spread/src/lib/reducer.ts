@@ -8,7 +8,7 @@ export const initialState: SpreadState = {
 
 export const spreadReducer: Reducer<SpreadState, SetSpreadModeAction> = (
   state = initialState,
-  action
+  action,
 ) => {
   switch (action.type) {
     case SET_SPREAD_MODE:

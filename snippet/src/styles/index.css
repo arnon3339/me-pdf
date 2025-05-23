@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import url("https://fonts.googleapis.com/css2?family=Open Sans:wght@400;600&amp;display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Open Sans:wght@400;600&amp;display=swap');
 
 :host {
   --tw-translate-x: 0;
@@ -27,7 +27,7 @@
   --tw-outline-style: solid;
   display: flex;
   flex-direction: column;
-  overflow: hidden; 
+  overflow: hidden;
   width: 100%;
   height: 100%;
 }

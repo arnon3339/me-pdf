@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h, ComponentChildren } from 'preact';
-import { useState, useEffect } from 'preact/hooks'; 
+import { useState, useEffect } from 'preact/hooks';
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
@@ -14,9 +14,9 @@ interface EmbedPDFState {
 
 interface EmbedPDFProps {
   engine: PdfEngine;
-  onInitialized: (registry: PluginRegistry) => Promise<void>
-  plugins: PluginBatchRegistration<IPlugin<any>, any>[]
-  children: ComponentChildren | ((state: EmbedPDFState) => ComponentChildren)
+  onInitialized: (registry: PluginRegistry) => Promise<void>;
+  plugins: PluginBatchRegistration<IPlugin<any>, any>[];
+  children: ComponentChildren | ((state: EmbedPDFState) => ComponentChildren);
 }
 
 export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFProps) {
@@ -26,7 +26,7 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
 
   useEffect(() => {
     const initialize = async () => {
-      const pdfViewer = new PluginRegistry(engine); 
+      const pdfViewer = new PluginRegistry(engine);
 
       // Register the ViewportPlugin with the container
       pdfViewer.registerPluginBatch(plugins);
@@ -46,7 +46,9 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
 
   return (
     <PDFContext.Provider value={{ registry, isInitializing, pluginsReady }}>
-      {typeof children === 'function' ? children({ registry, isInitializing, pluginsReady }) : children}
+      {typeof children === 'function'
+        ? children({ registry, isInitializing, pluginsReady })
+        : children}
     </PDFContext.Provider>
   );
-} 
+}

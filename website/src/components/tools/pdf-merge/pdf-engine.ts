@@ -1,6 +1,11 @@
 import { PdfiumEngine } from '@embedpdf/engines'
 import { init } from '@embedpdf/pdfium'
-import { PdfDocumentObject, PdfEngine, PdfFile, PdfTaskHelper } from '@embedpdf/models'
+import {
+  PdfDocumentObject,
+  PdfEngine,
+  PdfFile,
+  PdfTaskHelper,
+} from '@embedpdf/models'
 
 // Singleton instance of the engine
 let engineInstance: PdfiumEngine | null = null
@@ -17,17 +22,19 @@ export async function initializeEngine(): Promise<PdfEngine> {
 
   const wasmModule = await init({ wasmBinary })
   const engine = new PdfiumEngine(wasmModule)
-  
+
   // Initialize the engine using the task pattern
-  const task = engine.initialize ? engine.initialize() : PdfTaskHelper.resolve(true)
-  
+  const task = engine.initialize
+    ? engine.initialize()
+    : PdfTaskHelper.resolve(true)
+
   await new Promise<void>((resolve, reject) => {
     task.wait(
       () => resolve(),
-      (error) => reject(error)
+      (error) => reject(error),
     )
   })
-  
+
   engineInstance = engine
   return engine
 }
@@ -36,21 +43,21 @@ export async function initializeEngine(): Promise<PdfEngine> {
  * Open a PDF document using the engine
  */
 export async function openPdfDocument(
-  engine: PdfEngine, 
+  engine: PdfEngine,
   fileContent: ArrayBuffer,
-  password: string = ''
+  password: string = '',
 ): Promise<PdfDocumentObject> {
   const pdfFile: PdfFile = {
     id: `file-${Math.random().toString(36).substring(2, 9)}`,
     content: fileContent,
   }
-  
+
   const task = engine.openDocumentFromBuffer(pdfFile, password)
-  
+
   return new Promise<PdfDocumentObject>((resolve, reject) => {
     task.wait(
       (result) => resolve(result),
-      (error) => reject(error)
+      (error) => reject(error),
     )
   })
 }
@@ -60,13 +67,13 @@ export async function openPdfDocument(
  */
 export async function closePdfDocument(
   engine: PdfEngine,
-  doc: PdfDocumentObject
+  doc: PdfDocumentObject,
 ) {
   const task = engine.closeDocument(doc)
   return new Promise<void>((resolve, reject) => {
     task.wait(
       () => resolve(),
-      (error) => reject(error)
+      (error) => reject(error),
     )
   })
 }
@@ -78,33 +85,33 @@ export async function generateThumbnail(
   engine: PdfEngine,
   doc: PdfDocumentObject,
   pageIndex: number,
-  scale: number = 0.5
+  scale: number = 0.5,
 ): Promise<string> {
   const page = doc.pages[pageIndex]
   const task = engine.renderThumbnail(doc, page, scale, 0, 1)
-  
+
   console.log(doc, page, scale, 0, 1)
 
   return new Promise<string>((resolve, reject) => {
     task.wait(
       (result) => {
         const imageData = result
-        
+
         // Convert the image data to a data URL
         const canvas = document.createElement('canvas')
         canvas.width = imageData.width
         canvas.height = imageData.height
-        
+
         const ctx = canvas.getContext('2d')
         if (!ctx) {
           resolve('')
           return
         }
-        
+
         ctx.putImageData(imageData, 0, 0)
         resolve(canvas.toDataURL('image/jpeg', 0.7))
       },
-      (error) => reject(error)
+      (error) => reject(error),
     )
   })
 }
@@ -114,15 +121,15 @@ export async function generateThumbnail(
  */
 export async function mergePdfPages(
   engine: PdfEngine,
-  mergeConfigs: Array<{ docId: string, pageIndices: number[] }>
+  mergeConfigs: Array<{ docId: string; pageIndices: number[] }>,
 ): Promise<PdfFile> {
   // @ts-ignore - mergePages might not be in the type definition but it exists in the implementation
   const task = engine.mergePages(mergeConfigs)
-  
+
   return new Promise<PdfFile>((resolve, reject) => {
     task.wait(
       (result) => resolve(result),
-      (error) => reject(error)
+      (error) => reject(error),
     )
   })
-} 
+}

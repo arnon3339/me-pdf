@@ -23,7 +23,7 @@ const core = new PDFCore(engine);
 
 const navigationPlugin = new NavigationPlugin({
   initialPage: 1,
-  defaultScrollMode: 'continuous'
+  defaultScrollMode: 'continuous',
 });
 
 core.registerPlugin(navigationPlugin);

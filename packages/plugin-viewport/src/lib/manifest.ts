@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { ViewportPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { ViewportPluginConfig } from './types';
 
 export const VIEWPORT_PLUGIN_ID = 'viewport';
 
@@ -13,6 +13,6 @@ export const manifest: PluginManifest<ViewportPluginConfig> = {
   defaultConfig: {
     enabled: true,
     viewportGap: 10,
-    scrollEndDelay: 300
-  }
+    scrollEndDelay: 300,
+  },
 };

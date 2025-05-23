@@ -1,7 +1,5 @@
-import { BasePluginConfig } from "@embedpdf/core";
+import { BasePluginConfig } from '@embedpdf/core';
 
 export interface PrintPluginConfig extends BasePluginConfig {}
 
-export interface PrintCapability {
-
-}
+export interface PrintCapability {}

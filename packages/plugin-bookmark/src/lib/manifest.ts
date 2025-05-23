@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { BookmarkPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { BookmarkPluginConfig } from './types';
 
 export const BOOKMARK_PLUGIN_ID = 'bookmark';
 
@@ -11,6 +11,6 @@ export const manifest: PluginManifest<BookmarkPluginConfig> = {
   requires: ['loader'],
   optional: [],
   defaultConfig: {
-    enabled: true
-  }
-}; 
+    enabled: true,
+  },
+};

@@ -43,20 +43,23 @@ export type SelectionAction =
   | ClearSelectionAction
   | SetRectsAction;
 
-export const cachePageGeometry = (page:number,geo:PdfPageGeometry):
-  CachePageGeometryAction => ({ type:CACHE_PAGE_GEOMETRY, payload:{page,geo} });
+export const cachePageGeometry = (page: number, geo: PdfPageGeometry): CachePageGeometryAction => ({
+  type: CACHE_PAGE_GEOMETRY,
+  payload: { page, geo },
+});
 
-export const setSelection = (sel: SelectionRangeX):
-  SetSelectionAction => ({ type: SET_SELECTION, payload: sel });
+export const setSelection = (sel: SelectionRangeX): SetSelectionAction => ({
+  type: SET_SELECTION,
+  payload: sel,
+});
 
-export const startSelection = ():
-  StartSelectionAction => ({ type: START_SELECTION });
+export const startSelection = (): StartSelectionAction => ({ type: START_SELECTION });
 
-export const endSelection = ():
-  EndSelectionAction => ({ type: END_SELECTION });
+export const endSelection = (): EndSelectionAction => ({ type: END_SELECTION });
 
-export const clearSelection = ():
-  ClearSelectionAction => ({ type: CLEAR_SELECTION });
+export const clearSelection = (): ClearSelectionAction => ({ type: CLEAR_SELECTION });
 
-export const setRects = (page: number, rects: Rect[]):
-  SetRectsAction => ({ type: SET_RECTS, payload: { page, rects } });
+export const setRects = (page: number, rects: Rect[]): SetRectsAction => ({
+  type: SET_RECTS,
+  payload: { page, rects },
+});

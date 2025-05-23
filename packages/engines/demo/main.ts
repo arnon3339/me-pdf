@@ -38,20 +38,14 @@ async function run() {
 
   engine.initialize();
 
-  const passwordElem = document.getElementById(
-    'pdf-password',
-  ) as HTMLInputElement;
+  const passwordElem = document.getElementById('pdf-password') as HTMLInputElement;
   const inputElem = document.getElementById('pdf-file') as HTMLInputElement;
-  const bookmarksElem = document.getElementById(
-    'pdf-bookmarks',
-  ) as HTMLParagraphElement;
+  const bookmarksElem = document.getElementById('pdf-bookmarks') as HTMLParagraphElement;
   const saveElem = document.getElementById('save') as HTMLInputElement;
 
   let currDoc: PdfDocumentObject | null = null;
   inputElem?.addEventListener('input', async (evt) => {
-    const closeTask = currDoc
-      ? engine.closeDocument(currDoc)
-      : PdfTaskHelper.resolve(true);
+    const closeTask = currDoc ? engine.closeDocument(currDoc) : PdfTaskHelper.resolve(true);
     currDoc = null;
 
     closeTask.wait(async () => {
@@ -75,23 +69,12 @@ async function run() {
             for (let i = 0; i < doc.pageCount; i++) {
               const page = doc.pages[i];
 
-              const renderTask = engine.renderPage(
-                doc,
-                page,
-                1,
-                0,
-                window.devicePixelRatio,
-                {
-                  withAnnotations: true,
-                },
-              );
+              const renderTask = engine.renderPage(doc, page, 1, 0, window.devicePixelRatio, {
+                withAnnotations: true,
+              });
               renderTask.wait((imageData) => {
-                const canvasElem = document.createElement(
-                  'canvas',
-                ) as HTMLCanvasElement;
-                const rootElem = document.getElementById(
-                  'root',
-                ) as HTMLDivElement;
+                const canvasElem = document.createElement('canvas') as HTMLCanvasElement;
+                const rootElem = document.getElementById('root') as HTMLDivElement;
                 rootElem.appendChild(canvasElem);
                 canvasElem.style.width = `${page.size.width}px`;
                 canvasElem.style.height = `${page.size.height}px`;
@@ -99,24 +82,11 @@ async function run() {
                 canvasElem.height = imageData.height;
 
                 const ctx = canvasElem.getContext('2d');
-                ctx?.putImageData(
-                  imageData,
-                  0,
-                  0,
-                  0,
-                  0,
-                  imageData.width,
-                  imageData.height,
-                );
+                ctx?.putImageData(imageData, 0, 0, 0, 0, imageData.width, imageData.height);
                 console.log(imageData);
               }, logError);
 
-              const annotationsTask = engine.getPageAnnotations(
-                doc,
-                page,
-                1,
-                0,
-              );
+              const annotationsTask = engine.getPageAnnotations(doc, page, 1, 0);
               annotationsTask.wait((annotations) => {
                 console.log(page.index, annotations);
               }, logError);

@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { Tile } from '@embedpdf/plugin-tiling'
+import { Tile } from '@embedpdf/plugin-tiling';
 import { useTilingCapability } from '../hooks/use-tiling';
 import { TileImg } from './tile-img';
 
@@ -22,11 +22,20 @@ export function TilingLayer({ pageIndex, scale, style, ...props }: TilingLayoutP
   }, [tilingProvides]);
 
   return (
-    <div style={{
-      ...style
-    }} {...props}>
+    <div
+      style={{
+        ...style,
+      }}
+      {...props}
+    >
       {tiles?.map((tile) => (
-        <TileImg key={tile.id} pageIndex={pageIndex} tile={tile} dpr={window.devicePixelRatio} scale={scale} />
+        <TileImg
+          key={tile.id}
+          pageIndex={pageIndex}
+          tile={tile}
+          dpr={window.devicePixelRatio}
+          scale={scale}
+        />
       ))}
     </div>
   );

@@ -1,6 +1,11 @@
-import { BasePlugin, PluginRegistry } from "@embedpdf/core";
-import { RenderCapability, RenderPageOptions, RenderPageRectOptions, RenderPluginConfig } from "./types";
-import { PdfEngine, Rotation } from "@embedpdf/models";
+import { BasePlugin, PluginRegistry } from '@embedpdf/core';
+import {
+  RenderCapability,
+  RenderPageOptions,
+  RenderPageRectOptions,
+  RenderPluginConfig,
+} from './types';
+import { PdfEngine, Rotation } from '@embedpdf/models';
 
 export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapability> {
   static readonly id = 'render' as const;
@@ -11,9 +16,7 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
     this.engine = engine;
   }
 
-  async initialize(_config: RenderPluginConfig): Promise<void> {
-
-  }
+  async initialize(_config: RenderPluginConfig): Promise<void> {}
 
   protected buildCapability(): RenderCapability {
     return {
@@ -22,14 +25,20 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
     };
   }
 
-  private renderPage({pageIndex, scaleFactor = 1, dpr = 1, rotation = Rotation.Degree0, options = { withAnnotations: false }}: RenderPageOptions) {
+  private renderPage({
+    pageIndex,
+    scaleFactor = 1,
+    dpr = 1,
+    rotation = Rotation.Degree0,
+    options = { withAnnotations: false },
+  }: RenderPageOptions) {
     const coreState = this.getCoreState().core;
 
     if (!coreState.document) {
       throw new Error('document does not open');
     }
 
-    const page = coreState.document.pages.find(page => page.index === pageIndex);
+    const page = coreState.document.pages.find((page) => page.index === pageIndex);
     if (!page) {
       throw new Error('page does not exist');
     }
@@ -37,18 +46,33 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
     return this.engine.renderPage(coreState.document, page, scaleFactor, rotation, dpr, options);
   }
 
-  private renderPageRect({pageIndex, scaleFactor = 1, dpr = 1, rect, rotation = Rotation.Degree0, options = { withAnnotations: false }}: RenderPageRectOptions) {
+  private renderPageRect({
+    pageIndex,
+    scaleFactor = 1,
+    dpr = 1,
+    rect,
+    rotation = Rotation.Degree0,
+    options = { withAnnotations: false },
+  }: RenderPageRectOptions) {
     const coreState = this.getCoreState().core;
 
     if (!coreState.document) {
       throw new Error('document does not open');
     }
 
-    const page = coreState.document.pages.find(page => page.index === pageIndex);
+    const page = coreState.document.pages.find((page) => page.index === pageIndex);
     if (!page) {
       throw new Error('page does not exist');
     }
 
-    return this.engine.renderPageRect(coreState.document, page, scaleFactor, rotation, dpr, rect, options);
+    return this.engine.renderPageRect(
+      coreState.document,
+      page,
+      scaleFactor,
+      rotation,
+      dpr,
+      rect,
+      options,
+    );
   }
 }

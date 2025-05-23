@@ -1,5 +1,5 @@
 import { Rect } from '@embedpdf/models';
-import { ScrollCapability }   from '@embedpdf/plugin-scroll';
+import { ScrollCapability } from '@embedpdf/plugin-scroll';
 import { ViewportCapability, ViewportMetrics } from '@embedpdf/plugin-viewport';
 
 export type MenuCoords = { left: number; top: number } | null;
@@ -10,23 +10,25 @@ function edgeVisible(
   menuHeight: number,
   margin: number,
   vpGap: number,
-  isTop: boolean
+  isTop: boolean,
 ) {
   if (isTop) {
     // For top position, check if there's enough space above the rect including margin
     return vr.origin.y + vpGap >= menuHeight + margin;
   } else {
     // For bottom position, check if there's enough space below the rect including margin
-    return vr.origin.y + vpGap + vr.size.height + menuHeight + margin <= vp.scrollTop + vp.clientHeight;
+    return (
+      vr.origin.y + vpGap + vr.size.height + menuHeight + margin <= vp.scrollTop + vp.clientHeight
+    );
   }
 }
 
 /**
  * Decide where to place the menu for a *multi-page* selection.
  *
- * boundingRects ··· one rect per page  
- * scrollCap     ··· converts page-space → viewport-space  
- * vpCap         ··· live viewport metrics  
+ * boundingRects ··· one rect per page
+ * scrollCap     ··· converts page-space → viewport-space
+ * vpCap         ··· live viewport metrics
  * margin        ··· gap between rect and menu
  */
 export function menuPositionForSelection(
@@ -34,7 +36,7 @@ export function menuPositionForSelection(
   scrollCap: ScrollCapability,
   vpCap: ViewportCapability,
   margin = 8,
-  menuHeight = 40
+  menuHeight = 40,
 ): MenuCoords {
   if (!boundingRects.length) return null;
 
@@ -42,9 +44,10 @@ export function menuPositionForSelection(
   const vpGap = vpCap.getViewportGap();
 
   // Get the relevant rect(s) for positioning
-  const rects = boundingRects.length === 1 
-    ? { first: boundingRects[0], last: boundingRects[0] }
-    : { first: boundingRects[0], last: boundingRects[boundingRects.length - 1] };
+  const rects =
+    boundingRects.length === 1
+      ? { first: boundingRects[0], last: boundingRects[0] }
+      : { first: boundingRects[0], last: boundingRects[boundingRects.length - 1] };
 
   const firstVR = scrollCap.getRectPositionForPage(rects.first.page, rects.first.rect);
   const lastVR = scrollCap.getRectPositionForPage(rects.last.page, rects.last.rect);
@@ -57,13 +60,13 @@ export function menuPositionForSelection(
   if (bottomSpaceAvailable) {
     return {
       left: lastVR.origin.x + lastVR.size.width / 2,
-      top: lastVR.origin.y + lastVR.size.height + margin
+      top: lastVR.origin.y + lastVR.size.height + margin,
     };
   }
   if (topSpaceAvailable) {
     return {
       left: firstVR.origin.x + firstVR.size.width / 2,
-      top: firstVR.origin.y - margin - menuHeight
+      top: firstVR.origin.y - margin - menuHeight,
     };
   }
   return null;

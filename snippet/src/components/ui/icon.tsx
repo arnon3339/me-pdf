@@ -13,14 +13,14 @@ export interface IconProps extends IconRenderOptions {
 export function Icon({ icon, className, title }: IconProps): VNode | null {
   const iconManager = useIcon();
   let svgContent: string | undefined;
-  
+
   // Check if it's a data URI
   if (iconManager.isSvgDataUri(icon)) {
     svgContent = iconManager.dataUriToSvgString(icon);
   } else {
     svgContent = iconManager.getSvgString(icon);
   }
-  
+
   if (!svgContent) {
     console.warn(`Icon not found: ${icon}`);
     return null;
@@ -28,17 +28,13 @@ export function Icon({ icon, className, title }: IconProps): VNode | null {
 
   // Build the component with dangerouslySetInnerHTML to avoid DOM usage
   const iconElement = (
-    <span 
-      className={className} 
-      dangerouslySetInnerHTML={{ 
-        __html: svgContent
+    <span
+      className={className}
+      dangerouslySetInnerHTML={{
+        __html: svgContent,
       }}
     />
   );
 
-  return title ? (
-    <span title={title}>
-      {iconElement}
-    </span>
-  ) : iconElement;
+  return title ? <span title={title}>{iconElement}</span> : iconElement;
 }

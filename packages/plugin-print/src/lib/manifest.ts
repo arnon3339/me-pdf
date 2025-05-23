@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { PrintPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { PrintPluginConfig } from './types';
 
 export const PRINT_PLUGIN_ID = 'print';
 
@@ -11,6 +11,6 @@ export const manifest: PluginManifest<PrintPluginConfig> = {
   requires: ['loader'],
   optional: [],
   defaultConfig: {
-    enabled: true
-  }
-}; 
+    enabled: true,
+  },
+};

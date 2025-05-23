@@ -1,24 +1,50 @@
-import { BaseUIComponent, childrenFunctionOptions } from "./types";
+import { BaseUIComponent, childrenFunctionOptions } from './types';
 
 export class UIComponent<T extends BaseUIComponent<any, any, any>> {
   public componentConfig: T;
-  public props: T['id'] extends string ? (T extends BaseUIComponent<infer P, any, any> ? P & { id: string } : any) : any;
+  public props: T['id'] extends string
+    ? T extends BaseUIComponent<infer P, any, any>
+      ? P & { id: string }
+      : any
+    : any;
   public type: string;
-  private children: Array<{ id: string,component: UIComponent<any>, priority: number, className?: string }> = [];
-  private registry: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any>;
+  private children: Array<{
+    id: string;
+    component: UIComponent<any>;
+    priority: number;
+    className?: string;
+  }> = [];
+  private registry: Record<
+    string,
+    (
+      props: any,
+      children: (options?: childrenFunctionOptions) => any[],
+      context?: Record<string, any>,
+    ) => any
+  >;
   private updateCallbacks: (() => void)[] = [];
   private hadUpdateBeforeListeners = false;
 
-  constructor(componentConfig: T, registry: Record<string, (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any>) {
+  constructor(
+    componentConfig: T,
+    registry: Record<
+      string,
+      (
+        props: any,
+        children: (options?: childrenFunctionOptions) => any[],
+        context?: Record<string, any>,
+      ) => any
+    >,
+  ) {
     this.componentConfig = componentConfig;
 
     const props = componentConfig.props || {};
 
     if (typeof props === 'function') {
       const initialProps = props(componentConfig.initialState);
-      this.props = { ...initialProps, id: componentConfig.id }
+      this.props = { ...initialProps, id: componentConfig.id };
     } else {
-      this.props = { ...props, id: componentConfig.id }
+      this.props = { ...props, id: componentConfig.id };
     }
 
     this.type = componentConfig.type;
@@ -37,7 +63,7 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
   }
 
   removeChild(child: UIComponent<any>) {
-    this.children = this.children.filter(c => c.component !== child);
+    this.children = this.children.filter((c) => c.component !== child);
   }
 
   clearChildren() {
@@ -85,10 +111,10 @@ export class UIComponent<T extends BaseUIComponent<any, any, any>> {
   }
 
   offUpdate(callback: () => void) {
-    this.updateCallbacks = this.updateCallbacks.filter(cb => cb !== callback);
+    this.updateCallbacks = this.updateCallbacks.filter((cb) => cb !== callback);
   }
 
   protected notifyUpdate() {
-    this.updateCallbacks.forEach(cb => cb());
+    this.updateCallbacks.forEach((cb) => cb());
   }
 }

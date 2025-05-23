@@ -3,7 +3,7 @@ import { PrintPluginConfig } from './types';
 import { PrintCapability } from './types';
 
 export class PrintPlugin extends BasePlugin<PrintPluginConfig, PrintCapability> {
-  static readonly id = 'print' as const; 
+  static readonly id = 'print' as const;
 
   constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
@@ -14,8 +14,6 @@ export class PrintPlugin extends BasePlugin<PrintPluginConfig, PrintCapability> 
   }
 
   protected buildCapability(): PrintCapability {
-    return {
-
-    };
+    return {};
   }
 }

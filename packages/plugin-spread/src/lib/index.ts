@@ -1,9 +1,9 @@
-import { PluginPackage } from "@embedpdf/core";
-import { SpreadPlugin } from "./spread-plugin";
-import { manifest, SPREAD_PLUGIN_ID } from "./manifest";
-import { SpreadPluginConfig, SpreadState } from "./types";
-import { spreadReducer, initialState } from "./reducer";
-import { SpreadAction } from "./actions";
+import { PluginPackage } from '@embedpdf/core';
+import { SpreadPlugin } from './spread-plugin';
+import { manifest, SPREAD_PLUGIN_ID } from './manifest';
+import { SpreadPluginConfig, SpreadState } from './types';
+import { spreadReducer, initialState } from './reducer';
+import { SpreadAction } from './actions';
 
 export const SpreadPluginPackage: PluginPackage<
   SpreadPlugin,
@@ -17,6 +17,6 @@ export const SpreadPluginPackage: PluginPackage<
   initialState,
 };
 
-export * from "./spread-plugin";
-export * from "./types";
+export * from './spread-plugin';
+export * from './types';
 export * from './manifest';

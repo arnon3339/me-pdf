@@ -54,21 +54,22 @@ bun add @embedpdf/pdfium
 ```javascript
 import { init, WrappedPdfiumModule } from '@embedpdf/pdfium';
 
-const pdfiumWasm = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm';
+const pdfiumWasm =
+  'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm';
 
 let pdfiumInstance = null;
 
 async function initializePdfium() {
   if (pdfiumInstance) return pdfiumInstance;
-  
+
   const response = await fetch(pdfiumWasm);
   const wasmBinary = await response.arrayBuffer();
   pdfiumInstance = await init({ wasmBinary });
-  
+
   // Initialize the PDFium extension library
   // This is required before performing any PDF operations
   pdfiumInstance.PDFiumExt_Init();
-  
+
   return pdfiumInstance;
 }
 

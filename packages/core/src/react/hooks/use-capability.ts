@@ -1,5 +1,5 @@
-import { useContext } from "react";
-import { PDFContext } from "../context";
+import { useContext } from 'react';
+import { PDFContext } from '../context';
 import type { IPlugin } from '@embedpdf/core';
 
 /**
@@ -10,21 +10,23 @@ import type { IPlugin } from '@embedpdf/core';
  * // Get zoom capability
  * const zoom = useCapability<ZoomPlugin>('zoom');
  */
-export function useCapability<T extends IPlugin<any>>(pluginId: string): ReturnType<NonNullable<T['provides']>> | null {
+export function useCapability<T extends IPlugin<any>>(
+  pluginId: string,
+): ReturnType<NonNullable<T['provides']>> | null {
   const contextValue = useContext(PDFContext);
-  
+
   // Error if used outside of context
   if (contextValue === undefined) {
     throw new Error('useCapability must be used within a PDFContext.Provider');
   }
-  
+
   const { registry, isInitializing } = contextValue;
-  
+
   // During initialization, return null instead of throwing an error
   if (isInitializing) {
     return null;
   }
-  
+
   // At this point, initialization is complete but registry is still null, which is unexpected
   if (registry === null) {
     throw new Error('PDF registry failed to initialize properly');
@@ -32,11 +34,11 @@ export function useCapability<T extends IPlugin<any>>(pluginId: string): ReturnT
 
   const plugin = registry.getPlugin<T>(pluginId);
 
-  if(!plugin) {
+  if (!plugin) {
     throw new Error(`Plugin ${pluginId} not found`);
   }
 
-  if(!plugin.provides) {
+  if (!plugin.provides) {
     throw new Error(`Plugin ${pluginId} does not provide a capability`);
   }
 

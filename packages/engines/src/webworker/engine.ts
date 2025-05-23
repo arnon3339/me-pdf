@@ -101,10 +101,7 @@ export class WebWorkerEngine implements PdfEngine {
   ) {
     this.worker.addEventListener('message', this.handle);
 
-    this.readyTask = new WorkerTask<boolean>(
-      this.worker,
-      WebWorkerEngine.readyTaskId,
-    );
+    this.readyTask = new WorkerTask<boolean>(this.worker, WebWorkerEngine.readyTaskId);
     this.tasks.set(WebWorkerEngine.readyTaskId, this.readyTask);
   }
 
@@ -150,12 +147,7 @@ export class WebWorkerEngine implements PdfEngine {
           break;
       }
     } catch (e) {
-      this.logger.error(
-        LOG_SOURCE,
-        LOG_CATEGORY,
-        'webworker met error when handling message: ',
-        e,
-      );
+      this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'webworker met error when handling message: ', e);
     }
   };
 
@@ -536,14 +528,7 @@ export class WebWorkerEngine implements PdfEngine {
     page: PdfPageObject,
     annotation: PdfAnnotationObject,
   ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'createPageAnnotations',
-      doc,
-      page,
-      annotation,
-    );
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'createPageAnnotations', doc, page, annotation);
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
@@ -606,14 +591,7 @@ export class WebWorkerEngine implements PdfEngine {
     page: PdfPageObject,
     annotation: PdfAnnotationObject,
   ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'removePageAnnotations',
-      doc,
-      page,
-      annotation,
-    );
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'removePageAnnotations', doc, page, annotation);
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
@@ -710,14 +688,7 @@ export class WebWorkerEngine implements PdfEngine {
    * @public
    */
   searchAllPages(doc: PdfDocumentObject, keyword: string, flags: MatchFlag[] = []) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'searchAllPages 123',
-      doc,
-      keyword,
-      flags
-    );
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'searchAllPages 123', doc, keyword, flags);
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<SearchAllPagesResult>(this.worker, requestId);
 
@@ -785,17 +756,8 @@ export class WebWorkerEngine implements PdfEngine {
    *
    * @public
    */
-  readAttachmentContent(
-    doc: PdfDocumentObject,
-    attachment: PdfAttachmentObject,
-  ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'readAttachmentContent',
-      doc,
-      attachment,
-    );
+  readAttachmentContent(doc: PdfDocumentObject, attachment: PdfAttachmentObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'readAttachmentContent', doc, attachment);
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<ArrayBuffer>(this.worker, requestId);
 
@@ -823,14 +785,7 @@ export class WebWorkerEngine implements PdfEngine {
     annotation: PdfWidgetAnnoObject,
     value: FormFieldValue,
   ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'setFormFieldValue',
-      doc,
-      annotation,
-      value,
-    );
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setFormFieldValue', doc, annotation, value);
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
@@ -852,11 +807,7 @@ export class WebWorkerEngine implements PdfEngine {
    *
    * @public
    */
-  flattenPage(
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    flag: PdfPageFlattenFlag,
-  ) {
+  flattenPage(doc: PdfDocumentObject, page: PdfPageObject, flag: PdfPageFlattenFlag) {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'flattenPage', doc, page, flag);
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfPageFlattenResult>(this.worker, requestId);
@@ -995,7 +946,7 @@ export class WebWorkerEngine implements PdfEngine {
    *
    * @public
    */
-  mergePages(mergeConfigs: Array<{ docId: string, pageIndices: number[] }>) {
+  mergePages(mergeConfigs: Array<{ docId: string; pageIndices: number[] }>) {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'mergePages', mergeConfigs);
     const requestId = this.generateRequestId(mergeConfigs.map((config) => config.docId).join('.'));
     const task = new WorkerTask<PdfFile>(this.worker, requestId);
@@ -1045,11 +996,7 @@ export class WebWorkerEngine implements PdfEngine {
    *
    * @internal
    */
-  proxy<R>(
-    task: WorkerTask<R>,
-    request: ExecuteRequest,
-    transferables: any[] = [],
-  ) {
+  proxy<R>(task: WorkerTask<R>, request: ExecuteRequest, transferables: any[] = []) {
     this.logger.debug(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1058,46 +1005,22 @@ export class WebWorkerEngine implements PdfEngine {
       request,
       transferables,
     );
-    this.logger.perf(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      `${request.data.name}`,
-      'Begin',
-      request.id,
-    );
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `${request.data.name}`, 'Begin', request.id);
     this.readyTask.wait(
       () => {
         this.worker.postMessage(request, transferables);
         task.wait(
           () => {
-            this.logger.perf(
-              LOG_SOURCE,
-              LOG_CATEGORY,
-              `${request.data.name}`,
-              'End',
-              request.id,
-            );
+            this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `${request.data.name}`, 'End', request.id);
           },
           () => {
-            this.logger.perf(
-              LOG_SOURCE,
-              LOG_CATEGORY,
-              `${request.data.name}`,
-              'End',
-              request.id,
-            );
+            this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `${request.data.name}`, 'End', request.id);
           },
         );
         this.tasks.set(request.id, task);
       },
       () => {
-        this.logger.perf(
-          LOG_SOURCE,
-          LOG_CATEGORY,
-          `${request.data.name}`,
-          'End',
-          request.id,
-        );
+        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `${request.data.name}`, 'End', request.id);
         task.reject({
           code: PdfErrorCode.Initialization,
           message: 'worker initialization failed',

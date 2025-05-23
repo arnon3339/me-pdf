@@ -1,7 +1,7 @@
-import { BasePluginConfig } from "@embedpdf/core";
-import { PdfDocumentObject } from "@embedpdf/models";
-import { PDFLoadingStrategy, PDFLoadingOptions } from "./loader/strategies/loading-strategy";
-import { StrategyResolver } from "./loader";
+import { BasePluginConfig } from '@embedpdf/core';
+import { PdfDocumentObject } from '@embedpdf/models';
+import { PDFLoadingStrategy, PDFLoadingOptions } from './loader/strategies/loading-strategy';
+import { StrategyResolver } from './loader';
 
 export interface LoaderPluginConfig extends BasePluginConfig {
   defaultStrategies?: { [key: string]: PDFLoadingStrategy };

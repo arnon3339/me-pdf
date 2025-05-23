@@ -5,13 +5,13 @@ import {
   TabGroup,
   TabList,
   TabPanel,
-  TabPanels
+  TabPanels,
 } from '@headlessui/react'
 import type {
   TabProps as HeadlessTabProps,
   TabGroupProps,
   TabListProps,
-  TabPanelProps
+  TabPanelProps,
 } from '@headlessui/react'
 import cn from 'clsx'
 import type { FC, ReactElement, ReactNode } from 'react'
@@ -45,7 +45,7 @@ export const Tabs: FC<
   selectedIndex: _selectedIndex,
   onChange,
   className,
-  tabClassName
+  tabClassName,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(defaultIndex)
   const hash = useHash()
@@ -60,7 +60,7 @@ export const Tabs: FC<
   useEffect(() => {
     if (!hash) return
     const tabPanel = tabPanelsRef.current.querySelector(
-      `[role=tabpanel]:has([id="${hash}"])`
+      `[role=tabpanel]:has([id="${hash}"])`,
     )
     if (!tabPanel) return
 
@@ -106,7 +106,7 @@ export const Tabs: FC<
       // the storage event only get picked up (by the listener) if the localStorage was changed in
       // another browser's tab/window (of the same app), but not within the context of the current tab.
       window.dispatchEvent(
-        new StorageEvent('storage', { key: storageKey, newValue })
+        new StorageEvent('storage', { key: storageKey, newValue }),
       )
       return
     }
@@ -122,12 +122,12 @@ export const Tabs: FC<
       as={Fragment}
     >
       <TabList
-        className={args =>
+        className={(args) =>
           cn(
-            'nextra-scrollbar overflow-x-auto overscroll-x-contain overflow-y-hidden',
+            'nextra-scrollbar overflow-x-auto overflow-y-hidden overscroll-x-contain',
             'mt-4 flex w-full gap-2 border-b border-gray-200 pb-px',
             'focus-visible:nextra-focus',
-            typeof className === 'function' ? className(args) : className
+            typeof className === 'function' ? className(args) : className,
           )
         }
       >
@@ -135,11 +135,11 @@ export const Tabs: FC<
           <HeadlessTab
             key={index}
             disabled={isTabObjectItem(item) && item.disabled}
-            className={args => {
+            className={(args) => {
               const { selected, disabled, hover, focus } = args
               return cn(
                 focus && 'nextra-focus ring-inset',
-                'whitespace-nowrap cursor-pointer',
+                'cursor-pointer whitespace-nowrap',
                 'rounded-t p-2 font-medium leading-5 transition-colors',
                 '-mb-0.5 select-none border-b-2',
                 selected
@@ -150,13 +150,13 @@ export const Tabs: FC<
                 selected
                   ? 'text-primary-600'
                   : disabled
-                    ? 'text-gray-400 pointer-events-none'
+                    ? 'pointer-events-none text-gray-400'
                     : hover
                       ? 'text-black'
                       : 'text-gray-600',
                 typeof tabClassName === 'function'
                   ? tabClassName(args)
-                  : tabClassName
+                  : tabClassName,
               )
             }}
           >
@@ -164,9 +164,7 @@ export const Tabs: FC<
           </HeadlessTab>
         ))}
       </TabList>
-      <TabPanels ref={tabPanelsRef}>
-        {children}
-      </TabPanels>
+      <TabPanels ref={tabPanelsRef}>{children}</TabPanels>
     </TabGroup>
   )
 }
@@ -182,11 +180,11 @@ export const Tab: FC<TabPanelProps> = ({
     <TabPanel
       {...props}
       unmount={unmount}
-      className={args =>
+      className={(args) =>
         cn(
-          'rounded mt-6',
+          'mt-6 rounded',
           args.focus && 'nextra-focus',
-          typeof className === 'function' ? className(args) : className
+          typeof className === 'function' ? className(args) : className,
         )
       }
     >

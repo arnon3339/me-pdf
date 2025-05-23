@@ -49,9 +49,7 @@ import {
  *
  * @public
  */
-export function createMockPdfEngine(
-  partialEngine?: Partial<PdfEngine>,
-): PdfEngine {
+export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngine {
   const engine: PdfEngine = {
     openDocumentUrl: jest.fn((file: PdfFileUrl, options?: PdfUrlOptions) => {
       return PdfTaskHelper.create();
@@ -216,16 +214,11 @@ export function createMockPdfEngine(
       const ab = array.buffer;
       const realBuffer = ab instanceof ArrayBuffer ? ab : new Uint8Array(array).buffer;
       const blob = new Blob([realBuffer], { type: 'image/png' });
-  
+
       return PdfTaskHelper.resolve(blob);
     }),
     getPageAnnotations: jest.fn(
-      (
-        doc: PdfDocumentObject,
-        page: PdfPageObject,
-        scaleFactor: number,
-        rotation: Rotation,
-      ) => {
+      (doc: PdfDocumentObject, page: PdfPageObject, scaleFactor: number, rotation: Rotation) => {
         const link: PdfLinkAnnoObject = {
           status: PdfAnnotationObjectStatus.Committed,
           pageIndex: page.index,
@@ -270,12 +263,7 @@ export function createMockPdfEngine(
       return PdfTaskHelper.resolve(true);
     }),
     getPageTextRects: jest.fn(
-      (
-        doc: PdfDocumentObject,
-        page: PdfPageObject,
-        scaleFactor: number,
-        rotation: Rotation,
-      ) => {
+      (doc: PdfDocumentObject, page: PdfPageObject, scaleFactor: number, rotation: Rotation) => {
         const textRects: PdfTextRectObject[] = [
           {
             content: 'pdf text',
@@ -304,14 +292,8 @@ export function createMockPdfEngine(
     saveAsCopy: (pdf: PdfDocumentObject) => {
       return PdfTaskHelper.resolve(new ArrayBuffer(0));
     },
-    flattenPage: (
-      pdf: PdfDocumentObject,
-      page: PdfPageObject,
-      flag: PdfPageFlattenFlag,
-    ) => {
-      return PdfTaskHelper.resolve<PdfPageFlattenResult>(
-        PdfPageFlattenResult.Success,
-      );
+    flattenPage: (pdf: PdfDocumentObject, page: PdfPageObject, flag: PdfPageFlattenFlag) => {
+      return PdfTaskHelper.resolve<PdfPageFlattenResult>(PdfPageFlattenResult.Success);
     },
     extractPages: (pdf: PdfDocumentObject, pageIndexes: number[]) => {
       return PdfTaskHelper.resolve(new ArrayBuffer(0));
@@ -324,7 +306,7 @@ export function createMockPdfEngine(
     },
     getPageGeometry: (doc: PdfDocumentObject, page: PdfPageObject) => {
       return PdfTaskHelper.resolve({
-        runs: []
+        runs: [],
       } as PdfPageGeometry);
     },
     merge: (files: PdfFile[]) => {
@@ -333,7 +315,7 @@ export function createMockPdfEngine(
         content: new ArrayBuffer(0),
       });
     },
-    mergePages: (mergeConfigs: Array<{ docId: string, pageIndices: number[] }>) => {
+    mergePages: (mergeConfigs: Array<{ docId: string; pageIndices: number[] }>) => {
       return PdfTaskHelper.resolve({
         id: 'id',
         content: new ArrayBuffer(0),
@@ -345,16 +327,18 @@ export function createMockPdfEngine(
         pageIndex: 0,
         charIndex: 0,
         charCount: keyword.length,
-        rects: [{
-          origin: {
-            x: 0,
-            y: 0,
+        rects: [
+          {
+            origin: {
+              x: 0,
+              y: 0,
+            },
+            size: {
+              width: 50,
+              height: 20,
+            },
           },
-          size: {
-            width: 50,
-            height: 20,
-          },
-        }],
+        ],
         context: {
           before: '',
           match: '',
@@ -363,20 +347,17 @@ export function createMockPdfEngine(
           truncatedRight: false,
         },
       };
-      
+
       // Return a mock SearchAllPagesResult with a single result
       return PdfTaskHelper.resolve<SearchAllPagesResult>({
         results: [mockResult],
-        total: 1
+        total: 1,
       });
     },
     getAttachments: (doc: PdfDocumentObject) => {
       return PdfTaskHelper.resolve([] as PdfAttachmentObject[]);
     },
-    readAttachmentContent: (
-      doc: PdfDocumentObject,
-      attachment: PdfAttachmentObject,
-    ) => {
+    readAttachmentContent: (doc: PdfDocumentObject, attachment: PdfAttachmentObject) => {
       return PdfTaskHelper.resolve(new ArrayBuffer(0));
     },
     setFormFieldValue: (
@@ -399,9 +380,7 @@ export function createMockPdfEngine(
  *
  * @public
  */
-export function createMockPdfDocument(
-  doc?: Partial<PdfDocumentObject>,
-): PdfDocumentObject {
+export function createMockPdfDocument(doc?: Partial<PdfDocumentObject>): PdfDocumentObject {
   const pageCount = 10;
   const pageWidth = 100;
   const pageHeight = 200;

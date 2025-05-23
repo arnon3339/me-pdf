@@ -18,12 +18,12 @@ export const Button: FC<ButtonProps> = ({
 }) => {
   return (
     <HeadlessButton
-      className={args =>
+      className={(args) =>
         cn(
-          'transition cursor-pointer',
+          'cursor-pointer transition',
           args.focus && 'nextra-focus',
           variant === 'outline' && [classes.border, 'rounded-md p-1.5'],
-          typeof className === 'function' ? className(args) : className
+          typeof className === 'function' ? className(args) : className,
         )
       }
       {...props}

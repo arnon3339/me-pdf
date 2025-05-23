@@ -2,4 +2,4 @@
 
 import { PdfMergeTool } from './pdf-merge-tool'
 
-export { PdfMergeTool } 
+export { PdfMergeTool }

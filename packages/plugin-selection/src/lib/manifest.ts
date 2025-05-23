@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { SelectionPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { SelectionPluginConfig } from './types';
 
 export const SELECTION_PLUGIN_ID = 'selection';
 
@@ -11,6 +11,6 @@ export const manifest: PluginManifest<SelectionPluginConfig> = {
   requires: [],
   optional: [],
   defaultConfig: {
-    enabled: true
-  }
-}; 
+    enabled: true,
+  },
+};

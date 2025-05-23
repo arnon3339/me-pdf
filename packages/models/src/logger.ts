@@ -112,13 +112,7 @@ export class ConsoleLogger implements Logger {
   }
 
   /** {@inheritDoc Logger.perf} */
-  perf(
-    source: string,
-    category: string,
-    event: string,
-    phase: 'Begin' | 'End',
-    ...args: any
-  ) {
+  perf(source: string, category: string, event: string, phase: 'Begin' | 'End', ...args: any) {
     console.info(`${source}.${category}.${event}.${phase}`, ...args);
   }
 }
@@ -180,13 +174,7 @@ export class LevelLogger implements Logger {
   }
 
   /** {@inheritDoc Logger.perf} */
-  perf(
-    source: string,
-    category: string,
-    event: string,
-    phase: 'Begin' | 'End',
-    ...args: any
-  ) {
+  perf(source: string, category: string, event: string, phase: 'Begin' | 'End', ...args: any) {
     this.logger.perf(source, category, event, phase, ...args);
   }
 }
@@ -225,20 +213,14 @@ export class PerfLogger implements Logger {
   ) {
     switch (phase) {
       case 'Begin':
-        window.performance.mark(
-          `${source}.${category}.${event}.${phase}.${identifier}`,
-          {
-            detail: args,
-          },
-        );
+        window.performance.mark(`${source}.${category}.${event}.${phase}.${identifier}`, {
+          detail: args,
+        });
         break;
       case 'End':
-        window.performance.mark(
-          `${source}.${category}.${event}.${phase}.${identifier}`,
-          {
-            detail: args,
-          },
-        );
+        window.performance.mark(`${source}.${category}.${event}.${phase}.${identifier}`, {
+          detail: args,
+        });
         window.performance.measure(
           `${source}.${category}.${event}.Measure.${identifier}`,
           `${source}.${category}.${event}.Begin.${identifier}`,
@@ -289,13 +271,7 @@ export class AllLogger implements Logger {
   }
 
   /** {@inheritDoc Logger.perf} */
-  perf(
-    source: string,
-    category: string,
-    event: string,
-    phase: 'Begin' | 'End',
-    ...args: any
-  ) {
+  perf(source: string, category: string, event: string, phase: 'Begin' | 'End', ...args: any) {
     for (const logger of this.loggers) {
       logger.perf(source, category, event, phase, ...args);
     }

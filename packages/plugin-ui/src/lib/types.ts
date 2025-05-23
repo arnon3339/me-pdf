@@ -1,9 +1,9 @@
-import { CoreState } from "@embedpdf/core";
-import { UI_PLUGIN_ID } from "./manifest";
-import { UIComponent } from "./ui-component";
-import { MenuRegistry, MenuManagerCapabilities } from "./menu/types";
-import { IconRegistry, IconCapabilities } from "./icons/types";
-import { SetHeaderVisiblePayload, TogglePanelPayload } from "./actions";
+import { CoreState } from '@embedpdf/core';
+import { UI_PLUGIN_ID } from './manifest';
+import { UIComponent } from './ui-component';
+import { MenuRegistry, MenuManagerCapabilities } from './menu/types';
+import { IconRegistry, IconCapabilities } from './icons/types';
+import { SetHeaderVisiblePayload, TogglePanelPayload } from './actions';
 
 export interface UIPluginConfig {
   enabled: boolean;
@@ -15,34 +15,34 @@ export interface UIPluginConfig {
 export interface UIPluginState {
   panel: {
     [id: string]: PanelState;
-  },
+  };
   header: {
     [id: string]: HeaderState;
-  },
+  };
   groupedItems: {
     [id: string]: {};
-  },
+  };
   divider: {
     [id: string]: {};
-  },
+  };
   iconButton: {
     [id: string]: {};
-  },
+  };
   tabButton: {
     [id: string]: {};
-  },
+  };
   selectButton: {
     [id: string]: {};
-  },
+  };
   custom: {
     [id: string]: any;
-  },
+  };
   floating: {
     [id: string]: FloatingState;
-  },
+  };
   commandMenu: {
     [id: string]: CommandMenuState;
-  }
+  };
 }
 
 export type NavbarPlacement = 'top' | 'bottom' | 'left' | 'right';
@@ -52,22 +52,36 @@ export interface childrenFunctionOptions {
   filter?: (childId: string) => boolean;
 }
 
-export type UICapability = IconCapabilities & MenuManagerCapabilities & {
-  registerComponentRenderer: (type: string, renderer: (props: any, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any) => void;
-  getComponent: <T extends BaseUIComponent<any, any, any>>(id: string) => UIComponent<T> | undefined;
-  getCommandMenu: () => UIComponent<CommandMenuComponent> | undefined;
-  hideCommandMenu: () => void;
-  getHeadersByPlacement: (placement: 'top' | 'bottom' | 'left' | 'right') => UIComponent<HeaderComponent<any>>[];
-  getPanelsByLocation: (location: 'left' | 'right') => UIComponent<PanelComponent<any>>[];
-  getFloatingComponents: (viewportPosition?: 'inside' | 'outside') => UIComponent<FloatingComponent>[];
-  addSlot: (parentId: string, slotId: string, priority?: number) => void;
-  registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
-  togglePanel: (payload: TogglePanelPayload) => void;
-  setHeaderVisible: (payload: SetHeaderVisiblePayload) => void;
-}
+export type UICapability = IconCapabilities &
+  MenuManagerCapabilities & {
+    registerComponentRenderer: (
+      type: string,
+      renderer: (
+        props: any,
+        children: (options?: childrenFunctionOptions) => any[],
+        context?: Record<string, any>,
+      ) => any,
+    ) => void;
+    getComponent: <T extends BaseUIComponent<any, any, any>>(
+      id: string,
+    ) => UIComponent<T> | undefined;
+    getCommandMenu: () => UIComponent<CommandMenuComponent> | undefined;
+    hideCommandMenu: () => void;
+    getHeadersByPlacement: (
+      placement: 'top' | 'bottom' | 'left' | 'right',
+    ) => UIComponent<HeaderComponent<any>>[];
+    getPanelsByLocation: (location: 'left' | 'right') => UIComponent<PanelComponent<any>>[];
+    getFloatingComponents: (
+      viewportPosition?: 'inside' | 'outside',
+    ) => UIComponent<FloatingComponent>[];
+    addSlot: (parentId: string, slotId: string, priority?: number) => void;
+    registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
+    togglePanel: (payload: TogglePanelPayload) => void;
+    setHeaderVisible: (payload: SetHeaderVisiblePayload) => void;
+  };
 
 export interface BaseUIComponent<TProps, TInitial = undefined, TStore = any> {
-  id: string;   // e.g., "highlightToolButton",
+  id: string; // e.g., "highlightToolButton",
   type: string; // e.g., "toolButton",
   render?: string;
   /**
@@ -89,10 +103,7 @@ export interface BaseUIComponent<TProps, TInitial = undefined, TStore = any> {
    * A function that, on store changes, returns new or changed props to update
    * the component with (Redux-like).
    */
-  mapStateToProps?: (
-    storeState: TStore,
-    ownProps: TProps
-  ) => TProps;
+  mapStateToProps?: (storeState: TStore, ownProps: TProps) => TProps;
 }
 
 export interface Slot {
@@ -113,7 +124,8 @@ export interface PanelProps {
   [name: string]: any;
 }
 
-export interface PanelComponent<TStore = any> extends BaseUIComponent<PanelProps, PanelState, TStore> {
+export interface PanelComponent<TStore = any>
+  extends BaseUIComponent<PanelProps, PanelState, TStore> {
   type: 'panel';
   slots: Slot[];
 }
@@ -130,9 +142,10 @@ export interface HeaderProps {
   visibleChild?: string | null;
 }
 
-export interface HeaderComponent<TStore = any> extends BaseUIComponent<HeaderProps, HeaderState, TStore> {
+export interface HeaderComponent<TStore = any>
+  extends BaseUIComponent<HeaderProps, HeaderState, TStore> {
   type: 'header';
-  slots: Slot[]; 
+  slots: Slot[];
 }
 
 export interface GroupedItemsProps {
@@ -141,12 +154,14 @@ export interface GroupedItemsProps {
   gap?: number;
 }
 
-export interface GroupedItemsComponent<TStore = any> extends BaseUIComponent<GroupedItemsProps, undefined, TStore> {
+export interface GroupedItemsComponent<TStore = any>
+  extends BaseUIComponent<GroupedItemsProps, undefined, TStore> {
   type: 'groupedItems';
   slots: Slot[];
 }
 
-export interface DividerComponent<TStore = any> extends BaseUIComponent<undefined, undefined, TStore> {
+export interface DividerComponent<TStore = any>
+  extends BaseUIComponent<undefined, undefined, TStore> {
   type: 'divider';
 }
 
@@ -158,7 +173,8 @@ export interface IconButtonProps {
   img?: string;
 }
 
-export interface IconButtonComponent<TStore = any> extends BaseUIComponent<IconButtonProps, undefined, TStore> {
+export interface IconButtonComponent<TStore = any>
+  extends BaseUIComponent<IconButtonProps, undefined, TStore> {
   type: 'iconButton';
 }
 
@@ -169,7 +185,8 @@ export interface TabButtonProps {
   label: string;
 }
 
-export interface TabButtonComponent<TStore = any> extends BaseUIComponent<TabButtonProps, undefined, TStore> {
+export interface TabButtonComponent<TStore = any>
+  extends BaseUIComponent<TabButtonProps, undefined, TStore> {
   type: 'tabButton';
 }
 
@@ -180,7 +197,8 @@ export interface SelectButtonProps {
   activeCommandId: string;
 }
 
-export interface SelectButtonComponent<TStore = any> extends BaseUIComponent<SelectButtonProps, undefined, TStore> {
+export interface SelectButtonComponent<TStore = any>
+  extends BaseUIComponent<SelectButtonProps, undefined, TStore> {
   type: 'selectButton';
 }
 
@@ -198,7 +216,8 @@ export interface FloatingComponentProps {
   [name: string]: any;
 }
 
-export interface FloatingComponent<TStore = any> extends BaseUIComponent<FloatingComponentProps, FloatingState, TStore> {
+export interface FloatingComponent<TStore = any>
+  extends BaseUIComponent<FloatingComponentProps, FloatingState, TStore> {
   type: 'floating';
   slots: Slot[];
 }
@@ -219,7 +238,8 @@ export interface CommandMenuProps {
   flatten?: boolean;
 }
 
-export interface CommandMenuComponent<TStore = any> extends BaseUIComponent<CommandMenuProps, CommandMenuState, TStore> {
+export interface CommandMenuComponent<TStore = any>
+  extends BaseUIComponent<CommandMenuProps, CommandMenuState, TStore> {
   type: 'commandMenu';
 }
 
@@ -229,7 +249,11 @@ export type WithComponentId<TProps> = TProps & {
 };
 
 // Add this type for render functions that need component ID in props
-export type ComponentRenderFunction<TProps> = (props: WithComponentId<TProps>, children: (options?: childrenFunctionOptions) => any[], context?: Record<string, any>) => any;
+export type ComponentRenderFunction<TProps> = (
+  props: WithComponentId<TProps>,
+  children: (options?: childrenFunctionOptions) => any[],
+  context?: Record<string, any>,
+) => any;
 
 export interface GlobalStoreState<TPlugins extends Record<string, any> = {}> {
   core: CoreState;
@@ -238,12 +262,12 @@ export interface GlobalStoreState<TPlugins extends Record<string, any> = {}> {
   } & TPlugins;
 }
 
-export type UIComponentType<TStore = any> = 
-  | GroupedItemsComponent<TStore> 
-  | DividerComponent<TStore> 
-  | IconButtonComponent<TStore> 
+export type UIComponentType<TStore = any> =
+  | GroupedItemsComponent<TStore>
+  | DividerComponent<TStore>
+  | IconButtonComponent<TStore>
   | TabButtonComponent<TStore>
-  | HeaderComponent<TStore> 
+  | HeaderComponent<TStore>
   | PanelComponent<TStore>
   | CustomComponent<TStore>
   | FloatingComponent<TStore>

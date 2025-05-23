@@ -1,22 +1,49 @@
-import { BasePlugin, PluginRegistry, createEmitter, createBehaviorEmitter } from "@embedpdf/core";
-import { ViewportPluginConfig, ViewportState, ViewportCapability, ViewportMetrics, ViewportScrollMetrics, ViewportInputMetrics, ScrollToPayload } from "./types";
-import { ViewportAction, setViewportMetrics, setViewportScrollMetrics, setViewportGap, setScrollActivity } from "./actions";
+import { BasePlugin, PluginRegistry, createEmitter, createBehaviorEmitter } from '@embedpdf/core';
+import {
+  ViewportPluginConfig,
+  ViewportState,
+  ViewportCapability,
+  ViewportMetrics,
+  ViewportScrollMetrics,
+  ViewportInputMetrics,
+  ScrollToPayload,
+} from './types';
+import {
+  ViewportAction,
+  setViewportMetrics,
+  setViewportScrollMetrics,
+  setViewportGap,
+  setScrollActivity,
+} from './actions';
 
-export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCapability, ViewportState, ViewportAction> {
+export class ViewportPlugin extends BasePlugin<
+  ViewportPluginConfig,
+  ViewportCapability,
+  ViewportState,
+  ViewportAction
+> {
   static readonly id = 'viewport' as const;
 
   private readonly viewportMetrics$ = createBehaviorEmitter<ViewportMetrics>();
   private readonly scrollMetrics$ = createBehaviorEmitter<ViewportScrollMetrics>();
-  private readonly scrollReq$ = createEmitter<{ x:number; y:number; behavior?:ScrollBehavior }>();
+  private readonly scrollReq$ = createEmitter<{
+    x: number;
+    y: number;
+    behavior?: ScrollBehavior;
+  }>();
   private readonly scrollActivity$ = createBehaviorEmitter<boolean>();
 
   private scrollEndTimer?: number;
   private readonly scrollEndDelay: number;
 
-  constructor(public readonly id: string, registry: PluginRegistry, config: ViewportPluginConfig) {
+  constructor(
+    public readonly id: string,
+    registry: PluginRegistry,
+    config: ViewportPluginConfig,
+  ) {
     super(id, registry);
 
-    if(config.viewportGap) {
+    if (config.viewportGap) {
       this.dispatch(setViewportGap(config.viewportGap));
     }
 
@@ -34,9 +61,9 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
       },
       setViewportScrollMetrics: this.setViewportScrollMetrics.bind(this),
       scrollTo: (pos: ScrollToPayload) => this.scrollTo(pos),
-      onScrollRequest : this.scrollReq$.on,
+      onScrollRequest: this.scrollReq$.on,
       isScrolling: () => this.state.isScrolling,
-      onScrollActivity: this.scrollActivity$.on
+      onScrollActivity: this.scrollActivity$.on,
     };
   }
 
@@ -49,8 +76,8 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
   }
 
   private setViewportScrollMetrics(scrollMetrics: ViewportScrollMetrics) {
-    if(
-      scrollMetrics.scrollTop !== this.state.viewportMetrics.scrollTop || 
+    if (
+      scrollMetrics.scrollTop !== this.state.viewportMetrics.scrollTop ||
       scrollMetrics.scrollLeft !== this.state.viewportMetrics.scrollLeft
     ) {
       this.dispatch(setViewportScrollMetrics(scrollMetrics));
@@ -60,23 +87,23 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
 
   private scrollTo(pos: ScrollToPayload) {
     const { x, y, center, behavior = 'auto' } = pos;
-    
+
     if (center) {
       const metrics = this.state.viewportMetrics;
       // Calculate the centered position by adding half the viewport dimensions
-      const centeredX = x - (metrics.clientWidth / 2);
-      const centeredY = y - (metrics.clientHeight / 2);
-      
+      const centeredX = x - metrics.clientWidth / 2;
+      const centeredY = y - metrics.clientHeight / 2;
+
       this.scrollReq$.emit({
         x: centeredX,
         y: centeredY,
-        behavior
+        behavior,
       });
     } else {
       this.scrollReq$.emit({
         x,
         y,
-        behavior
+        behavior,
       });
     }
   }
@@ -87,14 +114,14 @@ export class ViewportPlugin extends BasePlugin<ViewportPluginConfig, ViewportCap
       this.viewportMetrics$.emit(newState.viewportMetrics);
       this.scrollMetrics$.emit({
         scrollTop: newState.viewportMetrics.scrollTop,
-        scrollLeft: newState.viewportMetrics.scrollLeft
+        scrollLeft: newState.viewportMetrics.scrollLeft,
       });
       if (prevState.isScrolling !== newState.isScrolling) {
         this.scrollActivity$.emit(newState.isScrolling);
       }
     }
   }
-  
+
   async initialize(_config: ViewportPluginConfig) {
     // No initialization needed
   }

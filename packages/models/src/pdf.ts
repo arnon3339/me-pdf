@@ -18,7 +18,7 @@ export interface PdfPageObject {
   size: Size;
 }
 
-/** 
+/**
  * Representation of pdf page with rotated size
  *
  * @public
@@ -451,7 +451,7 @@ export enum AppearanceMode {
  * @public
  */
 export enum PdfAnnotationState {
-  /**   
+  /**
    * Annotation is active
    */
   Marked = 'Marked',
@@ -991,9 +991,7 @@ export interface PdfFormObject {
  *
  * @public
  */
-export type PdfStampAnnoObjectContents = Array<
-  PdfPathObject | PdfImageObject | PdfFormObject
->;
+export type PdfStampAnnoObjectContents = Array<PdfPathObject | PdfImageObject | PdfFormObject>;
 
 /**
  * Pdf stamp annotation
@@ -1118,9 +1116,7 @@ export interface PdfUnsupportedAnnoObject extends PdfAnnotationObjectBase {
  *
  * @public
  */
-export type PdfAnnotationObject =
-  | PdfSupportedAnnoObject
-  | PdfUnsupportedAnnoObject;
+export type PdfAnnotationObject = PdfSupportedAnnoObject | PdfUnsupportedAnnoObject;
 
 /**
  * Pdf attachment
@@ -1202,10 +1198,7 @@ export interface SearchTarget {
  *
  * @public
  */
-export function compareSearchTarget(
-  targetA: SearchTarget,
-  targetB: SearchTarget,
-) {
+export function compareSearchTarget(targetA: SearchTarget, targetB: SearchTarget) {
   const flagA = unionFlags(targetA.flags);
   const flagB = unionFlags(targetB.flags);
 
@@ -1217,11 +1210,11 @@ export interface TextContext {
   /** Complete words that come *before* the hit (no ellipsis)            */
   before: string;
   /** Exactly the text that matched (case-preserved)                      */
-  match:  string;
+  match: string;
   /** Complete words that come *after* the hit (no ellipsis)             */
-  after:  string;
+  after: string;
   /** `true` ⇢ there were more words on the left that we cut off         */
-  truncatedLeft:  boolean;
+  truncatedLeft: boolean;
   /** `true` ⇢ there were more words on the right that we cut off        */
   truncatedRight: boolean;
 }
@@ -1262,7 +1255,7 @@ export interface SearchAllPagesResult {
    * Array of all search results across all pages
    */
   results: SearchResult[];
-  
+
   /**
    * Total number of results found
    */
@@ -1298,7 +1291,7 @@ export interface PdfGlyphObject {
  *
  * @public
  */
-export interface PdfGlyphSlim { 
+export interface PdfGlyphSlim {
   /**
    * X coordinate of the glyph
    */
@@ -1346,7 +1339,7 @@ export interface PdfRun {
  *
  * @public
  */
-export interface PdfPageGeometry { 
+export interface PdfPageGeometry {
   /**
    * Runs of the page
    */
@@ -1581,10 +1574,7 @@ export interface PdfEngine {
    * @param options - Additional options including mode (auto, range-request, full-fetch) and password
    * @returns Task that resolves with the PdfDocumentObject or an error
    */
-  openDocumentUrl: (
-    file: PdfFileUrl,
-    options?: PdfUrlOptions
-  ) => PdfTask<PdfDocumentObject>;
+  openDocumentUrl: (file: PdfFileUrl, options?: PdfUrlOptions) => PdfTask<PdfDocumentObject>;
   /**
    * Open pdf document from buffer
    * @param file - pdf file
@@ -1758,9 +1748,9 @@ export interface PdfEngine {
    * @returns Task contains all search results throughout the document
    */
   searchAllPages: (
-    doc: PdfDocumentObject, 
-    keyword: string, 
-    flags?: MatchFlag[]
+    doc: PdfDocumentObject,
+    keyword: string,
+    flags?: MatchFlag[],
   ) => PdfTask<SearchAllPagesResult>;
   /**
    * Get all attachments in this file
@@ -1808,20 +1798,14 @@ export interface PdfEngine {
    * @param pageIndexes - indexes of pdf pages
    * @returns task contains the new pdf file content
    */
-  extractPages: (
-    doc: PdfDocumentObject,
-    pageIndexes: number[],
-  ) => PdfTask<ArrayBuffer>;
+  extractPages: (doc: PdfDocumentObject, pageIndexes: number[]) => PdfTask<ArrayBuffer>;
   /**
    * Extract text on specified pdf pages
    * @param doc - pdf document
    * @param pageIndexes - indexes of pdf pages
    * @returns task contains the text
    */
-  extractText: (
-    doc: PdfDocumentObject,
-    pageIndexes: number[],
-  ) => PdfTask<string>;
+  extractText: (doc: PdfDocumentObject, pageIndexes: number[]) => PdfTask<string>;
   /**
    * Get all glyphs in the specified pdf page
    * @param doc - pdf document
@@ -1848,7 +1832,7 @@ export interface PdfEngine {
    * @returns A PdfTask that resolves with the merged PDF file
    * @public
    */
-  mergePages: (mergeConfigs: Array<{ docId: string, pageIndices: number[] }>) => PdfTask<PdfFile>;
+  mergePages: (mergeConfigs: Array<{ docId: string; pageIndices: number[] }>) => PdfTask<PdfFile>;
   /**
    * Save a copy of pdf document
    * @param doc - pdf document

@@ -6,8 +6,8 @@ import commonjs from '@rollup/plugin-commonjs';
 import babel from '@rollup/plugin-babel';
 import typescript from '@rollup/plugin-typescript';
 import postcss from 'rollup-plugin-postcss';
-import autoprefixer from 'autoprefixer'
-import tailwindcss from '@tailwindcss/postcss'
+import autoprefixer from 'autoprefixer';
+import tailwindcss from '@tailwindcss/postcss';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import url from '@rollup/plugin-url';
@@ -25,38 +25,38 @@ export default [
     output: {
       dir: 'dist',
       format: 'esm',
-      sourcemap: false
+      sourcemap: false,
     },
     plugins: [
       copy({
         targets: [
-          { 
-            src: 'src/index.html', 
-            dest: 'dist'
+          {
+            src: 'src/index.html',
+            dest: 'dist',
           },
           {
             src: 'node_modules/@embedpdf/pdfium/dist/*.wasm',
-            dest: 'dist'
+            dest: 'dist',
           },
           {
             src: 'demo-pdf/*.pdf',
-            dest: 'dist'
-          }
-        ]
+            dest: 'dist',
+          },
+        ],
       }),
       url({
         include: ['**/*.svg'],
-        limit: 8192
+        limit: 8192,
       }),
       resolve({
-        browser: true, 
+        browser: true,
         dedupe: [
-          'react', 
-          'react-dom', 
-          'react/jsx-runtime', 
-          'preact/compat', 
-          'preact/compat/jsx-runtime'
-        ]
+          'react',
+          'react-dom',
+          'react/jsx-runtime',
+          'preact/compat',
+          'preact/compat/jsx-runtime',
+        ],
       }),
       commonjs(),
       alias({
@@ -64,8 +64,8 @@ export default [
           { find: 'react', replacement: 'preact/compat' },
           { find: 'react-dom/test-utils', replacement: 'preact/test-utils' },
           { find: 'react-dom', replacement: 'preact/compat' },
-          { find: 'react/jsx-runtime', replacement: 'preact/jsx-runtime' }
-        ]
+          { find: 'react/jsx-runtime', replacement: 'preact/jsx-runtime' },
+        ],
       }),
       postcss({
         extract: false,
@@ -73,35 +73,37 @@ export default [
         autoModules: false,
         minimize: false,
         inject: false,
-        plugins: [autoprefixer(), tailwindcss()]
+        plugins: [autoprefixer(), tailwindcss()],
       }),
       typescript(),
       babel({
         exclude: 'node_modules/**',
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
         babelHelpers: 'bundled',
-        babelrc: true
+        babelrc: true,
       }),
-      isDev && serve({
-        open: true,
-        verbose: true,
-        contentBase: ['dist'],
-        historyApiFallback: true,
-        host: 'localhost',
-        port: 3020,
-        headers: {
-          'Cross-Origin-Opener-Policy': 'same-origin',
-          'Cross-Origin-Embedder-Policy': 'require-corp'
-        }
-      }),
+      isDev &&
+        serve({
+          open: true,
+          verbose: true,
+          contentBase: ['dist'],
+          historyApiFallback: true,
+          host: 'localhost',
+          port: 3020,
+          headers: {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp',
+          },
+        }),
       terser({
         module: true,
-        compress: isDev ? false : true
+        compress: isDev ? false : true,
       }),
-      isDev && livereload({
-        watch: 'dist',
-        verbose: false,
-      })
+      isDev &&
+        livereload({
+          watch: 'dist',
+          verbose: false,
+        }),
     ].filter(Boolean),
   },
   {
@@ -109,7 +111,7 @@ export default [
     output: {
       file: 'dist/worker.js',
       format: 'es',
-      sourcemap: false
+      sourcemap: false,
     },
     plugins: [
       resolve(),
@@ -117,8 +119,8 @@ export default [
       typescript(),
       terser({
         module: true,
-        compress: isDev ? false : true
-      })
-    ]
-  }
+        compress: isDev ? false : true,
+      }),
+    ],
+  },
 ];

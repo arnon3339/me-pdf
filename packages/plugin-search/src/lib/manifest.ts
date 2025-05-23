@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { SearchPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { SearchPluginConfig } from './types';
 
 export const SEARCH_PLUGIN_ID = 'search';
 
@@ -12,6 +12,6 @@ export const manifest: PluginManifest<SearchPluginConfig> = {
   optional: [],
   defaultConfig: {
     enabled: true,
-    flags: []
-  }
-}; 
+    flags: [],
+  },
+};

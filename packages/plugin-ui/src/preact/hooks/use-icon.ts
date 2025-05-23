@@ -6,11 +6,11 @@ import { IconIdentifier, Icon as IconType, IconRegistry } from '@embedpdf/plugin
  */
 export function useIcon() {
   const { provides: uiProvides } = useUICapability();
-  
+
   if (!uiProvides) {
     throw new Error('useIcon must be used within a UI context');
   }
-  
+
   const {
     registerIcon,
     registerIcons,

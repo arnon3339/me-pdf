@@ -24,7 +24,7 @@ export interface StoreState<CoreState> {
 export type StoreListener<CoreState> = (
   action: Action,
   newState: StoreState<CoreState>,
-  oldState: StoreState<CoreState>
+  oldState: StoreState<CoreState>,
 ) => void;
 
 /**
@@ -33,8 +33,4 @@ export type StoreListener<CoreState> = (
  * - `newPluginState` => The plugin state *after* the update
  * - `oldPluginState` => The plugin state *before* the update
  */
-export type PluginListener = (
-  action: Action,
-  newPluginState: any,
-  oldPluginState: any
-) => void;
+export type PluginListener = (action: Action, newPluginState: any, oldPluginState: any) => void;

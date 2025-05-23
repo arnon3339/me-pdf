@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { UIPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { UIPluginConfig } from './types';
 
 export const UI_PLUGIN_ID = 'ui';
 
@@ -12,6 +12,6 @@ export const manifest: PluginManifest<UIPluginConfig> = {
   optional: [],
   defaultConfig: {
     enabled: true,
-    components: {}
-  }
-}; 
+    components: {},
+  },
+};

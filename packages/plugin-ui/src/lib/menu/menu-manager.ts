@@ -1,7 +1,15 @@
-import { PluginRegistry } from "@embedpdf/core";
-import { MenuItem, Action, ExecuteOptions, ResolvedMenuItem, MenuRegistry, Menu, MenuManagerCapabilities } from "./types";
-import { EventCallback, createEventController } from "../utils";
-import { resolveMenuItem } from "./utils";
+import { PluginRegistry } from '@embedpdf/core';
+import {
+  MenuItem,
+  Action,
+  ExecuteOptions,
+  ResolvedMenuItem,
+  MenuRegistry,
+  Menu,
+  MenuManagerCapabilities,
+} from './types';
+import { EventCallback, createEventController } from '../utils';
+import { resolveMenuItem } from './utils';
 
 /**
  * MenuManager manages a registry of menu items and handles their execution.
@@ -12,7 +20,7 @@ export class MenuManager {
   private shortcutMap: Record<string, string> = {}; // maps shortcut to menu item id
   private eventController = createEventController();
   private pluginRegistry: PluginRegistry;
-  
+
   // Event types
   static readonly EVENTS = {
     COMMAND_EXECUTED: 'menu:command_executed',
@@ -29,7 +37,7 @@ export class MenuManager {
   /**
    * Get the current state of the plugin registry
    */
-  private get state() {                     
+  private get state() {
     return this.pluginRegistry.getStore().getState();
   }
 
@@ -40,9 +48,9 @@ export class MenuManager {
     if (this.registry[item.id]) {
       console.warn(`Menu item with ID ${item.id} already exists and will be overwritten`);
     }
-    
+
     this.registry[item.id] = item;
-    
+
     if ('shortcut' in item && item.shortcut) {
       this.shortcutMap[this.normalizeShortcut(item.shortcut)] = item.id;
     }
@@ -52,7 +60,7 @@ export class MenuManager {
    * Register multiple menu items at once
    */
   registerItems(items: MenuRegistry): void {
-    Object.values(items).forEach(item => {
+    Object.values(items).forEach((item) => {
       this.registerItem(item);
     });
   }
@@ -60,7 +68,7 @@ export class MenuManager {
   /**
    * Resolve a menu item by ID
    */
-  public resolve(id: string): MenuItem  {   
+  public resolve(id: string): MenuItem {
     const raw = this.registry[id];
     return resolveMenuItem(raw, this.state);
   }
@@ -71,12 +79,12 @@ export class MenuManager {
   getMenuItem(id: string): ResolvedMenuItem | undefined {
     const item = this.resolve(id);
     if (!item) return undefined;
-    
+
     return {
       item,
       isGroup: item.type === 'group',
       isMenu: item.type === 'menu',
-      isAction: item.type === 'action'
+      isAction: item.type === 'action',
     };
   }
 
@@ -109,9 +117,7 @@ export class MenuManager {
    * Get menu items by their IDs
    */
   getItemsByIds(ids: string[]): MenuItem[] {
-    return ids
-      .map(id => this.resolve(id))
-      .filter(item => item !== undefined) as MenuItem[];
+    return ids.map((id) => this.resolve(id)).filter((item) => item !== undefined) as MenuItem[];
   }
 
   /**
@@ -126,15 +132,15 @@ export class MenuManager {
 
     // Get all immediate children
     const children = this.getItemsByIds(item.children);
-    
+
     // If flatten is false or not specified, return immediate children
     if (!options.flatten) {
       return children;
     }
-    
+
     // If flatten is true, recursively include menu children
     const flattened: MenuItem[] = [];
-    
+
     for (const child of children) {
       if (child.type === 'group') {
         // For groups, add the group itself but don't flatten its children
@@ -148,7 +154,7 @@ export class MenuManager {
         flattened.push(child);
       }
     }
-    
+
     return flattened;
   }
 
@@ -161,13 +167,13 @@ export class MenuManager {
       console.warn(`Menu item '${id}' not found`);
       return;
     }
-    if(resolved.item.type === 'group') {
+    if (resolved.item.type === 'group') {
       console.warn(`Cannot execute group '${id}'`);
       return;
     }
 
     const { item } = resolved;
-    
+
     if (item.disabled) {
       console.warn(`Menu item '${id}' is disabled`);
       return;
@@ -176,11 +182,11 @@ export class MenuManager {
     if (resolved.isAction) {
       // Execute the command's action
       (item as Action).action(this.pluginRegistry, this.state);
-      this.eventController.emit(MenuManager.EVENTS.COMMAND_EXECUTED, { 
-        command: item, 
-        source: options.source || 'api'
+      this.eventController.emit(MenuManager.EVENTS.COMMAND_EXECUTED, {
+        command: item,
+        source: options.source || 'api',
       });
-    } else if (('children' in item) && item.children?.length) {
+    } else if ('children' in item && item.children?.length) {
       // Handle submenu
       this.handleSubmenu(item, options);
     }
@@ -192,12 +198,12 @@ export class MenuManager {
   executeShortcut(shortcut: string): boolean {
     const normalizedShortcut = this.normalizeShortcut(shortcut);
     const itemId = this.shortcutMap[normalizedShortcut];
-    
+
     if (itemId) {
       this.executeCommand(itemId, { source: 'shortcut' });
-      this.eventController.emit(MenuManager.EVENTS.SHORTCUT_EXECUTED, { 
-        shortcut: normalizedShortcut, 
-        itemId 
+      this.eventController.emit(MenuManager.EVENTS.SHORTCUT_EXECUTED, {
+        shortcut: normalizedShortcut,
+        itemId,
       });
       return true;
     }
@@ -226,7 +232,7 @@ export class MenuManager {
       menuId: menuItem.id,
       triggerElement: options.triggerElement,
       position: options.position,
-      flatten: options.flatten || false
+      flatten: options.flatten || false,
     });
   }
 
@@ -239,11 +245,7 @@ export class MenuManager {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Don't handle shortcuts if the event target is an input, textarea, or has contentEditable
       const target = event.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' || 
-        target.tagName === 'TEXTAREA' || 
-        target.isContentEditable
-      ) {
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return;
       }
 
@@ -284,7 +286,7 @@ export class MenuManager {
   private normalizeShortcut(shortcut: string): string {
     return shortcut
       .split('+')
-      .map(part => part.trim())
+      .map((part) => part.trim())
       .join('+');
   }
 

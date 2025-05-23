@@ -38,18 +38,13 @@ export type NamesToType<T extends readonly Type[]> = T extends []
   ? []
   : T extends readonly [infer U extends Type]
     ? [NameToType<U>]
-    : T extends readonly [
-          infer U extends Type,
-          ...infer Rest extends readonly Type[],
-        ]
+    : T extends readonly [infer U extends Type, ...infer Rest extends readonly Type[]]
       ? [NameToType<U>, ...NamesToType<Rest>]
       : [];
 
 export type Functions = typeof functions;
 
-export type Wrapped<
-  T extends Record<string, readonly [readonly Type[], Type]>,
-> = {
+export type Wrapped<T extends Record<string, readonly [readonly Type[], Type]>> = {
   [P in keyof T]: CWrappedFunc<T[P][0], T[P][1]>;
 };
 
@@ -59,9 +54,7 @@ export type WrappedPdfiumModule = {
   pdfium: PdfiumModule & PdfiumRuntimeMethods;
 } & Methods;
 
-export async function init(
-  moduleOverrides: Partial<PdfiumModule>,
-): Promise<WrappedPdfiumModule> {
+export async function init(moduleOverrides: Partial<PdfiumModule>): Promise<WrappedPdfiumModule> {
   const pdfium = await createPdfium<PdfiumRuntimeMethods>(moduleOverrides);
 
   const module: WrappedPdfiumModule = {

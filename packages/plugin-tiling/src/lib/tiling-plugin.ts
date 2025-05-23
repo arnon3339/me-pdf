@@ -1,11 +1,23 @@
-import { BasePlugin, CoreState, createBehaviorEmitter, PluginRegistry, StoreState } from "@embedpdf/core";
-import { ignore, Rect } from "@embedpdf/models";
-import { RenderCapability, RenderPlugin } from "@embedpdf/plugin-render";
-import { ScrollCapability, ScrollMetrics, ScrollPlugin } from "@embedpdf/plugin-scroll";
-import { TilingPluginConfig, TilingCapability, Tile, RenderTileOptions, TilingState } from "./types";
-import { ViewportCapability, ViewportPlugin } from "@embedpdf/plugin-viewport";
-import { markTileStatus, updateVisibleTiles } from "./actions";
-import { calculateTilesForPage } from "./utils";
+import {
+  BasePlugin,
+  CoreState,
+  createBehaviorEmitter,
+  PluginRegistry,
+  StoreState,
+} from '@embedpdf/core';
+import { ignore, Rect } from '@embedpdf/models';
+import { RenderCapability, RenderPlugin } from '@embedpdf/plugin-render';
+import { ScrollCapability, ScrollMetrics, ScrollPlugin } from '@embedpdf/plugin-scroll';
+import {
+  TilingPluginConfig,
+  TilingCapability,
+  Tile,
+  RenderTileOptions,
+  TilingState,
+} from './types';
+import { ViewportCapability, ViewportPlugin } from '@embedpdf/plugin-viewport';
+import { markTileStatus, updateVisibleTiles } from './actions';
+import { calculateTilesForPage } from './utils';
 
 export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapability> {
   static readonly id = 'tiling' as const;
@@ -22,14 +34,14 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
 
     this.config = config;
 
-    this.renderCapability = this.registry.getPlugin<RenderPlugin>("render")!.provides();
-    this.scrollCapability = this.registry.getPlugin<ScrollPlugin>("scroll")!.provides();
-    this.viewportCapability = this.registry.getPlugin<ViewportPlugin>("viewport")!.provides();
+    this.renderCapability = this.registry.getPlugin<RenderPlugin>('render')!.provides();
+    this.scrollCapability = this.registry.getPlugin<ScrollPlugin>('scroll')!.provides();
+    this.viewportCapability = this.registry.getPlugin<ViewportPlugin>('viewport')!.provides();
 
-    this.scrollCapability.onScroll((scrollMetrics) => this.calculateVisibleTiles(scrollMetrics), { 
-      mode: 'throttle', 
-      wait: 500, 
-      throttleMode: 'trailing' 
+    this.scrollCapability.onScroll((scrollMetrics) => this.calculateVisibleTiles(scrollMetrics), {
+      mode: 'throttle',
+      wait: 500,
+      throttleMode: 'trailing',
     });
   }
 
@@ -37,9 +49,14 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
     // Fetch dependencies from the registry if needed
   }
 
-  protected onCoreStoreUpdated(oldState: StoreState<CoreState>, newState: StoreState<CoreState>): void {
-    if(oldState.core.scale !== newState.core.scale) {
-      this.calculateVisibleTiles(this.scrollCapability.getMetrics(this.viewportCapability.getMetrics()));
+  protected onCoreStoreUpdated(
+    oldState: StoreState<CoreState>,
+    newState: StoreState<CoreState>,
+  ): void {
+    if (oldState.core.scale !== newState.core.scale) {
+      this.calculateVisibleTiles(
+        this.scrollCapability.getMetrics(this.viewportCapability.getMetrics()),
+      );
     }
   }
 
@@ -86,7 +103,7 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
 
   private renderTile(options: RenderTileOptions) {
     if (!this.renderCapability) {
-      throw new Error("Render capability not available.");
+      throw new Error('Render capability not available.');
     }
 
     this.dispatch(markTileStatus(options.pageIndex, options.tile.id, 'rendering'));

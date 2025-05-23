@@ -7,11 +7,12 @@ export interface StateChangeHandler<TState> {
 }
 
 export abstract class BasePlugin<
-  TConfig = unknown, 
+  TConfig = unknown,
   TCapability = unknown,
   TState = unknown,
-  TAction extends Action = Action
-> implements IPlugin<TConfig> {
+  TAction extends Action = Action,
+> implements IPlugin<TConfig>
+{
   static readonly id: string;
 
   protected pluginStore: PluginStore<TState, TAction>;
@@ -28,10 +29,12 @@ export abstract class BasePlugin<
 
   constructor(
     public readonly id: string,
-    protected registry: PluginRegistry
+    protected registry: PluginRegistry,
   ) {
     if (id !== (this.constructor as typeof BasePlugin).id) {
-      throw new Error(`Plugin ID mismatch: ${id} !== ${(this.constructor as typeof BasePlugin).id}`);
+      throw new Error(
+        `Plugin ID mismatch: ${id} !== ${(this.constructor as typeof BasePlugin).id}`,
+      );
     }
     this.coreStore = this.registry.getStore();
     this.pluginStore = this.coreStore.getPluginStore<TState, TAction>(this.id);
@@ -52,7 +55,7 @@ export abstract class BasePlugin<
 
   /** Construct the public capability (called once & cached). */
   protected abstract buildCapability(): TCapability;
-  
+
   public provides(): Readonly<TCapability> {
     if (!this._capability) {
       const cap = this.buildCapability();
@@ -66,7 +69,7 @@ export abstract class BasePlugin<
    * Initialize plugin with config
    */
   abstract initialize(config: TConfig): Promise<void>;
-  
+
   /**
    *  Get a copy of the current state
    */
@@ -118,13 +121,13 @@ export abstract class BasePlugin<
   protected debouncedDispatch(action: TAction, debounceTime: number = 100): boolean {
     const now = Date.now();
     const lastActionTime = this.debouncedActions[action.type] || 0;
-    
+
     if (now - lastActionTime >= debounceTime) {
       this.debouncedActions[action.type] = now;
       this.dispatch(action);
       return true;
     }
-    
+
     return false;
   }
 
@@ -138,7 +141,9 @@ export abstract class BasePlugin<
   /**
    * Subscribe to core store changes
    */
-  protected subscribeToCoreStore(listener: (action: Action, state: StoreState<CoreState>) => void): () => void {
+  protected subscribeToCoreStore(
+    listener: (action: Action, state: StoreState<CoreState>) => void,
+  ): () => void {
     return this.coreStore.subscribe(listener);
   }
 
@@ -156,7 +161,10 @@ export abstract class BasePlugin<
    * @param oldState Previous state
    * @param newState New state
    */
-  protected onCoreStoreUpdated(oldState: StoreState<CoreState>, newState: StoreState<CoreState>): void {
+  protected onCoreStoreUpdated(
+    oldState: StoreState<CoreState>,
+    newState: StoreState<CoreState>,
+  ): void {
     // Default implementation does nothing - can be overridden by plugins
   }
 
@@ -196,4 +204,4 @@ export abstract class BasePlugin<
       this.readyResolve = resolve;
     });
   }
-} 
+}

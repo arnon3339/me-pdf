@@ -24,7 +24,7 @@ import { somePlugin } from '@embedpdf/plugin-some-plugin';
 
 function MyPDFViewer() {
   return (
-    <EmbedPDF 
+    <EmbedPDF
       engine={/* your PDF engine */}
       onInitialized={async (registry) => {
         // Initialize your viewer
@@ -48,9 +48,7 @@ import { useCapability } from '@embedpdf/core/preact';
 
 function MyComponent() {
   const zoom = useCapability('zoom');
-  
-  return (
-    <button onClick={() => zoom.zoomIn()}>Zoom In</button>
-  );
+
+  return <button onClick={() => zoom.zoomIn()}>Zoom In</button>;
 }
-``` 
+```

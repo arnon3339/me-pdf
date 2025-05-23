@@ -10,11 +10,11 @@ export const Image = forwardRef<HTMLImageElement, ImageProps>((props, ref) => {
   ) {
     console.warn(
       `[nextra] Failed to load blur image "${(props.src as any).src}" due missing "src.blurDataURL" value.
-This is Turbopack bug, which will not occurs on production (since Webpack is used for "next build" command).`
+This is Turbopack bug, which will not occurs on production (since Webpack is used for "next build" command).`,
     )
     props = {
       ...props,
-      placeholder: 'empty'
+      placeholder: 'empty',
     }
   }
   const ComponentToUse = typeof props.src === 'object' ? NextImage : 'img'

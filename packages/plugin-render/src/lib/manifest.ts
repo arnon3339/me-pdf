@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { RenderPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { RenderPluginConfig } from './types';
 
 export const RENDER_PLUGIN_ID = 'render';
 
@@ -12,5 +12,5 @@ export const manifest: PluginManifest<RenderPluginConfig> = {
   optional: [],
   defaultConfig: {
     enabled: true,
-  }
-}; 
+  },
+};

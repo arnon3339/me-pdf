@@ -1,13 +1,42 @@
-import { BasePlugin, CoreState, PluginRegistry, SET_DOCUMENT, SET_PAGES, SET_ROTATION, StoreState, createBehaviorEmitter, createEmitter, getPagesWithRotatedSize } from "@embedpdf/core";
-import { PdfPageObject, PdfPageObjectWithRotatedSize, Position, Rect, restoreRect, rotateRect, Rotation, transformRect } from "@embedpdf/models";
-import { ViewportCapability, ViewportMetrics, ViewportPlugin } from "@embedpdf/plugin-viewport";
-import { ScrollCapability, ScrollPluginConfig, ScrollStrategy, ScrollMetrics, ScrollState, LayoutChangePayload, ScrollerLayout, ScrollToPageOptions } from "./types";
-import { BaseScrollStrategy, ScrollStrategyConfig } from "./strategies/base-strategy";
-import { VerticalScrollStrategy } from "./strategies/vertical-strategy";
-import { HorizontalScrollStrategy } from "./strategies/horizontal-strategy";
-import { updateScrollState, ScrollAction } from "./actions";
-import { VirtualItem } from "./types/virtual-item";
-import { getScrollerLayout } from "./selectors";
+import {
+  BasePlugin,
+  CoreState,
+  PluginRegistry,
+  SET_DOCUMENT,
+  SET_PAGES,
+  SET_ROTATION,
+  StoreState,
+  createBehaviorEmitter,
+  createEmitter,
+  getPagesWithRotatedSize,
+} from '@embedpdf/core';
+import {
+  PdfPageObject,
+  PdfPageObjectWithRotatedSize,
+  Position,
+  Rect,
+  restoreRect,
+  rotateRect,
+  Rotation,
+  transformRect,
+} from '@embedpdf/models';
+import { ViewportCapability, ViewportMetrics, ViewportPlugin } from '@embedpdf/plugin-viewport';
+import {
+  ScrollCapability,
+  ScrollPluginConfig,
+  ScrollStrategy,
+  ScrollMetrics,
+  ScrollState,
+  LayoutChangePayload,
+  ScrollerLayout,
+  ScrollToPageOptions,
+} from './types';
+import { BaseScrollStrategy, ScrollStrategyConfig } from './strategies/base-strategy';
+import { VerticalScrollStrategy } from './strategies/vertical-strategy';
+import { HorizontalScrollStrategy } from './strategies/horizontal-strategy';
+import { updateScrollState, ScrollAction } from './actions';
+import { VirtualItem } from './types/virtual-item';
+import { getScrollerLayout } from './selectors';
 
 type PartialScroll = Partial<ScrollState>;
 type Emits = {
@@ -15,7 +44,12 @@ type Emits = {
   metrics?: ScrollMetrics;
 };
 
-export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapability, ScrollState, ScrollAction> {
+export class ScrollPlugin extends BasePlugin<
+  ScrollPluginConfig,
+  ScrollCapability,
+  ScrollState,
+  ScrollAction
+> {
   static readonly id = 'scroll' as const;
   private viewport: ViewportCapability;
   private strategy: BaseScrollStrategy;
@@ -29,12 +63,12 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   private readonly scroll$ = createBehaviorEmitter<ScrollMetrics>();
   private readonly state$ = createBehaviorEmitter<ScrollState>();
   private readonly scrollerLayout$ = createBehaviorEmitter<ScrollerLayout>();
-  private readonly pageChange$  = createEmitter<number>();
+  private readonly pageChange$ = createEmitter<number>();
 
   constructor(
     public readonly id: string,
     registry: PluginRegistry,
-    private config?: ScrollPluginConfig
+    private config?: ScrollPluginConfig,
   ) {
     super(id, registry);
 
@@ -46,25 +80,26 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       bufferSize: this.config?.bufferSize ?? 2,
     };
 
-    this.strategy = this.config?.strategy === ScrollStrategy.Horizontal
-      ? new HorizontalScrollStrategy(this.strategyConfig)
-      : new VerticalScrollStrategy(this.strategyConfig);
+    this.strategy =
+      this.config?.strategy === ScrollStrategy.Horizontal
+        ? new HorizontalScrollStrategy(this.strategyConfig)
+        : new VerticalScrollStrategy(this.strategyConfig);
 
     this.initialPage = this.config?.initialPage;
     this.currentScale = this.coreState.core.scale;
     this.currentRotation = this.coreState.core.rotation;
     // Subscribe to viewport and page manager events
-    this.viewport.onViewportChange(
-      vp => this.commitMetrics(this.computeMetrics(vp)),
-      { mode: 'throttle', wait: 250 },
-    );
-    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => 
+    this.viewport.onViewportChange((vp) => this.commitMetrics(this.computeMetrics(vp)), {
+      mode: 'throttle',
+      wait: 250,
+    });
+    this.coreStore.onAction(SET_DOCUMENT, (_action, state) =>
       this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
     );
-    this.coreStore.onAction(SET_ROTATION, (_action, state) => 
+    this.coreStore.onAction(SET_ROTATION, (_action, state) =>
       this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
     );
-    this.coreStore.onAction(SET_PAGES, (_action, state) => 
+    this.coreStore.onAction(SET_PAGES, (_action, state) =>
       this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
     );
   }
@@ -79,10 +114,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     return { virtualItems, totalContentSize };
   }
 
-  private computeMetrics(
-    vp: ViewportMetrics,
-    items: VirtualItem[] = this.state.virtualItems,
-  ) {
+  private computeMetrics(vp: ViewportMetrics, items: VirtualItem[] = this.state.virtualItems) {
     return this.strategy.handleScroll(vp, items, this.currentScale);
   }
 
@@ -139,12 +171,15 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     this.pushScrollLayout();
   }
 
-  override onCoreStoreUpdated(prevState: StoreState<CoreState>, newState: StoreState<CoreState>): void {
-    if(prevState.core.scale !== newState.core.scale) {
+  override onCoreStoreUpdated(
+    prevState: StoreState<CoreState>,
+    newState: StoreState<CoreState>,
+  ): void {
+    if (prevState.core.scale !== newState.core.scale) {
       this.currentScale = newState.core.scale;
       this.commitMetrics(this.computeMetrics(this.viewport.getMetrics()));
     }
-    if(prevState.core.rotation !== newState.core.rotation) {
+    if (prevState.core.rotation !== newState.core.rotation) {
       this.currentRotation = newState.core.rotation;
     }
   }
@@ -156,7 +191,8 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   private setScrollStrategy(newStrategy: ScrollStrategy) {
     // Only update if the strategy is actually changing
     if (
-      (newStrategy === ScrollStrategy.Horizontal && this.strategy instanceof HorizontalScrollStrategy) ||
+      (newStrategy === ScrollStrategy.Horizontal &&
+        this.strategy instanceof HorizontalScrollStrategy) ||
       (newStrategy === ScrollStrategy.Vertical && this.strategy instanceof VerticalScrollStrategy)
     ) {
       return;
@@ -171,7 +207,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
     this.dispatch(
       updateScrollState({
         strategy: newStrategy,
-      })
+      }),
     );
 
     // Recalculate layout and scroll metrics
@@ -189,15 +225,21 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       scrollToPage: (options: ScrollToPageOptions) => {
         const { pageNumber, behavior = 'smooth', pageCoordinates, center = false } = options;
         const virtualItems = this.getVirtualItemsFromState();
-        const position = this.strategy.getScrollPositionForPage(pageNumber, virtualItems, this.currentScale, this.currentRotation, pageCoordinates);
+        const position = this.strategy.getScrollPositionForPage(
+          pageNumber,
+          virtualItems,
+          this.currentScale,
+          this.currentRotation,
+          pageCoordinates,
+        );
         if (position) {
           this.viewport.scrollTo({ ...position, behavior, center });
         }
       },
       scrollToNextPage: (behavior = 'smooth') => {
         const virtualItems = this.getVirtualItemsFromState();
-        const currentItemIndex = virtualItems.findIndex(item =>
-          item.pageNumbers.includes(this.currentPage)
+        const currentItemIndex = virtualItems.findIndex((item) =>
+          item.pageNumbers.includes(this.currentPage),
         );
         if (currentItemIndex >= 0 && currentItemIndex < virtualItems.length - 1) {
           const nextItem = virtualItems[currentItemIndex + 1];
@@ -205,7 +247,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
             nextItem.pageNumbers[0],
             virtualItems,
             this.currentScale,
-            this.currentRotation
+            this.currentRotation,
           );
           if (position) {
             this.viewport.scrollTo({ ...position, behavior });
@@ -214,8 +256,8 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
       },
       scrollToPreviousPage: (behavior = 'smooth') => {
         const virtualItems = this.getVirtualItemsFromState();
-        const currentItemIndex = virtualItems.findIndex(item =>
-          item.pageNumbers.includes(this.currentPage)
+        const currentItemIndex = virtualItems.findIndex((item) =>
+          item.pageNumbers.includes(this.currentPage),
         );
         if (currentItemIndex > 0) {
           const prevItem = virtualItems[currentItemIndex - 1];
@@ -223,7 +265,7 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
             prevItem.pageNumbers[0],
             virtualItems,
             this.currentScale,
-            this.currentRotation
+            this.currentRotation,
           );
           if (position) {
             this.viewport.scrollTo({ ...position, behavior });
@@ -246,23 +288,24 @@ export class ScrollPlugin extends BasePlugin<ScrollPluginConfig, ScrollCapabilit
   }
 
   private getLayout(): LayoutChangePayload {
-    return { 
-      virtualItems: this.state.virtualItems, 
-      totalContentSize: this.state.totalContentSize 
+    return {
+      virtualItems: this.state.virtualItems,
+      totalContentSize: this.state.totalContentSize,
     };
   }
-  
+
   private getRectPositionForPage(
     pageIndex: number,
     rect: Rect,
     scale?: number,
-    rotation?: Rotation
+    rotation?: Rotation,
   ): Rect | null {
     return this.strategy.getRectPositionForPage(
-      pageIndex + 1, this.state.virtualItems, 
-      scale ?? this.currentScale, 
-      rotation ?? this.currentRotation, 
-      rect
+      pageIndex + 1,
+      this.state.virtualItems,
+      scale ?? this.currentScale,
+      rotation ?? this.currentRotation,
+      rect,
     );
   }
 

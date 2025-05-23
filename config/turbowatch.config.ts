@@ -6,32 +6,29 @@ const foundPackageJson = globSync('packages/*/package.json');
 
 type PathToPackageNameMap = Map<string, string>;
 
-const allPackages = foundPackageJson.reduce<PathToPackageNameMap>(
-  (acc, current) => {
-    try {
-      const packageJson = readFileSync(current, 'utf8');
-      const packageJsonParsed = JSON.parse(packageJson) as {
-        dependencies: Record<string, string>;
-        name: string | undefined;
-      };
+const allPackages = foundPackageJson.reduce<PathToPackageNameMap>((acc, current) => {
+  try {
+    const packageJson = readFileSync(current, 'utf8');
+    const packageJsonParsed = JSON.parse(packageJson) as {
+      dependencies: Record<string, string>;
+      name: string | undefined;
+    };
 
-      const packageName = packageJsonParsed.name;
+    const packageName = packageJsonParsed.name;
 
-      if (!packageName) {
-        return acc;
-      }
-
-      acc.set(current, packageName);
+    if (!packageName) {
       return acc;
-    } catch (_) {}
+    }
 
+    acc.set(current, packageName);
     return acc;
-  },
-  new Map()
-);
+  } catch (_) {}
+
+  return acc;
+}, new Map());
 
 const dirList = [...allPackages.keys()].map(
-  (dir) => ['dirname', dir.replace('/package.json', '')] satisfies Expression
+  (dir) => ['dirname', dir.replace('/package.json', '')] satisfies Expression,
 );
 
 export default defineConfig({

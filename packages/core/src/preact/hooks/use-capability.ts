@@ -15,16 +15,14 @@ type CapabilityState<T extends BasePlugin> = {
  * // Get zoom capability
  * const zoom = useCapability<ZoomPlugin>(ZoomPlugin.id);
  */
-export function useCapability<T extends BasePlugin>(
-  pluginId: T['id']
-): CapabilityState<T> {
+export function useCapability<T extends BasePlugin>(pluginId: T['id']): CapabilityState<T> {
   const { plugin, isLoading, ready } = usePlugin<T>(pluginId);
 
   if (!plugin) {
     return {
       provides: null,
       isLoading,
-      ready
+      ready,
     };
   }
 
@@ -35,6 +33,6 @@ export function useCapability<T extends BasePlugin>(
   return {
     provides: plugin.provides() as ReturnType<NonNullable<T['provides']>>,
     isLoading,
-    ready
+    ready,
   };
-} 
+}

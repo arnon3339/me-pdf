@@ -1,9 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 export default {
-  content: [
-    './src/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     fontSize: {
       xs: '.75rem',
@@ -15,10 +13,10 @@ export default {
       '3xl': '1.875rem',
       '4xl': '2.25rem',
       '5xl': '3rem',
-      '6xl': '4rem'
+      '6xl': '4rem',
     },
     letterSpacing: {
-      tight: '-0.015em'
+      tight: '-0.015em',
     },
     extend: {
       colors: {
@@ -36,7 +34,7 @@ export default {
           600: '#4b5563',
           700: '#374151',
           800: '#1f2937',
-          900: '#111827'
+          900: '#111827',
         },
         primary: {
           50: '#f4f1f8',
@@ -48,7 +46,7 @@ export default {
           600: '#6a5296',
           700: '#584485',
           800: '#463674',
-          900: '#342863'
+          900: '#342863',
         },
         neutral: {
           100: '#f3f4f6',
@@ -59,9 +57,9 @@ export default {
           600: '#4b5563',
           700: '#374151',
           800: '#1f2937',
-          900: '#111827'
-        }
+          900: '#111827',
+        },
       },
     },
-  }
+  },
 } satisfies Config

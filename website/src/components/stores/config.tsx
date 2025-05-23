@@ -7,7 +7,7 @@ import { createContext, useContext } from 'react'
 import { usePathname } from 'next/navigation'
 
 const ConfigContext = createContext<ReturnType<typeof normalizePages> | null>(
-  null
+  null,
 )
 
 export function useConfig() {
@@ -18,7 +18,7 @@ export function useConfig() {
   const { activeThemeContext, activeType } = normalizePagesResult
   return {
     normalizePagesResult,
-    hideSidebar: !activeThemeContext.sidebar || activeType === 'page'
+    hideSidebar: !activeThemeContext.sidebar || activeType === 'page',
   }
 }
 
@@ -32,7 +32,7 @@ export const ConfigProvider: FC<{
 
   const normalizedPages = normalizePages({
     list: pageMap,
-    route: pathname
+    route: pathname,
   })
   const { activeThemeContext } = normalizedPages
 

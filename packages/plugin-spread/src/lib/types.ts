@@ -1,5 +1,5 @@
-import { BasePluginConfig } from "@embedpdf/core";
-import { PdfPageObject } from "@embedpdf/models";
+import { BasePluginConfig } from '@embedpdf/core';
+import { PdfPageObject } from '@embedpdf/models';
 
 export interface SpreadPluginConfig extends BasePluginConfig {
   defaultSpreadMode?: SpreadMode;
@@ -8,7 +8,7 @@ export interface SpreadPluginConfig extends BasePluginConfig {
 export enum SpreadMode {
   None = 'none',
   Odd = 'odd',
-  Even = 'even'
+  Even = 'even',
 }
 
 export interface SpreadCapability {

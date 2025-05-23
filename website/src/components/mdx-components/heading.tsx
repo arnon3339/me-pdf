@@ -6,7 +6,7 @@ import type { ComponentProps, FC } from 'react'
 import { HeadingAnchor } from './heading-anchor.client'
 
 const createHeading = (
-  Tag: `h${1 | 2 | 3 | 4 | 5 | 6}`
+  Tag: `h${1 | 2 | 3 | 4 | 5 | 6}`,
 ): FC<ComponentProps<typeof Tag>> =>
   function Heading({ children, id, className, ...props }) {
     const _class = // can be added by footnotes
@@ -23,9 +23,9 @@ const createHeading = (
               h3: 'mt-8 text-2xl',
               h4: 'mt-8 text-xl',
               h5: 'mt-8 text-lg',
-              h6: 'mt-8 text-base'
+              h6: 'mt-8 text-base',
             }[Tag],
-            className
+            className,
           )
 
     return (

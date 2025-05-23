@@ -10,16 +10,18 @@ const classes = {
     'focus-visible:nextra-focus text-gray-600',
     'hover:text-gray-800',
     'contrast-more:text-gray-700',
-    'flex max-w-[50%] items-center gap-1 py-4 text-base font-medium transition-colors [word-break:break-word] md:text-lg'
+    'flex max-w-[50%] items-center gap-1 py-4 text-base font-medium transition-colors [word-break:break-word] md:text-lg',
   ),
-  icon: cn('inline shrink-0')
+  icon: cn('inline shrink-0'),
 }
 
 export const Pagination: FC = () => {
   const { flatDocsDirectories, activeIndex } = useConfig().normalizePagesResult
 
-  let prev: typeof flatDocsDirectories[number] | undefined = flatDocsDirectories[activeIndex - 1]
-  let next: typeof flatDocsDirectories[number] | undefined = flatDocsDirectories[activeIndex + 1]
+  let prev: (typeof flatDocsDirectories)[number] | undefined =
+    flatDocsDirectories[activeIndex - 1]
+  let next: (typeof flatDocsDirectories)[number] | undefined =
+    flatDocsDirectories[activeIndex + 1]
 
   if (prev && !prev.isUnderCurrentDocsTree) prev = undefined
   if (next && !next.isUnderCurrentDocsTree) next = undefined
@@ -29,8 +31,8 @@ export const Pagination: FC = () => {
   return (
     <div
       className={cn(
-        'mb-8 flex items-center border-t pt-8 nextra-border',
-        'print:hidden'
+        'nextra-border mb-8 flex items-center border-t pt-8',
+        'print:hidden',
       )}
     >
       {prev && (
@@ -50,7 +52,7 @@ export const Pagination: FC = () => {
         <NextLink
           href={next.route}
           title={next.title}
-          className={cn(classes.link, 'ps-4 ms-auto text-end')}
+          className={cn(classes.link, 'ms-auto ps-4 text-end')}
         >
           {next.title}
           <ArrowRightIcon

@@ -4,8 +4,8 @@ import { useEffect, useRef } from 'react'
 import type { FC } from 'react'
 import { setActiveSlug } from '@/components/stores'
 
-const callback: IntersectionObserverCallback = entries => {
-  const entry = entries.find(entry => entry.isIntersecting)
+const callback: IntersectionObserverCallback = (entries) => {
+  const entry = entries.find((entry) => entry.isIntersecting)
 
   if (entry) {
     const slug = (entry.target as HTMLAnchorElement).hash.slice(1)
@@ -19,11 +19,11 @@ const observer: IntersectionObserver =
     : new IntersectionObserver(callback, {
         rootMargin: `-${
           getComputedStyle(document.body).getPropertyValue(
-            '--nextra-navbar-height'
+            '--nextra-navbar-height',
           ) ||
           // can be '' on 404 page
           '0%'
-        } 0% -80%`
+        } 0% -80%`,
       })
 
 export const HeadingAnchor: FC<{ id: string }> = ({ id }) => {

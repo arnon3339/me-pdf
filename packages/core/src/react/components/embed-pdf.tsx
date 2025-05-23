@@ -6,8 +6,8 @@ import { ViewportContext, PDFContext } from '../context';
 
 interface EmbedPDFProps {
   engine: PdfEngine;
-  onInitialized: (registry: PluginRegistry) => Promise<void>
-  plugins: (viewportElement: HTMLDivElement) => PluginBatchRegistration<IPlugin<any>, any>[]
+  onInitialized: (registry: PluginRegistry) => Promise<void>;
+  plugins: (viewportElement: HTMLDivElement) => PluginBatchRegistration<IPlugin<any>, any>[];
   children: React.ReactNode;
 }
 
@@ -20,10 +20,10 @@ export function EmbedPDF({ engine, onInitialized, plugins: getPlugins, children 
     if (!viewportElement) return; // Wait until the viewport ref is set
 
     const initialize = async () => {
-      const pdfViewer = new PluginRegistry(engine); 
+      const pdfViewer = new PluginRegistry(engine);
 
       // Register the ViewportPlugin with the container
-      const plugins = getPlugins(viewportElement)
+      const plugins = getPlugins(viewportElement);
       pdfViewer.registerPluginBatch(plugins);
 
       // Register additional plugins passed via props
@@ -47,9 +47,7 @@ export function EmbedPDF({ engine, onInitialized, plugins: getPlugins, children 
 
   return (
     <ViewportContext.Provider value={viewportContextValue}>
-      <PDFContext.Provider value={{ registry, isInitializing }}>
-        {children}
-      </PDFContext.Provider>
+      <PDFContext.Provider value={{ registry, isInitializing }}>{children}</PDFContext.Provider>
     </ViewportContext.Provider>
   );
 }

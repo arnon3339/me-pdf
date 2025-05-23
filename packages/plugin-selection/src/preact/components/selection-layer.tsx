@@ -4,7 +4,7 @@ import { useSelectionCapability } from '../hooks';
 import { glyphAt } from '@embedpdf/plugin-selection';
 import { PdfPageGeometry, Rect, restorePosition, Rotation, Size } from '@embedpdf/models';
 
-type Props = { pageIndex: number; scale: number, rotation: Rotation, containerSize: Size };
+type Props = { pageIndex: number; scale: number; rotation: Rotation; containerSize: Size };
 
 export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Props) {
   const { provides: sel } = useSelectionCapability();
@@ -35,7 +35,7 @@ export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Pr
 
       // clear the selection
       sel.clear();
-      sel.getGeometry(pageIndex).then(geo => {
+      sel.getGeometry(pageIndex).then((geo) => {
         const g = glyphAt(geo, toPt(e));
         if (g !== -1) sel.begin(pageIndex, g);
       });
@@ -50,20 +50,20 @@ export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Pr
     const onUp = () => sel.end();
 
     /* cheap glyphAt cache for the active page */
-    let geoCache: PdfPageGeometry|undefined;
-    const cachedGlyphAt = (pt:{x:number;y:number})=>{
-      if(!geoCache) return -1;
+    let geoCache: PdfPageGeometry | undefined;
+    const cachedGlyphAt = (pt: { x: number; y: number }) => {
+      if (!geoCache) return -1;
       return glyphAt(geoCache, pt);
     };
-    sel.getGeometry(pageIndex).then(g=> geoCache=g);
+    sel.getGeometry(pageIndex).then((g) => (geoCache = g));
 
     wrap.addEventListener('pointerdown', onDown);
     wrap.addEventListener('pointermove', onMove);
-    wrap.addEventListener('pointerup',   onUp);
+    wrap.addEventListener('pointerup', onUp);
     return () => {
       wrap.removeEventListener('pointerdown', onDown);
       wrap.removeEventListener('pointermove', onMove);
-      wrap.removeEventListener('pointerup',   onUp);
+      wrap.removeEventListener('pointerup', onUp);
     };
   }, [sel, pageIndex, scale]);
 
@@ -83,10 +83,10 @@ export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Pr
           key={i}
           style={{
             position: 'absolute',
-            left:  b.origin.x * scale,
-            top:   b.origin.y * scale,
+            left: b.origin.x * scale,
+            top: b.origin.y * scale,
             width: b.size.width * scale,
-            height:b.size.height * scale,
+            height: b.size.height * scale,
             background: 'rgba(33,150,243)',
             pointerEvents: 'none',
           }}

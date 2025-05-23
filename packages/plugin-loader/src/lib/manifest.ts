@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { LoaderPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { LoaderPluginConfig } from './types';
 
 export const LOADER_PLUGIN_ID = 'loader';
 
@@ -15,9 +15,9 @@ export const manifest: PluginManifest<LoaderPluginConfig> = {
     description: 'A plugin for loading PDF documents',
     version: '1.0.0',
     author: 'EmbedPDF',
-    license: 'MIT'
+    license: 'MIT',
   },
   defaultConfig: {
-    enabled: true
-  }
-}; 
+    enabled: true,
+  },
+};

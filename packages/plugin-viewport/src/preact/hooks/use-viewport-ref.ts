@@ -1,5 +1,5 @@
-import { useLayoutEffect, useRef } from "preact/hooks";
-import { useViewportCapability } from "./use-viewport"; 
+import { useLayoutEffect, useRef } from 'preact/hooks';
+import { useViewportCapability } from './use-viewport';
 
 export function useViewportRef() {
   const { provides: viewportProvides } = useViewportCapability();
@@ -15,11 +15,11 @@ export function useViewportRef() {
     const onScroll = () => {
       viewportProvides.setViewportScrollMetrics({
         scrollTop: container.scrollTop,
-        scrollLeft: container.scrollLeft
+        scrollLeft: container.scrollLeft,
       });
-    }
-    container.addEventListener("scroll", onScroll);
-    
+    };
+    container.addEventListener('scroll', onScroll);
+
     // Example: On resize, call setMetrics
     const resizeObserver = new ResizeObserver(() => {
       viewportProvides.setViewportMetrics({
@@ -30,20 +30,22 @@ export function useViewportRef() {
         scrollTop: container.scrollTop,
         scrollLeft: container.scrollLeft,
         scrollWidth: container.scrollWidth,
-        scrollHeight: container.scrollHeight
+        scrollHeight: container.scrollHeight,
       });
     });
     resizeObserver.observe(container);
 
-    const unsubscribeScrollRequest = viewportProvides.onScrollRequest(({ x, y, behavior='auto' }) => {
-      requestAnimationFrame(() => {
-        container.scrollTo({ left: x, top: y, behavior });
-      });
-    });
+    const unsubscribeScrollRequest = viewportProvides.onScrollRequest(
+      ({ x, y, behavior = 'auto' }) => {
+        requestAnimationFrame(() => {
+          container.scrollTo({ left: x, top: y, behavior });
+        });
+      },
+    );
 
     // Cleanup
     return () => {
-      container.removeEventListener("scroll", onScroll);
+      container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
       unsubscribeScrollRequest();
     };

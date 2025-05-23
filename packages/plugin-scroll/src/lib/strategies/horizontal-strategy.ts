@@ -1,7 +1,7 @@
-import { PdfPageObjectWithRotatedSize } from "@embedpdf/models";
-import { ViewportMetrics } from "@embedpdf/plugin-viewport";
-import { BaseScrollStrategy, ScrollStrategyConfig } from "./base-strategy";
-import { VirtualItem, PageLayout } from "../types/virtual-item";
+import { PdfPageObjectWithRotatedSize } from '@embedpdf/models';
+import { ViewportMetrics } from '@embedpdf/plugin-viewport';
+import { BaseScrollStrategy, ScrollStrategyConfig } from './base-strategy';
+import { VirtualItem, PageLayout } from '../types/virtual-item';
 
 export class HorizontalScrollStrategy extends BaseScrollStrategy {
   constructor(config: ScrollStrategyConfig) {
@@ -12,7 +12,7 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
     let xOffset = 0;
     return pdfPageObject.map((pagesInSpread, index) => {
       let pageX = 0;
-      const pageLayouts: PageLayout[] = pagesInSpread.map(page => {
+      const pageLayouts: PageLayout[] = pagesInSpread.map((page) => {
         const layout: PageLayout = {
           pageNumber: page.index + 1,
           pageIndex: page.index,
@@ -26,9 +26,12 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
         pageX += page.rotatedSize.width + this.pageGap;
         return layout;
       });
-      const width = pagesInSpread.reduce((sum, page, i) => 
-        sum + page.rotatedSize.width + (i < pagesInSpread.length - 1 ? this.pageGap : 0), 0);
-      const height = Math.max(...pagesInSpread.map(p => p.rotatedSize.height));
+      const width = pagesInSpread.reduce(
+        (sum, page, i) =>
+          sum + page.rotatedSize.width + (i < pagesInSpread.length - 1 ? this.pageGap : 0),
+        0,
+      );
+      const height = Math.max(...pagesInSpread.map((p) => p.rotatedSize.height));
       const item: VirtualItem = {
         id: `item-${index}`,
         x: xOffset,
@@ -37,7 +40,7 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
         width,
         height,
         pageLayouts,
-        pageNumbers: pagesInSpread.map(p => p.index + 1),
+        pageNumbers: pagesInSpread.map((p) => p.index + 1),
         index,
       };
       xOffset += width + this.pageGap;
@@ -47,8 +50,9 @@ export class HorizontalScrollStrategy extends BaseScrollStrategy {
 
   getTotalContentSize(virtualItems: VirtualItem[]): { width: number; height: number } {
     if (virtualItems.length === 0) return { width: 0, height: 0 };
-    const totalWidth = virtualItems[virtualItems.length - 1].x + virtualItems[virtualItems.length - 1].width;
-    const maxHeight = Math.max(...virtualItems.map(item => item.height));
+    const totalWidth =
+      virtualItems[virtualItems.length - 1].x + virtualItems[virtualItems.length - 1].width;
+    const maxHeight = Math.max(...virtualItems.map((item) => item.height));
     return {
       width: totalWidth,
       height: maxHeight,

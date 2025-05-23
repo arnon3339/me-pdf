@@ -1,13 +1,13 @@
-import { BasePlugin, createBehaviorEmitter, PluginRegistry } from "@embedpdf/core";
+import { BasePlugin, createBehaviorEmitter, PluginRegistry } from '@embedpdf/core';
 import {
   MatchFlag,
   PdfDocumentObject,
   SearchAllPagesResult,
   TaskError,
   PdfEngine,
-} from "@embedpdf/models";
-import { SearchPluginConfig, SearchCapability, SearchState, SearchResultState } from "./types";
-import { LoaderCapability, LoaderEvent, LoaderPlugin } from "@embedpdf/plugin-loader";
+} from '@embedpdf/models';
+import { SearchPluginConfig, SearchCapability, SearchState, SearchResultState } from './types';
+import { LoaderCapability, LoaderEvent, LoaderPlugin } from '@embedpdf/plugin-loader';
 import {
   startSearchSession,
   stopSearchSession,
@@ -17,9 +17,14 @@ import {
   setSearchResults,
   setActiveResultIndex,
   SearchAction,
-} from "./actions";
+} from './actions';
 
-export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapability, SearchState, SearchAction> {
+export class SearchPlugin extends BasePlugin<
+  SearchPluginConfig,
+  SearchCapability,
+  SearchState,
+  SearchAction
+> {
   static readonly id = 'search' as const;
   private loader: LoaderCapability;
   private currentDocument?: PdfDocumentObject;
@@ -34,7 +39,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
     this.engine = engine;
-    this.loader = this.registry.getPlugin<LoaderPlugin>("loader")!.provides();
+    this.loader = this.registry.getPlugin<LoaderPlugin>('loader')!.provides();
 
     this.loader.onDocumentLoaded(this.handleDocumentLoaded.bind(this));
     this.loader.onLoaderEvent(this.handleLoaderEvent.bind(this));
@@ -48,7 +53,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
   }
 
   private handleLoaderEvent(event: LoaderEvent): void {
-    if (event.type === "error" || (event.type === "start" && this.currentDocument)) {
+    if (event.type === 'error' || (event.type === 'start' && this.currentDocument)) {
       if (this.getState().active) {
         this.stopSearchSession();
       }
@@ -59,7 +64,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
   async initialize(config: SearchPluginConfig): Promise<void> {
     this.dispatch(setSearchFlags(config.flags || []));
     this.dispatch(
-      setShowAllResults(config.showAllResults !== undefined ? config.showAllResults : true)
+      setShowAllResults(config.showAllResults !== undefined ? config.showAllResults : true),
     );
   }
 
@@ -102,7 +107,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
     if (state.active) {
       this.searchAllPages(state.query, true);
     }
-  } 
+  }
 
   private notifySearchStart(): void {
     this.searchStart$.emit();
@@ -132,7 +137,10 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
     this.notifySearchStop();
   }
 
-  private async searchAllPages(keyword: string, force: boolean = false): Promise<SearchAllPagesResult> {
+  private async searchAllPages(
+    keyword: string,
+    force: boolean = false,
+  ): Promise<SearchAllPagesResult> {
     const trimmedKeyword = keyword.trim();
     const state = this.getState();
 
@@ -156,24 +164,22 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
     }
 
     return new Promise<SearchAllPagesResult>((resolve) => {
-      this.engine
-        .searchAllPages(this.currentDocument!, trimmedKeyword, state.flags)
-        .wait(
-          (results) => {
-            const activeResultIndex = results.total > 0 ? 0 : -1;
-            this.dispatch(setSearchResults(results.results, results.total, activeResultIndex));
-            this.searchResult$.emit(results);
-            if (results.total > 0) {
-              this.notifyActiveResultChange(0);
-            }
-            resolve(results);
-          },
-          (error: TaskError<any>) => {
-            console.error("Error during search:", error);
-            this.dispatch(setSearchResults([], 0, -1));
-            resolve({ results: [], total: 0 });
+      this.engine.searchAllPages(this.currentDocument!, trimmedKeyword, state.flags).wait(
+        (results) => {
+          const activeResultIndex = results.total > 0 ? 0 : -1;
+          this.dispatch(setSearchResults(results.results, results.total, activeResultIndex));
+          this.searchResult$.emit(results);
+          if (results.total > 0) {
+            this.notifyActiveResultChange(0);
           }
-        );
+          resolve(results);
+        },
+        (error: TaskError<any>) => {
+          console.error('Error during search:', error);
+          this.dispatch(setSearchResults([], 0, -1));
+          resolve({ results: [], total: 0 });
+        },
+      );
     });
   }
 
@@ -183,9 +189,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
       return -1;
     }
     const nextIndex =
-      state.activeResultIndex >= state.results.length - 1
-        ? 0
-        : state.activeResultIndex + 1;
+      state.activeResultIndex >= state.results.length - 1 ? 0 : state.activeResultIndex + 1;
     return this.goToResult(nextIndex);
   }
 
@@ -195,9 +199,7 @@ export class SearchPlugin extends BasePlugin<SearchPluginConfig, SearchCapabilit
       return -1;
     }
     const prevIndex =
-      state.activeResultIndex <= 0
-        ? state.results.length - 1
-        : state.activeResultIndex - 1;
+      state.activeResultIndex <= 0 ? state.results.length - 1 : state.activeResultIndex - 1;
     return this.goToResult(prevIndex);
   }
 

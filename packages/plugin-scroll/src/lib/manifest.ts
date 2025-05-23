@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { ScrollPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { ScrollPluginConfig } from './types';
 
 export const SCROLL_PLUGIN_ID = 'scroll';
 
@@ -12,6 +12,6 @@ export const manifest: PluginManifest<ScrollPluginConfig> = {
   optional: [],
   defaultConfig: {
     enabled: true,
-    pageGap: 10
-  }
-}; 
+    pageGap: 10,
+  },
+};

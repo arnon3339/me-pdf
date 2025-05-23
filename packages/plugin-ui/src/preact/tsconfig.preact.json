@@ -5,4 +5,4 @@
     "jsxImportSource": "preact"
   },
   "include": ["./**/*.ts", "./**/*.tsx"]
-} 
+}

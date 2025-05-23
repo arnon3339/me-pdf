@@ -18,8 +18,8 @@ export class BufferStrategy implements PDFLoadingStrategy {
           } else {
             reject(new Error(`PDF loading failed: ${error.reason}`));
           }
-        }
+        },
       );
     });
   }
-} 
+}

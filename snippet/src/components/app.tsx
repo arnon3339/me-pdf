@@ -6,30 +6,93 @@ import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
 import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import { init, init as initPdfium } from '@embedpdf/pdfium';
 import { MatchFlag, PdfEngine, Rotation } from '@embedpdf/models';
-import { VIEWPORT_PLUGIN_ID, ViewportPluginPackage, ViewportState } from '@embedpdf/plugin-viewport';
+import {
+  VIEWPORT_PLUGIN_ID,
+  ViewportPluginPackage,
+  ViewportState,
+} from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/preact';
-import { SCROLL_PLUGIN_ID, ScrollPlugin, ScrollPluginPackage, ScrollState, ScrollStrategy } from '@embedpdf/plugin-scroll';
+import {
+  SCROLL_PLUGIN_ID,
+  ScrollPlugin,
+  ScrollPluginPackage,
+  ScrollState,
+  ScrollStrategy,
+} from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/preact';
-import { SPREAD_PLUGIN_ID, SpreadMode, SpreadPlugin, SpreadPluginPackage, SpreadState } from '@embedpdf/plugin-spread';
+import {
+  SPREAD_PLUGIN_ID,
+  SpreadMode,
+  SpreadPlugin,
+  SpreadPluginPackage,
+  SpreadState,
+} from '@embedpdf/plugin-spread';
 //import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-layer';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 //import { RenderLayerPackage } from '@embedpdf/layer-render';
 //import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
-import { MenuItem, defineComponent, GlobalStoreState, IconRegistry, UIComponentType, UIPlugin, UIPluginConfig, UIPluginPackage, hasActive, isActive, UI_PLUGIN_ID } from '@embedpdf/plugin-ui';
-import { attachmentsRenderer, commandMenuRenderer, commentRender, dividerRenderer, groupedItemsRenderer, headerRenderer, iconButtonRenderer, outlineRenderer, pageControlsContainerRenderer, PageControlsProps, pageControlsRenderer, panelRenderer, searchRenderer, selectButtonRenderer, tabButtonRenderer, textSelectionMenuRenderer, thumbnailsRender, zoomRenderer, ZoomRendererProps } from './renderers';
+import {
+  MenuItem,
+  defineComponent,
+  GlobalStoreState,
+  IconRegistry,
+  UIComponentType,
+  UIPlugin,
+  UIPluginConfig,
+  UIPluginPackage,
+  hasActive,
+  isActive,
+  UI_PLUGIN_ID,
+} from '@embedpdf/plugin-ui';
+import {
+  attachmentsRenderer,
+  commandMenuRenderer,
+  commentRender,
+  dividerRenderer,
+  groupedItemsRenderer,
+  headerRenderer,
+  iconButtonRenderer,
+  outlineRenderer,
+  pageControlsContainerRenderer,
+  PageControlsProps,
+  pageControlsRenderer,
+  panelRenderer,
+  searchRenderer,
+  selectButtonRenderer,
+  tabButtonRenderer,
+  textSelectionMenuRenderer,
+  thumbnailsRender,
+  zoomRenderer,
+  ZoomRendererProps,
+} from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
-import { ZOOM_PLUGIN_ID, ZoomMode, ZoomPlugin, ZoomPluginPackage, ZoomState } from '@embedpdf/plugin-zoom';
+import {
+  ZOOM_PLUGIN_ID,
+  ZoomMode,
+  ZoomPlugin,
+  ZoomPluginPackage,
+  ZoomState,
+} from '@embedpdf/plugin-zoom';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/preact';
 import { ROTATE_PLUGIN_ID, RotatePlugin, RotatePluginPackage } from '@embedpdf/plugin-rotate';
 import { Rotate } from '@embedpdf/plugin-rotate/preact';
 import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/plugin-search';
 import { SearchLayer } from '@embedpdf/plugin-search/preact';
-import { SELECTION_PLUGIN_ID, SelectionPlugin, SelectionPluginPackage, SelectionState } from '@embedpdf/plugin-selection';
+import {
+  SELECTION_PLUGIN_ID,
+  SelectionPlugin,
+  SelectionPluginPackage,
+  SelectionState,
+} from '@embedpdf/plugin-selection';
 import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
 import { TilingPlugin, TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
-import { THUMBNAIL_PLUGIN_ID, ThumbnailPlugin, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
+import {
+  THUMBNAIL_PLUGIN_ID,
+  ThumbnailPlugin,
+  ThumbnailPluginPackage,
+} from '@embedpdf/plugin-thumbnail';
 import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 
@@ -51,7 +114,7 @@ interface InitializeEngineOptions {
 }
 // **Initialize the Pdfium Engine**
 async function initializeEngine(options?: InitializeEngineOptions): Promise<PdfEngine> {
-  if(options?.workerUrl) {
+  if (options?.workerUrl) {
     const worker = new Worker(options.workerUrl, {
       type: 'module',
     });
@@ -74,152 +137,152 @@ interface PDFViewerProps {
 }
 
 type State = GlobalStoreState<{
-  [ZOOM_PLUGIN_ID]: ZoomState,
-  [VIEWPORT_PLUGIN_ID]: ViewportState,
-  [SCROLL_PLUGIN_ID]: ScrollState,
-  [SPREAD_PLUGIN_ID]: SpreadState,
-  [SEARCH_PLUGIN_ID]: SearchState,
-  [SELECTION_PLUGIN_ID]: SelectionState
-}>
+  [ZOOM_PLUGIN_ID]: ZoomState;
+  [VIEWPORT_PLUGIN_ID]: ViewportState;
+  [SCROLL_PLUGIN_ID]: ScrollState;
+  [SPREAD_PLUGIN_ID]: SpreadState;
+  [SEARCH_PLUGIN_ID]: SearchState;
+  [SELECTION_PLUGIN_ID]: SelectionState;
+}>;
 
 export const icons: IconRegistry = {
   menu: {
     id: 'menu',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-menu"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8l16 0" /><path d="M4 16l16 0" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-menu"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8l16 0" /><path d="M4 16l16 0" /></svg>',
   },
   download: {
     id: 'download',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-download"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-download"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>',
   },
   fullscreen: {
     id: 'fullscreen',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-maximize"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2 -2v-2" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-maximize"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2 -2v-2" /></svg>',
   },
   save: {
     id: 'save',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>',
   },
   print: {
     id: 'print',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" /><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" /><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" /><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" /><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" /></svg>',
   },
   settings: {
     id: 'settings',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>',
   },
   viewSettings: {
     id: 'viewSettings',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-file-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M12 10.5v1.5" /><path d="M12 16v1.5" /><path d="M15.031 12.25l-1.299 .75" /><path d="M10.268 15l-1.3 .75" /><path d="M15 15.803l-1.285 -.773" /><path d="M10.285 12.97l-1.285 -.773" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-file-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M12 10.5v1.5" /><path d="M12 16v1.5" /><path d="M15.031 12.25l-1.299 .75" /><path d="M10.268 15l-1.3 .75" /><path d="M15 15.803l-1.285 -.773" /><path d="M10.285 12.97l-1.285 -.773" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /></svg>',
   },
   rotateClockwise: {
     id: 'rotateClockwise',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-rotate-clockwise"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-rotate-clockwise"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5" /></svg>',
   },
   rotateCounterClockwise: {
     id: 'rotateCounterClockwise',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-rotate"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-rotate"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" /></svg>',
   },
   singlePage: {
     id: 'singlePage',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-columns-1"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 3m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v16a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-columns-1"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 3m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v16a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z" /></svg>',
   },
   doublePage: {
     id: 'doublePage',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-columns-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 3m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v16a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1zm9 -1v18" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-columns-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 3m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v16a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1zm9 -1v18" /></svg>',
   },
   zoomIn: {
     id: 'zoomIn',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M9 12h6" /><path d="M12 9v6" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M9 12h6" /><path d="M12 9v6" /></svg>',
   },
   zoomOut: {
     id: 'zoomOut',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-minus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l6 0" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-minus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l6 0" /></svg>',
   },
   fitToWidth: {
     id: 'fitToWidth',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-autofit-width"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 12v-6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6" /><path d="M10 18h-7" /><path d="M21 18h-7" /><path d="M6 15l-3 3l3 3" /><path d="M18 15l3 3l-3 3" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-autofit-width"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 12v-6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6" /><path d="M10 18h-7" /><path d="M21 18h-7" /><path d="M6 15l-3 3l3 3" /><path d="M18 15l3 3l-3 3" /></svg>',
   },
-  fitToPage: {  
-    id: 'fitToPage',  
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-autofit-height"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 20h-6a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h6" /><path d="M18 14v7" /><path d="M18 3v7" /><path d="M15 18l3 3l3 -3" /><path d="M15 6l3 -3l3 3" /></svg>'
+  fitToPage: {
+    id: 'fitToPage',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-autofit-height"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 20h-6a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h6" /><path d="M18 14v7" /><path d="M18 3v7" /><path d="M15 18l3 3l3 -3" /><path d="M15 6l3 -3l3 3" /></svg>',
   },
   chevronRight: {
     id: 'chevronRight',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>',
   },
   chevronLeft: {
     id: 'chevronLeft',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>',
   },
   chevronDown: {
     id: 'chevronDown',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>',
   },
   search: {
     id: 'search',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-search"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-search"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>',
   },
   comment: {
     id: 'comment',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-message-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 11v.01" /><path d="M8 11v.01" /><path d="M16 11v.01" /><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3z" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-message-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 11v.01" /><path d="M8 11v.01" /><path d="M16 11v.01" /><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3z" /></svg>',
   },
   sidebar: {
     id: 'sidebar',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-sidebar-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 18v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M14 18v-12a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2z" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-sidebar-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 18v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M14 18v-12a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2z" /></svg>',
   },
   dots: {
     id: 'dots',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>',
   },
   vertical: {
     id: 'vertical',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-vertical"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7l4 -4l4 4" /><path d="M8 17l4 4l4 -4" /><path d="M12 3l0 18" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-vertical"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7l4 -4l4 4" /><path d="M8 17l4 4l4 -4" /><path d="M12 3l0 18" /></svg>',
   },
   horizontal: {
     id: 'horizontal',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-horizontal"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 8l-4 4l4 4" /><path d="M17 8l4 4l-4 4" /><path d="M3 12l18 0" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-horizontal"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 8l-4 4l4 4" /><path d="M17 8l4 4l-4 4" /><path d="M3 12l18 0" /></svg>',
   },
   book: {
     id: 'book',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6l0 13" /><path d="M12 6l0 13" /><path d="M21 6l0 13" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6l0 13" /><path d="M12 6l0 13" /><path d="M21 6l0 13" /></svg>',
   },
   book2: {
-    id: 'book2',  
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z" /><path d="M19 16h-12a2 2 0 0 0 -2 2" /><path d="M9 8h6" /></svg>'
+    id: 'book2',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z" /><path d="M19 16h-12a2 2 0 0 0 -2 2" /><path d="M9 8h6" /></svg>',
   },
   squares: {
     id: 'squares',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-squares"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 10a2 2 0 0 1 2 -2h9a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-9a2 2 0 0 1 -2 -2z" /><path d="M16 8v-3a2 2 0 0 0 -2 -2h-9a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h3" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-squares"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 10a2 2 0 0 1 2 -2h9a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-9a2 2 0 0 1 -2 -2z" /><path d="M16 8v-3a2 2 0 0 0 -2 -2h-9a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h3" /></svg>',
   },
   listTree: {
     id: 'listTree',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-list-tree"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6h11" /><path d="M12 12h8" /><path d="M15 18h5" /><path d="M5 6v.01" /><path d="M8 12v.01" /><path d="M11 18v.01" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-list-tree"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6h11" /><path d="M12 12h8" /><path d="M15 18h5" /><path d="M5 6v.01" /><path d="M8 12v.01" /><path d="M11 18v.01" /></svg>',
   },
   paperclip: {
     id: 'paperclip',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-paperclip"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-paperclip"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" /></svg>',
   },
   copy: {
     id: 'copy',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-copy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>'
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-copy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>',
   },
   underline: {
     id: 'underline',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h16" stroke="#e44234" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /></svg>'
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h16" stroke="#e44234" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /></svg>',
   },
   squiggly: {
     id: 'squiggly',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-wavy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /><path d="M4 20c1.5 -1.5 3.5 -1.5 5 0s3.5 1.5 5 0 3.5 -1.5 5 0" stroke="#e44234" /></svg>'
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-wavy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /><path d="M4 20c1.5 -1.5 3.5 -1.5 5 0s3.5 1.5 5 0 3.5 -1.5 5 0" stroke="#e44234" /></svg>',
   },
   strikethrough: {
     id: 'strikethrough',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M4 10h16" stroke="#e44234" /></svg>'
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M4 10h16" stroke="#e44234" /></svg>',
   },
   highlight: {
     id: 'highlight',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="#ffcd45" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor"/><path d="M8 10h8" stroke="currentColor"/></svg>'
-  }
-}
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="#ffcd45" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor"/><path d="M8 10h8" stroke="currentColor"/></svg>',
+  },
+};
 
 export const menuItems: Record<string, MenuItem<State>> = {
   menuCtr: {
@@ -229,10 +292,9 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcut: 'Shift+M',
     //shortcutLabel: 'M',
     type: 'menu',
-    children: [
-      'download', 'enterFS', 'save', 'print', 'settings'
-    ],
-    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'menuCtr'
+    children: ['download', 'enterFS', 'save', 'print', 'settings'],
+    active: (storeState) =>
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'menuCtr',
   },
   download: {
     id: 'download',
@@ -243,7 +305,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: () => {
       console.log('download');
-    }
+    },
   },
   enterFS: {
     id: 'enterFS',
@@ -254,7 +316,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: () => {
       console.log('enterFS');
-    }
+    },
   },
   save: {
     id: 'save',
@@ -265,7 +327,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: () => {
       console.log('save');
-    }
+    },
   },
   print: {
     id: 'print',
@@ -276,7 +338,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: () => {
       console.log('print');
-    }
+    },
   },
   settings: {
     id: 'settings',
@@ -288,26 +350,25 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: () => {
       console.log('settings');
-    }
+    },
   },
   /* --- View controls menu --- */
-  viewCtr:     {
-    id:'viewCtr',     
-    icon:'viewSettings',  
-    label:'View controls', 
+  viewCtr: {
+    id: 'viewCtr',
+    icon: 'viewSettings',
+    label: 'View controls',
     //shortcut: 'Shift+V',
     //shortcutLabel: 'V',
     type: 'menu',
-    children:[
-      'pageOrientation', 'scrollLayout', 'pageLayout', 'enterFS'
-    ],
-    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'viewCtr'
+    children: ['pageOrientation', 'scrollLayout', 'pageLayout', 'enterFS'],
+    active: (storeState) =>
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'viewCtr',
   },
   pageOrientation: {
     id: 'pageOrientation',
     label: 'Page orientation',
     type: 'group',
-    children: ['rotateClockwise', 'rotateCounterClockwise']
+    children: ['rotateClockwise', 'rotateCounterClockwise'],
   },
   rotateClockwise: {
     id: 'rotateClockwise',
@@ -316,10 +377,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: (registry) => {
       const rotate = registry.getPlugin<RotatePlugin>(ROTATE_PLUGIN_ID)?.provides();
-      if(rotate) {
-        rotate.rotateForward()
+      if (rotate) {
+        rotate.rotateForward();
       }
-    }
+    },
   },
   rotateCounterClockwise: {
     id: 'rotateCounterClockwise',
@@ -328,16 +389,16 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: (registry) => {
       const rotate = registry.getPlugin<RotatePlugin>(ROTATE_PLUGIN_ID)?.provides();
-      if(rotate) {
-        rotate.rotateBackward()
+      if (rotate) {
+        rotate.rotateBackward();
       }
-    }
+    },
   },
   scrollLayout: {
     id: 'scrollLayout',
     label: 'Scroll layout',
     type: 'group',
-    children: ['vertical', 'horizontal']
+    children: ['vertical', 'horizontal'],
   },
   vertical: {
     id: 'vertical',
@@ -347,10 +408,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Vertical,
     action: (registry) => {
       const scroll = registry.getPlugin<ScrollPlugin>(SCROLL_PLUGIN_ID)?.provides();
-      if(scroll) {
+      if (scroll) {
         scroll.setScrollStrategy(ScrollStrategy.Vertical);
       }
-    }
+    },
   },
   horizontal: {
     id: 'horizontal',
@@ -360,16 +421,16 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) => storeState.plugins.scroll.strategy === ScrollStrategy.Horizontal,
     action: (registry) => {
       const scroll = registry.getPlugin<ScrollPlugin>(SCROLL_PLUGIN_ID)?.provides();
-      if(scroll) {
+      if (scroll) {
         scroll.setScrollStrategy(ScrollStrategy.Horizontal);
       }
-    }
+    },
   },
   pageLayout: {
     id: 'pageLayout',
     label: 'Page layout',
     type: 'group',
-    children: ['singlePage', 'doublePage', 'coverFacingPage']
+    children: ['singlePage', 'doublePage', 'coverFacingPage'],
   },
   singlePage: {
     id: 'singlePage',
@@ -380,10 +441,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.None,
     action: (registry) => {
       const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
-      if(spread) {
+      if (spread) {
         spread.setSpreadMode(SpreadMode.None);
       }
-    }
+    },
   },
   doublePage: {
     id: 'doublePage',
@@ -394,10 +455,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.Odd,
     action: (registry) => {
       const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
-      if(spread) {
+      if (spread) {
         spread.setSpreadMode(SpreadMode.Odd);
       }
-    }
+    },
   },
   coverFacingPage: {
     id: 'coverFacingPage',
@@ -408,10 +469,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) => storeState.plugins.spread.spreadMode === SpreadMode.Even,
     action: (registry) => {
       const spread = registry.getPlugin<SpreadPlugin>(SPREAD_PLUGIN_ID)?.provides();
-      if(spread) {
+      if (spread) {
         spread.setSpreadMode(SpreadMode.Even);
       }
-    }
+    },
   },
   leftAction: {
     id: 'leftAction',
@@ -419,27 +480,26 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'menu',
     icon: 'dots',
     children: ['viewCtr', 'zoom'],
-    active: (storeState) => 
-      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'leftAction' || 
-      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'zoom' || 
+    active: (storeState) =>
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'leftAction' ||
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'zoom' ||
       storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'changeZoomLevel' ||
-      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'viewCtr'
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'viewCtr',
   },
-  zoom:     {
-    id:'zoom',     
-    icon:'zoomIn',  
-    label:'Zoom Controls', 
+  zoom: {
+    id: 'zoom',
+    icon: 'zoomIn',
+    label: 'Zoom Controls',
     //shortcut: 'Shift+Z',
     //shortcutLabel: 'Z',
     type: 'menu',
-    children:[
-      'changeZoomLevel', 'zoomIn', 'zoomOut', 'fitToWidth', 'fitToPage'
-    ],
-    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'zoom'
+    children: ['changeZoomLevel', 'zoomIn', 'zoomOut', 'fitToWidth', 'fitToPage'],
+    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'zoom',
   },
   changeZoomLevel: {
     id: 'changeZoomLevel',
-    label: (storeState) => `Zoom level (${(storeState.plugins.zoom.currentZoomLevel * 100).toFixed(0)}%)`,
+    label: (storeState) =>
+      `Zoom level (${(storeState.plugins.zoom.currentZoomLevel * 100).toFixed(0)}%)`,
     type: 'menu',
     children: [
       'zoom25',
@@ -450,9 +510,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
       'zoom200',
       'zoom400',
       'zoom800',
-      'zoom1600'
+      'zoom1600',
     ],
-    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'changeZoomLevel'
+    active: (storeState) =>
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'changeZoomLevel',
   },
   zoom25: {
     id: 'zoom25',
@@ -462,10 +523,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
+      if (zoom) {
         zoom.requestZoom(0.25);
       }
-    }
+    },
   },
   zoom50: {
     id: 'zoom50',
@@ -475,10 +536,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
-        zoom.requestZoom(0.50);
+      if (zoom) {
+        zoom.requestZoom(0.5);
       }
-    }
+    },
   },
   zoom100: {
     id: 'zoom100',
@@ -488,10 +549,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
+      if (zoom) {
         zoom.requestZoom(1);
       }
-    }
+    },
   },
   zoom125: {
     id: 'zoom125',
@@ -501,23 +562,23 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
+      if (zoom) {
         zoom.requestZoom(1.25);
       }
-    }
+    },
   },
   zoom150: {
     id: 'zoom150',
     label: '150%',
     type: 'action',
-    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 1.50,
+    active: (storeState) => storeState.plugins.zoom.currentZoomLevel === 1.5,
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
-        zoom.requestZoom(1.50);
+      if (zoom) {
+        zoom.requestZoom(1.5);
       }
-    }
+    },
   },
   zoom200: {
     id: 'zoom200',
@@ -527,10 +588,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
+      if (zoom) {
         zoom.requestZoom(2);
       }
-    }
+    },
   },
   zoom400: {
     id: 'zoom400',
@@ -540,10 +601,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
+      if (zoom) {
         zoom.requestZoom(4);
       }
-    }
+    },
   },
   zoom800: {
     id: 'zoom800',
@@ -553,10 +614,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
+      if (zoom) {
         zoom.requestZoom(8);
       }
-    }
+    },
   },
   zoom1600: {
     id: 'zoom1600',
@@ -566,12 +627,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
+      if (zoom) {
         zoom.requestZoom(16);
       }
-    }
+    },
   },
-  zoomIn: {     
+  zoomIn: {
     id: 'zoomIn',
     label: 'Zoom in',
     icon: 'zoomIn',
@@ -579,10 +640,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
+      if (zoom) {
         zoom.zoomIn();
       }
-    }
+    },
   },
   zoomOut: {
     id: 'zoomOut',
@@ -591,11 +652,11 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
-      
-      if(zoom) {
+
+      if (zoom) {
         zoom.zoomOut();
       }
-    }
+    },
   },
   search: {
     id: 'search',
@@ -605,11 +666,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.togglePanel({id: 'rightPanel', visibleChild: 'search'});
+      if (ui) {
+        ui.togglePanel({ id: 'rightPanel', visibleChild: 'search' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.panel.rightPanel.open === true && storeState.plugins.ui.panel.rightPanel.visibleChild === 'search'
+    active: (storeState) =>
+      storeState.plugins.ui.panel.rightPanel.open === true &&
+      storeState.plugins.ui.panel.rightPanel.visibleChild === 'search',
   },
   comment: {
     id: 'comment',
@@ -619,11 +682,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.togglePanel({id: 'rightPanel', visibleChild: 'comment'});
+      if (ui) {
+        ui.togglePanel({ id: 'rightPanel', visibleChild: 'comment' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.panel.rightPanel.open === true && storeState.plugins.ui.panel.rightPanel.visibleChild === 'comment'
+    active: (storeState) =>
+      storeState.plugins.ui.panel.rightPanel.open === true &&
+      storeState.plugins.ui.panel.rightPanel.visibleChild === 'comment',
   },
   fitToWidth: {
     id: 'fitToWidth',
@@ -634,10 +699,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
-        zoom.requestZoom(ZoomMode.FitWidth)
+      if (zoom) {
+        zoom.requestZoom(ZoomMode.FitWidth);
       }
-    }
+    },
   },
   fitToPage: {
     id: 'fitToPage',
@@ -648,10 +713,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const zoom = registry.getPlugin<ZoomPlugin>(ZOOM_PLUGIN_ID)?.provides();
 
-      if(zoom) {
-        zoom.requestZoom(ZoomMode.FitPage)
+      if (zoom) {
+        zoom.requestZoom(ZoomMode.FitPage);
       }
-    }
+    },
   },
   sidebar: {
     id: 'sidebar',
@@ -661,21 +726,20 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry, state) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.togglePanel({id: 'leftPanel', visibleChild: state.plugins.ui.panel.leftPanel.visibleChild || 'thumbnails'});
+      if (ui) {
+        ui.togglePanel({
+          id: 'leftPanel',
+          visibleChild: state.plugins.ui.panel.leftPanel.visibleChild || 'thumbnails',
+        });
       }
     },
-    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true
+    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true,
   },
   sidebarMenu: {
-    id:'sidebarMenu',     
-    label:'Sidebar Menu', 
+    id: 'sidebarMenu',
+    label: 'Sidebar Menu',
     type: 'menu',
-    children:[
-      'thumbnails',
-      'outline',
-      'attachments'
-    ]
+    children: ['thumbnails', 'outline', 'attachments'],
   },
   thumbnails: {
     id: 'thumbnails',
@@ -685,11 +749,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.togglePanel({id: 'leftPanel', visibleChild: 'thumbnails'});
+      if (ui) {
+        ui.togglePanel({ id: 'leftPanel', visibleChild: 'thumbnails' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true && storeState.plugins.ui.panel.leftPanel.visibleChild === 'thumbnails'
+    active: (storeState) =>
+      storeState.plugins.ui.panel.leftPanel.open === true &&
+      storeState.plugins.ui.panel.leftPanel.visibleChild === 'thumbnails',
   },
   outline: {
     id: 'outline',
@@ -699,11 +765,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.togglePanel({id: 'leftPanel', visibleChild: 'outline'});
+      if (ui) {
+        ui.togglePanel({ id: 'leftPanel', visibleChild: 'outline' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true && storeState.plugins.ui.panel.leftPanel.visibleChild === 'outline'
+    active: (storeState) =>
+      storeState.plugins.ui.panel.leftPanel.open === true &&
+      storeState.plugins.ui.panel.leftPanel.visibleChild === 'outline',
   },
   attachments: {
     id: 'attachments',
@@ -713,11 +781,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.togglePanel({id: 'leftPanel', visibleChild: 'attachments'});
+      if (ui) {
+        ui.togglePanel({ id: 'leftPanel', visibleChild: 'attachments' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true && storeState.plugins.ui.panel.leftPanel.visibleChild === 'attachments'
+    active: (storeState) =>
+      storeState.plugins.ui.panel.leftPanel.open === true &&
+      storeState.plugins.ui.panel.leftPanel.visibleChild === 'attachments',
   },
   view: {
     id: 'view',
@@ -728,11 +798,11 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.setHeaderVisible({id: 'toolsHeader', visible: false});
+      if (ui) {
+        ui.setHeaderVisible({ id: 'toolsHeader', visible: false });
       }
     },
-    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === false
+    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === false,
   },
   annotate: {
     id: 'annotate',
@@ -743,11 +813,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.setHeaderVisible({id: 'toolsHeader', visible: true, visibleChild: 'annotationTools'});
+      if (ui) {
+        ui.setHeaderVisible({ id: 'toolsHeader', visible: true, visibleChild: 'annotationTools' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'annotationTools'
+    active: (storeState) =>
+      storeState.plugins.ui.header.toolsHeader.visible === true &&
+      storeState.plugins.ui.header.toolsHeader.visibleChild === 'annotationTools',
   },
   shapes: {
     id: 'shapes',
@@ -758,11 +830,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.setHeaderVisible({id: 'toolsHeader', visible: true, visibleChild: 'shapeTools'});
+      if (ui) {
+        ui.setHeaderVisible({ id: 'toolsHeader', visible: true, visibleChild: 'shapeTools' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'shapeTools'
+    active: (storeState) =>
+      storeState.plugins.ui.header.toolsHeader.visible === true &&
+      storeState.plugins.ui.header.toolsHeader.visibleChild === 'shapeTools',
   },
   fillAndSign: {
     id: 'fillAndSign',
@@ -771,11 +845,13 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.setHeaderVisible({id: 'toolsHeader', visible: true, visibleChild: 'fillAndSignTools'});
+      if (ui) {
+        ui.setHeaderVisible({ id: 'toolsHeader', visible: true, visibleChild: 'fillAndSignTools' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'fillAndSignTools'
+    active: (storeState) =>
+      storeState.plugins.ui.header.toolsHeader.visible === true &&
+      storeState.plugins.ui.header.toolsHeader.visibleChild === 'fillAndSignTools',
   },
   form: {
     id: 'form',
@@ -784,25 +860,22 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
-      if(ui) {
-        ui.setHeaderVisible({id: 'toolsHeader', visible: true, visibleChild: 'formTools'});
+      if (ui) {
+        ui.setHeaderVisible({ id: 'toolsHeader', visible: true, visibleChild: 'formTools' });
       }
     },
-    active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === true && storeState.plugins.ui.header.toolsHeader.visibleChild === 'formTools'
+    active: (storeState) =>
+      storeState.plugins.ui.header.toolsHeader.visible === true &&
+      storeState.plugins.ui.header.toolsHeader.visibleChild === 'formTools',
   },
   tabOverflow: {
     id: 'tabOverflow',
     label: 'More',
     icon: 'dots',
     type: 'menu',
-    children: [
-      'view',
-      'annotate',
-      'shapes',
-      'fillAndSign',
-      'form'
-    ],
-    active: (storeState) => storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'tabOverflow'
+    children: ['view', 'annotate', 'shapes', 'fillAndSign', 'form'],
+    active: (storeState) =>
+      storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'tabOverflow',
   },
   nextPage: {
     id: 'nextPage',
@@ -814,10 +887,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const scroll = registry.getPlugin<ScrollPlugin>(SCROLL_PLUGIN_ID)?.provides();
 
-      if(scroll) {
+      if (scroll) {
         scroll.scrollToNextPage();
       }
-    }
+    },
   },
   previousPage: {
     id: 'previousPage',
@@ -829,10 +902,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry) => {
       const scroll = registry.getPlugin<ScrollPlugin>(SCROLL_PLUGIN_ID)?.provides();
 
-      if(scroll) {
+      if (scroll) {
         scroll.scrollToPreviousPage();
       }
-    }     
+    },
   },
   copy: {
     id: 'copy',
@@ -841,46 +914,37 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: (registry) => {
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
-      
-    }
+    },
   },
   underline: {
     id: 'underline',
     label: 'Underline',
     type: 'action',
     icon: 'underline',
-    action: (registry) => {
-  
-    }
+    action: (registry) => {},
   },
   squiggly: {
     id: 'squiggly',
     label: 'Squiggly',
     type: 'action',
     icon: 'squiggly',
-    action: (registry) => {
-
-    }
+    action: (registry) => {},
   },
   strikethrough: {
     id: 'strikethrough',
     label: 'Strikethrough',
     type: 'action',
     icon: 'strikethrough',
-    action: (registry) => {
-
-    }
+    action: (registry) => {},
   },
   highlight: {
     id: 'highlight',
     label: 'Highlight',
     type: 'action',
     icon: 'highlight',
-    action: (registry) => {
-
-    }
-  } 
-}
+    action: (registry) => {},
+  },
+};
 
 // Define components
 export const components: Record<string, UIComponentType<State>> = {
@@ -890,12 +954,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       commandId: 'menuCtr',
       active: false,
-      label: 'Menu'
-    },   
+      label: 'Menu',
+    },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.menuCtr, storeState)
-    })
+      active: isActive(menuItems.menuCtr, storeState),
+    }),
   },
   copyButton: {
     type: 'iconButton',
@@ -903,40 +967,40 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       commandId: 'copy',
       active: false,
-      label: 'Copy'
-    },   
+      label: 'Copy',
+    },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.copy, storeState)
-    })
+      active: isActive(menuItems.copy, storeState),
+    }),
   },
   underlineButton: {
     type: 'iconButton',
     id: 'underlineButton',
     props: {
       commandId: 'underline',
-    }
+    },
   },
   squigglyButton: {
     type: 'iconButton',
     id: 'squigglyButton',
     props: {
       commandId: 'squiggly',
-    }
+    },
   },
   strikethroughButton: {
     type: 'iconButton',
     id: 'strikethroughButton',
     props: {
       commandId: 'strikethrough',
-    }
+    },
   },
   highlightButton: {
     type: 'iconButton',
     id: 'highlightButton',
     props: {
       commandId: 'highlight',
-    }
+    },
   },
   viewCtrButton: {
     type: 'iconButton',
@@ -944,12 +1008,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       commandId: 'viewCtr',
       active: false,
-      label: 'View settings'
-    },   
+      label: 'View settings',
+    },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.viewCtr, storeState)
-    })
+      active: isActive(menuItems.viewCtr, storeState),
+    }),
   },
   commentButton: {
     type: 'iconButton',
@@ -961,8 +1025,8 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.comment, storeState)
-    })
+      active: isActive(menuItems.comment, storeState),
+    }),
   },
   searchButton: {
     type: 'iconButton',
@@ -974,8 +1038,8 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.search, storeState)
-    })
+      active: isActive(menuItems.search, storeState),
+    }),
   },
   filePickerButton: {
     type: 'iconButton',
@@ -992,7 +1056,7 @@ export const components: Record<string, UIComponentType<State>> = {
       label: 'Download',
       img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZG93bmxvYWQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDE3djJhMiAyIDAgMCAwIDIgMmgxMmEyIDIgMCAwIDAgMiAtMnYtMiIgLz48cGF0aCBkPSJNNyAxMWw1IDVsNSAtNSIgLz48cGF0aCBkPSJNMTIgNGwwIDEyIiAvPjwvc3ZnPg==',
     },
-  },  
+  },
   zoomButton: {
     type: 'iconButton',
     id: 'zoomButton',
@@ -1003,8 +1067,9 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.zoom, storeState) || isActive(menuItems.changeZoomLevel, storeState)
-    })
+      active:
+        isActive(menuItems.zoom, storeState) || isActive(menuItems.changeZoomLevel, storeState),
+    }),
   },
   sidebarButton: {
     type: 'iconButton',
@@ -1012,12 +1077,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       commandId: 'sidebar',
       label: 'Sidebar',
-      active: false
+      active: false,
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.sidebar, storeState)
-    })
+      active: isActive(menuItems.sidebar, storeState),
+    }),
   },
   divider1: {
     type: 'divider',
@@ -1032,25 +1097,29 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.leftAction, storeState)
-    })
+      active: isActive(menuItems.leftAction, storeState),
+    }),
   },
   headerStart: {
     id: 'headerStart',
     type: 'groupedItems',
     slots: [
-      { componentId: 'menuButton', priority: 0 }, 
-      { componentId: 'divider1', priority: 1, className: 'flex' }, 
-      { componentId: 'sidebarButton', priority: 2 }, 
+      { componentId: 'menuButton', priority: 0 },
+      { componentId: 'divider1', priority: 1, className: 'flex' },
+      { componentId: 'sidebarButton', priority: 2 },
       { componentId: 'expandLeftActionsButton', priority: 3, className: '@min-[400px]:hidden' },
-      { componentId: 'viewCtrButton', priority: 4, className: 'hidden @min-[400px]:block' }, 
+      { componentId: 'viewCtrButton', priority: 4, className: 'hidden @min-[400px]:block' },
       { componentId: 'divider1', priority: 6, className: 'hidden @min-[400px]:flex' },
-      { componentId: 'zoomButton', priority: 7, className: 'hidden @min-[400px]:block @min-[900px]:hidden' },
-      { componentId: 'zoom', priority: 8, className: 'hidden @min-[900px]:block' }
-    ],  
+      {
+        componentId: 'zoomButton',
+        priority: 7,
+        className: 'hidden @min-[400px]:block @min-[900px]:hidden',
+      },
+      { componentId: 'zoom', priority: 8, className: 'hidden @min-[900px]:block' },
+    ],
     props: {
-      gap: 10
-    }
+      gap: 10,
+    },
   },
   viewTab: {
     type: 'tabButton',
@@ -1058,12 +1127,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       label: 'View',
       commandId: 'view',
-      active: false
+      active: false,
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.view, storeState)
-    })
+      active: isActive(menuItems.view, storeState),
+    }),
   },
   annotateTab: {
     type: 'tabButton',
@@ -1071,12 +1140,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       label: 'Annotate',
       commandId: 'annotate',
-      active: false
+      active: false,
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.annotate, storeState)
-    })
+      active: isActive(menuItems.annotate, storeState),
+    }),
   },
   shapesTab: {
     type: 'tabButton',
@@ -1084,12 +1153,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       label: 'Shapes',
       commandId: 'shapes',
-      active: false
+      active: false,
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.shapes, storeState)
-    })
+      active: isActive(menuItems.shapes, storeState),
+    }),
   },
   fillAndSignTab: {
     type: 'tabButton',
@@ -1097,12 +1166,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       label: 'Fill and Sign',
       commandId: 'fillAndSign',
-      active: false
+      active: false,
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.fillAndSign, storeState)
-    })
+      active: isActive(menuItems.fillAndSign, storeState),
+    }),
   },
   formTab: {
     type: 'tabButton',
@@ -1110,12 +1179,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       label: 'Form',
       commandId: 'form',
-      active: false
+      active: false,
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.form, storeState)
-    })
+      active: isActive(menuItems.form, storeState),
+    }),
   },
   tabOverflowButton: {
     type: 'iconButton',
@@ -1123,12 +1192,12 @@ export const components: Record<string, UIComponentType<State>> = {
     props: {
       label: 'More',
       commandId: 'tabOverflow',
-      active: false
+      active: false,
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.tabOverflow, storeState)
-    })
+      active: isActive(menuItems.tabOverflow, storeState),
+    }),
   },
   selectButton: {
     type: 'selectButton',
@@ -1137,13 +1206,15 @@ export const components: Record<string, UIComponentType<State>> = {
       menuCommandId: 'tabOverflow',
       commandIds: ['view', 'annotate', 'shapes', 'fillAndSign', 'form'],
       activeCommandId: 'view',
-      active: false
+      active: false,
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      activeCommandId: ownProps.commandIds.find(commandId => isActive(menuItems[commandId], storeState)) ?? ownProps.commandIds[0],
-      active: isActive(menuItems.tabOverflow, storeState)
-    })
+      activeCommandId:
+        ownProps.commandIds.find((commandId) => isActive(menuItems[commandId], storeState)) ??
+        ownProps.commandIds[0],
+      active: isActive(menuItems.tabOverflow, storeState),
+    }),
   },
   headerCenter: {
     id: 'headerCenter',
@@ -1155,42 +1226,50 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'shapesTab', priority: 3, className: 'hidden @min-[600px]:block' },
       { componentId: 'fillAndSignTab', priority: 4, className: 'hidden @min-[700px]:block' },
       { componentId: 'formTab', priority: 5, className: 'hidden @min-[800px]:block' },
-      { componentId: 'tabOverflowButton', priority: 60, className: 'hidden @min-[500px]:block @min-[701px]:hidden' },
+      {
+        componentId: 'tabOverflowButton',
+        priority: 60,
+        className: 'hidden @min-[500px]:block @min-[701px]:hidden',
+      },
     ],
     props: {
-      gap: 10
-    }
+      gap: 10,
+    },
   },
   headerEnd: {
     id: 'headerEnd',
     type: 'groupedItems',
     slots: [
       { componentId: 'searchButton', priority: 1 },
-      { componentId: 'commentButton', priority: 2 }
+      { componentId: 'commentButton', priority: 2 },
     ],
     props: {
-      gap: 10
-    }
+      gap: 10,
+    },
   },
-  pageControls: defineComponent<{ currentPage: number, pageCount: number }, PageControlsProps, State>()({
+  pageControls: defineComponent<
+    { currentPage: number; pageCount: number },
+    PageControlsProps,
+    State
+  >()({
     id: 'pageControls',
     type: 'custom',
     render: 'pageControls',
     initialState: {
       currentPage: 1,
-      pageCount: 1
+      pageCount: 1,
     },
     props: (initialState) => ({
       currentPage: initialState.currentPage,
       pageCount: initialState.pageCount,
       nextPageCommandId: 'nextPage',
-      previousPageCommandId: 'previousPage'
+      previousPageCommandId: 'previousPage',
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       currentPage: storeState.plugins.scroll.currentPage,
-      pageCount: storeState.core.document?.pageCount ?? 1
-    })
+      pageCount: storeState.core.document?.pageCount ?? 1,
+    }),
   }),
   pageControlsContainer: {
     id: 'pageControlsContainer',
@@ -1199,9 +1278,7 @@ export const components: Record<string, UIComponentType<State>> = {
       scrollerPosition: 'outside',
     },
     render: 'pageControlsContainer',
-    slots: [
-      { componentId: 'pageControls', priority: 0 }
-    ]
+    slots: [{ componentId: 'pageControls', priority: 0 }],
   },
   textSelectionMenuButtons: {
     id: 'textSelectionMenuButtons',
@@ -1211,11 +1288,11 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'highlightButton', priority: 1 },
       { componentId: 'underlineButton', priority: 2 },
       { componentId: 'strikethroughButton', priority: 3 },
-      { componentId: 'squigglyButton', priority: 4 }
+      { componentId: 'squigglyButton', priority: 4 },
     ],
     props: {
-      gap: 10
-    }
+      gap: 10,
+    },
   },
   textSelectionMenu: {
     id: 'textSelectionMenu',
@@ -1231,16 +1308,14 @@ export const components: Record<string, UIComponentType<State>> = {
       scale: storeState.core.scale,
       rotation: storeState.core.rotation,
       spread: storeState.plugins[SPREAD_PLUGIN_ID].spreadMode,
-      open: 
-        storeState.plugins[SELECTION_PLUGIN_ID].active 
-        && !storeState.plugins[SELECTION_PLUGIN_ID].selecting
-    }), 
-    slots: [
-      { componentId: 'textSelectionMenuButtons', priority: 0 }
-    ],
+      open:
+        storeState.plugins[SELECTION_PLUGIN_ID].active &&
+        !storeState.plugins[SELECTION_PLUGIN_ID].selecting,
+    }),
+    slots: [{ componentId: 'textSelectionMenuButtons', priority: 0 }],
     getChildContext: {
-      direction: 'horizontal'
-    }
+      direction: 'horizontal',
+    },
   },
   topHeader: {
     type: 'header',
@@ -1248,17 +1323,18 @@ export const components: Record<string, UIComponentType<State>> = {
     slots: [
       { componentId: 'headerStart', priority: 0 },
       { componentId: 'headerCenter', priority: 1 },
-      { componentId: 'headerEnd', priority: 2 }
+      { componentId: 'headerEnd', priority: 2 },
     ],
     getChildContext: (props) => ({
-      direction: props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical'
+      direction:
+        props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical',
     }),
     props: {
       placement: 'top',
-      style: { 
+      style: {
         backgroundColor: '#ffffff',
-        gap: '10px'
-      }
+        gap: '10px',
+      },
     },
   },
   annotationTools: {
@@ -1268,18 +1344,18 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'highlightButton', priority: 1 },
       { componentId: 'underlineButton', priority: 2 },
       { componentId: 'strikethroughButton', priority: 3 },
-      { componentId: 'squigglyButton', priority: 4 }
+      { componentId: 'squigglyButton', priority: 4 },
     ],
     props: {
-      gap: 10
-    }
+      gap: 10,
+    },
   },
   toolsHeader: {
     type: 'header',
     id: 'toolsHeader',
     initialState: {
       visible: false,
-      visibleChild: null
+      visibleChild: null,
     },
     props: (initialState) => ({
       placement: 'top',
@@ -1287,44 +1363,43 @@ export const components: Record<string, UIComponentType<State>> = {
       visibleChild: initialState.visibleChild,
       style: {
         backgroundColor: '#f1f3f5',
-        justifyContent: 'center'
-      }
+        justifyContent: 'center',
+      },
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       visible: storeState.plugins.ui.header.toolsHeader.visible,
-      visibleChild: storeState.plugins.ui.header.toolsHeader.visibleChild
+      visibleChild: storeState.plugins.ui.header.toolsHeader.visibleChild,
     }),
-    slots: [
-      { componentId: 'annotationTools', priority: 0 }
-    ],
+    slots: [{ componentId: 'annotationTools', priority: 0 }],
     getChildContext: (props) => ({
-      direction: props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical'
-    })
+      direction:
+        props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical',
+    }),
   },
   leftPanel: {
     id: 'leftPanel',
     type: 'panel',
     initialState: {
       open: false,
-      visibleChild: 'thumbnails'
+      visibleChild: 'thumbnails',
     },
     props: (initialState) => ({
       open: initialState.open,
       visibleChild: initialState.visibleChild,
       location: 'left',
-      tabsCommandId: 'sidebarMenu' 
+      tabsCommandId: 'sidebarMenu',
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       open: storeState.plugins.ui.panel.leftPanel.open,
-      visibleChild: storeState.plugins.ui.panel.leftPanel.visibleChild
+      visibleChild: storeState.plugins.ui.panel.leftPanel.visibleChild,
     }),
     slots: [
       { componentId: 'thumbnails', priority: 0 },
       { componentId: 'outline', priority: 1 },
-      { componentId: 'attachments', priority: 2 }
-    ]
+      { componentId: 'attachments', priority: 2 },
+    ],
   },
   thumbnails: {
     id: 'thumbnails',
@@ -1332,18 +1407,18 @@ export const components: Record<string, UIComponentType<State>> = {
     render: 'thumbnails',
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      currentPage: storeState.plugins.scroll.currentPage
-    })
+      currentPage: storeState.plugins.scroll.currentPage,
+    }),
   },
   outline: {
     id: 'outline',
     type: 'custom',
-    render: 'outline'
+    render: 'outline',
   },
   attachments: {
     id: 'attachments',
     type: 'custom',
-    render: 'attachments'
+    render: 'attachments',
   },
   search: {
     id: 'search',
@@ -1357,13 +1432,13 @@ export const components: Record<string, UIComponentType<State>> = {
       activeResultIndex: storeState.plugins.search.activeResultIndex,
       active: storeState.plugins.search.active,
       query: storeState.plugins.search.query,
-      loading: storeState.plugins.search.loading
-    })
+      loading: storeState.plugins.search.loading,
+    }),
   },
   comment: {
     id: 'comment',
     type: 'custom',
-    render: 'comment'
+    render: 'comment',
   },
   commandMenu: {
     id: 'commandMenu',
@@ -1373,14 +1448,14 @@ export const components: Record<string, UIComponentType<State>> = {
       activeCommand: null,
       triggerElement: undefined,
       position: undefined,
-      flatten: false
+      flatten: false,
     },
     props: (initialState) => ({
       open: initialState.open,
       activeCommand: initialState.activeCommand,
       triggerElement: initialState.triggerElement,
       position: initialState.position,
-      flatten: initialState.flatten
+      flatten: initialState.flatten,
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
@@ -1388,51 +1463,52 @@ export const components: Record<string, UIComponentType<State>> = {
       activeCommand: storeState.plugins.ui.commandMenu.commandMenu.activeCommand,
       triggerElement: storeState.plugins.ui.commandMenu.commandMenu.triggerElement,
       position: storeState.plugins.ui.commandMenu.commandMenu.position,
-      flatten: storeState.plugins.ui.commandMenu.commandMenu.flatten
-    })
+      flatten: storeState.plugins.ui.commandMenu.commandMenu.flatten,
+    }),
   },
   zoom: defineComponent<{ zoomLevel: number }, ZoomRendererProps, State>()({
     id: 'zoom',
     type: 'custom',
     render: 'zoom',
     initialState: {
-      zoomLevel: 1
+      zoomLevel: 1,
     },
     props: (initialState) => ({
       zoomLevel: initialState.zoomLevel,
       commandZoomIn: menuItems.zoomIn.id,
       commandZoomOut: menuItems.zoomOut.id,
       commandZoomMenu: menuItems.zoom.id,
-      zoomMenuActive: false
+      zoomMenuActive: false,
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       zoomLevel: storeState.plugins.zoom.currentZoomLevel,
-      zoomMenuActive: isActive(menuItems.zoom, storeState) || isActive(menuItems.changeZoomLevel, storeState)
-    })
+      zoomMenuActive:
+        isActive(menuItems.zoom, storeState) || isActive(menuItems.changeZoomLevel, storeState),
+    }),
   }),
   rightPanel: {
     id: 'rightPanel',
     type: 'panel',
     initialState: {
       open: false,
-      visibleChild: null
+      visibleChild: null,
     },
     props: (initialState) => ({
       open: initialState.open,
       visibleChild: initialState.visibleChild,
-      location: 'right'
+      location: 'right',
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       open: storeState.plugins.ui.panel.rightPanel.open,
-      visibleChild: storeState.plugins.ui.panel.rightPanel.visibleChild
+      visibleChild: storeState.plugins.ui.panel.rightPanel.visibleChild,
     }),
     slots: [
       { componentId: 'search', priority: 0 },
-      { componentId: 'comment', priority: 1 }
-    ]
-  }
+      { componentId: 'comment', priority: 1 },
+    ],
+  },
 };
 
 // UIPlugin configuration
@@ -1440,7 +1516,7 @@ export const uiConfig: UIPluginConfig = {
   enabled: true,
   components,
   menuItems,
-  icons
+  icons,
 };
 
 export function PDFViewer({ config }: PDFViewerProps) {
@@ -1450,7 +1526,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
   useEffect(() => {
     initializeEngine({
       workerUrl: config.workerUrl,
-      wasmUrl: config.wasmUrl
+      wasmUrl: config.wasmUrl,
     }).then(setEngine);
   }, []);
 
@@ -1459,12 +1535,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
   // Map config values to plugin settings
   //const scrollStrategy = config.scrollStrategy === 'horizontal' ? ScrollStrategy.Horizontal : ScrollStrategy.Vertical;
   //const zoomMode = config.zoomMode === 'fitWidth' ? ZoomMode.FitWidth : ZoomMode.FitPage;
- 
+
   return (
     <>
-      <style>
-        {styles}
-      </style>
+      <style>{styles}</style>
       <EmbedPDF
         engine={engine}
         onInitialized={async (registry) => {
@@ -1479,7 +1553,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
             uiCapability.registerComponentRenderer('panel', panelRenderer);
             uiCapability.registerComponentRenderer('search', searchRenderer);
             uiCapability.registerComponentRenderer('zoom', zoomRenderer);
-            uiCapability.registerComponentRenderer('pageControlsContainer', pageControlsContainerRenderer);
+            uiCapability.registerComponentRenderer(
+              'pageControlsContainer',
+              pageControlsContainerRenderer,
+            );
             uiCapability.registerComponentRenderer('pageControls', pageControlsRenderer);
             uiCapability.registerComponentRenderer('commandMenu', commandMenuRenderer);
             uiCapability.registerComponentRenderer('comment', commentRender);
@@ -1493,17 +1570,17 @@ export function PDFViewer({ config }: PDFViewerProps) {
         plugins={[
           createPluginRegistration(UIPluginPackage, uiConfig),
           createPluginRegistration(LoaderPluginPackage, {
-            loadingOptions: { 
+            loadingOptions: {
               type: 'url',
               pdfFile: {
                 id: 'pdf',
-                url: config.src
+                url: config.src,
               },
               options: {
-                mode: 'full-fetch'
-              }
+                mode: 'full-fetch',
+              },
             },
-          }), 
+          }),
           createPluginRegistration(ViewportPluginPackage, {
             viewportGap: 10,
           }),
@@ -1513,12 +1590,12 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(ZoomPluginPackage, {
             defaultZoomLevel: ZoomMode.FitPage,
           }),
-          createPluginRegistration(SpreadPluginPackage, { 
-            defaultSpreadMode: SpreadMode.None 
+          createPluginRegistration(SpreadPluginPackage, {
+            defaultSpreadMode: SpreadMode.None,
           }),
           createPluginRegistration(RenderPluginPackage, {}),
           createPluginRegistration(RotatePluginPackage, {
-            defaultRotation: Rotation.Degree0
+            defaultRotation: Rotation.Degree0,
           }),
           createPluginRegistration(SearchPluginPackage, {}),
           createPluginRegistration(SelectionPluginPackage, {}),
@@ -1531,88 +1608,97 @@ export function PDFViewer({ config }: PDFViewerProps) {
             width: 150,
             gap: 10,
             buffer: 3,
-            labelHeight: 30
+            labelHeight: 30,
           }),
           createPluginRegistration(AnnotationPluginPackage, {}),
         ]}
-      > 
-       {({pluginsReady}) => (
-        <PluginUIProvider>
-          {({ headers, panels, floating, commandMenu }) => (
-            <div className="flex flex-col h-full w-full @container">
-              {headers.top.length > 0 && (
-                <div>
-                  {headers.top}
-                </div>
-              )}
-              <div className="flex flex-row flex-1 overflow-hidden">
-                <div className="flex flex-col">
-                  {headers.left}
-                </div>
-                <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-                  {panels.left.length > 0 && (
-                    <Fragment>
-                      <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full z-10">
-                        {panels.left}
-                      </div>
-                      <div className="hidden md:flex flex-col static">
-                        {panels.left}
-                      </div>
-                    </Fragment>
-                  )}
-                  <div className="flex-1 relative flex w-full overflow-hidden">
-                    <Viewport
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        flexGrow: 1,
-                        backgroundColor: '#f1f3f5',
-                        overflow: 'auto',
-                      }}
-                    >
-                      {pluginsReady && <Scroller 
-                          renderPage={({pageIndex, scale, rotation, width, height, rotatedHeight, rotatedWidth}) => 
-                            <Rotate pageSize={{width, height}}>
-                              <div className="bg-white" style={{width, height}}>
-                                <RenderLayer pageIndex={pageIndex} className="absolute top-0 left-0 w-full h-full" />
-                                <TilingLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
-                                <SearchLayer pageIndex={pageIndex} scale={scale} className="absolute top-0 left-0 w-full h-full" />
-                                <SelectionLayer pageIndex={pageIndex} scale={scale} rotation={rotation} containerSize={{width: rotatedWidth, height: rotatedHeight}} />
-                                <AnnotationLayer pageIndex={pageIndex} className="absolute" />
-                              </div>
-                            </Rotate>
-                          }
-                          overlayElements={floating.insideScroller}
-                        />
-                      }
-                      {floating.outsideScroller}
-                    </Viewport>
+      >
+        {({ pluginsReady }) => (
+          <PluginUIProvider>
+            {({ headers, panels, floating, commandMenu }) => (
+              <div className="@container flex h-full w-full flex-col">
+                {headers.top.length > 0 && <div>{headers.top}</div>}
+                <div className="flex flex-1 flex-row overflow-hidden">
+                  <div className="flex flex-col">{headers.left}</div>
+                  <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+                    {panels.left.length > 0 && (
+                      <Fragment>
+                        <div className="absolute bottom-0 left-0 right-0 z-10 flex w-full md:hidden">
+                          {panels.left}
+                        </div>
+                        <div className="static hidden flex-col md:flex">{panels.left}</div>
+                      </Fragment>
+                    )}
+                    <div className="relative flex w-full flex-1 overflow-hidden">
+                      <Viewport
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          flexGrow: 1,
+                          backgroundColor: '#f1f3f5',
+                          overflow: 'auto',
+                        }}
+                      >
+                        {pluginsReady && (
+                          <Scroller
+                            renderPage={({
+                              pageIndex,
+                              scale,
+                              rotation,
+                              width,
+                              height,
+                              rotatedHeight,
+                              rotatedWidth,
+                            }) => (
+                              <Rotate pageSize={{ width, height }}>
+                                <div className="bg-white" style={{ width, height }}>
+                                  <RenderLayer
+                                    pageIndex={pageIndex}
+                                    className="absolute left-0 top-0 h-full w-full"
+                                  />
+                                  <TilingLayer
+                                    pageIndex={pageIndex}
+                                    scale={scale}
+                                    className="absolute left-0 top-0 h-full w-full"
+                                  />
+                                  <SearchLayer
+                                    pageIndex={pageIndex}
+                                    scale={scale}
+                                    className="absolute left-0 top-0 h-full w-full"
+                                  />
+                                  <SelectionLayer
+                                    pageIndex={pageIndex}
+                                    scale={scale}
+                                    rotation={rotation}
+                                    containerSize={{ width: rotatedWidth, height: rotatedHeight }}
+                                  />
+                                  <AnnotationLayer pageIndex={pageIndex} className="absolute" />
+                                </div>
+                              </Rotate>
+                            )}
+                            overlayElements={floating.insideScroller}
+                          />
+                        )}
+                        {floating.outsideScroller}
+                      </Viewport>
+                    </div>
+                    {panels.right.length > 0 && (
+                      <Fragment>
+                        <div className="absolute bottom-0 left-0 right-0 z-10 flex w-full md:hidden">
+                          {panels.right}
+                        </div>
+                        <div className="static hidden flex-col md:flex">{panels.right}</div>
+                      </Fragment>
+                    )}
                   </div>
-                  {panels.right.length > 0 && (
-                    <Fragment>
-                      <div className="flex md:hidden absolute bottom-0 left-0 right-0 w-full z-10">
-                        {panels.right}
-                      </div>
-                      <div className="hidden md:flex flex-col static">
-                        {panels.right}
-                      </div>
-                    </Fragment>
-                  )}
+                  <div className="flex flex-col">{headers.right}</div>
                 </div>
-                <div className="flex flex-col">
-                  {headers.right}
-                </div>
+                {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
+                {commandMenu}
               </div>
-              {headers.bottom.length > 0 && (
-                <div>
-                  {headers.bottom}
-                </div>
-              )}
-              {commandMenu}
-            </div>
-          )}
-        </PluginUIProvider>
-      )}
+            )}
+          </PluginUIProvider>
+        )}
       </EmbedPDF>
     </>
   );

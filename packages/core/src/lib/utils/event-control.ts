@@ -21,7 +21,7 @@ export class EventControl<T> {
 
   constructor(
     private handler: EventHandler<T>,
-    private options: EventControlOptions
+    private options: EventControlOptions,
   ) {}
 
   handle = (data: T): void => {
@@ -36,7 +36,7 @@ export class EventControl<T> {
     if (this.timeoutId) {
       window.clearTimeout(this.timeoutId);
     }
-    
+
     this.timeoutId = window.setTimeout(() => {
       this.handler(data);
       this.timeoutId = undefined;
@@ -44,28 +44,31 @@ export class EventControl<T> {
   }
 
   private throttle(data: T): void {
-    if(this.options.mode === 'debounce') return;
+    if (this.options.mode === 'debounce') return;
 
     const now = Date.now();
     const throttleMode = this.options.throttleMode || 'leading-trailing';
-    
+
     if (now - this.lastRun >= this.options.wait) {
       if (throttleMode === 'leading-trailing') {
         this.handler(data);
       }
       this.lastRun = now;
     }
-    
+
     // Always schedule the trailing execution
     if (this.timeoutId) {
       window.clearTimeout(this.timeoutId);
     }
-    
-    this.timeoutId = window.setTimeout(() => {
-      this.handler(data);
-      this.lastRun = Date.now();
-      this.timeoutId = undefined;
-    }, this.options.wait - (now - this.lastRun));
+
+    this.timeoutId = window.setTimeout(
+      () => {
+        this.handler(data);
+        this.lastRun = Date.now();
+        this.timeoutId = undefined;
+      },
+      this.options.wait - (now - this.lastRun),
+    );
   }
 
   destroy(): void {

@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { ThumbnailPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { ThumbnailPluginConfig } from './types';
 
 export const THUMBNAIL_PLUGIN_ID = 'thumbnail';
 
@@ -15,6 +15,6 @@ export const manifest: PluginManifest<ThumbnailPluginConfig> = {
     width: 150,
     gap: 10,
     buffer: 3,
-    labelHeight: 16
-  }
-}; 
+    labelHeight: 16,
+  },
+};

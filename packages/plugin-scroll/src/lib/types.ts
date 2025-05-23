@@ -1,7 +1,7 @@
-import { BasePluginConfig, Emitter, EventHook } from "@embedpdf/core";
-import { PdfPageObject, Rect, Rotation } from "@embedpdf/models";
-import { ViewportMetrics } from "@embedpdf/plugin-viewport";
-import { VirtualItem } from "./types/virtual-item";
+import { BasePluginConfig, Emitter, EventHook } from '@embedpdf/core';
+import { PdfPageObject, Rect, Rotation } from '@embedpdf/models';
+import { ViewportMetrics } from '@embedpdf/plugin-viewport';
+import { VirtualItem } from './types/virtual-item';
 
 export interface ScrollState extends ScrollMetrics {
   virtualItems: VirtualItem[];
@@ -24,7 +24,7 @@ export interface ScrollerLayout {
 
 export enum ScrollStrategy {
   Vertical = 'vertical',
-  Horizontal = 'horizontal'
+  Horizontal = 'horizontal',
 }
 
 export interface PageVisibilityMetrics {
@@ -66,7 +66,7 @@ export interface ScrollStrategyInterface {
   getVirtualItems(): VirtualItem[];
   scrollToPage(pageNumber: number, behavior?: ScrollBehavior): void;
   calculateDimensions(pdfPageObject: PdfPageObject[][]): void;
-} 
+}
 
 export interface ScrollPluginConfig extends BasePluginConfig {
   strategy?: ScrollStrategy;
@@ -75,8 +75,7 @@ export interface ScrollPluginConfig extends BasePluginConfig {
   pageGap?: number;
 }
 
-export type LayoutChangePayload =
-  Pick<ScrollState, 'virtualItems' | 'totalContentSize'>;
+export type LayoutChangePayload = Pick<ScrollState, 'virtualItems' | 'totalContentSize'>;
 
 export interface ScrollToPageOptions {
   pageNumber: number;
@@ -88,8 +87,8 @@ export interface ScrollToPageOptions {
 export interface ScrollCapability {
   onScrollerData: EventHook<ScrollerLayout>;
   onStateChange: EventHook<ScrollState>;
-  onScroll      : EventHook<ScrollMetrics>;
-  onPageChange  : EventHook<number>;
+  onScroll: EventHook<ScrollMetrics>;
+  onPageChange: EventHook<number>;
   onLayoutChange: EventHook<LayoutChangePayload>;
   scrollToPage(options: ScrollToPageOptions): void;
   scrollToNextPage(behavior?: ScrollBehavior): void;
@@ -97,7 +96,12 @@ export interface ScrollCapability {
   getMetrics(viewport?: ViewportMetrics): ScrollMetrics;
   getLayout(): LayoutChangePayload;
   getScrollerLayout(): ScrollerLayout;
-  getRectPositionForPage(page: number, rect: Rect, scale?: number, rotation?: Rotation): Rect | null;
+  getRectPositionForPage(
+    page: number,
+    rect: Rect,
+    scale?: number,
+    rotation?: Rotation,
+  ): Rect | null;
   setScrollStrategy(strategy: ScrollStrategy): void;
   getPageGap(): number;
 }

@@ -1,10 +1,10 @@
-import { Action } from "@embedpdf/core";
-import { ViewportInputMetrics, ViewportScrollMetrics } from "./types";
+import { Action } from '@embedpdf/core';
+import { ViewportInputMetrics, ViewportScrollMetrics } from './types';
 
-export const SET_VIEWPORT_METRICS = "SET_VIEWPORT_METRICS";
-export const SET_VIEWPORT_SCROLL_METRICS = "SET_VIEWPORT_SCROLL_METRICS";
-export const SET_VIEWPORT_GAP = "SET_VIEWPORT_GAP";
-export const SET_SCROLL_ACTIVITY = "SET_SCROLL_ACTIVITY";
+export const SET_VIEWPORT_METRICS = 'SET_VIEWPORT_METRICS';
+export const SET_VIEWPORT_SCROLL_METRICS = 'SET_VIEWPORT_SCROLL_METRICS';
+export const SET_VIEWPORT_GAP = 'SET_VIEWPORT_GAP';
+export const SET_SCROLL_ACTIVITY = 'SET_SCROLL_ACTIVITY';
 
 export interface SetViewportMetricsAction extends Action {
   type: typeof SET_VIEWPORT_METRICS;
@@ -26,41 +26,37 @@ export interface SetScrollActivityAction extends Action {
   payload: boolean;
 }
 
-export type ViewportAction = 
-  | SetViewportMetricsAction 
-  | SetViewportScrollMetricsAction 
-  | SetViewportGapAction 
+export type ViewportAction =
+  | SetViewportMetricsAction
+  | SetViewportScrollMetricsAction
+  | SetViewportGapAction
   | SetScrollActivityAction;
 
-export function setViewportGap(
-  viewportGap: number
-): SetViewportGapAction {
+export function setViewportGap(viewportGap: number): SetViewportGapAction {
   return {
     type: SET_VIEWPORT_GAP,
-    payload: viewportGap
+    payload: viewportGap,
   };
 }
 
 export function setViewportMetrics(
-  viewportMetrics: ViewportInputMetrics
+  viewportMetrics: ViewportInputMetrics,
 ): SetViewportMetricsAction {
   return {
     type: SET_VIEWPORT_METRICS,
-    payload: viewportMetrics
+    payload: viewportMetrics,
   };
 }
 
 export function setViewportScrollMetrics(
-  scrollMetrics: ViewportScrollMetrics
+  scrollMetrics: ViewportScrollMetrics,
 ): SetViewportScrollMetricsAction {
   return {
     type: SET_VIEWPORT_SCROLL_METRICS,
-    payload: scrollMetrics
+    payload: scrollMetrics,
   };
 }
 
-export function setScrollActivity(
-  isScrolling: boolean
-): SetScrollActivityAction {
+export function setScrollActivity(isScrolling: boolean): SetScrollActivityAction {
   return { type: SET_SCROLL_ACTIVITY, payload: isScrolling };
 }

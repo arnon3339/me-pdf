@@ -1,9 +1,9 @@
-import { PluginPackage } from "@embedpdf/core";
-import { ScrollPlugin } from "./scroll-plugin";
-import { manifest, SCROLL_PLUGIN_ID } from "./manifest";
-import { ScrollPluginConfig, ScrollState } from "./types";
-import { scrollReducer, initialState } from "./reducer";
-import { ScrollAction } from "./actions";
+import { PluginPackage } from '@embedpdf/core';
+import { ScrollPlugin } from './scroll-plugin';
+import { manifest, SCROLL_PLUGIN_ID } from './manifest';
+import { ScrollPluginConfig, ScrollState } from './types';
+import { scrollReducer, initialState } from './reducer';
+import { ScrollAction } from './actions';
 
 export const ScrollPluginPackage: PluginPackage<
   ScrollPlugin,
@@ -14,10 +14,10 @@ export const ScrollPluginPackage: PluginPackage<
   manifest,
   create: (registry, _engine, config) => new ScrollPlugin(SCROLL_PLUGIN_ID, registry, config),
   reducer: scrollReducer,
-  initialState: (coreState, config) => initialState(coreState, config)
+  initialState: (coreState, config) => initialState(coreState, config),
 };
 
-export * from "./scroll-plugin";
-export * from "./types";
+export * from './scroll-plugin';
+export * from './types';
 export * from './manifest';
 export * from './types/virtual-item';

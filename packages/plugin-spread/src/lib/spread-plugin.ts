@@ -5,8 +5,13 @@ import { SpreadCapability, SpreadMode, SpreadPluginConfig, SpreadState } from '.
 import { setSpreadMode } from './actions';
 import { SpreadAction } from './actions';
 
-export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadCapability, SpreadState, SpreadAction> {
-  static readonly id = 'spread' as const; 
+export class SpreadPlugin extends BasePlugin<
+  SpreadPluginConfig,
+  SpreadCapability,
+  SpreadState,
+  SpreadAction
+> {
+  static readonly id = 'spread' as const;
   private spreadHandlers: ((spreadMode: SpreadMode) => void)[] = [];
 
   constructor(id: string, registry: PluginRegistry, cfg: SpreadPluginConfig) {
@@ -18,7 +23,7 @@ export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadCapabilit
   }
 
   async initialize(config: SpreadPluginConfig): Promise<void> {
-    if(config.defaultSpreadMode) {
+    if (config.defaultSpreadMode) {
       this.dispatch(setSpreadMode(config.defaultSpreadMode));
     }
   }
@@ -38,14 +43,14 @@ export class SpreadPlugin extends BasePlugin<SpreadPluginConfig, SpreadCapabilit
 
       case SpreadMode.Odd:
         return Array.from({ length: Math.ceil(pages.length / 2) }, (_, i) =>
-          pages.slice(i * 2, i * 2 + 2)
+          pages.slice(i * 2, i * 2 + 2),
         );
 
       case SpreadMode.Even:
         return [
           [pages[0]],
           ...Array.from({ length: Math.ceil((pages.length - 1) / 2) }, (_, i) =>
-            pages.slice(1 + i * 2, 1 + i * 2 + 2)
+            pages.slice(1 + i * 2, 1 + i * 2 + 2),
           ),
         ];
 

@@ -1,5 +1,5 @@
-import { BasePluginConfig, EventHook } from "@embedpdf/core";
-import { MatchFlag, SearchResult, SearchTarget, SearchAllPagesResult } from "@embedpdf/models";
+import { BasePluginConfig, EventHook } from '@embedpdf/core';
+import { MatchFlag, SearchResult, SearchTarget, SearchAllPagesResult } from '@embedpdf/models';
 
 export interface SearchPluginConfig extends BasePluginConfig {
   flags?: MatchFlag[];
@@ -66,7 +66,7 @@ export interface SearchCapability {
    * Start a search session
    */
   startSearch: () => void;
-  
+
   /**
    * Stop the active search session
    */

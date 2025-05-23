@@ -14,22 +14,24 @@ interface VirtualScrollerProps {
 }
 
 interface LoadingThumbnail {
-  docId: string;
-  pageIndex: number;
-  loading: boolean;
+  docId: string
+  pageIndex: number
+  loading: boolean
 }
 
-export const VirtualScroller: React.FC<VirtualScrollerProps> = ({ 
-  items, 
-  onUpdatePages, 
+export const VirtualScroller: React.FC<VirtualScrollerProps> = ({
+  items,
+  onUpdatePages,
   visibleItems = 4,
   engine,
-  doc
+  doc,
 }) => {
   const [scrollTop, setScrollTop] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
-  const [loadingThumbnails, setLoadingThumbnails] = useState<LoadingThumbnail[]>([])
+  const [loadingThumbnails, setLoadingThumbnails] = useState<
+    LoadingThumbnail[]
+  >([])
 
   // Calculate item dimensions based on container width
   const itemDimensions = useMemo(() => {
@@ -59,23 +61,23 @@ export const VirtualScroller: React.FC<VirtualScrollerProps> = ({
   // Calculate visible range based on actual dimensions
   const visibleRange = useMemo(() => {
     if (!items.length || !itemDimensions.height) return { start: 0, end: 0 }
-    
+
     const itemsPerRow = 2
     const rowHeight = itemDimensions.height
     const containerHeight = 400 // matches the container's h-[400px]
-    
+
     const visibleRows = Math.ceil(containerHeight / rowHeight)
     const bufferRows = 1
-    
+
     const startRow = Math.max(0, Math.floor(scrollTop / rowHeight) - bufferRows)
     const endRow = Math.min(
       Math.ceil(items.length / itemsPerRow),
-      startRow + visibleRows + (bufferRows * 2)
+      startRow + visibleRows + bufferRows * 2,
     )
-    
+
     return {
       start: startRow * itemsPerRow,
-      end: Math.min(items.length, endRow * itemsPerRow)
+      end: Math.min(items.length, endRow * itemsPerRow),
     }
   }, [items.length, itemDimensions.height, scrollTop])
 
@@ -97,102 +99,122 @@ export const VirtualScroller: React.FC<VirtualScrollerProps> = ({
   // Batch thumbnail generation and updates
   useEffect(() => {
     const generateVisibleThumbnails = async () => {
-      const pagesToGenerate = visibleItems1.filter(page => 
-        !page.thumbnail && 
-        !loadingThumbnails.some(lt => lt.docId === page.docId && lt.pageIndex === page.pageIndex)
-      );
+      const pagesToGenerate = visibleItems1.filter(
+        (page) =>
+          !page.thumbnail &&
+          !loadingThumbnails.some(
+            (lt) => lt.docId === page.docId && lt.pageIndex === page.pageIndex,
+          ),
+      )
 
-      if (pagesToGenerate.length === 0) return;
+      if (pagesToGenerate.length === 0) return
 
-      setLoadingThumbnails(prev => [
+      setLoadingThumbnails((prev) => [
         ...prev,
-        ...pagesToGenerate.map(p => ({ docId: p.docId, pageIndex: p.pageIndex, loading: true }))
-      ]);
+        ...pagesToGenerate.map((p) => ({
+          docId: p.docId,
+          pageIndex: p.pageIndex,
+          loading: true,
+        })),
+      ])
 
       try {
         // Generate all thumbnails in parallel
-        const thumbnailPromises = pagesToGenerate.map(page => 
+        const thumbnailPromises = pagesToGenerate.map((page) =>
           generateThumbnail(engine, doc, page.pageIndex)
-            .then(thumbnail => ({ page, thumbnail }))
-            .catch(error => {
-              console.error('Error generating thumbnail for page', page.pageIndex, error);
-              return null;
-            })
-        );
+            .then((thumbnail) => ({ page, thumbnail }))
+            .catch((error) => {
+              console.error(
+                'Error generating thumbnail for page',
+                page.pageIndex,
+                error,
+              )
+              return null
+            }),
+        )
 
-        const results = await Promise.all(thumbnailPromises);
-        
+        const results = await Promise.all(thumbnailPromises)
+
         // Batch update all thumbnails at once
         const updatedPages = results
-          .filter((result): result is { page: DocumentPage; thumbnail: string } => result !== null)
+          .filter(
+            (result): result is { page: DocumentPage; thumbnail: string } =>
+              result !== null,
+          )
           .map(({ page, thumbnail }) => ({
             ...page,
-            thumbnail
-          }));
+            thumbnail,
+          }))
 
         if (updatedPages.length > 0) {
-          onUpdatePages(updatedPages);
+          onUpdatePages(updatedPages)
         }
       } finally {
-        setLoadingThumbnails(prev => 
-          prev.filter(p => !pagesToGenerate.some(page => 
-            page.docId === p.docId && page.pageIndex === p.pageIndex
-          ))
-        );
+        setLoadingThumbnails((prev) =>
+          prev.filter(
+            (p) =>
+              !pagesToGenerate.some(
+                (page) =>
+                  page.docId === p.docId && page.pageIndex === p.pageIndex,
+              ),
+          ),
+        )
       }
-    };
+    }
 
-    generateVisibleThumbnails();
-  }, [visibleItems1, engine, doc, onUpdatePages]);
+    generateVisibleThumbnails()
+  }, [visibleItems1, engine, doc, onUpdatePages])
 
   // Handle page selection
-  const handlePageClick = useCallback((page: DocumentPage) => {
-    onUpdatePages([{
-      ...page,
-      selected: !page.selected
-    }]);
-  }, [onUpdatePages]);
+  const handlePageClick = useCallback(
+    (page: DocumentPage) => {
+      onUpdatePages([
+        {
+          ...page,
+          selected: !page.selected,
+        },
+      ])
+    },
+    [onUpdatePages],
+  )
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="h-[400px] overflow-auto border border-gray-200 rounded-md p-2 bg-[#f9fafb]"
+      className="h-[400px] overflow-auto rounded-md border border-gray-200 bg-[#f9fafb] p-2"
       onScroll={handleScroll}
     >
-      <div 
-        className="relative w-full"
-        style={{ height: `${totalHeight}px` }}
-      >
-        <div 
+      <div className="relative w-full" style={{ height: `${totalHeight}px` }}>
+        <div
           className="absolute left-0 right-0 grid grid-cols-2 gap-2"
-          style={{ 
+          style={{
             transform: `translateY(${Math.floor(visibleRange.start / 2) * itemDimensions.height}px)`,
           }}
         >
           {visibleItems1.map((page, idx) => (
-            <div 
-              key={`${page.docId}-${page.pageIndex}`} 
-              className={`relative border ${page.selected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} rounded-md p-2 cursor-pointer`}
+            <div
+              key={`${page.docId}-${page.pageIndex}`}
+              className={`relative border ${page.selected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} cursor-pointer rounded-md p-2`}
               onClick={() => handlePageClick(page)}
               style={{
                 // Force aspect ratio container
                 aspectRatio: '1/1.414',
-                width: '100%'
+                width: '100%',
               }}
             >
-              <div className="absolute top-2 right-4 z-10">
-                <span className="text-xs bg-gray-200 px-1.5 rounded-full">
+              <div className="absolute right-4 top-2 z-10">
+                <span className="rounded-full bg-gray-200 px-1.5 text-xs">
                   {page.pageIndex + 1}
                 </span>
               </div>
               {page.thumbnail ? (
-                <img 
-                  src={page.thumbnail} 
+                <img
+                  src={page.thumbnail}
                   alt={`Page ${page.pageIndex + 1}`}
-                  className="w-full h-full object-contain bg-gray-500 p-2 rounded-md"
+                  className="h-full w-full rounded-md bg-gray-500 object-contain p-2"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center text-sm text-gray-400">
+                <div className="flex h-full w-full animate-pulse items-center justify-center bg-gray-100 text-sm text-gray-400">
                   Loading...
                 </div>
               )}
@@ -202,4 +224,4 @@ export const VirtualScroller: React.FC<VirtualScrollerProps> = ({
       </div>
     </div>
   )
-} 
+}

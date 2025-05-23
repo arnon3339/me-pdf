@@ -1,8 +1,8 @@
-import { Action } from "@embedpdf/core";
-import { ScrollState } from "./types";
+import { Action } from '@embedpdf/core';
+import { ScrollState } from './types';
 
-export const UPDATE_SCROLL_STATE = "UPDATE_SCROLL_STATE";
-export const SET_DESIRED_SCROLL_POSITION = "SET_DESIRED_SCROLL_POSITION";
+export const UPDATE_SCROLL_STATE = 'UPDATE_SCROLL_STATE';
+export const SET_DESIRED_SCROLL_POSITION = 'SET_DESIRED_SCROLL_POSITION';
 
 export interface UpdateScrollStateAction extends Action {
   type: typeof UPDATE_SCROLL_STATE;
@@ -20,6 +20,9 @@ export function updateScrollState(payload: Partial<ScrollState>): UpdateScrollSt
   return { type: UPDATE_SCROLL_STATE, payload };
 }
 
-export function setDesiredScrollPosition(payload: { x: number; y: number }): SetDesiredScrollPositionAction {
+export function setDesiredScrollPosition(payload: {
+  x: number;
+  y: number;
+}): SetDesiredScrollPositionAction {
   return { type: SET_DESIRED_SCROLL_POSITION, payload };
 }

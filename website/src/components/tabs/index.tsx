@@ -8,5 +8,5 @@ import { Tabs as _Tabs, Tab } from './index.client'
 // server component. You can only pass the imported name through.
 export const Tabs = Object.assign(
   (props: ComponentProps<typeof _Tabs>) => <_Tabs {...props} />,
-  { Tab }
+  { Tab },
 )

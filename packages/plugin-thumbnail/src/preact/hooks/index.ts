@@ -1,1 +1,1 @@
-export * from "./use-thumbnail";
+export * from './use-thumbnail';

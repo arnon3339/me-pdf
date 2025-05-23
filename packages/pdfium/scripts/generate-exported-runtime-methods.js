@@ -8,11 +8,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const names = methods.join(',');
-fs.writeFileSync(
-  path.join(__dirname, '../build/exported-runtime-methods.txt'),
-  names,
-  { encoding: 'utf-8' },
-);
+fs.writeFileSync(path.join(__dirname, '../build/exported-runtime-methods.txt'), names, {
+  encoding: 'utf-8',
+});
 
 const defintion = `
 /// <reference types="emscripten" />

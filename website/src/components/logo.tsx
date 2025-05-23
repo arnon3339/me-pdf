@@ -1,6 +1,13 @@
 const Logo = () => {
   return (
-    <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 250" width="100%" height="100%">
+    <svg
+      id="Layer_1"
+      data-name="Layer 1"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 250 250"
+      width="100%"
+      height="100%"
+    >
       <g>
         <path
           className="cls-2"
@@ -24,7 +31,7 @@ const Logo = () => {
         />
       </g>
     </svg>
-  );
-};
+  )
+}
 
-export default Logo;
+export default Logo

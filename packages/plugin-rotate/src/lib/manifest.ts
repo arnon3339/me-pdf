@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { RotatePluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { RotatePluginConfig } from './types';
 
 export const ROTATE_PLUGIN_ID = 'rotate';
 
@@ -11,6 +11,6 @@ export const manifest: PluginManifest<RotatePluginConfig> = {
   requires: ['loader'],
   optional: ['spread'],
   defaultConfig: {
-    enabled: true
-  }
-}; 
+    enabled: true,
+  },
+};

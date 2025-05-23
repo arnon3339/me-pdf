@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { AnnotationPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { AnnotationPluginConfig } from './types';
 
 export const ANNOTATION_PLUGIN_ID = 'annotation';
 
@@ -11,6 +11,6 @@ export const manifest: PluginManifest<AnnotationPluginConfig> = {
   requires: [],
   optional: [],
   defaultConfig: {
-    enabled: true
-  }
+    enabled: true,
+  },
 };

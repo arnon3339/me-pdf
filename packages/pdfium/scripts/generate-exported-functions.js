@@ -16,11 +16,9 @@ const names = [...extraFunctions, ...funcNames]
   })
   .join(',');
 
-fs.writeFileSync(
-  path.join(__dirname, '../build/exported-functions.txt'),
-  names,
-  { encoding: 'utf-8' },
-);
+fs.writeFileSync(path.join(__dirname, '../build/exported-functions.txt'), names, {
+  encoding: 'utf-8',
+});
 
 const defintion = `
 export const functions = {

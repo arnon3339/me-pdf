@@ -1,5 +1,5 @@
-import { PluginManifest } from "@embedpdf/core";
-import { TilingPluginConfig } from "./types";
+import { PluginManifest } from '@embedpdf/core';
+import { TilingPluginConfig } from './types';
 
 export const TILING_PLUGIN_ID = 'tiling';
 
@@ -15,5 +15,5 @@ export const manifest: PluginManifest<TilingPluginConfig> = {
     tileSize: 768,
     overlapPx: 2.5,
     extraRings: 0,
-  }
+  },
 };

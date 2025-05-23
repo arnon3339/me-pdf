@@ -17,7 +17,7 @@ export const Collapse: FC<{
   isOpen,
   horizontal = false,
   openDuration = 500,
-  closeDuration = 300
+  closeDuration = 300,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null!)
   const [initialOpen] = useState(isOpen)
@@ -86,12 +86,12 @@ export const Collapse: FC<{
       ref={containerRef}
       className={cn(
         'transform-gpu transition-all ease-in-out motion-reduce:transition-none',
-        isOpen ? 'opacity-100' : 'opacity-0 overflow-hidden',
-        className
+        isOpen ? 'opacity-100' : 'overflow-hidden opacity-0',
+        className,
       )}
       style={{
         ...(initialOpen || horizontal ? undefined : { height: 0 }),
-        transitionDuration: (isOpen ? openDuration : closeDuration) + 'ms'
+        transitionDuration: (isOpen ? openDuration : closeDuration) + 'ms',
       }}
     >
       {newChildren}

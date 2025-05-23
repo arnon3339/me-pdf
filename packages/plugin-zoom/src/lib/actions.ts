@@ -1,9 +1,10 @@
-import { Action } from "@embedpdf/core";
-import { ZoomLevel } from "./types";
+import { Action } from '@embedpdf/core';
+
+import { ZoomLevel } from './types';
 
 // Action Types
-export const SET_ZOOM_LEVEL = "SET_ZOOM_LEVEL";
-export const SET_INITIAL_ZOOM_LEVEL = "SET_INITIAL_ZOOM_LEVEL";
+export const SET_ZOOM_LEVEL = 'SET_ZOOM_LEVEL';
+export const SET_INITIAL_ZOOM_LEVEL = 'SET_INITIAL_ZOOM_LEVEL';
 
 // Action Interfaces
 export interface SetZoomLevelAction extends Action {
