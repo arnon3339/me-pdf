@@ -223,10 +223,7 @@ export const leftPanelMainRenderer: ComponentRenderFunction<LeftPanelMainProps> 
   return (
     <Fragment>
       {tabsCommand && tabChildren && (
-        <div
-          role="tablist"
-          className="mx-4 my-4 flex flex-shrink-0 overflow-hidden bg-white dark:bg-gray-900"
-        >
+        <div role="tablist" className="mx-4 my-4 flex flex-shrink-0 overflow-hidden bg-white">
           {tabChildren
             .filter((child) => child.type === 'action')
             .map((child, idx, array) => {
@@ -250,7 +247,7 @@ export const leftPanelMainRenderer: ComponentRenderFunction<LeftPanelMainProps> 
                     className={`relative flex h-7 flex-1 cursor-pointer items-center justify-center border outline-none transition-colors ${isFirst ? 'rounded-l-md' : ''} ${isLast ? 'rounded-r-md' : ''} ${!isLast ? 'border-r-0' : ''} ${
                       isActive
                         ? 'border-blue-600 bg-blue-600 text-white'
-                        : 'border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-50'
                     } `}
                   >
                     {child.icon && (
