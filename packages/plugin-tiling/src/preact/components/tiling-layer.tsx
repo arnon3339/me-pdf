@@ -1,9 +1,10 @@
 /** @jsxImportSource preact */
+import { Tile } from '@embedpdf/plugin-tiling';
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { Tile } from '@embedpdf/plugin-tiling';
-import { useTilingCapability } from '../hooks/use-tiling';
+
 import { TileImg } from './tile-img';
+import { useTilingCapability } from '../hooks/use-tiling';
 
 type TilingLayoutProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;

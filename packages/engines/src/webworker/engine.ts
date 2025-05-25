@@ -483,6 +483,29 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.getAllAnnotations}
+   *
+   * @public
+   */
+  getAllAnnotations(doc: PdfDocumentObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getAllAnnotations', doc);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<Record<number, PdfAnnotationObject[]>>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'getAllAnnotations',
+        args: [doc],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
    * {@inheritDoc @embedpdf/models!PdfEngine.getPageAnnotations}
    *
    * @public

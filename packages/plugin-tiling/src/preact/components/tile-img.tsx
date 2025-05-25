@@ -1,8 +1,9 @@
 /** @jsxImportSource preact */
-import { useEffect, useRef, useState } from 'preact/hooks';
-import { Tile } from '@embedpdf/plugin-tiling';
-import { useTilingCapability } from '../hooks/use-tiling';
 import { ignore, PdfErrorCode } from '@embedpdf/models';
+import { Tile } from '@embedpdf/plugin-tiling';
+import { useEffect, useRef, useState } from 'preact/hooks';
+
+import { useTilingCapability } from '../hooks/use-tiling';
 
 interface TileImgProps {
   pageIndex: number;

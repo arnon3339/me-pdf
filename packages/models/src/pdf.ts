@@ -1753,6 +1753,12 @@ export interface PdfEngine {
     flags?: MatchFlag[],
   ) => PdfTask<SearchAllPagesResult>;
   /**
+   * Get all annotations in this file
+   * @param doc - pdf document
+   * @returns task that contains the annotations or error
+   */
+  getAllAnnotations: (doc: PdfDocumentObject) => PdfTask<Record<number, PdfAnnotationObject[]>>;
+  /**
    * Get all attachments in this file
    * @param doc - pdf document
    * @returns task that contains the attachments or error

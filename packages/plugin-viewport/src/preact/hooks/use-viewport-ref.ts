@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from 'preact/hooks';
+
 import { useViewportCapability } from './use-viewport';
 
 export function useViewportRef() {

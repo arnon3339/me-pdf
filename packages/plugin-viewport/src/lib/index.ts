@@ -1,9 +1,10 @@
 import { PluginPackage } from '@embedpdf/core';
-import { ViewportPlugin } from './viewport-plugin';
-import { manifest, VIEWPORT_PLUGIN_ID } from './manifest';
-import { ViewportPluginConfig, ViewportState } from './types';
-import { viewportReducer, initialState } from './reducer';
+
 import { ViewportAction } from './actions';
+import { manifest, VIEWPORT_PLUGIN_ID } from './manifest';
+import { viewportReducer, initialState } from './reducer';
+import { ViewportPluginConfig, ViewportState } from './types';
+import { ViewportPlugin } from './viewport-plugin';
 
 export const ViewportPluginPackage: PluginPackage<
   ViewportPlugin,

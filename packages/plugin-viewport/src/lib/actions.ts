@@ -1,4 +1,5 @@
 import { Action } from '@embedpdf/core';
+
 import { ViewportInputMetrics, ViewportScrollMetrics } from './types';
 
 export const SET_VIEWPORT_METRICS = 'SET_VIEWPORT_METRICS';

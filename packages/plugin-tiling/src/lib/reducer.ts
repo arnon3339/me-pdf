@@ -1,10 +1,11 @@
-import { CoreState, Reducer } from '@embedpdf/core';
-import { Tile, TilingPluginConfig, TilingState } from './types';
-import { UPDATE_VISIBLE_TILES, MARK_TILE_STATUS, TilingAction } from './actions';
+import { Reducer } from '@embedpdf/core';
 
-export const initialState = (_coreState: CoreState, _config: TilingPluginConfig): TilingState => ({
+import { UPDATE_VISIBLE_TILES, MARK_TILE_STATUS, TilingAction } from './actions';
+import { Tile, TilingState } from './types';
+
+export const initialState: TilingState = {
   visibleTiles: {},
-});
+};
 
 export const tilingReducer: Reducer<TilingState, TilingAction> = (state, action) => {
   switch (action.type) {

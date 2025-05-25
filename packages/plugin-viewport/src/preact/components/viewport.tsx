@@ -1,8 +1,9 @@
 /** @jsxImportSource preact */
 import { ComponentChildren, JSX } from 'preact';
-import { useViewportRef } from '../hooks/use-viewport-ref';
-import { useViewportCapability } from '../hooks';
 import { useEffect, useState } from 'preact/hooks';
+
+import { useViewportCapability } from '../hooks';
+import { useViewportRef } from '../hooks/use-viewport-ref';
 
 type ViewportProps = JSX.HTMLAttributes<HTMLDivElement> & {
   children: ComponentChildren;

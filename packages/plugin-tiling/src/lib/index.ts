@@ -1,10 +1,10 @@
 import { PluginPackage } from '@embedpdf/core';
-import { TilingPluginConfig, TilingState } from './types';
-import { TilingPlugin } from './tiling-plugin';
-import { manifest, TILING_PLUGIN_ID } from './manifest';
-import { initialState } from './reducer';
-import { tilingReducer } from './reducer';
+
 import { TilingAction } from './actions';
+import { manifest, TILING_PLUGIN_ID } from './manifest';
+import { initialState, tilingReducer } from './reducer';
+import { TilingPlugin } from './tiling-plugin';
+import { TilingPluginConfig, TilingState } from './types';
 
 export const TilingPluginPackage: PluginPackage<
   TilingPlugin,
@@ -15,7 +15,7 @@ export const TilingPluginPackage: PluginPackage<
   manifest,
   create: (registry, _engine, config) => new TilingPlugin(TILING_PLUGIN_ID, registry, config),
   reducer: (state, action) => tilingReducer(state, action),
-  initialState: (coreState, config) => initialState(coreState, config),
+  initialState,
 };
 
 export * from './tiling-plugin';

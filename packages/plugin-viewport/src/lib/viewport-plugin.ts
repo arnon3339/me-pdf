@@ -1,4 +1,12 @@
 import { BasePlugin, PluginRegistry, createEmitter, createBehaviorEmitter } from '@embedpdf/core';
+
+import {
+  ViewportAction,
+  setViewportMetrics,
+  setViewportScrollMetrics,
+  setViewportGap,
+  setScrollActivity,
+} from './actions';
 import {
   ViewportPluginConfig,
   ViewportState,
@@ -8,13 +16,6 @@ import {
   ViewportInputMetrics,
   ScrollToPayload,
 } from './types';
-import {
-  ViewportAction,
-  setViewportMetrics,
-  setViewportScrollMetrics,
-  setViewportGap,
-  setScrollActivity,
-} from './actions';
 
 export class ViewportPlugin extends BasePlugin<
   ViewportPluginConfig,

@@ -1,5 +1,5 @@
 import { Reducer } from '@embedpdf/core';
-import { ViewportState } from './types';
+
 import {
   SET_VIEWPORT_METRICS,
   SET_VIEWPORT_SCROLL_METRICS,
@@ -7,6 +7,7 @@ import {
   ViewportAction,
   SET_SCROLL_ACTIVITY,
 } from './actions';
+import { ViewportState } from './types';
 
 export const initialState: ViewportState = {
   viewportGap: 0,

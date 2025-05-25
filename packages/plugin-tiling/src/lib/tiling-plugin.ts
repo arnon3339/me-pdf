@@ -5,9 +5,12 @@ import {
   PluginRegistry,
   StoreState,
 } from '@embedpdf/core';
-import { ignore, Rect } from '@embedpdf/models';
+import { ignore } from '@embedpdf/models';
 import { RenderCapability, RenderPlugin } from '@embedpdf/plugin-render';
 import { ScrollCapability, ScrollMetrics, ScrollPlugin } from '@embedpdf/plugin-scroll';
+import { ViewportCapability, ViewportPlugin } from '@embedpdf/plugin-viewport';
+
+import { markTileStatus, updateVisibleTiles } from './actions';
 import {
   TilingPluginConfig,
   TilingCapability,
@@ -15,8 +18,6 @@ import {
   RenderTileOptions,
   TilingState,
 } from './types';
-import { ViewportCapability, ViewportPlugin } from '@embedpdf/plugin-viewport';
-import { markTileStatus, updateVisibleTiles } from './actions';
 import { calculateTilesForPage } from './utils';
 
 export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapability> {
