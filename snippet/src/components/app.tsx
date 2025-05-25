@@ -52,6 +52,8 @@ import {
   groupedItemsRenderer,
   headerRenderer,
   iconButtonRenderer,
+  leftPanelMainRenderer,
+  LeftPanelMainProps,
   outlineRenderer,
   pageControlsContainerRenderer,
   PageControlsProps,
@@ -64,6 +66,7 @@ import {
   thumbnailsRender,
   zoomRenderer,
   ZoomRendererProps,
+  leftPanelAnnotationStyleRenderer,
 } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import {
@@ -281,6 +284,10 @@ export const icons: IconRegistry = {
   highlight: {
     id: 'highlight',
     svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="#ffcd45" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor"/><path d="M8 10h8" stroke="currentColor"/></svg>',
+  },
+  palette: {
+    id: 'palette',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-palette"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25" /><path d="M8.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M16.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>',
   },
 };
 
@@ -729,11 +736,18 @@ export const menuItems: Record<string, MenuItem<State>> = {
       if (ui) {
         ui.togglePanel({
           id: 'leftPanel',
-          visibleChild: state.plugins.ui.panel.leftPanel.visibleChild || 'thumbnails',
+          visibleChild: 'leftPanelMain',
+          open:
+            state.plugins.ui.panel.leftPanel.open === true &&
+            state.plugins.ui.panel.leftPanel.visibleChild === 'leftPanelMain'
+              ? false
+              : true,
         });
       }
     },
-    active: (storeState) => storeState.plugins.ui.panel.leftPanel.open === true,
+    active: (storeState) =>
+      storeState.plugins.ui.panel.leftPanel.open === true &&
+      storeState.plugins.ui.panel.leftPanel.visibleChild === 'leftPanelMain',
   },
   sidebarMenu: {
     id: 'sidebarMenu',
@@ -750,12 +764,18 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
       if (ui) {
-        ui.togglePanel({ id: 'leftPanel', visibleChild: 'thumbnails' });
+        ui.togglePanel({ id: 'leftPanel', visibleChild: 'leftPanelMain', open: true });
+        ui.updateComponentState({
+          componentType: 'custom',
+          componentId: 'leftPanelMain',
+          patch: {
+            visibleChild: 'thumbnails',
+          },
+        });
       }
     },
     active: (storeState) =>
-      storeState.plugins.ui.panel.leftPanel.open === true &&
-      storeState.plugins.ui.panel.leftPanel.visibleChild === 'thumbnails',
+      storeState.plugins.ui.custom.leftPanelMain.visibleChild === 'thumbnails',
   },
   outline: {
     id: 'outline',
@@ -766,12 +786,17 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
       if (ui) {
-        ui.togglePanel({ id: 'leftPanel', visibleChild: 'outline' });
+        ui.togglePanel({ id: 'leftPanel', visibleChild: 'leftPanelMain', open: true });
+        ui.updateComponentState({
+          componentType: 'custom',
+          componentId: 'leftPanelMain',
+          patch: {
+            visibleChild: 'outline',
+          },
+        });
       }
     },
-    active: (storeState) =>
-      storeState.plugins.ui.panel.leftPanel.open === true &&
-      storeState.plugins.ui.panel.leftPanel.visibleChild === 'outline',
+    active: (storeState) => storeState.plugins.ui.custom.leftPanelMain.visibleChild === 'outline',
   },
   attachments: {
     id: 'attachments',
@@ -782,12 +807,18 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
 
       if (ui) {
-        ui.togglePanel({ id: 'leftPanel', visibleChild: 'attachments' });
+        ui.togglePanel({ id: 'leftPanel', visibleChild: 'leftPanelMain', open: true });
+        ui.updateComponentState({
+          componentType: 'custom',
+          componentId: 'leftPanelMain',
+          patch: {
+            visibleChild: 'attachments',
+          },
+        });
       }
     },
     active: (storeState) =>
-      storeState.plugins.ui.panel.leftPanel.open === true &&
-      storeState.plugins.ui.panel.leftPanel.visibleChild === 'attachments',
+      storeState.plugins.ui.custom.leftPanelMain.visibleChild === 'attachments',
   },
   view: {
     id: 'view',
@@ -944,6 +975,30 @@ export const menuItems: Record<string, MenuItem<State>> = {
     icon: 'highlight',
     action: (registry) => {},
   },
+  styleAnnotation: {
+    id: 'styleAnnotation',
+    label: 'Style',
+    type: 'action',
+    icon: 'palette',
+    action: (registry, state) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if (ui) {
+        ui.togglePanel({
+          id: 'leftPanel',
+          visibleChild: 'leftPanelAnnotationStyle',
+          open:
+            state.plugins.ui.panel.leftPanel.open === true &&
+            state.plugins.ui.panel.leftPanel.visibleChild === 'leftPanelAnnotationStyle'
+              ? false
+              : true,
+        });
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.ui.panel.leftPanel.open === true &&
+      storeState.plugins.ui.panel.leftPanel.visibleChild === 'leftPanelAnnotationStyle',
+  },
 };
 
 // Define components
@@ -959,6 +1014,19 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.menuCtr, storeState),
+    }),
+  },
+  styleButton: {
+    type: 'iconButton',
+    id: 'styleButton',
+    props: {
+      commandId: 'styleAnnotation',
+      active: false,
+      label: 'Style',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.styleAnnotation, storeState),
     }),
   },
   copyButton: {
@@ -1204,7 +1272,7 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'selectButton',
     props: {
       menuCommandId: 'tabOverflow',
-      commandIds: ['view', 'annotate', 'shapes', 'fillAndSign', 'form'],
+      commandIds: ['view', 'annotate'],
       activeCommandId: 'view',
       active: false,
     },
@@ -1223,14 +1291,6 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
       { componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
       { componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
-      { componentId: 'shapesTab', priority: 3, className: 'hidden @min-[600px]:block' },
-      { componentId: 'fillAndSignTab', priority: 4, className: 'hidden @min-[700px]:block' },
-      { componentId: 'formTab', priority: 5, className: 'hidden @min-[800px]:block' },
-      {
-        componentId: 'tabOverflowButton',
-        priority: 60,
-        className: 'hidden @min-[500px]:block @min-[701px]:hidden',
-      },
     ],
     props: {
       gap: 10,
@@ -1345,6 +1405,8 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'underlineButton', priority: 2 },
       { componentId: 'strikethroughButton', priority: 3 },
       { componentId: 'squigglyButton', priority: 4 },
+      { componentId: 'divider1', priority: 5 },
+      { componentId: 'styleButton', priority: 6 },
     ],
     props: {
       gap: 10,
@@ -1377,18 +1439,43 @@ export const components: Record<string, UIComponentType<State>> = {
         props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical',
     }),
   },
+  leftPanelAnnotationStyle: {
+    id: 'leftPanelAnnotationStyle',
+    type: 'custom',
+    render: 'leftPanelAnnotationStyle',
+  },
+  leftPanelMain: defineComponent<{ visibleChild: string }, LeftPanelMainProps, State>()({
+    id: 'leftPanelMain',
+    type: 'custom',
+    render: 'leftPanelMain',
+    initialState: {
+      visibleChild: 'thumbnails',
+    },
+    props: (initialState) => ({
+      visibleChild: initialState.visibleChild,
+      tabsCommandId: 'sidebarMenu',
+    }),
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      visibleChild: storeState.plugins.ui.custom.leftPanelMain.visibleChild,
+    }),
+    slots: [
+      { componentId: 'thumbnails', priority: 0 },
+      { componentId: 'outline', priority: 1 },
+      { componentId: 'attachments', priority: 2 },
+    ],
+  }),
   leftPanel: {
     id: 'leftPanel',
     type: 'panel',
     initialState: {
       open: false,
-      visibleChild: 'thumbnails',
+      visibleChild: 'leftPanelMain',
     },
     props: (initialState) => ({
       open: initialState.open,
       visibleChild: initialState.visibleChild,
       location: 'left',
-      tabsCommandId: 'sidebarMenu',
     }),
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
@@ -1396,9 +1483,8 @@ export const components: Record<string, UIComponentType<State>> = {
       visibleChild: storeState.plugins.ui.panel.leftPanel.visibleChild,
     }),
     slots: [
-      { componentId: 'thumbnails', priority: 0 },
-      { componentId: 'outline', priority: 1 },
-      { componentId: 'attachments', priority: 2 },
+      { componentId: 'leftPanelMain', priority: 0 },
+      { componentId: 'leftPanelAnnotationStyle', priority: 1 },
     ],
   },
   thumbnails: {
@@ -1565,6 +1651,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
             uiCapability.registerComponentRenderer('attachments', attachmentsRenderer);
             uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
             uiCapability.registerComponentRenderer('textSelectionMenu', textSelectionMenuRenderer);
+            uiCapability.registerComponentRenderer('leftPanelMain', leftPanelMainRenderer);
+            uiCapability.registerComponentRenderer(
+              'leftPanelAnnotationStyle',
+              leftPanelAnnotationStyleRenderer,
+            );
           }
         }}
         plugins={[

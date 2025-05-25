@@ -2,6 +2,7 @@ import { BasePlugin, CoreState, PluginRegistry, StoreState, arePropsEqual } from
 import {
   childrenFunctionOptions,
   CommandMenuComponent,
+  CustomComponent,
   FloatingComponent,
   GroupedItemsComponent,
   HeaderComponent,
@@ -22,6 +23,8 @@ import {
   uiHideCommandMenu,
   TogglePanelPayload,
   SetHeaderVisiblePayload,
+  uiUpdateComponentState,
+  UpdateComponentStatePayload,
 } from './actions';
 import { MenuManager } from './menu/menu-manager';
 import { IconManager } from './icons/icon-manager';
@@ -86,8 +89,7 @@ export class UIPlugin extends BasePlugin<
     this.menuManager.on(MenuManager.EVENTS.MENU_REQUESTED, (data) => {
       const { menuId, triggerElement, position, flatten } = data;
 
-      const uiState = this.getState();
-      const isOpen = uiState.commandMenu.commandMenu?.activeCommand === menuId;
+      const isOpen = this.state.commandMenu.commandMenu?.activeCommand === menuId;
       if (isOpen) {
         return this.dispatch(uiHideCommandMenu({ id: 'commandMenu' }));
       }
@@ -135,7 +137,7 @@ export class UIPlugin extends BasePlugin<
     Object.values(this.components).forEach((component) => {
       if (isItemWithSlots(component)) {
         const props = component.componentConfig;
-        props.slots.forEach((slot) => {
+        props.slots?.forEach((slot) => {
           const child = this.components[slot.componentId];
           if (child) {
             component.addChild(slot.componentId, child, slot.priority, slot.className);
@@ -263,6 +265,9 @@ export class UIPlugin extends BasePlugin<
       setHeaderVisible: (payload: SetHeaderVisiblePayload) => {
         this.dispatch(uiSetHeaderVisible(payload));
       },
+      updateComponentState: (payload: UpdateComponentStatePayload) => {
+        this.dispatch(uiUpdateComponentState(payload));
+      },
       ...this.iconManager.capabilities(),
       ...this.menuManager.capabilities(),
     };
@@ -282,12 +287,14 @@ function isItemWithSlots(
   | UIComponent<GroupedItemsComponent>
   | UIComponent<HeaderComponent>
   | UIComponent<PanelComponent>
-  | UIComponent<FloatingComponent> {
+  | UIComponent<FloatingComponent>
+  | UIComponent<CustomComponent> {
   return (
     isGroupedItemsComponent(component) ||
     isHeaderComponent(component) ||
     isPanelComponent(component) ||
-    isFloatingComponent(component)
+    isFloatingComponent(component) ||
+    isCustomComponent(component)
   );
 }
 
@@ -320,4 +327,10 @@ function isCommandMenuComponent(
   component: UIComponent<UIComponentType>,
 ): component is UIComponent<CommandMenuComponent> {
   return component.type === 'commandMenu';
+}
+
+function isCustomComponent(
+  component: UIComponent<UIComponentType>,
+): component is UIComponent<CustomComponent> {
+  return component.type === 'custom';
 }

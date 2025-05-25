@@ -130,8 +130,8 @@ export const dividerRenderer: ComponentRenderFunction<DividerComponent> = (
 ) => {
   const className =
     context?.direction === 'horizontal'
-      ? 'h-6 w-[1px] bg-gray-200 self-center'
-      : 'h-[1px] w-6 bg-gray-200 self-center';
+      ? 'h-6 w-[1px] bg-gray-300 self-center'
+      : 'h-[1px] w-6 bg-gray-300 self-center';
 
   return <div className={className} />;
 };
@@ -197,24 +197,30 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
   );
 };
 
-export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId?: string }> = (
+export interface LeftPanelAnnotationStyleProps {}
+
+export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
+  LeftPanelAnnotationStyleProps
+> = (props, children) => {
+  return <div>Left Panel Annotation Style</div>;
+};
+
+export interface LeftPanelMainProps {
+  visibleChild: string;
+  tabsCommandId: string;
+}
+
+export const leftPanelMainRenderer: ComponentRenderFunction<LeftPanelMainProps> = (
   props,
   children,
 ) => {
-  if (!props.open) return null;
-
   const { provides: ui } = useUICapability();
   const tabsCommand = props.tabsCommandId ? ui?.getMenuOrAction(props.tabsCommandId) : null;
   const tabChildren =
     tabsCommand && tabsCommand.type === 'menu' ? ui?.getItemsByIds(tabsCommand.children) : null;
 
-  // Determine border class based on position
-  const borderClass = props.location === 'left' ? 'md:border-r' : 'md:border-l';
-
   return (
-    <div
-      className={`flex w-full flex-none shrink-0 flex-col border-t bg-white md:w-[275px] md:min-w-[275px] md:border-t-0 ${borderClass} h-full border-[#cfd4da]`}
-    >
+    <Fragment>
       {tabsCommand && tabChildren && (
         <div
           role="tablist"
@@ -255,6 +261,27 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId
             })}
         </div>
       )}
+      {children({
+        ...(props.visibleChild && {
+          filter: (childId) => childId === props.visibleChild,
+        }),
+      })}
+    </Fragment>
+  );
+};
+
+export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId?: string }> = (
+  props,
+  children,
+) => {
+  if (!props.open) return null;
+  // Determine border class based on position
+  const borderClass = props.location === 'left' ? 'md:border-r' : 'md:border-l';
+
+  return (
+    <div
+      className={`flex w-full flex-none shrink-0 flex-col border-t bg-white md:w-[275px] md:min-w-[275px] md:border-t-0 ${borderClass} h-full border-[#cfd4da]`}
+    >
       {children({
         ...(props.visibleChild && {
           filter: (childId) => childId === props.visibleChild,

@@ -3,7 +3,11 @@ import { UI_PLUGIN_ID } from './manifest';
 import { UIComponent } from './ui-component';
 import { MenuRegistry, MenuManagerCapabilities } from './menu/types';
 import { IconRegistry, IconCapabilities } from './icons/types';
-import { SetHeaderVisiblePayload, TogglePanelPayload } from './actions';
+import {
+  SetHeaderVisiblePayload,
+  TogglePanelPayload,
+  UpdateComponentStatePayload,
+} from './actions';
 
 export interface UIPluginConfig {
   enabled: boolean;
@@ -78,6 +82,7 @@ export type UICapability = IconCapabilities &
     registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
     togglePanel: (payload: TogglePanelPayload) => void;
     setHeaderVisible: (payload: SetHeaderVisiblePayload) => void;
+    updateComponentState: <T>(payload: UpdateComponentStatePayload<T>) => void;
   };
 
 export interface BaseUIComponent<TProps, TInitial = undefined, TStore = any> {
@@ -205,6 +210,7 @@ export interface SelectButtonComponent<TStore = any>
 export interface CustomComponent<TStore = any> extends BaseUIComponent<any, any, TStore> {
   type: 'custom';
   render: string;
+  slots?: Slot[];
 }
 
 export interface FloatingState {

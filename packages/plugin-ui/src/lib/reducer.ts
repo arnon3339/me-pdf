@@ -6,6 +6,7 @@ import {
   UI_SET_HEADER_VISIBLE,
   UI_SHOW_COMMAND_MENU,
   UI_TOGGLE_PANEL,
+  UI_UPDATE_COMPONENT_STATE,
   UIPluginAction,
 } from './actions';
 
@@ -99,7 +100,31 @@ export const uiReducer: Reducer<UIPluginState, UIPluginAction> = (state = initia
           },
         },
       };
+    case UI_UPDATE_COMPONENT_STATE: {
+      const { componentType, componentId, patch } = action.payload;
 
+      // if the slice or the component is unknown → ignore
+      if (!state[componentType] || !state[componentType][componentId]) return state;
+
+      const current = state[componentType][componentId] as Record<string, any>;
+
+      // keep only keys that already exist
+      const filteredPatch = Object.fromEntries(Object.entries(patch).filter(([k]) => k in current));
+
+      // no allowed keys? -> no-op
+      if (Object.keys(filteredPatch).length === 0) return state;
+
+      return {
+        ...state,
+        [componentType]: {
+          ...state[componentType],
+          [componentId]: {
+            ...current,
+            ...filteredPatch,
+          },
+        },
+      };
+    }
     default:
       return state;
   }

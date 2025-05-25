@@ -9,6 +9,7 @@ export const UI_TOGGLE_PANEL = 'UI_TOGGLE_PANEL';
 export const UI_SHOW_COMMAND_MENU = 'UI_SHOW_COMMAND_MENU';
 export const UI_HIDE_COMMAND_MENU = 'UI_HIDE_COMMAND_MENU';
 export const UI_UPDATE_COMMAND_MENU = 'UI_UPDATE_COMMAND_MENU';
+export const UI_UPDATE_COMPONENT_STATE = 'UI_UPDATE_COMPONENT_STATE';
 
 export interface InitFlyoutPayload {
   id: string;
@@ -38,6 +39,15 @@ export interface ShowCommandMenuPayload {
   triggerElement?: HTMLElement;
   position?: 'top' | 'bottom' | 'left' | 'right';
   flatten?: boolean;
+}
+
+export interface UpdateComponentStatePayload<T = any> {
+  /** one of the top-level keys inside UIPluginState, e.g. "panel" | "custom" … */
+  componentType: keyof UIPluginState;
+  /** same id you used when registering the component */
+  componentId: string;
+  /** partial patch – only keys existing in the current state will be applied */
+  patch: Partial<T>;
 }
 
 export interface HideCommandMenuPayload {
@@ -79,6 +89,11 @@ export interface UiHideCommandMenuAction extends Action {
   payload: HideCommandMenuPayload;
 }
 
+export interface UiUpdateComponentStateAction extends Action {
+  type: typeof UI_UPDATE_COMPONENT_STATE;
+  payload: UpdateComponentStatePayload;
+}
+
 export type UIPluginAction =
   | UiInitComponentsAction
   | UiInitFlyoutAction
@@ -86,7 +101,8 @@ export type UIPluginAction =
   | UiSetHeaderVisibleAction
   | UiTogglePanelAction
   | UiShowCommandMenuAction
-  | UiHideCommandMenuAction;
+  | UiHideCommandMenuAction
+  | UiUpdateComponentStateAction;
 
 export const uiInitComponents = (state: UIPluginState): UiInitComponentsAction => ({
   type: UI_INIT_COMPONENTS,
@@ -120,5 +136,12 @@ export const uiShowCommandMenu = (payload: ShowCommandMenuPayload): UiShowComman
 
 export const uiHideCommandMenu = (payload: HideCommandMenuPayload): UiHideCommandMenuAction => ({
   type: UI_HIDE_COMMAND_MENU,
+  payload,
+});
+
+export const uiUpdateComponentState = <T>(
+  payload: UpdateComponentStatePayload<T>,
+): UiUpdateComponentStateAction => ({
+  type: UI_UPDATE_COMPONENT_STATE,
   payload,
 });
