@@ -1672,7 +1672,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                     rotation={rotation}
                                     containerSize={{ width: rotatedWidth, height: rotatedHeight }}
                                   />
-                                  <AnnotationLayer pageIndex={pageIndex} className="absolute" />
+                                  <AnnotationLayer
+                                    pageIndex={pageIndex}
+                                    scale={scale}
+                                    className="absolute"
+                                  />
                                 </div>
                               </Rotate>
                             )}

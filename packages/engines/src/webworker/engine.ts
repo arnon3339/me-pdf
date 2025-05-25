@@ -510,21 +510,8 @@ export class WebWorkerEngine implements PdfEngine {
    *
    * @public
    */
-  getPageAnnotations(
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-  ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'getPageAnnotations',
-      doc,
-      page,
-      scaleFactor,
-      rotation,
-    );
+  getPageAnnotations(doc: PdfDocumentObject, page: PdfPageObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageAnnotations', doc, page);
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfAnnotationObject[]>(this.worker, requestId);
 
@@ -533,7 +520,7 @@ export class WebWorkerEngine implements PdfEngine {
       type: 'ExecuteRequest',
       data: {
         name: 'getPageAnnotations',
-        args: [doc, page, scaleFactor, rotation],
+        args: [doc, page],
       },
     };
     this.proxy(task, request);

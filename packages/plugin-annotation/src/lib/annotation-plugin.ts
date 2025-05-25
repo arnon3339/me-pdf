@@ -1,23 +1,37 @@
-import { BasePlugin, PluginRegistry } from '@embedpdf/core';
+import { BasePlugin, createBehaviorEmitter, PluginRegistry, SET_DOCUMENT } from '@embedpdf/core';
 import {
+  ignore,
   PdfAnnotationObject,
+  PdfDocumentObject,
   PdfEngine,
-  PdfErrorCode,
   PdfErrorReason,
-  PdfTaskHelper,
-  Rotation,
   Task,
 } from '@embedpdf/models';
-import { AnnotationCapability, AnnotationPluginConfig, GetPageAnnotationsOptions } from './types';
+import {
+  AnnotationCapability,
+  AnnotationPluginConfig,
+  AnnotationState,
+  GetPageAnnotationsOptions,
+} from './types';
+import { setAnnotations } from './actions';
 
 export class AnnotationPlugin extends BasePlugin<AnnotationPluginConfig, AnnotationCapability> {
   static readonly id = 'annotation' as const;
 
   private engine: PdfEngine;
 
+  private readonly state$ = createBehaviorEmitter<AnnotationState>();
+
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
     this.engine = engine;
+
+    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => {
+      const doc = state.core.document;
+      if (doc) {
+        this.getAllAnnotations(doc);
+      }
+    });
   }
 
   async initialize(config: AnnotationPluginConfig): Promise<void> {
@@ -29,13 +43,23 @@ export class AnnotationPlugin extends BasePlugin<AnnotationPluginConfig, Annotat
       getPageAnnotations: (options: GetPageAnnotationsOptions) => {
         return this.getPageAnnotations(options);
       },
+      onStateChange: this.state$.on,
     };
+  }
+
+  override onStoreUpdated(_prevState: AnnotationState, newState: AnnotationState): void {
+    this.state$.emit(newState);
+  }
+
+  private getAllAnnotations(doc: PdfDocumentObject) {
+    const task = this.engine.getAllAnnotations(doc);
+    task.wait((annotations) => this.dispatch(setAnnotations(annotations)), ignore);
   }
 
   private getPageAnnotations(
     options: GetPageAnnotationsOptions,
   ): Task<PdfAnnotationObject[], PdfErrorReason> {
-    const { pageIndex, scaleFactor = 1, rotation = Rotation.Degree0 } = options;
+    const { pageIndex } = options;
 
     const doc = this.coreState.core.document;
 
@@ -49,6 +73,6 @@ export class AnnotationPlugin extends BasePlugin<AnnotationPluginConfig, Annotat
       throw new Error('page does not open');
     }
 
-    return this.engine.getPageAnnotations(doc, page, scaleFactor, rotation);
+    return this.engine.getPageAnnotations(doc, page);
   }
 }

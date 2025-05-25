@@ -220,42 +220,40 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     getAllAnnotations: jest.fn((doc: PdfDocumentObject) => {
       return PdfTaskHelper.resolve({});
     }),
-    getPageAnnotations: jest.fn(
-      (doc: PdfDocumentObject, page: PdfPageObject, scaleFactor: number, rotation: Rotation) => {
-        const link: PdfLinkAnnoObject = {
-          status: PdfAnnotationObjectStatus.Committed,
-          pageIndex: page.index,
-          id: page.index + 1,
-          type: PdfAnnotationSubtype.LINK,
-          target: {
-            type: 'action',
-            action: {
-              type: PdfActionType.URI,
-              uri: 'https://localhost',
-            },
+    getPageAnnotations: jest.fn((doc: PdfDocumentObject, page: PdfPageObject) => {
+      const link: PdfLinkAnnoObject = {
+        status: PdfAnnotationObjectStatus.Committed,
+        pageIndex: page.index,
+        id: page.index + 1,
+        type: PdfAnnotationSubtype.LINK,
+        target: {
+          type: 'action',
+          action: {
+            type: PdfActionType.URI,
+            uri: 'https://localhost',
           },
-          text: 'localhost',
-          rect: {
-            origin: {
-              x: 0,
-              y: 0,
-            },
-            size: {
-              width: 100,
-              height: 100,
-            },
+        },
+        text: 'localhost',
+        rect: {
+          origin: {
+            x: 0,
+            y: 0,
           },
-          appearances: {
-            normal: '',
-            rollover: '',
-            down: '',
+          size: {
+            width: 100,
+            height: 100,
           },
-        };
-        const annotations: PdfAnnotationObject[] = [];
-        annotations.push(link);
-        return PdfTaskHelper.resolve(annotations);
-      },
-    ),
+        },
+        appearances: {
+          normal: '',
+          rollover: '',
+          down: '',
+        },
+      };
+      const annotations: PdfAnnotationObject[] = [];
+      annotations.push(link);
+      return PdfTaskHelper.resolve(annotations);
+    }),
     createPageAnnotation: jest.fn(() => {
       return PdfTaskHelper.resolve(true);
     }),

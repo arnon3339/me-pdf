@@ -1668,8 +1668,6 @@ export interface PdfEngine {
   getPageAnnotations: (
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
   ) => PdfTask<PdfAnnotationObject[]>;
   /**
    * Create a annotation on specified page

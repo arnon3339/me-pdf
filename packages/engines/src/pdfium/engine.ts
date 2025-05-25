@@ -989,21 +989,8 @@ export class PdfiumEngine implements PdfEngine {
    *
    * @public
    */
-  getPageAnnotations(
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-  ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'getPageAnnotations',
-      doc,
-      page,
-      scaleFactor,
-      rotation,
-    );
+  getPageAnnotations(doc: PdfDocumentObject, page: PdfPageObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageAnnotations', doc, page);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
