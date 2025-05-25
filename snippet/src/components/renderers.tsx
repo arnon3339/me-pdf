@@ -225,7 +225,7 @@ export const leftPanelMainRenderer: ComponentRenderFunction<LeftPanelMainProps> 
       {tabsCommand && tabChildren && (
         <div
           role="tablist"
-          className="m-4 flex flex-shrink-0 overflow-hidden bg-white dark:bg-gray-900"
+          className="mx-4 my-4 flex flex-shrink-0 overflow-hidden bg-white dark:bg-gray-900"
         >
           {tabChildren
             .filter((child) => child.type === 'action')
@@ -276,8 +276,17 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId
   children,
 ) => {
   const { elementRef, isFullscreen } = useSwipeGesture(props.open);
+  const { provides: ui } = useUICapability();
   if (!props.open) return null;
   const borderClass = props.location === 'left' ? 'md:border-r' : 'md:border-l';
+
+  const togglePanel = () => {
+    ui?.togglePanel({
+      id: props.id,
+      visibleChild: props.visibleChild || 'leftPanelMain',
+      open: !props.open,
+    });
+  };
 
   return (
     <div
@@ -291,8 +300,12 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId
         <div className="h-1 w-12 rounded-full bg-gray-300"></div>
       </div>
 
+      <div className="flex flex-row justify-end md:hidden">
+        <Icon icon="x" className="mr-5 h-5 w-5 cursor-pointer" onClick={togglePanel} />
+      </div>
+
       {/* Panel content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex min-h-0 flex-1 flex-col">
         {children({
           ...(props.visibleChild && {
             filter: (childId) => childId === props.visibleChild,

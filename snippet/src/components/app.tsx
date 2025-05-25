@@ -27,10 +27,7 @@ import {
   SpreadPluginPackage,
   SpreadState,
 } from '@embedpdf/plugin-spread';
-//import { LayerPluginPackage, createLayerRegistration } from '@embedpdf/plugin-layer';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
-//import { RenderLayerPackage } from '@embedpdf/layer-render';
-//import { ZoomPluginPackage, ZoomMode, ZOOM_PLUGIN_ID, ZoomState } from '@embedpdf/plugin-zoom';
 import {
   MenuItem,
   defineComponent,
@@ -288,6 +285,10 @@ export const icons: IconRegistry = {
   palette: {
     id: 'palette',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-palette"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25" /><path d="M8.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M16.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>',
+  },
+  x: {
+    id: 'x',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>',
   },
 };
 
@@ -1707,7 +1708,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
         {({ pluginsReady }) => (
           <PluginUIProvider>
             {({ headers, panels, floating, commandMenu }) => (
-              <div className="@container flex h-full w-full flex-col">
+              <div className="@container flex h-full w-full select-none flex-col">
                 {headers.top.length > 0 && <div>{headers.top}</div>}
                 <div className="flex flex-1 flex-row overflow-hidden">
                   <div className="flex flex-col">{headers.left}</div>

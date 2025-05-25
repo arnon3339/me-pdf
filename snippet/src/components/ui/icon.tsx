@@ -1,16 +1,17 @@
-import { h, VNode } from 'preact';
+import { h, VNode, JSX, ComponentChildren } from 'preact';
 import { IconIdentifier, IconRenderOptions } from '@embedpdf/plugin-ui';
 import { useIcon } from '@embedpdf/plugin-ui/preact';
 
-export interface IconProps extends IconRenderOptions {
-  icon: IconIdentifier;
-}
+type IconProps = JSX.ButtonHTMLAttributes<HTMLSpanElement> &
+  IconRenderOptions & {
+    icon: IconIdentifier;
+  };
 
 /**
  * Icon component for React
  * Renders an icon from the registry or a raw SVG string in an SSR-compatible way
  */
-export function Icon({ icon, className, title }: IconProps): VNode | null {
+export function Icon({ icon, title, ...props }: IconProps): VNode | null {
   const iconManager = useIcon();
   let svgContent: string | undefined;
 
@@ -29,12 +30,18 @@ export function Icon({ icon, className, title }: IconProps): VNode | null {
   // Build the component with dangerouslySetInnerHTML to avoid DOM usage
   const iconElement = (
     <span
-      className={className}
+      {...props}
       dangerouslySetInnerHTML={{
         __html: svgContent,
       }}
     />
   );
 
-  return title ? <span title={title}>{iconElement}</span> : iconElement;
+  return title ? (
+    <span title={title} {...props}>
+      {iconElement}
+    </span>
+  ) : (
+    iconElement
+  );
 }

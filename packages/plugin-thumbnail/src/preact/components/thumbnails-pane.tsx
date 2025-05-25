@@ -30,11 +30,7 @@ export function ThumbnailsPane({ style, ...props }: ThumbnailsProps) {
   }, []);
 
   return (
-    <div
-      ref={viewportRef}
-      style={{ overflowY: 'auto', height: '100%', position: 'relative', ...style }}
-      {...props}
-    >
+    <div ref={viewportRef} style={{ overflowY: 'auto', position: 'relative', ...style }} {...props}>
       {/* spacer keeps correct scroll height even before first window arrives */}
       <div style={{ height: window?.totalHeight ?? 0, position: 'relative' }}>
         {window?.items.map((m) => props.children(m))}
