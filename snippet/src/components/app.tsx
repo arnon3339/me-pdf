@@ -1712,14 +1712,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                 <div className="flex flex-1 flex-row overflow-hidden">
                   <div className="flex flex-col">{headers.left}</div>
                   <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
-                    {panels.left.length > 0 && (
-                      <Fragment>
-                        <div className="absolute bottom-0 left-0 right-0 z-10 flex w-full md:hidden">
-                          {panels.left}
-                        </div>
-                        <div className="static hidden flex-col md:flex">{panels.left}</div>
-                      </Fragment>
-                    )}
+                    {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
                     <div className="relative flex w-full flex-1 overflow-hidden">
                       <Viewport
                         style={{
@@ -1777,14 +1770,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                         {floating.outsideScroller}
                       </Viewport>
                     </div>
-                    {panels.right.length > 0 && (
-                      <Fragment>
-                        <div className="absolute bottom-0 left-0 right-0 z-10 flex w-full md:hidden">
-                          {panels.right}
-                        </div>
-                        <div className="static hidden flex-col md:flex">{panels.right}</div>
-                      </Fragment>
-                    )}
+                    {panels.right.length > 0 && <Fragment>{panels.right}</Fragment>}
                   </div>
                   <div className="flex flex-col">{headers.right}</div>
                 </div>

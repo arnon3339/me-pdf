@@ -32,6 +32,7 @@ import { MatchFlag } from '@embedpdf/models';
 import { Checkbox } from './ui/checkbox';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
 import { menuPositionForSelection } from './utils';
+import { useSwipeGesture } from '@/hooks/use-swipe-gesture';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
   { commandId, onClick, active, ...props },
@@ -224,7 +225,7 @@ export const leftPanelMainRenderer: ComponentRenderFunction<LeftPanelMainProps> 
       {tabsCommand && tabChildren && (
         <div
           role="tablist"
-          className="m-4 inline-flex flex-shrink-0 overflow-hidden bg-white dark:bg-gray-900"
+          className="m-4 flex flex-shrink-0 overflow-hidden bg-white dark:bg-gray-900"
         >
           {tabChildren
             .filter((child) => child.type === 'action')
@@ -274,19 +275,30 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId
   props,
   children,
 ) => {
+  const { elementRef, isFullscreen } = useSwipeGesture(props.open);
   if (!props.open) return null;
-  // Determine border class based on position
   const borderClass = props.location === 'left' ? 'md:border-r' : 'md:border-l';
 
   return (
     <div
-      className={`flex w-full flex-none shrink-0 flex-col border-t bg-white md:w-[275px] md:min-w-[275px] md:border-t-0 ${borderClass} h-full border-[#cfd4da]`}
+      className={`flex w-full flex-none shrink-0 flex-col border-t bg-white md:w-[275px] md:min-w-[275px] md:border-t-0 ${borderClass} fixed absolute bottom-0 left-0 right-0 z-10 touch-pan-y border-[#cfd4da] transition-all duration-300 ease-in-out md:static md:h-full ${isFullscreen ? 'h-screen' : 'h-[50vh]'}`}
     >
-      {children({
-        ...(props.visibleChild && {
-          filter: (childId) => childId === props.visibleChild,
-        }),
-      })}
+      {/* Drag handle for mobile */}
+      <div
+        className="flex h-6 w-full cursor-grab items-center justify-center active:cursor-grabbing md:hidden"
+        ref={elementRef}
+      >
+        <div className="h-1 w-12 rounded-full bg-gray-300"></div>
+      </div>
+
+      {/* Panel content */}
+      <div className="flex-1 overflow-auto">
+        {children({
+          ...(props.visibleChild && {
+            filter: (childId) => childId === props.visibleChild,
+          }),
+        })}
+      </div>
     </div>
   );
 };
