@@ -1724,6 +1724,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                           overflow: 'auto',
                         }}
                       >
+                        {!pluginsReady && <div>Loading...</div>}
                         {pluginsReady && (
                           <Scroller
                             renderPage={({
