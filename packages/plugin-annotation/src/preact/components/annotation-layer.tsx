@@ -15,12 +15,20 @@ type AnnotationLayerProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & 
 export function AnnotationLayer({ pageIndex, scale, style, ...props }: AnnotationLayerProps) {
   const { provides: annotationProvides } = useAnnotationCapability();
   const [annotations, setAnnotations] = useState<PdfAnnotationObject[]>([]);
+  const [selectionState, setSelectionState] = useState<{
+    selectedPageIndex: number | undefined;
+    selectedAnnotationId: number | undefined;
+  }>({ selectedPageIndex: undefined, selectedAnnotationId: undefined });
 
   useEffect(() => {
     if (annotationProvides) {
-      annotationProvides.onStateChange((state) =>
-        setAnnotations(getAnnotationsByPageIndex(state, pageIndex)),
-      );
+      annotationProvides.onStateChange((state) => {
+        setAnnotations(getAnnotationsByPageIndex(state, pageIndex));
+        setSelectionState({
+          selectedPageIndex: state.selectedAnnotation?.pageIndex,
+          selectedAnnotationId: state.selectedAnnotation?.annotationId,
+        });
+      });
     }
   }, [annotationProvides]);
 
@@ -32,9 +40,21 @@ export function AnnotationLayer({ pageIndex, scale, style, ...props }: Annotatio
       {...props}
     >
       {annotations.map((annotation) => {
+        const isSelected =
+          selectionState.selectedPageIndex === pageIndex &&
+          selectionState.selectedAnnotationId === annotation.id;
+
         switch (annotation.type) {
           case PdfAnnotationSubtype.HIGHLIGHT:
-            return <HighlightAnnotation annotation={annotation} scale={scale} />;
+            return (
+              <HighlightAnnotation
+                key={annotation.id}
+                annotation={annotation}
+                scale={scale}
+                isSelected={isSelected}
+                pageIndex={pageIndex}
+              />
+            );
           default:
             return null;
         }
