@@ -220,24 +220,32 @@ export class ZoomPlugin extends BasePlugin<
       return false;
     }
 
-    let maxW = 0,
-      maxH = 0;
+    // Available space after accounting for fixed viewport gaps
+    const availableWidth = vp.clientWidth - 2 * vpGap;
+    const availableHeight = vp.clientHeight - 2 * vpGap;
+
+    if (availableWidth <= 0 || availableHeight <= 0) {
+      return false;
+    }
+
+    let maxContentW = 0,
+      maxContentH = 0;
 
     spreads.forEach((spread) => {
-      const w =
-        spread.reduce((s, p, i) => s + p.rotatedSize.width + (i ? pgGap : 0), 0) + 2 * vpGap;
-      const h = Math.max(...spread.map((p) => p.rotatedSize.height)) + 2 * vpGap;
-      maxW = Math.max(maxW, w);
-      maxH = Math.max(maxH, h);
+      // Only include scalable content (pages + page gaps), not viewport gaps
+      const contentW = spread.reduce((s, p, i) => s + p.rotatedSize.width + (i ? pgGap : 0), 0);
+      const contentH = Math.max(...spread.map((p) => p.rotatedSize.height));
+      maxContentW = Math.max(maxContentW, contentW);
+      maxContentH = Math.max(maxContentH, contentH);
     });
 
     switch (mode) {
       case ZoomMode.FitWidth:
-        return vp.clientWidth / maxW;
+        return availableWidth / maxContentW;
       case ZoomMode.FitPage:
-        return Math.min(vp.clientWidth / maxW, vp.clientHeight / maxH);
+        return Math.min(availableWidth / maxContentW, availableHeight / maxContentH);
       case ZoomMode.Automatic:
-        return Math.min(vp.clientWidth / maxW, 1);
+        return Math.min(availableWidth / maxContentW, 1);
       /* istanbul ignore next */
       default:
         return 1;
@@ -253,29 +261,33 @@ export class ZoomPlugin extends BasePlugin<
   ) {
     /* unscaled content size ------------------------------------------- */
     const layout = this.scroll.getLayout();
-    // const vpGap = this.viewport.getViewportGap();
+    const vpGap = this.viewport.getViewportGap();
 
     const contentW = layout.totalContentSize.width;
     const contentH = layout.totalContentSize.height;
 
-    /* helper: offset if content is narrower than viewport -------------- */
-    const off = (vw: number, cw: number, zoom: number) =>
-      cw * zoom < vw ? (vw - cw * zoom) / 2 : 0;
+    // Available space for content (excluding fixed viewport gaps)
+    const availableWidth = vp.clientWidth - 2 * vpGap;
+    const availableHeight = vp.clientHeight - 2 * vpGap;
 
-    const offXold = off(vp.clientWidth, contentW, oldZoom);
-    const offYold = off(vp.clientHeight, contentH, oldZoom);
+    /* helper: offset if content is narrower than available space ------- */
+    const off = (availableSpace: number, cw: number, zoom: number) =>
+      cw * zoom < availableSpace ? (availableSpace - cw * zoom) / 2 : 0;
 
-    const offXnew = off(vp.clientWidth, contentW, newZoom);
-    const offYnew = off(vp.clientHeight, contentH, newZoom);
+    const offXold = off(availableWidth, contentW, oldZoom);
+    const offYold = off(availableHeight, contentH, oldZoom);
+
+    const offXnew = off(availableWidth, contentW, newZoom);
+    const offYnew = off(availableHeight, contentH, newZoom);
 
     /* content coords of the focal point -------------------------------- */
-    const cx = (vp.scrollLeft + focus.vx - offXold) / oldZoom;
-    const cy = (vp.scrollTop + focus.vy - offYold) / oldZoom;
+    // Adjust focus point to account for vpGap and centering offset
+    const cx = (vp.scrollLeft + focus.vx - vpGap - offXold) / oldZoom;
+    const cy = (vp.scrollTop + focus.vy - vpGap - offYold) / oldZoom;
 
     /* new scroll so that (cx,cy) appears under focus again ------------- */
-    const desiredScrollLeft = cx * newZoom + offXnew - focus.vx;
-
-    const desiredScrollTop = cy * newZoom + offYnew - focus.vy;
+    const desiredScrollLeft = cx * newZoom + vpGap + offXnew - focus.vx;
+    const desiredScrollTop = cy * newZoom + vpGap + offYnew - focus.vy;
 
     return {
       desiredScrollLeft: Math.max(0, desiredScrollLeft),
