@@ -96,6 +96,7 @@ import {
 import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 import { PinchWrapper } from '@embedpdf/plugin-zoom/preact';
+import { LoadingIndicator } from './ui/loading-indicator';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -1618,7 +1619,15 @@ export function PDFViewer({ config }: PDFViewerProps) {
     }).then(setEngine);
   }, []);
 
-  if (!engine) return <div>Loading...</div>;
+  if (!engine)
+    return (
+      <>
+        <style>{styles}</style>
+        <div className="flex h-full w-full items-center justify-center">
+          <LoadingIndicator size="lg" text="Initializing PDF engine..." />
+        </div>
+      </>
+    );
 
   // Map config values to plugin settings
   //const scrollStrategy = config.scrollStrategy === 'horizontal' ? ScrollStrategy.Horizontal : ScrollStrategy.Vertical;
@@ -1725,7 +1734,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
                           overflow: 'auto',
                         }}
                       >
-                        {!pluginsReady && <div>Loading...</div>}
+                        {!pluginsReady && (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <LoadingIndicator size="lg" text="Loading PDF document..." />
+                          </div>
+                        )}
                         {pluginsReady && (
                           <PinchWrapper>
                             <Scroller
