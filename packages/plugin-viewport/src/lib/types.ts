@@ -11,6 +11,14 @@ export interface ViewportPluginConfig extends BasePluginConfig {
   scrollEndDelay?: number;
 }
 
+export interface ViewportRect {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+}
+
 export interface ViewportInputMetrics {
   width: number;
   height: number;
@@ -20,6 +28,7 @@ export interface ViewportInputMetrics {
   clientHeight: number;
   scrollWidth: number;
   scrollHeight: number;
+  rect: ViewportRect;
 }
 
 export interface ViewportMetrics extends ViewportInputMetrics {

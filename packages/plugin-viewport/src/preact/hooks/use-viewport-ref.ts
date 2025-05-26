@@ -23,6 +23,8 @@ export function useViewportRef() {
 
     // Example: On resize, call setMetrics
     const resizeObserver = new ResizeObserver(() => {
+      const rect = container.getBoundingClientRect();
+
       viewportProvides.setViewportMetrics({
         width: container.offsetWidth,
         height: container.offsetHeight,
@@ -32,6 +34,7 @@ export function useViewportRef() {
         scrollLeft: container.scrollLeft,
         scrollWidth: container.scrollWidth,
         scrollHeight: container.scrollHeight,
+        rect: rect,
       });
     });
     resizeObserver.observe(container);

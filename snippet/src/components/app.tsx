@@ -95,6 +95,7 @@ import {
 } from '@embedpdf/plugin-thumbnail';
 import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
+import { PinchWrapper } from '@embedpdf/plugin-zoom/preact';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -1726,48 +1727,50 @@ export function PDFViewer({ config }: PDFViewerProps) {
                       >
                         {!pluginsReady && <div>Loading...</div>}
                         {pluginsReady && (
-                          <Scroller
-                            renderPage={({
-                              pageIndex,
-                              scale,
-                              rotation,
-                              width,
-                              height,
-                              rotatedHeight,
-                              rotatedWidth,
-                            }) => (
-                              <Rotate pageSize={{ width, height }}>
-                                <div className="bg-white" style={{ width, height }}>
-                                  <RenderLayer
-                                    pageIndex={pageIndex}
-                                    className="absolute left-0 top-0 h-full w-full"
-                                  />
-                                  <TilingLayer
-                                    pageIndex={pageIndex}
-                                    scale={scale}
-                                    className="absolute left-0 top-0 h-full w-full"
-                                  />
-                                  <SearchLayer
-                                    pageIndex={pageIndex}
-                                    scale={scale}
-                                    className="absolute left-0 top-0 h-full w-full"
-                                  />
-                                  <SelectionLayer
-                                    pageIndex={pageIndex}
-                                    scale={scale}
-                                    rotation={rotation}
-                                    containerSize={{ width: rotatedWidth, height: rotatedHeight }}
-                                  />
-                                  <AnnotationLayer
-                                    pageIndex={pageIndex}
-                                    scale={scale}
-                                    className="absolute"
-                                  />
-                                </div>
-                              </Rotate>
-                            )}
-                            overlayElements={floating.insideScroller}
-                          />
+                          <PinchWrapper>
+                            <Scroller
+                              renderPage={({
+                                pageIndex,
+                                scale,
+                                rotation,
+                                width,
+                                height,
+                                rotatedHeight,
+                                rotatedWidth,
+                              }) => (
+                                <Rotate pageSize={{ width, height }}>
+                                  <div className="bg-white" style={{ width, height }}>
+                                    <RenderLayer
+                                      pageIndex={pageIndex}
+                                      className="absolute left-0 top-0 h-full w-full"
+                                    />
+                                    <TilingLayer
+                                      pageIndex={pageIndex}
+                                      scale={scale}
+                                      className="absolute left-0 top-0 h-full w-full"
+                                    />
+                                    <SearchLayer
+                                      pageIndex={pageIndex}
+                                      scale={scale}
+                                      className="absolute left-0 top-0 h-full w-full"
+                                    />
+                                    <SelectionLayer
+                                      pageIndex={pageIndex}
+                                      scale={scale}
+                                      rotation={rotation}
+                                      containerSize={{ width: rotatedWidth, height: rotatedHeight }}
+                                    />
+                                    <AnnotationLayer
+                                      pageIndex={pageIndex}
+                                      scale={scale}
+                                      className="absolute"
+                                    />
+                                  </div>
+                                </Rotate>
+                              )}
+                              overlayElements={floating.insideScroller}
+                            />
+                          </PinchWrapper>
                         )}
                         {floating.outsideScroller}
                       </Viewport>
