@@ -8,13 +8,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "rootDir": "src",
-    "paths": {
-      "preact": ["./node_modules/preact"],
-      "preact/hooks": ["./node_modules/preact/hooks"]
-    }
+    "jsx": "react",
+    "rootDir": "src"
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]

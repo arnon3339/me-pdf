@@ -5,7 +5,7 @@ import {
   SET_ANNOTATIONS,
   SELECT_ANNOTATION,
   DESELECT_ANNOTATION,
-  SET_EDIT_MODE,
+  SET_ANNOTATION_MODE,
   UPDATE_ANNOTATION_COLOR,
 } from './actions';
 import { AnnotationState } from './types';
@@ -13,7 +13,7 @@ import { AnnotationState } from './types';
 export const initialState: AnnotationState = {
   annotations: {},
   selectedAnnotation: null,
-  editMode: false,
+  annotationMode: null,
 };
 
 export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, action) => {
@@ -30,20 +30,18 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
       return {
         ...state,
         selectedAnnotation: action.payload,
-        editMode: false, // Reset edit mode when selecting new annotation
       };
 
     case DESELECT_ANNOTATION:
       return {
         ...state,
         selectedAnnotation: null,
-        editMode: false,
       };
 
-    case SET_EDIT_MODE:
+    case SET_ANNOTATION_MODE:
       return {
         ...state,
-        editMode: action.payload,
+        annotationMode: action.payload,
       };
 
     case UPDATE_ANNOTATION_COLOR: {

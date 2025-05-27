@@ -19,7 +19,7 @@ import {
   setAnnotations,
   selectAnnotation,
   deselectAnnotation,
-  setEditMode,
+  setAnnotationMode,
   updateAnnotationColor,
   AnnotationAction,
 } from './actions';
@@ -63,8 +63,8 @@ export class AnnotationPlugin extends BasePlugin<
       updateAnnotationColor: async (color: PdfAlphaColor) => {
         return this.updateSelectedAnnotationColor(color);
       },
-      setEditMode: (enabled: boolean) => {
-        this.dispatch(setEditMode(enabled));
+      setAnnotationMode: (mode: PdfAnnotationSubtype | null) => {
+        this.dispatch(setAnnotationMode(mode));
       },
       onStateChange: this.state$.on,
     };

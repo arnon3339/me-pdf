@@ -338,6 +338,34 @@ importers:
         specifier: ^5.0.0
         version: 5.8.3
 
+  packages/plugin-fullscreen:
+    dependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../core
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@embedpdf/models':
+        specifier: workspace:*
+        version: link:../models
+      '@embedpdf/plugin-loader':
+        specifier: workspace:*
+        version: link:../plugin-loader
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.18
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.8.0)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.8.3
+
   packages/plugin-layer:
     devDependencies:
       '@embedpdf/core':
@@ -417,6 +445,9 @@ importers:
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
+      preact:
+        specifier: ^10.26.4
+        version: 10.26.4
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -427,9 +458,9 @@ importers:
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
-      '@embedpdf/plugin-loader':
+      '@embedpdf/plugin-render':
         specifier: workspace:*
-        version: link:../plugin-loader
+        version: link:../plugin-render
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.18
@@ -810,6 +841,9 @@ importers:
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../packages/plugin-loader
+      '@embedpdf/plugin-print':
+        specifier: workspace:*
+        version: link:../packages/plugin-print
       '@embedpdf/plugin-render':
         specifier: workspace:*
         version: link:../packages/plugin-render

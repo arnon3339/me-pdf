@@ -32,6 +32,7 @@
     "@embedpdf/plugin-tiling": "workspace:*",
     "@embedpdf/plugin-thumbnail": "workspace:*",
     "@embedpdf/plugin-annotation": "workspace:*",
+    "@embedpdf/plugin-print": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {

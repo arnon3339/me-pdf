@@ -1,11 +1,11 @@
 import { Action } from '@embedpdf/core';
-import { PdfAnnotationObject, PdfAlphaColor } from '@embedpdf/models';
+import { PdfAnnotationObject, PdfAlphaColor, PdfAnnotationSubtype } from '@embedpdf/models';
 import { SelectedAnnotation } from './types';
 
 export const SET_ANNOTATIONS = 'SET_ANNOTATIONS';
 export const SELECT_ANNOTATION = 'SELECT_ANNOTATION';
 export const DESELECT_ANNOTATION = 'DESELECT_ANNOTATION';
-export const SET_EDIT_MODE = 'SET_EDIT_MODE';
+export const SET_ANNOTATION_MODE = 'SET_ANNOTATION_MODE';
 export const UPDATE_ANNOTATION_COLOR = 'UPDATE_ANNOTATION_COLOR';
 
 export interface SetAnnotationsAction extends Action {
@@ -22,9 +22,9 @@ export interface DeselectAnnotationAction extends Action {
   type: typeof DESELECT_ANNOTATION;
 }
 
-export interface SetEditModeAction extends Action {
-  type: typeof SET_EDIT_MODE;
-  payload: boolean;
+export interface SetAnnotationModeAction extends Action {
+  type: typeof SET_ANNOTATION_MODE;
+  payload: PdfAnnotationSubtype | null;
 }
 
 export interface UpdateAnnotationColorAction extends Action {
@@ -40,7 +40,7 @@ export type AnnotationAction =
   | SetAnnotationsAction
   | SelectAnnotationAction
   | DeselectAnnotationAction
-  | SetEditModeAction
+  | SetAnnotationModeAction
   | UpdateAnnotationColorAction;
 
 export function setAnnotations(
@@ -64,8 +64,11 @@ export function deselectAnnotation(): DeselectAnnotationAction {
   return { type: DESELECT_ANNOTATION };
 }
 
-export function setEditMode(enabled: boolean): SetEditModeAction {
-  return { type: SET_EDIT_MODE, payload: enabled };
+export function setAnnotationMode(mode: PdfAnnotationSubtype | null): SetAnnotationModeAction {
+  return {
+    type: SET_ANNOTATION_MODE,
+    payload: mode,
+  };
 }
 
 export function updateAnnotationColor(

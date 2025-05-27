@@ -28,17 +28,11 @@ export function LoadingIndicator({
       <div className="relative">
         {/* Outer spinning ring */}
         <div
-          className={`${sizeClasses[size]} animate-spin rounded-full border-2 border-gray-200`}
+          className={`${sizeClasses[size]} animate-spin rounded-full border-4 border-gray-200`}
         />
         {/* Inner spinning ring with blue-500 */}
         <div
-          className={`${sizeClasses[size]} absolute left-0 top-0 animate-spin rounded-full border-2 border-transparent border-r-blue-500 border-t-blue-500`}
-        />
-        {/* Center dot */}
-        <div
-          className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform ${
-            size === 'sm' ? 'h-1 w-1' : size === 'md' ? 'h-2 w-2' : 'h-3 w-3'
-          } animate-pulse rounded-full bg-blue-500`}
+          className={`${sizeClasses[size]} absolute left-0 top-0 animate-spin rounded-full border-4 border-transparent border-r-blue-500 border-t-blue-500`}
         />
       </div>
       {text && (

@@ -32,11 +32,20 @@ export function AnnotationLayer({ pageIndex, scale, style, ...props }: Annotatio
     }
   }, [annotationProvides]);
 
+  const handleLayerClick = (e: MouseEvent) => {
+    console.log('handleLayerClick', e.target, e.currentTarget);
+    // Only deselect if clicking directly on the layer (not on an annotation)
+    if (e.target === e.currentTarget && annotationProvides) {
+      annotationProvides.deselectAnnotation();
+    }
+  };
+
   return (
     <div
       style={{
         ...style,
       }}
+      onClick={handleLayerClick}
       {...props}
     >
       {annotations.map((annotation) => {

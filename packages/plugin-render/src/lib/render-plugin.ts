@@ -32,7 +32,7 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
     rotation = Rotation.Degree0,
     options = { withAnnotations: false },
   }: RenderPageOptions) {
-    const coreState = this.getCoreState().core;
+    const coreState = this.coreState.core;
 
     if (!coreState.document) {
       throw new Error('document does not open');
@@ -54,7 +54,7 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
     rotation = Rotation.Degree0,
     options = { withAnnotations: false },
   }: RenderPageRectOptions) {
-    const coreState = this.getCoreState().core;
+    const coreState = this.coreState.core;
 
     if (!coreState.document) {
       throw new Error('document does not open');

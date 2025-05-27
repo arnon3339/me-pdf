@@ -12,8 +12,12 @@ export const getSelectedAnnotation = (state: AnnotationState) => {
   return state.selectedAnnotation;
 };
 
-export const getEditMode = (state: AnnotationState) => {
-  return state.editMode;
+export const isInAnnotationMode = (state: AnnotationState) => {
+  return state.annotationMode !== null;
+};
+
+export const getSelectedAnnotationMode = (state: AnnotationState) => {
+  return state.annotationMode;
 };
 
 export const isAnnotationSelected = (

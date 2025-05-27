@@ -5,7 +5,7 @@ import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
 import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
 import { init, init as initPdfium } from '@embedpdf/pdfium';
-import { MatchFlag, PdfEngine, Rotation } from '@embedpdf/models';
+import { MatchFlag, PdfAnnotationSubtype, PdfEngine, Rotation } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
   ViewportPluginPackage,
@@ -64,6 +64,7 @@ import {
   zoomRenderer,
   ZoomRendererProps,
   leftPanelAnnotationStyleRenderer,
+  printModalRenderer,
 } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import {
@@ -93,10 +94,17 @@ import {
   ThumbnailPlugin,
   ThumbnailPluginPackage,
 } from '@embedpdf/plugin-thumbnail';
-import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation';
+import {
+  ANNOTATION_PLUGIN_ID,
+  AnnotationPlugin,
+  AnnotationPluginPackage,
+  AnnotationState,
+} from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 import { PinchWrapper } from '@embedpdf/plugin-zoom/preact';
 import { LoadingIndicator } from './ui/loading-indicator';
+import { PrintPluginPackage, PrintPlugin } from '@embedpdf/plugin-print';
+import { PrintProvider } from '@embedpdf/plugin-print/preact';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -145,6 +153,7 @@ type State = GlobalStoreState<{
   [SPREAD_PLUGIN_ID]: SpreadState;
   [SEARCH_PLUGIN_ID]: SearchState;
   [SELECTION_PLUGIN_ID]: SelectionState;
+  [ANNOTATION_PLUGIN_ID]: AnnotationState;
 }>;
 
 export const icons: IconRegistry = {
@@ -346,8 +355,17 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcut: 'Shift+P',
     //shortcutLabel: 'P',
     type: 'action',
-    action: () => {
-      console.log('print');
+    action: (registry, state) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+      if (ui) {
+        ui.updateComponentState({
+          componentType: 'floating',
+          componentId: 'printModal',
+          patch: {
+            open: true,
+          },
+        });
+      }
     },
   },
   settings: {
@@ -955,28 +973,100 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Underline',
     type: 'action',
     icon: 'underline',
-    action: (registry) => {},
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (state.plugins.annotation.annotationMode === PdfAnnotationSubtype.UNDERLINE) {
+          annotation.setAnnotationMode(null);
+        } else {
+          annotation.setAnnotationMode(PdfAnnotationSubtype.UNDERLINE);
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.annotationMode === PdfAnnotationSubtype.UNDERLINE,
   },
   squiggly: {
     id: 'squiggly',
     label: 'Squiggly',
     type: 'action',
     icon: 'squiggly',
-    action: (registry) => {},
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (state.plugins.annotation.annotationMode === PdfAnnotationSubtype.SQUIGGLY) {
+          annotation.setAnnotationMode(null);
+        } else {
+          annotation.setAnnotationMode(PdfAnnotationSubtype.SQUIGGLY);
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.annotationMode === PdfAnnotationSubtype.SQUIGGLY,
   },
   strikethrough: {
     id: 'strikethrough',
     label: 'Strikethrough',
     type: 'action',
     icon: 'strikethrough',
-    action: (registry) => {},
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (state.plugins.annotation.annotationMode === PdfAnnotationSubtype.STRIKEOUT) {
+          annotation.setAnnotationMode(null);
+        } else {
+          annotation.setAnnotationMode(PdfAnnotationSubtype.STRIKEOUT);
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.annotationMode === PdfAnnotationSubtype.STRIKEOUT,
   },
   highlight: {
     id: 'highlight',
     label: 'Highlight',
     type: 'action',
     icon: 'highlight',
-    action: (registry) => {},
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (state.plugins.annotation.annotationMode === PdfAnnotationSubtype.HIGHLIGHT) {
+          annotation.setAnnotationMode(null);
+        } else {
+          annotation.setAnnotationMode(PdfAnnotationSubtype.HIGHLIGHT);
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.annotationMode === PdfAnnotationSubtype.HIGHLIGHT,
+  },
+  squigglySelection: {
+    id: 'squigglySelection',
+    label: 'Squiggly Selection',
+    type: 'action',
+    icon: 'squiggly',
+    action: (registry, state) => {},
+  },
+  underlineSelection: {
+    id: 'underlineSelection',
+    label: 'Underline Selection',
+    type: 'action',
+    icon: 'underline',
+    action: (registry, state) => {},
+  },
+  strikethroughSelection: {
+    id: 'strikethroughSelection',
+    label: 'Strikethrough Selection',
+    type: 'action',
+    icon: 'strikethrough',
+    action: (registry, state) => {},
+  },
+  highlightSelection: {
+    id: 'highlightSelection',
+    label: 'Highlight Selection',
+    type: 'action',
+    icon: 'highlight',
+    action: (registry, state) => {},
   },
   styleAnnotation: {
     id: 'styleAnnotation',
@@ -1050,27 +1140,79 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'underlineButton',
     props: {
       commandId: 'underline',
+      active: false,
+      label: 'Underline',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.underline, storeState),
+    }),
   },
   squigglyButton: {
     type: 'iconButton',
     id: 'squigglyButton',
     props: {
       commandId: 'squiggly',
+      active: false,
+      label: 'Squiggly',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.squiggly, storeState),
+    }),
   },
   strikethroughButton: {
     type: 'iconButton',
     id: 'strikethroughButton',
     props: {
       commandId: 'strikethrough',
+      active: false,
+      label: 'Strikethrough',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.strikethrough, storeState),
+    }),
   },
   highlightButton: {
     type: 'iconButton',
     id: 'highlightButton',
     props: {
       commandId: 'highlight',
+      active: false,
+      label: 'Highlight',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.highlight, storeState),
+    }),
+  },
+  highlightSelectionButton: {
+    type: 'iconButton',
+    id: 'highlightSelectionButton',
+    props: {
+      commandId: 'highlightSelection',
+    },
+  },
+  underlineSelectionButton: {
+    type: 'iconButton',
+    id: 'underlineSelectionButton',
+    props: {
+      commandId: 'underlineSelection',
+    },
+  },
+  strikethroughSelectionButton: {
+    type: 'iconButton',
+    id: 'strikethroughSelectionButton',
+    props: {
+      commandId: 'strikethroughSelection',
+    },
+  },
+  squigglySelectionButton: {
+    type: 'iconButton',
+    id: 'squigglySelectionButton',
+    props: {
+      commandId: 'squigglySelection',
     },
   },
   viewCtrButton: {
@@ -1348,14 +1490,30 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'groupedItems',
     slots: [
       { componentId: 'copyButton', priority: 0 },
-      { componentId: 'highlightButton', priority: 1 },
-      { componentId: 'underlineButton', priority: 2 },
-      { componentId: 'strikethroughButton', priority: 3 },
-      { componentId: 'squigglyButton', priority: 4 },
+      { componentId: 'highlightSelectionButton', priority: 1 },
+      { componentId: 'underlineSelectionButton', priority: 2 },
+      { componentId: 'strikethroughSelectionButton', priority: 3 },
+      { componentId: 'squigglySelectionButton', priority: 4 },
     ],
     props: {
       gap: 10,
     },
+  },
+  printModal: {
+    id: 'printModal',
+    type: 'floating',
+    render: 'printModal',
+    initialState: {
+      open: false,
+    },
+    props: (initialState) => ({
+      open: initialState.open,
+      scrollerPosition: 'outside',
+    }),
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      open: storeState.plugins.ui.floating.printModal.open,
+    }),
   },
   textSelectionMenu: {
     id: 'textSelectionMenu',
@@ -1663,6 +1821,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
             uiCapability.registerComponentRenderer('textSelectionMenu', textSelectionMenuRenderer);
             uiCapability.registerComponentRenderer('leftPanelMain', leftPanelMainRenderer);
+            uiCapability.registerComponentRenderer('printModal', printModalRenderer);
             uiCapability.registerComponentRenderer(
               'leftPanelAnnotationStyle',
               leftPanelAnnotationStyleRenderer,
@@ -1713,88 +1872,96 @@ export function PDFViewer({ config }: PDFViewerProps) {
             labelHeight: 30,
           }),
           createPluginRegistration(AnnotationPluginPackage, {}),
+          createPluginRegistration(PrintPluginPackage, {
+            batchSize: 3,
+          }),
         ]}
       >
         {({ pluginsReady }) => (
           <PluginUIProvider>
             {({ headers, panels, floating, commandMenu }) => (
-              <div className="@container flex h-full w-full select-none flex-col">
-                {headers.top.length > 0 && <div>{headers.top}</div>}
-                <div className="flex flex-1 flex-row overflow-hidden">
-                  <div className="flex flex-col">{headers.left}</div>
-                  <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
-                    {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
-                    <div className="relative flex w-full flex-1 overflow-hidden">
-                      <Viewport
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          flexGrow: 1,
-                          backgroundColor: '#f1f3f5',
-                          overflow: 'auto',
-                        }}
-                      >
-                        {!pluginsReady && (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <LoadingIndicator size="lg" text="Loading PDF document..." />
-                          </div>
-                        )}
-                        {pluginsReady && (
-                          <PinchWrapper>
-                            <Scroller
-                              renderPage={({
-                                pageIndex,
-                                scale,
-                                rotation,
-                                width,
-                                height,
-                                rotatedHeight,
-                                rotatedWidth,
-                              }) => (
-                                <Rotate pageSize={{ width, height }}>
-                                  <div className="bg-white" style={{ width, height }}>
-                                    <RenderLayer
-                                      pageIndex={pageIndex}
-                                      className="absolute left-0 top-0 h-full w-full"
-                                    />
-                                    <TilingLayer
-                                      pageIndex={pageIndex}
-                                      scale={scale}
-                                      className="absolute left-0 top-0 h-full w-full"
-                                    />
-                                    <SearchLayer
-                                      pageIndex={pageIndex}
-                                      scale={scale}
-                                      className="absolute left-0 top-0 h-full w-full"
-                                    />
-                                    <SelectionLayer
-                                      pageIndex={pageIndex}
-                                      scale={scale}
-                                      rotation={rotation}
-                                      containerSize={{ width: rotatedWidth, height: rotatedHeight }}
-                                    />
-                                    <AnnotationLayer
-                                      pageIndex={pageIndex}
-                                      scale={scale}
-                                      className="absolute"
-                                    />
-                                  </div>
-                                </Rotate>
-                              )}
-                              overlayElements={floating.insideScroller}
-                            />
-                          </PinchWrapper>
-                        )}
-                        {floating.outsideScroller}
-                      </Viewport>
+              <PrintProvider>
+                <div className="@container flex h-full w-full select-none flex-col">
+                  {headers.top.length > 0 && <div>{headers.top}</div>}
+                  <div className="flex flex-1 flex-row overflow-hidden">
+                    <div className="flex flex-col">{headers.left}</div>
+                    <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+                      {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
+                      <div className="relative flex w-full flex-1 overflow-hidden">
+                        <Viewport
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            flexGrow: 1,
+                            backgroundColor: '#f1f3f5',
+                            overflow: 'auto',
+                          }}
+                        >
+                          {!pluginsReady && (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <LoadingIndicator size="lg" text="Loading PDF document..." />
+                            </div>
+                          )}
+                          {pluginsReady && (
+                            <PinchWrapper>
+                              <Scroller
+                                renderPage={({
+                                  pageIndex,
+                                  scale,
+                                  rotation,
+                                  width,
+                                  height,
+                                  rotatedHeight,
+                                  rotatedWidth,
+                                }) => (
+                                  <Rotate pageSize={{ width, height }}>
+                                    <div className="bg-white" style={{ width, height }}>
+                                      <RenderLayer
+                                        pageIndex={pageIndex}
+                                        className="absolute left-0 top-0 h-full w-full"
+                                      />
+                                      <TilingLayer
+                                        pageIndex={pageIndex}
+                                        scale={scale}
+                                        className="absolute left-0 top-0 h-full w-full"
+                                      />
+                                      <SearchLayer
+                                        pageIndex={pageIndex}
+                                        scale={scale}
+                                        className="absolute left-0 top-0 h-full w-full"
+                                      />
+                                      <SelectionLayer
+                                        pageIndex={pageIndex}
+                                        scale={scale}
+                                        rotation={rotation}
+                                        containerSize={{
+                                          width: rotatedWidth,
+                                          height: rotatedHeight,
+                                        }}
+                                      />
+                                      <AnnotationLayer
+                                        pageIndex={pageIndex}
+                                        scale={scale}
+                                        className="absolute"
+                                      />
+                                    </div>
+                                  </Rotate>
+                                )}
+                                overlayElements={floating.insideScroller}
+                              />
+                            </PinchWrapper>
+                          )}
+                          {floating.outsideScroller}
+                        </Viewport>
+                      </div>
+                      {panels.right.length > 0 && <Fragment>{panels.right}</Fragment>}
                     </div>
-                    {panels.right.length > 0 && <Fragment>{panels.right}</Fragment>}
+                    <div className="flex flex-col">{headers.right}</div>
                   </div>
-                  <div className="flex flex-col">{headers.right}</div>
+                  {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
+                  {commandMenu}
                 </div>
-                {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
-                {commandMenu}
-              </div>
+              </PrintProvider>
             )}
           </PluginUIProvider>
         )}

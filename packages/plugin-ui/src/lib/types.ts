@@ -225,7 +225,7 @@ export interface FloatingComponentProps {
 export interface FloatingComponent<TStore = any>
   extends BaseUIComponent<FloatingComponentProps, FloatingState, TStore> {
   type: 'floating';
-  slots: Slot[];
+  slots?: Slot[];
 }
 
 export interface CommandMenuState {

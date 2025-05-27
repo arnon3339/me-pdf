@@ -33,6 +33,9 @@ import { Checkbox } from './ui/checkbox';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
 import { menuPositionForSelection } from './utils';
 import { useSwipeGesture } from '@/hooks/use-swipe-gesture';
+import { Dialog } from './ui/dialog';
+import { usePrintAction } from '@embedpdf/plugin-print/preact';
+import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
   { commandId, onClick, active, ...props },
@@ -1092,5 +1095,270 @@ export const selectButtonRenderer: ComponentRenderFunction<SelectButtonProps> = 
         <Icon icon="chevronDown" className="h-4 w-4 text-gray-500" />
       </Button>
     </div>
+  );
+};
+
+export interface PrintModalProps {
+  open: boolean;
+}
+
+// ... existing code ...
+
+export const printModalRenderer: ComponentRenderFunction<PrintModalProps> = (props, children) => {
+  const { provides: ui } = useUICapability();
+  const { provides: scroll } = useScrollCapability();
+  const { executePrint, parsePageRange, progress, isReady, isPrinting } = usePrintAction();
+  const [pageRangeType, setPageRangeType] = useState<PageRangeType>(PageRangeType.All);
+  const [customPages, setCustomPages] = useState('');
+  const [includeAnnotations, setIncludeAnnotations] = useState(true);
+  const [quality, setQuality] = useState<PrintQuality>(PrintQuality.Normal);
+  const [customPagesError, setCustomPagesError] = useState<string>('');
+
+  if (!ui) return null;
+
+  if (!props.open) return null;
+
+  // Get current page and total pages
+  const scrollMetrics = scroll?.getMetrics();
+  const currentPage = scrollMetrics?.currentPage || 1;
+  const totalPages = scrollMetrics?.pageVisibilityMetrics?.length || 0;
+
+  const handleClose = () => {
+    ui.updateComponentState({
+      componentType: 'floating',
+      componentId: 'printModal',
+      patch: {
+        open: false,
+      },
+    });
+  };
+
+  const handlePageRangeChange = (type: PageRangeType) => {
+    setPageRangeType(type);
+    setCustomPagesError('');
+  };
+
+  const handleCustomPagesChange = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const value = target.value;
+    setCustomPages(value);
+
+    if (value.trim()) {
+      const parsed = parsePageRange(value);
+      if (!parsed.isValid) {
+        setCustomPagesError(parsed.error || 'Invalid page range');
+      } else {
+        setCustomPagesError('');
+      }
+    } else {
+      setCustomPagesError('');
+    }
+  };
+
+  const handlePrint = async () => {
+    let pageRange: PageRange;
+
+    switch (pageRangeType) {
+      case PageRangeType.Current:
+        pageRange = {
+          type: PageRangeType.Current,
+          currentPage: currentPage - 1, // Convert to 0-based index
+        };
+        break;
+      case PageRangeType.All:
+        pageRange = {
+          type: PageRangeType.All,
+        };
+        break;
+      case PageRangeType.Custom:
+        if (!customPages.trim()) {
+          setCustomPagesError('Please enter page numbers');
+          return;
+        }
+        const parsed = parsePageRange(customPages);
+        if (!parsed.isValid) {
+          setCustomPagesError(parsed.error || 'Invalid page range');
+          return;
+        }
+        pageRange = {
+          type: PageRangeType.Custom,
+          pages: parsed.pages,
+        };
+        break;
+      default:
+        return;
+    }
+
+    const printOptions: PrintOptions = {
+      pageRange,
+      includeAnnotations,
+      quality,
+    };
+
+    try {
+      await executePrint(printOptions);
+      // Close modal after successful print
+      handleClose();
+    } catch (error) {
+      console.error('Print failed:', error);
+    }
+  };
+
+  const isCustomPagesValid =
+    pageRangeType !== PageRangeType.Custom || (customPages.trim() && !customPagesError);
+
+  return (
+    <Dialog open={props.open} title="Print Settings" onClose={handleClose} maxWidth="28rem">
+      <div className="space-y-6">
+        {/* Pages to print */}
+        <div>
+          <label className="mb-3 block text-sm font-medium text-gray-700">Pages to print</label>
+          <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="pageRange"
+                value="all"
+                checked={pageRangeType === PageRangeType.All}
+                onChange={() => handlePageRangeChange(PageRangeType.All)}
+                className="mr-2"
+              />
+              <span className="text-sm">All pages</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="pageRange"
+                value="current"
+                checked={pageRangeType === PageRangeType.Current}
+                onChange={() => handlePageRangeChange(PageRangeType.Current)}
+                className="mr-2"
+              />
+              <span className="text-sm">Current page ({currentPage})</span>
+            </label>
+            <label className="flex items-start">
+              <input
+                type="radio"
+                name="pageRange"
+                value="custom"
+                checked={pageRangeType === PageRangeType.Custom}
+                onChange={() => handlePageRangeChange(PageRangeType.Custom)}
+                className="mr-2 mt-0.5"
+              />
+              <div className="flex-1">
+                <span className="mb-1 block text-sm">Specify pages</span>
+                <input
+                  type="text"
+                  placeholder="e.g., 1-3, 5, 8-10"
+                  value={customPages}
+                  onInput={handleCustomPagesChange}
+                  disabled={pageRangeType !== PageRangeType.Custom}
+                  className={`w-full rounded-md border px-3 py-1 text-sm ${
+                    pageRangeType !== PageRangeType.Custom
+                      ? 'bg-gray-100 text-gray-500'
+                      : customPagesError
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  } focus:outline-none focus:ring-1`}
+                />
+                {customPagesError && (
+                  <p className="mt-1 text-xs text-red-500">{customPagesError}</p>
+                )}
+                {pageRangeType === PageRangeType.Custom &&
+                  !customPagesError &&
+                  customPages.trim() && (
+                    <p className="mt-1 text-xs text-gray-500">Total pages: {totalPages}</p>
+                  )}
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Include annotations */}
+        <div>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={includeAnnotations}
+              onChange={(e) => setIncludeAnnotations((e.target as HTMLInputElement).checked)}
+              className="mr-2"
+            />
+            <span className="text-sm font-medium text-gray-700">Include annotations</span>
+          </label>
+        </div>
+
+        {/* Print Quality */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">Print Quality</label>
+          <div className="relative">
+            <select
+              value={quality}
+              onChange={(e) => setQuality((e.target as HTMLSelectElement).value as PrintQuality)}
+              className="w-full appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value={PrintQuality.Normal}>Normal</option>
+              <option value={PrintQuality.High}>High</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg
+                className="h-4 w-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress indicator */}
+        {isPrinting && progress && (
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-blue-900">
+                {progress.status === 'preparing' && 'Preparing...'}
+                {progress.status === 'rendering' && 'Rendering pages...'}
+                {progress.status === 'complete' && 'Complete!'}
+                {progress.status === 'error' && 'Error'}
+              </span>
+              <span className="text-sm text-blue-700">
+                {progress.current}/{progress.total}
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-blue-200">
+              <div
+                className="h-2 rounded-full bg-blue-600 transition-all duration-300"
+                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+              />
+            </div>
+            {progress.message && <p className="mt-2 text-sm text-blue-700">{progress.message}</p>}
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex justify-end space-x-3 border-t border-gray-200 pt-4">
+          <Button
+            onClick={handleClose}
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            disabled={isPrinting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handlePrint}
+            disabled={isPrinting || !isCustomPagesValid}
+            className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm text-white hover:!bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isPrinting ? 'Printing...' : 'Print'}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
   );
 };

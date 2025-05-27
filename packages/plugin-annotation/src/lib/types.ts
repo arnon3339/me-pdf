@@ -1,10 +1,16 @@
 import { BasePluginConfig, EventHook } from '@embedpdf/core';
-import { PdfAlphaColor, PdfAnnotationObject, PdfErrorReason, Task } from '@embedpdf/models';
+import {
+  PdfAlphaColor,
+  PdfAnnotationObject,
+  PdfErrorReason,
+  Task,
+  PdfAnnotationSubtype,
+} from '@embedpdf/models';
 
 export interface AnnotationState {
   annotations: Record<number, PdfAnnotationObject[]>;
   selectedAnnotation: SelectedAnnotation | null;
-  editMode: boolean;
+  annotationMode: PdfAnnotationSubtype | null;
 }
 
 export interface SelectedAnnotation {
@@ -22,7 +28,7 @@ export interface AnnotationCapability {
   selectAnnotation: (pageIndex: number, annotationId: number) => void;
   deselectAnnotation: () => void;
   updateAnnotationColor: (color: PdfAlphaColor) => Promise<boolean>;
-  setEditMode: (enabled: boolean) => void;
+  setAnnotationMode: (mode: PdfAnnotationSubtype | null) => void;
   onStateChange: EventHook<AnnotationState>;
 }
 
