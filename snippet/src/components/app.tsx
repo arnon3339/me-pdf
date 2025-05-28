@@ -105,6 +105,13 @@ import { PinchWrapper } from '@embedpdf/plugin-zoom/preact';
 import { LoadingIndicator } from './ui/loading-indicator';
 import { PrintPluginPackage, PrintPlugin } from '@embedpdf/plugin-print';
 import { PrintProvider } from '@embedpdf/plugin-print/preact';
+import {
+  FULLSCREEN_PLUGIN_ID,
+  FullscreenPlugin,
+  FullscreenPluginPackage,
+  FullscreenState,
+} from '@embedpdf/plugin-fullscreen';
+import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -154,6 +161,7 @@ type State = GlobalStoreState<{
   [SEARCH_PLUGIN_ID]: SearchState;
   [SELECTION_PLUGIN_ID]: SelectionState;
   [ANNOTATION_PLUGIN_ID]: AnnotationState;
+  [FULLSCREEN_PLUGIN_ID]: FullscreenState;
 }>;
 
 export const icons: IconRegistry = {
@@ -167,7 +175,11 @@ export const icons: IconRegistry = {
   },
   fullscreen: {
     id: 'fullscreen',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-maximize"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2 -2v-2" /></svg>',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-maximize"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2 -2v-2" /></svg>',
+  },
+  fullscreenExit: {
+    id: 'fullscreenExit',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-maximize-off"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2c0 -.551 .223 -1.05 .584 -1.412" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2c.545 0 1.04 -.218 1.4 -.572" /><path d="M3 3l18 18" /></svg>',
   },
   save: {
     id: 'save',
@@ -328,13 +340,30 @@ export const menuItems: Record<string, MenuItem<State>> = {
   },
   enterFS: {
     id: 'enterFS',
-    icon: 'fullscreen',
-    label: 'Enter full screen',
+    icon: (storeState) => {
+      const fullscreen = storeState.plugins.fullscreen.isFullscreen
+        ? 'fullscreenExit'
+        : 'fullscreen';
+      return fullscreen;
+    },
+    label: (storeState) => {
+      const fullscreen = storeState.plugins.fullscreen.isFullscreen
+        ? 'Exit full screen'
+        : 'Enter full screen';
+      return fullscreen;
+    },
     //shortcut: 'Shift+F',
     //shortcutLabel: 'F',
     type: 'action',
-    action: () => {
-      console.log('enterFS');
+    action: (registry) => {
+      const fullscreen = registry.getPlugin<FullscreenPlugin>(FULLSCREEN_PLUGIN_ID)?.provides();
+      if (fullscreen) {
+        if (fullscreen.isFullscreen()) {
+          fullscreen.exitFullscreen();
+        } else {
+          fullscreen.enableFullscreen();
+        }
+      }
     },
   },
   save: {
@@ -1875,93 +1904,96 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(PrintPluginPackage, {
             batchSize: 3,
           }),
+          createPluginRegistration(FullscreenPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (
           <PluginUIProvider>
             {({ headers, panels, floating, commandMenu }) => (
-              <PrintProvider>
-                <div className="@container flex h-full w-full select-none flex-col">
-                  {headers.top.length > 0 && <div>{headers.top}</div>}
-                  <div className="flex flex-1 flex-row overflow-hidden">
-                    <div className="flex flex-col">{headers.left}</div>
-                    <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
-                      {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
-                      <div className="relative flex w-full flex-1 overflow-hidden">
-                        <Viewport
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            flexGrow: 1,
-                            backgroundColor: '#f1f3f5',
-                            overflow: 'auto',
-                          }}
-                        >
-                          {!pluginsReady && (
-                            <div className="flex h-full w-full items-center justify-center">
-                              <LoadingIndicator size="lg" text="Loading PDF document..." />
-                            </div>
-                          )}
-                          {pluginsReady && (
-                            <PinchWrapper>
-                              <Scroller
-                                renderPage={({
-                                  pageIndex,
-                                  scale,
-                                  rotation,
-                                  width,
-                                  height,
-                                  rotatedHeight,
-                                  rotatedWidth,
-                                }) => (
-                                  <Rotate pageSize={{ width, height }}>
-                                    <div className="bg-white" style={{ width, height }}>
-                                      <RenderLayer
-                                        pageIndex={pageIndex}
-                                        className="absolute left-0 top-0 h-full w-full"
-                                      />
-                                      <TilingLayer
-                                        pageIndex={pageIndex}
-                                        scale={scale}
-                                        className="absolute left-0 top-0 h-full w-full"
-                                      />
-                                      <SearchLayer
-                                        pageIndex={pageIndex}
-                                        scale={scale}
-                                        className="absolute left-0 top-0 h-full w-full"
-                                      />
-                                      <SelectionLayer
-                                        pageIndex={pageIndex}
-                                        scale={scale}
-                                        rotation={rotation}
-                                        containerSize={{
-                                          width: rotatedWidth,
-                                          height: rotatedHeight,
-                                        }}
-                                      />
-                                      <AnnotationLayer
-                                        pageIndex={pageIndex}
-                                        scale={scale}
-                                        className="absolute"
-                                      />
-                                    </div>
-                                  </Rotate>
-                                )}
-                                overlayElements={floating.insideScroller}
-                              />
-                            </PinchWrapper>
-                          )}
-                          {floating.outsideScroller}
-                        </Viewport>
+              <FullscreenProvider>
+                <PrintProvider>
+                  <div className="@container flex h-full w-full select-none flex-col">
+                    {headers.top.length > 0 && <div>{headers.top}</div>}
+                    <div className="flex flex-1 flex-row overflow-hidden">
+                      <div className="flex flex-col">{headers.left}</div>
+                      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+                        {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
+                        <div className="relative flex w-full flex-1 overflow-hidden">
+                          <Viewport
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              flexGrow: 1,
+                              backgroundColor: '#f1f3f5',
+                              overflow: 'auto',
+                            }}
+                          >
+                            {!pluginsReady && (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <LoadingIndicator size="lg" text="Loading PDF document..." />
+                              </div>
+                            )}
+                            {pluginsReady && (
+                              <PinchWrapper>
+                                <Scroller
+                                  renderPage={({
+                                    pageIndex,
+                                    scale,
+                                    rotation,
+                                    width,
+                                    height,
+                                    rotatedHeight,
+                                    rotatedWidth,
+                                  }) => (
+                                    <Rotate pageSize={{ width, height }}>
+                                      <div className="bg-white" style={{ width, height }}>
+                                        <RenderLayer
+                                          pageIndex={pageIndex}
+                                          className="absolute left-0 top-0 h-full w-full"
+                                        />
+                                        <TilingLayer
+                                          pageIndex={pageIndex}
+                                          scale={scale}
+                                          className="absolute left-0 top-0 h-full w-full"
+                                        />
+                                        <SearchLayer
+                                          pageIndex={pageIndex}
+                                          scale={scale}
+                                          className="absolute left-0 top-0 h-full w-full"
+                                        />
+                                        <SelectionLayer
+                                          pageIndex={pageIndex}
+                                          scale={scale}
+                                          rotation={rotation}
+                                          containerSize={{
+                                            width: rotatedWidth,
+                                            height: rotatedHeight,
+                                          }}
+                                        />
+                                        <AnnotationLayer
+                                          pageIndex={pageIndex}
+                                          scale={scale}
+                                          className="absolute"
+                                        />
+                                      </div>
+                                    </Rotate>
+                                  )}
+                                  overlayElements={floating.insideScroller}
+                                />
+                              </PinchWrapper>
+                            )}
+                            {floating.outsideScroller}
+                          </Viewport>
+                        </div>
+                        {panels.right.length > 0 && <Fragment>{panels.right}</Fragment>}
                       </div>
-                      {panels.right.length > 0 && <Fragment>{panels.right}</Fragment>}
+                      <div className="flex flex-col">{headers.right}</div>
                     </div>
-                    <div className="flex flex-col">{headers.right}</div>
+                    {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
+                    {commandMenu}
                   </div>
-                  {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
-                  {commandMenu}
-                </div>
-              </PrintProvider>
+                </PrintProvider>
+              </FullscreenProvider>
             )}
           </PluginUIProvider>
         )}

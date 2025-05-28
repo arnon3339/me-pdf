@@ -1,15 +1,24 @@
 import { PluginPackage } from '@embedpdf/core';
 import { manifest, FULLSCREEN_PLUGIN_ID } from './manifest';
-import { FullscreenPluginConfig } from './types';
+import { FullscreenPluginConfig, FullscreenState } from './types';
 import { FullscreenPlugin } from './fullscreen-plugin';
+import { initialState } from './reducer';
+import { reducer } from './reducer';
+import { FullscreenAction } from './actions';
 
-export const FullscreenPluginPackage: PluginPackage<FullscreenPlugin, FullscreenPluginConfig> = {
+export const FullscreenPluginPackage: PluginPackage<
+  FullscreenPlugin,
+  FullscreenPluginConfig,
+  FullscreenState,
+  FullscreenAction
+> = {
   manifest,
   create: (registry) => new FullscreenPlugin(FULLSCREEN_PLUGIN_ID, registry),
-  reducer: () => {},
-  initialState: {},
+  reducer,
+  initialState,
 };
 
 export * from './fullscreen-plugin';
 export * from './types';
 export * from './manifest';
+export * from './actions';

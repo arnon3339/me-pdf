@@ -33,6 +33,7 @@
     "@embedpdf/plugin-thumbnail": "workspace:*",
     "@embedpdf/plugin-annotation": "workspace:*",
     "@embedpdf/plugin-print": "workspace:*",
+    "@embedpdf/plugin-fullscreen": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {

@@ -7,6 +7,9 @@ import {
   MenuRegistry,
   Menu,
   MenuManagerCapabilities,
+  ResolvedMenuItemResult,
+  ResolvedMenu,
+  ResolvedAction,
 } from './types';
 import { EventCallback, createEventController } from '../utils';
 import { resolveMenuItem } from './utils';
@@ -68,7 +71,7 @@ export class MenuManager {
   /**
    * Resolve a menu item by ID
    */
-  public resolve(id: string): MenuItem {
+  public resolve(id: string): ResolvedMenuItem {
     const raw = this.registry[id];
     return resolveMenuItem(raw, this.state);
   }
@@ -76,7 +79,7 @@ export class MenuManager {
   /**
    * Get a menu item by ID with type information
    */
-  getMenuItem(id: string): ResolvedMenuItem | undefined {
+  getMenuItem(id: string): ResolvedMenuItemResult | undefined {
     const item = this.resolve(id);
     if (!item) return undefined;
 
@@ -91,19 +94,19 @@ export class MenuManager {
   /**
    * Get a action by ID (only returns Action type items)
    */
-  getAction(id: string): Action | undefined {
+  getAction(id: string): ResolvedAction | undefined {
     const resolved = this.getMenuItem(id);
     if (!resolved || !resolved.isAction) return undefined;
-    return resolved.item as Action;
+    return resolved.item as ResolvedAction;
   }
 
   /**
    * Get menu or action by ID
    */
-  getMenuOrAction(id: string): Menu | Action | undefined {
+  getMenuOrAction(id: string): ResolvedMenu | ResolvedAction | undefined {
     const resolved = this.getMenuItem(id);
     if (!resolved) return undefined;
-    return resolved.item as Menu | Action;
+    return resolved.item as ResolvedMenu | ResolvedAction;
   }
 
   /**

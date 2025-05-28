@@ -1,6 +1,9 @@
-import { MenuItem, Dynamic } from './types';
+import { MenuItem, Dynamic, ResolvedMenuItem } from './types';
 
-export function resolveMenuItem<TStore>(item: MenuItem<TStore>, state: TStore): MenuItem<TStore> {
+export function resolveMenuItem<TStore>(
+  item: MenuItem<TStore>,
+  state: TStore,
+): ResolvedMenuItem<TStore> {
   const dyn = <T>(v: Dynamic<TStore, T> | undefined): T | undefined =>
     typeof v === 'function' ? (v as any)(state) : v;
 
@@ -14,6 +17,7 @@ export function resolveMenuItem<TStore>(item: MenuItem<TStore>, state: TStore): 
   // spread keeps unknown keys (e.g. children) intact
   return {
     ...item,
+    icon: dyn(item.icon) ?? '',
     label: dyn(item.label) ?? '',
     visible: dyn(item.visible) ?? true,
     active: dyn(item.active) ?? false,

@@ -11,6 +11,7 @@ import {
   Menu,
   MenuItem,
   PanelProps,
+  ResolvedMenuItem,
   SelectButtonProps,
   TabButtonProps,
 } from '@embedpdf/plugin-ui';
@@ -930,7 +931,7 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
     });
   };
 
-  const renderCommandItem = (command: MenuItem, index: number) => {
+  const renderCommandItem = (command: ResolvedMenuItem, index: number) => {
     if (command.type === 'group') {
       const group = command as Group;
       const groupChildren = ui.getItemsByIds(group.children);
