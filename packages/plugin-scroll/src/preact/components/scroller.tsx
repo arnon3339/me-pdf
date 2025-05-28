@@ -2,13 +2,14 @@
 import { JSX } from 'preact';
 import { ScrollStrategy, ScrollerLayout, PageLayout } from '@embedpdf/plugin-scroll';
 import { useRegistry } from '@embedpdf/core/preact';
-import { Rotation } from '@embedpdf/models';
+import { PdfDocumentObject, Rotation } from '@embedpdf/models';
 import { useScrollCapability } from '../hooks';
 import { useEffect, useState } from 'preact/hooks';
 
 interface RenderPageProps extends PageLayout {
   rotation: Rotation;
   scale: number;
+  document: PdfDocumentObject | null;
 }
 
 type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
@@ -102,6 +103,7 @@ export function Scroller({ renderPage, overlayElements, ...props }: ScrollerProp
                   ...layout,
                   rotation: coreState.core.rotation,
                   scale: coreState.core.scale,
+                  document: coreState.core.document,
                 })}
               </div>
             ))}

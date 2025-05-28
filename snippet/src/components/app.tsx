@@ -1961,9 +1961,14 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                     height,
                                     rotatedHeight,
                                     rotatedWidth,
+                                    document,
                                   }) => (
                                     <Rotate pageSize={{ width, height }}>
-                                      <div className="bg-white" style={{ width, height }}>
+                                      <div
+                                        key={document?.id}
+                                        className="bg-white"
+                                        style={{ width, height }}
+                                      >
                                         <RenderLayer
                                           pageIndex={pageIndex}
                                           className="absolute left-0 top-0 h-full w-full"
