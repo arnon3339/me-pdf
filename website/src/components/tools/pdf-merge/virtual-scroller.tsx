@@ -33,6 +33,47 @@ export const VirtualScroller: React.FC<VirtualScrollerProps> = ({
     LoadingThumbnail[]
   >([])
 
+  // Track object URLs for cleanup
+  const objectUrlsRef = useRef<Set<string>>(new Set())
+
+  // Cleanup function for object URLs
+  const cleanupObjectUrl = useCallback((url: string) => {
+    if (objectUrlsRef.current.has(url)) {
+      URL.revokeObjectURL(url)
+      objectUrlsRef.current.delete(url)
+    }
+  }, [])
+
+  // Cleanup all object URLs
+  const cleanupAllObjectUrls = useCallback(() => {
+    objectUrlsRef.current.forEach((url) => {
+      URL.revokeObjectURL(url)
+    })
+    objectUrlsRef.current.clear()
+  }, [])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupAllObjectUrls()
+    }
+  }, [cleanupAllObjectUrls])
+
+  // Cleanup object URLs when items change (pages removed)
+  useEffect(() => {
+    const currentThumbnails = new Set(
+      items.map((item) => item.thumbnail).filter(Boolean) as string[],
+    )
+
+    // Clean up any object URLs that are no longer in use
+    objectUrlsRef.current.forEach((url) => {
+      if (!currentThumbnails.has(url)) {
+        URL.revokeObjectURL(url)
+        objectUrlsRef.current.delete(url)
+      }
+    })
+  }, [items])
+
   // Calculate item dimensions based on container width
   const itemDimensions = useMemo(() => {
     // Account for grid-cols-2 and gap-2
@@ -122,7 +163,11 @@ export const VirtualScroller: React.FC<VirtualScrollerProps> = ({
         // Generate all thumbnails in parallel
         const thumbnailPromises = pagesToGenerate.map((page) =>
           generateThumbnail(engine, doc, page.pageIndex)
-            .then((thumbnail) => ({ page, thumbnail }))
+            .then((thumbnail) => {
+              // Track the object URL for cleanup
+              objectUrlsRef.current.add(thumbnail)
+              return { page, thumbnail }
+            })
             .catch((error) => {
               console.error(
                 'Error generating thumbnail for page',
@@ -141,10 +186,17 @@ export const VirtualScroller: React.FC<VirtualScrollerProps> = ({
             (result): result is { page: DocumentPage; thumbnail: string } =>
               result !== null,
           )
-          .map(({ page, thumbnail }) => ({
-            ...page,
-            thumbnail,
-          }))
+          .map(({ page, thumbnail }) => {
+            // If page already has a thumbnail, clean up the old one
+            if (page.thumbnail) {
+              cleanupObjectUrl(page.thumbnail)
+            }
+
+            return {
+              ...page,
+              thumbnail,
+            }
+          })
 
         if (updatedPages.length > 0) {
           onUpdatePages(updatedPages)
@@ -163,7 +215,7 @@ export const VirtualScroller: React.FC<VirtualScrollerProps> = ({
     }
 
     generateVisibleThumbnails()
-  }, [visibleItems1, engine, doc, onUpdatePages])
+  }, [visibleItems1, engine, doc, onUpdatePages, cleanupObjectUrl])
 
   // Handle page selection
   const handlePageClick = useCallback(

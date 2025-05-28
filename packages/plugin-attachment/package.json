@@ -27,6 +27,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@embedpdf/core": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",

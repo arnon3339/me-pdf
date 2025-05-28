@@ -3,8 +3,6 @@ import { useCapability } from '@embedpdf/core/preact';
 import { ViewportPlugin } from '@embedpdf/plugin-viewport';
 import { ZoomState } from '@embedpdf/plugin-zoom';
 
-import Hammer from 'hammerjs';
-
 import { useZoomCapability } from './use-zoom';
 
 export function usePinch() {
@@ -18,7 +16,12 @@ export function usePinch() {
       return;
     }
 
-    let hammer: HammerManager | undefined;
+    // Check if we're on the client side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    let hammer: any | undefined;
     let initialZoom = 0; // numeric scale at pinchstart
     let lastCenter = { x: 0, y: 0 };
 
@@ -71,28 +74,39 @@ export function usePinch() {
       initialZoom = 0;
     };
 
-    /* ------------------------------------------------------------------ */
-    /* Hammer setup                                                        */
-    /* ------------------------------------------------------------------ */
-    const inputClass = (() => {
-      const MOBILE_REGEX = /mobile|tablet|ip(ad|hone|od)|android/i;
-      const SUPPORT_TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const SUPPORT_ONLY_TOUCH = SUPPORT_TOUCH && MOBILE_REGEX.test(navigator.userAgent);
-      if (SUPPORT_ONLY_TOUCH) return Hammer.TouchInput;
-      if (!SUPPORT_TOUCH) return Hammer.MouseInput;
-      return Hammer.TouchMouseInput;
-    })();
+    // Dynamically import and setup Hammer
+    const setupHammer = async () => {
+      try {
+        const Hammer = (await import('hammerjs')).default;
 
-    hammer = new Hammer(element, {
-      touchAction: 'pan-x pan-y', // allow scroll in every direction
-      inputClass,
-    });
+        /* ------------------------------------------------------------------ */
+        /* Hammer setup                                                        */
+        /* ------------------------------------------------------------------ */
+        const inputClass = (() => {
+          const MOBILE_REGEX = /mobile|tablet|ip(ad|hone|od)|android/i;
+          const SUPPORT_TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+          const SUPPORT_ONLY_TOUCH = SUPPORT_TOUCH && MOBILE_REGEX.test(navigator.userAgent);
+          if (SUPPORT_ONLY_TOUCH) return Hammer.TouchInput;
+          if (!SUPPORT_TOUCH) return Hammer.MouseInput;
+          return Hammer.TouchMouseInput;
+        })();
 
-    hammer.get('pinch').set({ enable: true, pointers: 2, threshold: 0.1 });
+        hammer = new Hammer(element, {
+          touchAction: 'pan-x pan-y', // allow scroll in every direction
+          inputClass,
+        });
 
-    hammer.on('pinchstart', pinchStart);
-    hammer.on('pinchmove', pinchMove);
-    hammer.on('pinchend', pinchEnd);
+        hammer.get('pinch').set({ enable: true, pointers: 2, threshold: 0.1 });
+
+        hammer.on('pinchstart', pinchStart);
+        hammer.on('pinchmove', pinchMove);
+        hammer.on('pinchend', pinchEnd);
+      } catch (error) {
+        console.warn('Failed to load HammerJS:', error);
+      }
+    };
+
+    setupHammer();
 
     return () => {
       hammer?.destroy();

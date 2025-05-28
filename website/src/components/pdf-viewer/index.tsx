@@ -1,19 +1,69 @@
 'use client'
 
 import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
-import EmbedPDF from '@embedpdf/snippet'
 
 export default function PDFViewer() {
-  const viewerRef = useCallback((node: HTMLDivElement) => {
-    if (node !== null) {
-      EmbedPDF.init({
-        type: 'container',
-        target: node,
-        src: '/ebook.pdf',
-        wasmUrl: '/wasm/pdfium.wasm',
-      })
-    }
+  const [isClient, setIsClient] = useState(false)
+  const viewerRef = useRef<HTMLDivElement>(null)
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true)
   }, [])
 
-  return <div id="pdf-viewer" style={{ height: '500px' }} ref={viewerRef} />
+  // Load EmbedPDF only on client side
+  useEffect(() => {
+    if (!isClient || !viewerRef.current) return
+
+    const loadEmbedPDF = async () => {
+      try {
+        // Dynamic import to avoid SSR issues
+        const EmbedPDF = (await import('@embedpdf/snippet')).default
+
+        EmbedPDF.init({
+          type: 'container',
+          target: viewerRef.current!,
+          src: '/ebook.pdf',
+          wasmUrl: '/wasm/pdfium.wasm',
+        })
+      } catch (error) {
+        console.error('Failed to load EmbedPDF:', error)
+      }
+    }
+
+    loadEmbedPDF()
+  }, [isClient])
+
+  // Show loading state during SSR and initial client render
+  if (!isClient) {
+    return (
+      <div
+        style={{
+          height: '600px',
+          border: '1px solid #ccc',
+          borderRadius: '10px',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#f5f5f5',
+        }}
+      >
+        <div>Loading PDF Viewer...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      id="pdf-viewer"
+      style={{
+        height: '600px',
+        border: '1px solid #ccc',
+        borderRadius: '10px',
+        overflow: 'hidden',
+      }}
+      ref={viewerRef}
+    />
+  )
 }

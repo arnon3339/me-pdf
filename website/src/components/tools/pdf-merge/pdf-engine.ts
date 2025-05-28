@@ -90,26 +90,14 @@ export async function generateThumbnail(
   const page = doc.pages[pageIndex]
   const task = engine.renderThumbnail(doc, page, scale, 0, 1)
 
-  console.log(doc, page, scale, 0, 1)
-
   return new Promise<string>((resolve, reject) => {
     task.wait(
       (result) => {
-        const imageData = result
+        const blob = result as Blob
 
-        // Convert the image data to a data URL
-        const canvas = document.createElement('canvas')
-        canvas.width = imageData.width
-        canvas.height = imageData.height
-
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          resolve('')
-          return
-        }
-
-        ctx.putImageData(imageData, 0, 0)
-        resolve(canvas.toDataURL('image/jpeg', 0.7))
+        // Create object URL from the blob
+        const blobUrl = URL.createObjectURL(blob)
+        resolve(blobUrl)
       },
       (error) => reject(error),
     )

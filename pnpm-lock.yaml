@@ -1032,9 +1032,6 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@18.3.1)
-      '@embedpdf/core':
-        specifier: workspace:*
-        version: link:../packages/core
       '@embedpdf/engines':
         specifier: workspace:*
         version: link:../packages/engines
@@ -1044,24 +1041,6 @@ importers:
       '@embedpdf/pdfium':
         specifier: workspace:*
         version: link:../packages/pdfium
-      '@embedpdf/plugin-loader':
-        specifier: workspace:*
-        version: link:../packages/plugin-loader
-      '@embedpdf/plugin-scroll':
-        specifier: workspace:*
-        version: link:../packages/plugin-scroll
-      '@embedpdf/plugin-search':
-        specifier: workspace:*
-        version: link:../packages/plugin-search
-      '@embedpdf/plugin-spread':
-        specifier: workspace:*
-        version: link:../packages/plugin-spread
-      '@embedpdf/plugin-viewport':
-        specifier: workspace:*
-        version: link:../packages/plugin-viewport
-      '@embedpdf/plugin-zoom':
-        specifier: workspace:*
-        version: link:../packages/plugin-zoom
       '@embedpdf/snippet':
         specifier: workspace:*
         version: link:../snippet
