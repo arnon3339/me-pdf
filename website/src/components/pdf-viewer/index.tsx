@@ -2,7 +2,12 @@
 
 import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 
-export default function PDFViewer() {
+interface PDFViewerProps {
+  style?: React.CSSProperties
+  className?: string
+}
+
+export default function PDFViewer({ style, className }: PDFViewerProps) {
   const [isClient, setIsClient] = useState(false)
   const viewerRef = useRef<HTMLDivElement>(null)
 
@@ -57,11 +62,9 @@ export default function PDFViewer() {
   return (
     <div
       id="pdf-viewer"
+      className={className}
       style={{
-        height: '600px',
-        border: '1px solid #ccc',
-        borderRadius: '10px',
-        overflow: 'hidden',
+        ...style,
       }}
       ref={viewerRef}
     />

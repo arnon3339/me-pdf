@@ -9,11 +9,15 @@ import {
   Download,
   ExternalLink,
   Github,
+  ArrowDown,
+  MousePointer2,
+  Heart,
 } from 'lucide-react'
 import { JavaScript } from '@/components/icons/javascript'
 import { Typescript } from '@/components/icons/typescript'
 import { Scribble2 } from '@/components/icons/scribble2'
 import Link from 'next/link'
+import PDFViewer from './pdf-viewer'
 
 // Animated blobs for the background
 const AnimatedBackground = () => {
@@ -107,12 +111,14 @@ const HeaderAndHero = () => {
                   <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-500 opacity-25 blur transition duration-200 group-hover:opacity-100"></div>
                   <div className="relative rounded-2xl bg-white p-6 shadow-lg">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[#765ba7]">
-                      <Download size={24} className="text-white" />
+                      <Heart size={24} className="text-white" />
                     </div>
-                    <h3 className="mb-2 text-xl font-bold">Lightweight</h3>
+                    <h3 className="mb-2 text-xl font-bold">
+                      Truly Open and Free
+                    </h3>
                     <p className="text-gray-600">
-                      Only 3.2kb gzipped with zero dependencies. Won't slow down
-                      your application.
+                      MIT licensed, no paywalls, no limits. Skip overpriced SDKs
+                      with full source access.
                     </p>
                   </div>
                 </div>
@@ -137,66 +143,85 @@ const HeaderAndHero = () => {
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[#765ba7]">
                       <ExternalLink size={24} className="text-white" />
                     </div>
-                    <h3 className="mb-2 text-xl font-bold">
-                      Framework Agnostic
-                    </h3>
+                    <h3 className="mb-2 text-xl font-bold">Works Everywhere</h3>
                     <p className="text-gray-600">
-                      Works with React, Vue, Angular, Svelte, or vanilla
-                      JavaScript projects.
+                      Works with JavaScript or TypeScript projects. React, Vue,
+                      Svelte, or vanilla.
                     </p>
                   </div>
                 </div>
               </div>
-
-              {/* Testimonial section */}
-              <div className="relative mt-24">
-                <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 transform font-serif text-6xl text-gray-200">
-                  "
+            </div>
+          </div>
+        </div>
+        <div className="mt-24">
+          {/* Interactive Demo Section */}
+          <div className="relative">
+            {/* Header with arrow and call-to-action */}
+            <div className="mb-8 text-center">
+              <div className="relative inline-block">
+                <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">
+                  See it in action
+                </h2>
+              </div>
+              <p className="mt-4 text-lg text-gray-600">
+                Interact with our PDF viewer below - zoom, scroll, and navigate
+                through pages
+              </p>
+            </div>
+            {/* PDF Viewer with enhanced styling */}
+            <div className="group relative">
+              {/* Main viewer container */}
+              <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+                <PDFViewer className="h-[700px] w-full rounded-lg" />
+              </div>
+            </div>
+          </div>
+          {/* Testimonial section */}
+          <div className="relative mt-24">
+            <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 transform font-serif text-6xl text-gray-200">
+              "
+            </div>
+            <div className="relative mx-auto max-w-2xl text-center">
+              <p className="mb-4 text-xl italic text-gray-600">
+                EmbedPDF saved us countless hours of development time. Our
+                documents now load faster and look better than ever before.
+              </p>
+              <div className="flex items-center justify-center">
+                <div className="h-14 w-14 rounded-full">
+                  <img
+                    src="/profile.jpeg"
+                    alt="Bob Singor"
+                    className="h-10 w-10 rounded-full"
+                  />
                 </div>
-                <div className="relative mx-auto max-w-2xl text-center">
-                  <p className="mb-4 text-xl italic text-gray-600">
-                    EmbedPDF saved us countless hours of development time. Our
-                    documents now load faster and look better than ever before.
-                  </p>
-                  <div className="flex items-center justify-center">
-                    <div className="h-14 w-14 rounded-full">
-                      <img
-                        src="/profile.jpeg"
-                        alt="Bob Singor"
-                        className="h-10 w-10 rounded-full"
-                      />
-                    </div>
-                    <div className="ml-3 text-left">
-                      <div className="font-medium">Bob Singor</div>
-                      <div className="text-sm text-gray-500">
-                        Lead Developer @ CloudPDF
-                      </div>
-                    </div>
+                <div className="ml-3 text-left">
+                  <div className="font-medium">Bob Singor</div>
+                  <div className="text-sm text-gray-500">
+                    Lead Developer @ CloudPDF
                   </div>
                 </div>
               </div>
-
-              {/* Call to action */}
-              <div className="relative mt-24 overflow-hidden">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-600/20 via-blue-500/20 to-orange-400/20"></div>
-                <div className="relative rounded-2xl p-8 md:p-12">
-                  <h2 className="mb-4 text-2xl font-bold md:text-3xl">
-                    Ready to transform your PDF experience?
-                  </h2>
-                  <p className="mx-auto mb-8 max-w-xl text-gray-600">
-                    Join thousands of developers who've simplified their PDF
-                    integration with EmbedPDF.
-                  </p>
-                  <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                    <Link
-                      href="/docs"
-                      className="inline-flex items-center justify-center rounded-full bg-gray-900 px-6 py-3 font-medium text-white shadow-lg transition-colors hover:bg-gray-800"
-                    >
-                      Get Started Free
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                  </div>
-                </div>
+            </div>
+          </div>
+          <div className="relative mt-14 overflow-hidden">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-600/20 via-blue-500/20 to-orange-400/20"></div>
+            <div className="relative rounded-2xl p-8 md:p-12">
+              <h2 className="mx-auto mb-4 max-w-2xl text-2xl font-bold md:text-3xl">
+                Ready to transform your PDF experience?
+              </h2>
+              <p className="mx-auto mb-8 max-w-2xl text-gray-600">
+                Join thousands of developers who've simplified their PDF
+                integration with EmbedPDF.
+              </p>
+              <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                <Link
+                  href="/docs"
+                  className="inline-flex items-center justify-center rounded-full bg-gray-900 px-6 py-3 font-medium text-white shadow-lg transition-colors hover:bg-gray-800"
+                >
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
               </div>
             </div>
           </div>
