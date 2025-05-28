@@ -312,9 +312,6 @@ importers:
 
   packages/plugin-attachment:
     dependencies:
-      '@embedpdf/core':
-        specifier: workspace:*
-        version: link:../core
       preact:
         specifier: ^10.26.4
         version: 10.26.4
@@ -325,6 +322,9 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../core
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
@@ -340,9 +340,6 @@ importers:
 
   packages/plugin-bookmark:
     dependencies:
-      '@embedpdf/core':
-        specifier: workspace:*
-        version: link:../core
       preact:
         specifier: ^10.26.4
         version: 10.26.4
@@ -353,6 +350,9 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../core
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
