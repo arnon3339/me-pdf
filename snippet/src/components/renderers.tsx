@@ -28,7 +28,16 @@ import { Icon } from './ui/icon';
 import { useSearchCapability } from '@embedpdf/plugin-search/preact';
 import { ThumbImg, ThumbnailsPane } from '@embedpdf/plugin-thumbnail/preact';
 import { useDebounce } from '@/hooks/use-debounce';
-import { Rotation, SearchAllPagesResult, SearchResult } from '@embedpdf/models';
+import {
+  ignore,
+  PdfBookmarkObject,
+  PdfDocumentObject,
+  PdfErrorCode,
+  PdfZoomMode,
+  Rotation,
+  SearchAllPagesResult,
+  SearchResult,
+} from '@embedpdf/models';
 import { MatchFlag } from '@embedpdf/models';
 import { Checkbox } from './ui/checkbox';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
@@ -37,6 +46,8 @@ import { useSwipeGesture } from '@/hooks/use-swipe-gesture';
 import { Dialog } from './ui/dialog';
 import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
+import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
+import { useStoreState } from '@embedpdf/core/preact';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
   { commandId, onClick, active, ...props },
@@ -1052,8 +1063,142 @@ export const thumbnailsRender: ComponentRenderFunction<ThumbnailsRenderProps> = 
   );
 };
 
-export const outlineRenderer: ComponentRenderFunction<any> = (props, children) => {
-  return <div>Outline</div>;
+interface OutlineRenderProps {
+  document: PdfDocumentObject;
+}
+
+export const outlineRenderer: ComponentRenderFunction<OutlineRenderProps> = (props, children) => {
+  const { provides: bookmark } = useBookmarkCapability();
+  const { provides: scroll } = useScrollCapability();
+  const [bookmarks, setBookmarks] = useState<PdfBookmarkObject[]>([]);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!bookmark) return;
+    const task = bookmark.getBookmarks();
+    task.wait(({ bookmarks }) => {
+      setBookmarks(bookmarks);
+      // Auto-expand first level items
+      const firstLevelIds = bookmarks.map((_, index) => `bookmark-${index}`);
+      setExpandedItems(new Set(firstLevelIds));
+    }, ignore);
+
+    return () => {
+      task.abort({
+        code: PdfErrorCode.Cancelled,
+        message: 'Bookmark task cancelled',
+      });
+    };
+  }, [bookmark, props.document]);
+
+  const handleBookmarkClick = (bookmark: PdfBookmarkObject) => {
+    if (!scroll || !bookmark.target || bookmark.target.type !== 'action') return;
+
+    const action = bookmark.target.action;
+    if (action.type === 1 && action.destination) {
+      // Type 1 is "Go to destination"
+
+      const destination = action.destination;
+
+      if (destination.zoom.mode === PdfZoomMode.XYZ) {
+        const page = props.document?.pages.find((p) => p.index === destination.pageIndex);
+        if (!page) return;
+
+        scroll.scrollToPage({
+          pageNumber: destination.pageIndex + 1, // Convert from 0-based to 1-based
+          pageCoordinates: destination.zoom.params
+            ? {
+                x: destination.zoom.params.x,
+                y: page.size.height - destination.zoom.params.y,
+              }
+            : undefined,
+          behavior: 'smooth',
+        });
+      } else if (destination.zoom.mode === PdfZoomMode.FitPage) {
+        scroll.scrollToPage({
+          pageNumber: destination.pageIndex + 1, // Convert from 0-based to 1-based
+          behavior: 'smooth',
+        });
+      }
+    }
+  };
+
+  const toggleExpanded = (itemId: string) => {
+    setExpandedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const renderBookmarkItem = (bookmark: PdfBookmarkObject, index: number, level: number = 0) => {
+    const itemId = `bookmark-${index}`;
+    const hasChildren = bookmark.children && bookmark.children.length > 0;
+    const isExpanded = expandedItems.has(itemId);
+    const paddingLeft = level * 16 + 8; // 16px per level + 8px base padding
+
+    return (
+      <div key={itemId} className="outline-item">
+        <div
+          className="flex cursor-pointer items-center py-1 pr-4 text-sm text-gray-700 hover:bg-gray-100"
+          style={{ paddingLeft: `${paddingLeft}px` }}
+          onClick={() => handleBookmarkClick(bookmark)}
+        >
+          {hasChildren && (
+            <button
+              className="mr-1 flex h-4 w-4 items-center justify-center rounded hover:bg-gray-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpanded(itemId);
+              }}
+            >
+              <Icon
+                icon={isExpanded ? 'chevronDown' : 'chevronRight'}
+                className="h-3 w-3 text-gray-500"
+              />
+            </button>
+          )}
+          {!hasChildren && <div className="mr-1 w-4" />}
+          <span className="flex-1 truncate" title={bookmark.title}>
+            {bookmark.title}
+          </span>
+        </div>
+
+        {hasChildren && isExpanded && (
+          <div className="outline-children">
+            {bookmark.children?.map((child, childIndex) =>
+              renderBookmarkItem(child, `${index}-${childIndex}` as any, level + 1),
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (bookmarks.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <div className="text-center text-gray-500">
+          <div className="text-sm">No outline available</div>
+          <div className="mt-1 text-xs">This document doesn't contain bookmarks</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full flex-col bg-white">
+      <div className="flex-1 overflow-y-auto">
+        <div className="outline-tree">
+          {bookmarks.map((bookmark, index) => renderBookmarkItem(bookmark, index))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export const attachmentsRenderer: ComponentRenderFunction<any> = (props, children) => {
@@ -1102,8 +1247,6 @@ export const selectButtonRenderer: ComponentRenderFunction<SelectButtonProps> = 
 export interface PrintModalProps {
   open: boolean;
 }
-
-// ... existing code ...
 
 export const printModalRenderer: ComponentRenderFunction<PrintModalProps> = (props, children) => {
   const { provides: ui } = useUICapability();

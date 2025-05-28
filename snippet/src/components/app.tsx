@@ -113,6 +113,7 @@ import {
   FullscreenState,
 } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
+import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -1479,9 +1480,9 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'headerCenter',
     type: 'groupedItems',
     slots: [
-      { componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
-      { componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
-      { componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
+      //{ componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
+      //{ componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
+      //{ componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
     ],
     props: {
       gap: 10,
@@ -1492,7 +1493,7 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'groupedItems',
     slots: [
       { componentId: 'searchButton', priority: 1 },
-      { componentId: 'commentButton', priority: 2 },
+      //{ componentId: 'commentButton', priority: 2 },
     ],
     props: {
       gap: 10,
@@ -1707,6 +1708,13 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'outline',
     type: 'custom',
     render: 'outline',
+    props: {
+      document: null,
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      document: storeState.core.document,
+    }),
   },
   attachments: {
     id: 'attachments',
@@ -1922,6 +1930,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             batchSize: 3,
           }),
           createPluginRegistration(FullscreenPluginPackage, {}),
+          createPluginRegistration(BookmarkPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (

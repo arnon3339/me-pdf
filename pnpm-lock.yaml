@@ -315,6 +315,9 @@ importers:
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
+      preact:
+        specifier: ^10.26.4
+        version: 10.26.4
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -844,6 +847,9 @@ importers:
       '@embedpdf/plugin-annotation':
         specifier: workspace:*
         version: link:../packages/plugin-annotation
+      '@embedpdf/plugin-bookmark':
+        specifier: workspace:*
+        version: link:../packages/plugin-bookmark
       '@embedpdf/plugin-fullscreen':
         specifier: workspace:*
         version: link:../packages/plugin-fullscreen

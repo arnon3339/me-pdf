@@ -34,6 +34,7 @@
     "@embedpdf/plugin-annotation": "workspace:*",
     "@embedpdf/plugin-print": "workspace:*",
     "@embedpdf/plugin-fullscreen": "workspace:*",
+    "@embedpdf/plugin-bookmark": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {
