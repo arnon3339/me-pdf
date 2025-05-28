@@ -15,19 +15,27 @@ export function ThumbnailsPane({ style, ...props }: ThumbnailsProps) {
 
   const [window, setWindow] = useState<WindowState | null>(null);
 
-  /* subscribe once */
-  useEffect(() => thumbs?.onWindow(setWindow), []);
+  /* 1️⃣  subscribe once to window updates */
+  useEffect(() => thumbs?.onWindow(setWindow), [thumbs]);
 
-  /* update window on scroll */
+  /* 2️⃣  keep plugin in sync while the user scrolls */
   useEffect(() => {
     const vp = viewportRef.current;
     if (!vp) return;
-
     const onScroll = () => thumbs?.setViewport(vp.scrollTop, vp.clientHeight);
-    onScroll(); // first call
     vp.addEventListener('scroll', onScroll);
     return () => vp.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [thumbs]);
+
+  /* 3️⃣  kick-start (or re-kick) after document change */
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp || !thumbs) return;
+
+    if (window?.items.length === 0) {
+      thumbs.setViewport(vp.scrollTop, vp.clientHeight);
+    }
+  }, [window, thumbs]);
 
   return (
     <div ref={viewportRef} style={{ overflowY: 'auto', position: 'relative', ...style }} {...props}>

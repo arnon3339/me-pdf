@@ -8,6 +8,7 @@ export const START_SELECTION = 'START_SELECTION';
 export const END_SELECTION = 'END_SELECTION';
 export const CLEAR_SELECTION = 'CLEAR_SELECTION';
 export const SET_RECTS = 'SET_RECTS';
+export const RESET = 'RESET';
 
 export interface CachePageGeometryAction extends Action {
   type: typeof CACHE_PAGE_GEOMETRY;
@@ -35,13 +36,18 @@ export interface SetRectsAction extends Action {
   payload: { page: number; rects: Rect[] };
 }
 
+export interface ResetAction extends Action {
+  type: typeof RESET;
+}
+
 export type SelectionAction =
   | CachePageGeometryAction
   | SetSelectionAction
   | StartSelectionAction
   | EndSelectionAction
   | ClearSelectionAction
-  | SetRectsAction;
+  | SetRectsAction
+  | ResetAction;
 
 export const cachePageGeometry = (page: number, geo: PdfPageGeometry): CachePageGeometryAction => ({
   type: CACHE_PAGE_GEOMETRY,
@@ -63,3 +69,5 @@ export const setRects = (page: number, rects: Rect[]): SetRectsAction => ({
   type: SET_RECTS,
   payload: { page, rects },
 });
+
+export const reset = (): ResetAction => ({ type: RESET });

@@ -10,7 +10,7 @@ export class FullscreenPlugin extends BasePlugin<
 > {
   static readonly id = 'fullscreen' as const;
 
-  private readonly request$ = createEmitter<'enter' | 'exit'>();
+  private readonly fullscreenRequest$ = createEmitter<'enter' | 'exit'>();
 
   constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
@@ -21,13 +21,18 @@ export class FullscreenPlugin extends BasePlugin<
   protected buildCapability(): FullscreenCapability {
     return {
       isFullscreen: () => this.state.isFullscreen,
-      enableFullscreen: () => this.request$.emit('enter'),
-      exitFullscreen: () => this.request$.emit('exit'),
-      onRequest: this.request$.on,
+      enableFullscreen: () => this.fullscreenRequest$.emit('enter'),
+      exitFullscreen: () => this.fullscreenRequest$.emit('exit'),
+      onRequest: this.fullscreenRequest$.on,
     };
   }
 
   public setFullscreenState(isFullscreen: boolean): void {
     this.dispatch(setFullscreen(isFullscreen));
+  }
+
+  async destroy(): Promise<void> {
+    this.fullscreenRequest$.clear();
+    super.destroy();
   }
 }

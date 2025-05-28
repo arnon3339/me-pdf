@@ -27,7 +27,8 @@ import {
   SpreadPluginPackage,
   SpreadState,
 } from '@embedpdf/plugin-spread';
-import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
+import { LOADER_PLUGIN_ID, LoaderPlugin, LoaderPluginPackage } from '@embedpdf/plugin-loader';
+import { FilePicker } from '@embedpdf/plugin-loader/preact';
 import {
   MenuItem,
   defineComponent,
@@ -313,6 +314,10 @@ export const icons: IconRegistry = {
     id: 'x',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>',
   },
+  fileImport: {
+    id: 'fileImport',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-file-import"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M5 13v-8a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-5.5m-9.5 -2h7m-3 -3l3 3l-3 3" /></svg>',
+  },
 };
 
 export const menuItems: Record<string, MenuItem<State>> = {
@@ -323,7 +328,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcut: 'Shift+M',
     //shortcutLabel: 'M',
     type: 'menu',
-    children: ['download', 'enterFS', 'save', 'print', 'settings'],
+    children: ['openFile', 'download', 'enterFS', 'print'],
     active: (storeState) =>
       storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'menuCtr',
   },
@@ -336,6 +341,18 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     action: () => {
       console.log('download');
+    },
+  },
+  openFile: {
+    id: 'openFile',
+    icon: 'fileImport',
+    label: 'Open PDF',
+    type: 'action',
+    action: (registry) => {
+      const loader = registry.getPlugin<LoaderPlugin>(LOADER_PLUGIN_ID)?.provides();
+      if (loader) {
+        loader.openFileDialog();
+      }
     },
   },
   enterFS: {
@@ -1992,6 +2009,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                     {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
                     {commandMenu}
                   </div>
+                  <FilePicker />
                 </PrintProvider>
               </FullscreenProvider>
             )}

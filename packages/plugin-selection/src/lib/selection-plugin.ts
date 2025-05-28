@@ -1,4 +1,4 @@
-import { BasePlugin, CoreState, PluginRegistry, StoreState } from '@embedpdf/core';
+import { BasePlugin, PluginRegistry, SET_DOCUMENT } from '@embedpdf/core';
 import {
   SelectionCapability,
   SelectionPluginConfig,
@@ -13,6 +13,7 @@ import {
   startSelection,
   setRects,
   clearSelection,
+  reset,
 } from './actions';
 import { PdfEngine, PdfDocumentObject, PdfPageGeometry, TaskError, Rect } from '@embedpdf/models';
 import { createBehaviorEmitter } from '@embedpdf/core';
@@ -39,15 +40,14 @@ export class SelectionPlugin extends BasePlugin<
     private engine: PdfEngine,
   ) {
     super(id, registry);
+
+    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => {
+      this.dispatch(reset());
+      this.doc = state.core.document ?? undefined;
+    });
   }
 
   /* ── life-cycle ────────────────────────────────────────── */
-  override onCoreStoreUpdated(
-    _prevState: StoreState<CoreState>,
-    newState: StoreState<CoreState>,
-  ): void {
-    this.doc = newState.core.document ?? undefined;
-  }
   async initialize() {}
   async destroy() {
     this.selChange$.clear();

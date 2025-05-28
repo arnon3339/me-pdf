@@ -1,4 +1,12 @@
-import { BasePlugin, IPlugin, PluginRegistry, loadDocument, setDocument } from '@embedpdf/core';
+import {
+  BasePlugin,
+  IPlugin,
+  PluginRegistry,
+  createEmitter,
+  createBehaviorEmitter,
+  loadDocument,
+  setDocument,
+} from '@embedpdf/core';
 import { PdfDocumentObject, PdfEngine } from '@embedpdf/models';
 import { PDFDocumentLoader } from './loader';
 import { PDFLoadingOptions } from './loader/strategies/loading-strategy';
@@ -6,8 +14,11 @@ import { LoaderCapability, LoaderEvent, LoaderPluginConfig } from './types';
 
 export class LoaderPlugin extends BasePlugin<LoaderPluginConfig, LoaderCapability> {
   static readonly id = 'loader' as const;
-  private loaderHandlers: ((loaderEvent: LoaderEvent) => void)[] = [];
-  private documentLoadedHandlers: ((document: PdfDocumentObject) => void)[] = [];
+
+  private readonly loaderHandlers$ = createBehaviorEmitter<LoaderEvent>();
+  private readonly documentLoadedHandlers$ = createBehaviorEmitter<PdfDocumentObject>();
+  private readonly openFileRequest$ = createEmitter<'open'>();
+
   private documentLoader: PDFDocumentLoader;
   private loadingOptions?: Omit<PDFLoadingOptions, 'engine'>;
   private loadedDocument?: PdfDocumentObject;
@@ -23,11 +34,13 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig, LoaderCapabilit
 
   protected buildCapability(): LoaderCapability {
     return {
-      onLoaderEvent: (handler) => this.loaderHandlers.push(handler),
+      onLoaderEvent: this.loaderHandlers$.on,
+      onDocumentLoaded: this.documentLoadedHandlers$.on,
+      onOpenFileRequest: this.openFileRequest$.on,
+      openFileDialog: () => this.openFileRequest$.emit('open'),
       loadDocument: (options) => this.loadDocument(options),
       registerStrategy: (name, strategy) => this.documentLoader.registerStrategy(name, strategy),
       getDocument: () => this.loadedDocument,
-      onDocumentLoaded: (handler) => this.documentLoadedHandlers.push(handler),
       addStrategyResolver: (resolver) => this.documentLoader.addStrategyResolver(resolver),
     };
   }
@@ -55,7 +68,7 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig, LoaderCapabilit
     options: Omit<PDFLoadingOptions, 'engine'>,
   ): Promise<PdfDocumentObject> {
     try {
-      this.notifyHandlers({ type: 'start', documentId: options.pdfFile.id });
+      this.loaderHandlers$.emit({ type: 'start', documentId: options.pdfFile.id });
       this.dispatchCoreAction(loadDocument());
       const document = await this.documentLoader.loadDocument({
         ...options,
@@ -64,8 +77,8 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig, LoaderCapabilit
       this.dispatchCoreAction(setDocument(document));
       this.loadedDocument = document;
 
-      this.notifyHandlers({ type: 'complete', documentId: options.pdfFile.id });
-      this.notifyDocumentLoaded(document);
+      this.loaderHandlers$.emit({ type: 'complete', documentId: options.pdfFile.id });
+      this.documentLoadedHandlers$.emit(document);
       return document;
     } catch (error) {
       const errorEvent: LoaderEvent = {
@@ -73,16 +86,15 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig, LoaderCapabilit
         documentId: options.pdfFile.id,
         error: error instanceof Error ? error : new Error(String(error)),
       };
-      this.notifyHandlers(errorEvent);
+      this.loaderHandlers$.emit(errorEvent);
       throw error;
     }
   }
 
-  private notifyHandlers(event: LoaderEvent): void {
-    this.loaderHandlers.forEach((handler) => handler(event));
-  }
-
-  private notifyDocumentLoaded(document: PdfDocumentObject): void {
-    this.documentLoadedHandlers.forEach((handler) => handler(document));
+  async destroy(): Promise<void> {
+    this.loaderHandlers$.clear();
+    this.documentLoadedHandlers$.clear();
+    this.openFileRequest$.clear();
+    super.destroy();
   }
 }

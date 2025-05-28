@@ -29,7 +29,10 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
 
     this.renderCapability = this.registry.getPlugin<RenderPlugin>('render')!.provides();
 
-    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => this.setWindowState(state));
+    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => {
+      this.taskCache.clear();
+      this.setWindowState(state);
+    });
   }
 
   /* ------------ init ------------------------------------------------ */
@@ -63,8 +66,8 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     });
 
     this.window = {
-      start: 0,
-      end: 0,
+      start: -1,
+      end: -1,
       items: [],
       totalHeight: offset - GAP, // last item has no gap below
     };
@@ -120,7 +123,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
   private renderThumb(idx: number, dpr: number) {
     if (this.taskCache.has(idx)) return this.taskCache.get(idx)!;
 
-    const core = this.getCoreState().core;
+    const core = this.coreState.core;
     const page = core.document!.pages[idx];
     const scale = (this.cfg.width ?? 120) / page.size.width;
 

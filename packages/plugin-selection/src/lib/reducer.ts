@@ -7,6 +7,7 @@ import {
   END_SELECTION,
   SET_RECTS,
   CLEAR_SELECTION,
+  RESET,
 } from './actions';
 
 export const initialState: SelectionState = {
@@ -33,6 +34,8 @@ export const selectionReducer = (state = initialState, action: SelectionAction):
       return { ...state, selecting: false, selection: null, rects: {}, active: false };
     case SET_RECTS:
       return { ...state, rects: { ...state.rects, [action.payload.page]: action.payload.rects } };
+    case RESET:
+      return initialState;
     default:
       return state;
   }

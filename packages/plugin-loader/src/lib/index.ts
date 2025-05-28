@@ -12,3 +12,4 @@ export const LoaderPluginPackage: PluginPackage<LoaderPlugin, LoaderPluginConfig
 
 export * from './loader-plugin';
 export * from './types';
+export * from './manifest';

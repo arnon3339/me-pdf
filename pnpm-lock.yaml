@@ -389,6 +389,9 @@ importers:
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
+      preact:
+        specifier: ^10.26.4
+        version: 10.26.4
       react:
         specifier: ^18.2.0
         version: 18.3.1
