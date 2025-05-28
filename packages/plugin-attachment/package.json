@@ -1,5 +1,5 @@
 {
-  "name": "@embedpdf/plugin-bookmark",
+  "name": "@embedpdf/plugin-attachment",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
