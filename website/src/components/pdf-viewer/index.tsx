@@ -28,8 +28,8 @@ export default function PDFViewer({ style, className }: PDFViewerProps) {
         EmbedPDF.init({
           type: 'container',
           target: viewerRef.current!,
-          src: '/ebook.pdf',
-          wasmUrl: '/wasm/pdfium.wasm',
+          src: 'https://snippet.embedpdf.com/ebook.pdf',
+          worker: true,
         })
       } catch (error) {
         console.error('Failed to load EmbedPDF:', error)
