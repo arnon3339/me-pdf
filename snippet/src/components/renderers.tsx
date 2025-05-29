@@ -621,7 +621,7 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (
 
   return (
     <div className="flex flex-row items-center rounded-md bg-[#f1f3f5]">
-      <form onSubmit={handleZoomChange} className="@3xl:block hidden">
+      <form onSubmit={handleZoomChange} className="@2xl:block hidden">
         <input
           name="zoom"
           type="text"

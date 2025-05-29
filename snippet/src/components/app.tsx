@@ -1363,9 +1363,9 @@ export const components: Record<string, UIComponentType<State>> = {
       {
         componentId: 'zoomButton',
         priority: 7,
-        className: 'hidden @min-[400px]:block @min-[900px]:hidden',
+        className: 'hidden @min-[400px]:block @min-[700px]:hidden',
       },
-      { componentId: 'zoom', priority: 8, className: 'hidden @min-[900px]:block' },
+      { componentId: 'zoom', priority: 8, className: 'hidden @min-[700px]:block' },
     ],
     props: {
       gap: 10,
