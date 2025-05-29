@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'preact/compat';
 import { h, Fragment } from 'preact';
 import styles from '../styles/index.css';
 import { EmbedPDF } from '@embedpdf/core/preact';
-import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
-import { PdfiumEngine, WebWorkerEngine } from '@embedpdf/engines';
-import { init, init as initPdfium } from '@embedpdf/pdfium';
-import { MatchFlag, PdfAnnotationSubtype, PdfEngine, Rotation } from '@embedpdf/models';
+import { createPluginRegistration } from '@embedpdf/core';
+import { PdfAnnotationSubtype, PdfEngine, Rotation } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
   ViewportPluginPackage,
@@ -114,12 +112,11 @@ import {
 } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
-import { createEmbeddedWorker } from './worker-loader';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
   src: string;
-  wasmUrl?: string;
+  worker?: boolean;
   scrollStrategy?: string;
   zoomMode?: string;
 }
@@ -128,14 +125,19 @@ export interface PDFViewerConfig {
 let engineInstance: PdfEngine | null = null;
 
 interface InitializeEngineOptions {
-  wasmUrl?: string;
+  worker?: boolean;
 }
 // **Initialize the Pdfium Engine**
-async function initializeEngine(options?: InitializeEngineOptions): Promise<PdfEngine> {
-  const worker = createEmbeddedWorker();
-  const engine = new WebWorkerEngine(worker);
-  engineInstance = engine;
-  return engine;
+async function initializeEngine(options: InitializeEngineOptions): Promise<PdfEngine> {
+  if (options.worker) {
+    // Lazy load worker engine only when needed
+    const { createWorkerEngine } = await import('./loader-worker');
+    return createWorkerEngine();
+  } else {
+    // Lazy load local engine only when needed
+    const { createLocalEngine } = await import('./loader-local');
+    return createLocalEngine();
+  }
 }
 
 // **Props for the PDFViewer Component**
@@ -1814,7 +1816,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
 
   useEffect(() => {
     initializeEngine({
-      wasmUrl: config.wasmUrl,
+      worker: config.worker ?? true,
     }).then(setEngine);
   }, []);
 

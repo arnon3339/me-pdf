@@ -12,14 +12,20 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./wasm/*": {
-      "import": "./dist/wasm/*",
-      "require": "./dist/wasm/*"
+    "./pdfium": {
+      "types": "./dist/pdfium.d.ts",
+      "import": "./dist/pdfium.js",
+      "require": "./dist/pdfium.cjs"
+    },
+    "./worker": {
+      "types": "./dist/worker.d.ts",
+      "import": "./dist/worker.js",
+      "require": "./dist/worker.cjs"
     }
   },
   "scripts": {
-    "build": "PROJECT_CWD=$(pwd) pnpm -w p:build",
-    "build:watch": "PROJECT_CWD=$(pwd) pnpm -w p:build:watch",
+    "build": "tsup",
+    "build:watch": "tsup --watch",
     "clean": "PROJECT_CWD=$(pwd) pnpm -w p:clean",
     "lint": "PROJECT_CWD=$(pwd) pnpm -w p:lint",
     "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",

@@ -20,7 +20,6 @@ import { bundleWorker } from './tools/build-worker.js';
 
 // Check if we are in 'development' mode
 const isDev = process.env.ROLLUP_WATCH;
-const webWorkerCode = await bundleWorker();
 
 export default [
   {
@@ -30,6 +29,7 @@ export default [
       format: 'esm',
       sourcemap: false,
     },
+    treeshake: { moduleSideEffects: false },
     plugins: [
       copy({
         targets: [
@@ -49,7 +49,7 @@ export default [
       }),
       replace({
         preventAssignment: true,
-        values: { __WEBWORKER_BODY__: JSON.stringify(webWorkerCode) },
+        values: { __WEBWORKER_BODY__: JSON.stringify(await bundleWorker()) },
       }),
       url({
         include: ['**/*.svg'],

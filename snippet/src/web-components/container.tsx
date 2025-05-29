@@ -17,7 +17,7 @@ export class EmbedPdfContainer extends HTMLElement {
         src: this.getAttribute('src') || '/demo.pdf',
         scrollStrategy: this.getAttribute('scroll-strategy') || 'vertical',
         zoomMode: this.getAttribute('zoom-mode') || 'fitPage',
-        wasmUrl: this.getAttribute('wasm-url') || undefined,
+        worker: this.getAttribute('worker') !== 'false',
       };
     }
     this.renderViewer();
