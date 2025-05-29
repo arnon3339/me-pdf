@@ -114,12 +114,11 @@ import {
 } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
-import { createExternalWorker } from './worker-loader';
+import { createEmbeddedWorker } from './worker-loader';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
   src: string;
-  workerUrl?: string;
   wasmUrl?: string;
   scrollStrategy?: string;
   zoomMode?: string;
@@ -129,24 +128,14 @@ export interface PDFViewerConfig {
 let engineInstance: PdfEngine | null = null;
 
 interface InitializeEngineOptions {
-  workerUrl?: string;
   wasmUrl?: string;
 }
 // **Initialize the Pdfium Engine**
 async function initializeEngine(options?: InitializeEngineOptions): Promise<PdfEngine> {
-  if (options?.workerUrl) {
-    const worker = await createExternalWorker(options.workerUrl);
-    const engine = new WebWorkerEngine(worker);
-    engineInstance = engine;
-    return engine;
-  } else {
-    const response = await fetch(options?.wasmUrl || '/pdfium.wasm');
-    const wasmBinary = await response.arrayBuffer();
-    const wasmModule = await init({ wasmBinary });
-    const engine = new PdfiumEngine(wasmModule);
-    engineInstance = engine;
-    return engine;
-  }
+  const worker = createEmbeddedWorker();
+  const engine = new WebWorkerEngine(worker);
+  engineInstance = engine;
+  return engine;
 }
 
 // **Props for the PDFViewer Component**
@@ -1825,7 +1814,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
 
   useEffect(() => {
     initializeEngine({
-      workerUrl: config.workerUrl,
       wasmUrl: config.wasmUrl,
     }).then(setEngine);
   }, []);

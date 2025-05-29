@@ -16,8 +16,11 @@ import replace from '@rollup/plugin-replace';
 import copy from 'rollup-plugin-copy';
 import alias from '@rollup/plugin-alias';
 
+import { bundleWorker } from './tools/build-worker.js';
+
 // Check if we are in 'development' mode
 const isDev = process.env.ROLLUP_WATCH;
+const webWorkerCode = await bundleWorker();
 
 export default [
   {
@@ -43,6 +46,10 @@ export default [
             dest: 'dist',
           },
         ],
+      }),
+      replace({
+        preventAssignment: true,
+        values: { __WEBWORKER_BODY__: JSON.stringify(webWorkerCode) },
       }),
       url({
         include: ['**/*.svg'],
@@ -105,22 +112,5 @@ export default [
           verbose: false,
         }),
     ].filter(Boolean),
-  },
-  {
-    input: 'src/components/webworker.ts',
-    output: {
-      file: 'dist/worker.js',
-      format: 'es',
-      sourcemap: false,
-    },
-    plugins: [
-      resolve(),
-      commonjs(),
-      typescript(),
-      terser({
-        module: true,
-        compress: isDev ? false : true,
-      }),
-    ],
   },
 ];
