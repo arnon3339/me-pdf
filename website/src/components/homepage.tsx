@@ -39,6 +39,29 @@ const AnimatedBackground = () => {
 }
 
 const HeaderAndHero = () => {
+  const [isCopied, setIsCopied] = useState(false)
+
+  const copyToClipboard = async () => {
+    const codeSnippet = `<div id="pdf-viewer" style="height: 500px"></div>
+<script async type="module">
+  import EmbedPDF from 'https://snippet.embedpdf.com/embedpdf.js';
+
+  const EPDFinstance = EmbedPDF.init({
+    type: 'container',
+    target: document.getElementById('pdf-viewer'),
+    src: 'https://snippet.embedpdf.com/ebook.pdf'
+  }) 
+</script>`
+
+    try {
+      await navigator.clipboard.writeText(codeSnippet)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000) // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy text: ', err)
+    }
+  }
+
   return (
     <div className="relative min-h-screen">
       <AnimatedBackground />
@@ -155,6 +178,111 @@ const HeaderAndHero = () => {
           </div>
         </div>
         <div className="mt-24">
+          {/* Embed Code Section */}
+          <div className="relative mb-24">
+            <div className="mx-auto max-w-4xl">
+              {/* Header */}
+              <div className="mb-8 text-center">
+                <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">
+                  Quick Integration
+                </h2>
+                <p className="mt-4 text-lg text-gray-600">
+                  Get started in seconds with just two lines of code
+                </p>
+              </div>
+
+              {/* Code showcase container */}
+              <div className="group relative">
+                {/* Gradient border effect */}
+                <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-purple-600 via-blue-500 to-orange-400 opacity-20 blur transition duration-200 group-hover:opacity-30"></div>
+
+                {/* Main code container */}
+                <div className="relative overflow-hidden rounded-2xl bg-gray-900 shadow-2xl">
+                  {/* Header with copy button */}
+                  <div className="flex items-center justify-between border-b border-gray-700 px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                      <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                      <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                      <span className="ml-4 text-sm text-gray-400">
+                        index.html
+                      </span>
+                    </div>
+                    <button
+                      onClick={copyToClipboard}
+                      className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
+                    >
+                      {isCopied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+
+                  {/* Code content */}
+                  <div className="p-6">
+                    <pre className="overflow-x-auto text-sm leading-relaxed">
+                      <code className="text-gray-300">
+                        <span className="text-gray-500">
+                          &lt;!-- Add the PDF container --&gt;
+                        </span>
+                        {'\n'}
+                        <span className="text-blue-400">&lt;div</span>{' '}
+                        <span className="text-green-400">id</span>=
+                        <span className="text-yellow-300">"pdf-viewer"</span>{' '}
+                        <span className="text-green-400">style</span>=
+                        <span className="text-yellow-300">"height: 500px"</span>
+                        <span className="text-blue-400">&gt;&lt;/div&gt;</span>
+                        {'\n\n'}
+                        <span className="text-gray-500">
+                          &lt;!-- Initialize EmbedPDF --&gt;
+                        </span>
+                        {'\n'}
+                        <span className="text-blue-400">&lt;script</span>{' '}
+                        <span className="text-green-400">async</span>{' '}
+                        <span className="text-green-400">type</span>=
+                        <span className="text-yellow-300">"module"</span>
+                        <span className="text-blue-400">&gt;</span>
+                        {'\n'}
+                        {'  '}
+                        <span className="text-purple-400">import</span>{' '}
+                        <span className="text-white">EmbedPDF</span>{' '}
+                        <span className="text-purple-400">from</span>{' '}
+                        <span className="text-yellow-300">
+                          'https://snippet.embedpdf.com/embedpdf.js'
+                        </span>
+                        ;{'\n\n'}
+                        {'  '}
+                        <span className="text-purple-400">const</span>{' '}
+                        <span className="text-white">EPDFinstance</span>{' '}
+                        <span className="text-purple-400">=</span>{' '}
+                        <span className="text-white">EmbedPDF</span>.
+                        <span className="text-blue-300">init</span>({'{'}
+                        {'\n'}
+                        {'    '}
+                        <span className="text-red-300">type</span>:
+                        <span className="text-yellow-300">'container'</span>,
+                        {'\n'}
+                        {'    '}
+                        <span className="text-red-300">target</span>:
+                        <span className="text-white">document</span>.
+                        <span className="text-blue-300">getElementById</span>(
+                        <span className="text-yellow-300">'pdf-viewer'</span>),
+                        {'\n'}
+                        {'    '}
+                        <span className="text-red-300">src</span>:
+                        <span className="text-yellow-300">
+                          'https://snippet.embedpdf.com/ebook.pdf'
+                        </span>
+                        {'\n'}
+                        {'  '}
+                        {'}'}) {'\n'}
+                        <span className="text-blue-400">&lt;/script&gt;</span>
+                      </code>
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Interactive Demo Section */}
           <div className="relative">
             {/* Header with arrow and call-to-action */}
@@ -169,8 +297,9 @@ const HeaderAndHero = () => {
                 through pages
               </p>
             </div>
+
             {/* PDF Viewer with enhanced styling */}
-            <div className="group relative">
+            <div className="group relative mx-auto max-w-4xl">
               {/* Main viewer container */}
               <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
                 <PDFViewer className="h-[500px] w-full md:h-[700px]" />
@@ -204,7 +333,7 @@ const HeaderAndHero = () => {
               </div>
             </div>
           </div>
-          <div className="relative mt-14 overflow-hidden">
+          <div className="relative mx-auto mt-14 max-w-4xl overflow-hidden">
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-600/20 via-blue-500/20 to-orange-400/20"></div>
             <div className="relative rounded-2xl p-8 md:p-12">
               <h2 className="mx-auto mb-4 max-w-2xl text-2xl font-bold md:text-3xl">
