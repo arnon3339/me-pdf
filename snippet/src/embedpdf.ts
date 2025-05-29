@@ -1,5 +1,12 @@
 import { EmbedPdfContainer } from './web-components/container';
-import { PDFViewerConfig } from './components/app';
+import {
+  PDFViewerConfig,
+  PluginConfigs,
+  ScrollStrategy,
+  ZoomMode,
+  SpreadMode,
+  Rotation,
+} from './components/app';
 
 type ContainerConfig = PDFViewerConfig & {
   type: 'container';
@@ -18,6 +25,9 @@ function initContainer(config: ContainerConfig) {
 }
 
 export type ReturnContainerType = ReturnType<typeof initContainer>;
+
+// Export types for users
+export type { PluginConfigs, ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
 export default {
   init: (

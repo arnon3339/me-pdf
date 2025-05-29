@@ -113,12 +113,92 @@ import {
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
 
-// **Configuration Interface**
+export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
+
+// **Enhanced Configuration Interface**
+export interface PluginConfigs {
+  viewport?: {
+    viewportGap?: number;
+  };
+  scroll?: {
+    strategy?: ScrollStrategy;
+  };
+  zoom?: {
+    defaultZoomLevel?: ZoomMode;
+  };
+  spread?: {
+    defaultSpreadMode?: SpreadMode;
+  };
+  rotate?: {
+    defaultRotation?: Rotation;
+  };
+  tiling?: {
+    tileSize?: number;
+    overlapPx?: number;
+    extraRings?: number;
+  };
+  thumbnail?: {
+    width?: number;
+    gap?: number;
+    buffer?: number;
+    labelHeight?: number;
+  };
+  print?: {
+    batchSize?: number;
+  };
+}
+
 export interface PDFViewerConfig {
   src: string;
   worker?: boolean;
-  scrollStrategy?: string;
-  zoomMode?: string;
+  plugins?: PluginConfigs;
+}
+
+// **Default Plugin Configurations**
+const DEFAULT_PLUGIN_CONFIGS: Required<PluginConfigs> = {
+  viewport: {
+    viewportGap: 10,
+  },
+  scroll: {
+    strategy: ScrollStrategy.Vertical,
+  },
+  zoom: {
+    defaultZoomLevel: ZoomMode.FitPage,
+  },
+  spread: {
+    defaultSpreadMode: SpreadMode.None,
+  },
+  rotate: {
+    defaultRotation: Rotation.Degree0,
+  },
+  tiling: {
+    tileSize: 768,
+    overlapPx: 2.5,
+    extraRings: 0,
+  },
+  thumbnail: {
+    width: 150,
+    gap: 10,
+    buffer: 3,
+    labelHeight: 30,
+  },
+  print: {
+    batchSize: 3,
+  },
+};
+
+// **Utility function to merge configurations**
+function mergePluginConfigs(userConfigs: PluginConfigs = {}): Required<PluginConfigs> {
+  return {
+    viewport: { ...DEFAULT_PLUGIN_CONFIGS.viewport, ...userConfigs.viewport },
+    scroll: { ...DEFAULT_PLUGIN_CONFIGS.scroll, ...userConfigs.scroll },
+    zoom: { ...DEFAULT_PLUGIN_CONFIGS.zoom, ...userConfigs.zoom },
+    spread: { ...DEFAULT_PLUGIN_CONFIGS.spread, ...userConfigs.spread },
+    rotate: { ...DEFAULT_PLUGIN_CONFIGS.rotate, ...userConfigs.rotate },
+    tiling: { ...DEFAULT_PLUGIN_CONFIGS.tiling, ...userConfigs.tiling },
+    thumbnail: { ...DEFAULT_PLUGIN_CONFIGS.thumbnail, ...userConfigs.thumbnail },
+    print: { ...DEFAULT_PLUGIN_CONFIGS.print, ...userConfigs.print },
+  };
 }
 
 // **Singleton Engine Instance**
@@ -1296,7 +1376,7 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'filePickerButton',
     props: {
       label: 'Open File',
-      img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbnMtdGFibGVyLW91dGxpbmUgaWNvbi10YWJsZXItZmlsZS1pbXBvcnQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNCAzdjRhMSAxIDAgMCAwIDEgMWg0IiAvPjxwYXRoIGQ9Ik01IDEzdi04YTIgMiAwIDAgMSAyIC0yaDdsNSA1djExYTIgMiAwIDAgMSAtMiAyaC01LjVtLTkuNSAtMmg3bS0zIC0zbDMgM2wtMyAzIiAvPjwvc3ZnPg==',
+      img: 'data:image/svg+xml;base64,PHN2ZyAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiAgd2lkdGg9IjI0IiAgaGVpZ2h0PSIyNCIgIHZpZXdCb3g9IjAgMCAyNCAyNCIgIGZpbGw9Im5vbmUiICBzdHJva2U9IiMzNDNhNDAiICBzdHJva2Utd2lkdGg9IjIiICBzdHJva2UtbGluZWNhcD0icm91bmQiICBzdHJva2UtbGluZWpvaW49InJvdW5kIiAgY2xhc3M9Imljb24gaWNvbi10YWJsZXIgaWNvbi10YWJsZXItb3V0bGluZSBpY29uLXRhYmxlci1maWxlLWltcG9ydCI+PHBhdGggc3Ryb2tlPSJub25lIiBkPSJNIDAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNCAzdjRhMSAxIDAgMCAwIDEgMWg0IiAvPjxwYXRoIGQ9Ik01IDEzdi04YTIgMiAwIDAgMSAyIC0yaDdsNSA1djExYTIgMiAwIDAgMSAtMiAyaC01LjVtLTkuNSAtMmg3bS0zIC0zbDMgM2wtMyAzIiAvPjwvc3ZnPg==',
     },
   },
   downloadButton: {
@@ -1811,14 +1891,37 @@ export const uiConfig: UIPluginConfig = {
 };
 
 export function PDFViewer({ config }: PDFViewerProps) {
-  const [engine, setEngine] = useState<PdfEngine | null>(null);
-  const [initialized, setInitialized] = useState(false);
+  const [engine, setEngine] = useState<PdfEngine | null>(engineInstance);
 
   useEffect(() => {
-    initializeEngine({
-      worker: config.worker ?? true,
-    }).then(setEngine);
-  }, []);
+    let isMounted = true;
+
+    async function setupEngine() {
+      if (engineInstance) {
+        setEngine(engineInstance);
+        return;
+      }
+
+      try {
+        const newEngine = await initializeEngine({ worker: config.worker });
+        if (isMounted) {
+          engineInstance = newEngine;
+          setEngine(newEngine);
+        }
+      } catch (error) {
+        console.error('Failed to initialize PDF engine:', error);
+      }
+    }
+
+    setupEngine();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [config.worker]);
+
+  // **Merge user configurations with defaults**
+  const pluginConfigs = mergePluginConfigs(config.plugins);
 
   if (!engine)
     return (
@@ -1829,10 +1932,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
         </div>
       </>
     );
-
-  // Map config values to plugin settings
-  //const scrollStrategy = config.scrollStrategy === 'horizontal' ? ScrollStrategy.Horizontal : ScrollStrategy.Vertical;
-  //const zoomMode = config.zoomMode === 'fitWidth' ? ZoomMode.FitWidth : ZoomMode.FitPage;
 
   return (
     <>
@@ -1885,39 +1984,18 @@ export function PDFViewer({ config }: PDFViewerProps) {
               },
             },
           }),
-          createPluginRegistration(ViewportPluginPackage, {
-            viewportGap: 10,
-          }),
-          createPluginRegistration(ScrollPluginPackage, {
-            strategy: ScrollStrategy.Vertical,
-          }),
-          createPluginRegistration(ZoomPluginPackage, {
-            defaultZoomLevel: ZoomMode.FitPage,
-          }),
-          createPluginRegistration(SpreadPluginPackage, {
-            defaultSpreadMode: SpreadMode.None,
-          }),
+          createPluginRegistration(ViewportPluginPackage, pluginConfigs.viewport),
+          createPluginRegistration(ScrollPluginPackage, pluginConfigs.scroll),
+          createPluginRegistration(ZoomPluginPackage, pluginConfigs.zoom),
+          createPluginRegistration(SpreadPluginPackage, pluginConfigs.spread),
           createPluginRegistration(RenderPluginPackage, {}),
-          createPluginRegistration(RotatePluginPackage, {
-            defaultRotation: Rotation.Degree0,
-          }),
+          createPluginRegistration(RotatePluginPackage, pluginConfigs.rotate),
           createPluginRegistration(SearchPluginPackage, {}),
           createPluginRegistration(SelectionPluginPackage, {}),
-          createPluginRegistration(TilingPluginPackage, {
-            tileSize: 768,
-            overlapPx: 2.5,
-            extraRings: 0,
-          }),
-          createPluginRegistration(ThumbnailPluginPackage, {
-            width: 150,
-            gap: 10,
-            buffer: 3,
-            labelHeight: 30,
-          }),
+          createPluginRegistration(TilingPluginPackage, pluginConfigs.tiling),
+          createPluginRegistration(ThumbnailPluginPackage, pluginConfigs.thumbnail),
           createPluginRegistration(AnnotationPluginPackage, {}),
-          createPluginRegistration(PrintPluginPackage, {
-            batchSize: 3,
-          }),
+          createPluginRegistration(PrintPluginPackage, pluginConfigs.print),
           createPluginRegistration(FullscreenPluginPackage, {}),
           createPluginRegistration(BookmarkPluginPackage, {}),
         ]}
