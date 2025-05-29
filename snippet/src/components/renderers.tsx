@@ -1006,7 +1006,7 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
       trigger={triggerElement}
       open={open}
       placement={position || 'bottom'}
-      className="@max-[900px]:!bottom-0 @max-[900px]:!top-auto @max-[900px]:!left-0 @max-[900px]:!right-0"
+      className="@max-[600px]:!bottom-0 @max-[600px]:!top-auto @max-[600px]:!left-0 @max-[600px]:!right-0"
       onShow={() => {}}
       onHide={handleHide}
     >
