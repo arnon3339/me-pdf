@@ -114,6 +114,7 @@ import {
 } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
+import { createExternalWorker } from './worker-loader';
 
 // **Configuration Interface**
 export interface PDFViewerConfig {
@@ -134,9 +135,7 @@ interface InitializeEngineOptions {
 // **Initialize the Pdfium Engine**
 async function initializeEngine(options?: InitializeEngineOptions): Promise<PdfEngine> {
   if (options?.workerUrl) {
-    const worker = new Worker(options.workerUrl, {
-      type: 'module',
-    });
+    const worker = await createExternalWorker(options.workerUrl);
     const engine = new WebWorkerEngine(worker);
     engineInstance = engine;
     return engine;
