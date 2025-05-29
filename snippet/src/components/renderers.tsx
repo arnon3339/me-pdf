@@ -302,7 +302,7 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId
 
   return (
     <div
-      className={`flex w-full flex-none shrink-0 flex-col border-t bg-white md:w-[275px] md:min-w-[275px] md:border-t-0 ${borderClass} fixed absolute bottom-0 left-0 right-0 z-10 touch-pan-y border-[#cfd4da] transition-all duration-300 ease-in-out md:static md:h-full ${isFullscreen ? 'h-dvh' : 'h-[50vh]'}`}
+      className={`flex w-full flex-none shrink-0 flex-col border-t bg-white md:w-[275px] md:min-w-[275px] md:border-t-0 ${borderClass} absolute bottom-0 left-0 right-0 z-10 touch-pan-y border-[#cfd4da] transition-all duration-300 ease-in-out md:static md:h-full ${isFullscreen ? 'h-full' : 'h-1/2'}`}
     >
       {/* Drag handle for mobile */}
       <div
