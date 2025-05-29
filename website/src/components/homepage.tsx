@@ -173,7 +173,7 @@ const HeaderAndHero = () => {
             <div className="group relative">
               {/* Main viewer container */}
               <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-                <PDFViewer className="h-[700px] w-full rounded-lg" />
+                <PDFViewer className="h-[500px] w-full md:h-[700px]" />
               </div>
             </div>
           </div>
