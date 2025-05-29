@@ -29,7 +29,6 @@ export default [
       format: 'esm',
       sourcemap: false,
     },
-    treeshake: { moduleSideEffects: false },
     plugins: [
       copy({
         targets: [
