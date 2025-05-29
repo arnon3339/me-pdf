@@ -22,6 +22,19 @@ import { Scribble3 } from './icons/scribble3'
 // Mock documentation packages data
 const packages = [
   {
+    id: 'snippet',
+    name: '@embedpdf/snippet',
+    description:
+      'The complete, highest-level package with built-in UI and controls. Drop it into any website with just a simple snippet - no build tools required.',
+    icon: <Code className="h-6 w-6 text-white" />,
+    color: 'from-emerald-500 to-teal-600',
+    tags: ['Complete UI', 'Ready to Use', 'No Build Required'],
+    sections: [{ title: 'Introduction', url: '/docs/snippet/introduction' }],
+    url: '/docs/snippet/introduction',
+    latestVersion: '1.0.0',
+    lastUpdated: 'May 29, 2025',
+  },
+  {
     id: 'pdfium',
     name: '@embedpdf/pdfium',
     description:
@@ -34,8 +47,8 @@ const packages = [
       { title: 'Getting Started', url: '/docs/pdfium/getting-started' },
     ],
     url: '/docs/pdfium/introduction',
-    latestVersion: '2.3.0',
-    lastUpdated: 'February 28, 2025',
+    latestVersion: '1.0.0',
+    lastUpdated: 'May 29, 2025',
   },
   /*
   {
