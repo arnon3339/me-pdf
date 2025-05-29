@@ -1938,7 +1938,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             {({ headers, panels, floating, commandMenu }) => (
               <FullscreenProvider>
                 <PrintProvider>
-                  <div className="@container flex h-full w-full select-none flex-col">
+                  <div className="@container relative flex h-full w-full select-none flex-col">
                     {headers.top.length > 0 && <div>{headers.top}</div>}
                     <div className="flex flex-1 flex-row overflow-hidden">
                       <div className="flex flex-col">{headers.left}</div>
