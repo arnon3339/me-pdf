@@ -19,7 +19,10 @@ export class Store<CoreState, CoreAction extends Action = Action> {
    * @param reducer          The core reducer function
    * @param initialCoreState The initial core state
    */
-  constructor(reducer: Reducer<CoreState, CoreAction>, initialCoreState: CoreState) {
+  constructor(
+    reducer: Reducer<CoreState, CoreAction>,
+    public initialCoreState: CoreState,
+  ) {
     this.state = { core: initialCoreState, plugins: {} };
     this.coreReducer = reducer;
   }
@@ -246,5 +249,24 @@ export class Store<CoreState, CoreAction extends Action = Action> {
     // In many codebases you'd do something more robust here
     // or rely on TypeScript's narrowing logic if possible.
     return (action as CoreAction).type !== undefined;
+  }
+
+  /**
+   * Destroy the store: drop every listener and plugin reducer
+   */
+  public destroy(): void {
+    // 1. empty listener collections
+    this.listeners.length = 0;
+    for (const id in this.pluginListeners) {
+      this.pluginListeners[id]?.splice?.(0);
+    }
+    this.pluginListeners = {};
+
+    // 2. wipe plugin reducers and states
+    this.pluginReducers = {};
+    this.state.plugins = {};
+
+    // 3. reset core state to initial
+    this.state.core = { ...this.initialCoreState };
   }
 }

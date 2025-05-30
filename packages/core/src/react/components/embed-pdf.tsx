@@ -2,36 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
-import { ViewportContext, PDFContext } from '../context';
+import { PDFContext, PDFContextState } from '../context';
 
 interface EmbedPDFProps {
   engine: PdfEngine;
   onInitialized: (registry: PluginRegistry) => Promise<void>;
-  plugins: (viewportElement: HTMLDivElement) => PluginBatchRegistration<IPlugin<any>, any>[];
-  children: React.ReactNode;
+  plugins: PluginBatchRegistration<IPlugin<any>, any>[];
+  children: React.ReactNode | ((state: PDFContextState) => React.ReactNode);
 }
 
-export function EmbedPDF({ engine, onInitialized, plugins: getPlugins, children }: EmbedPDFProps) {
+export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFProps) {
   const [registry, setRegistry] = useState<PluginRegistry | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
-  const [viewportElement, setViewportElement] = useState<HTMLDivElement | null>(null);
+  const [pluginsReady, setPluginsReady] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!viewportElement) return; // Wait until the viewport ref is set
-
+    console.log('useEffect', engine, onInitialized, plugins);
     const initialize = async () => {
       const pdfViewer = new PluginRegistry(engine);
 
       // Register the ViewportPlugin with the container
-      const plugins = getPlugins(viewportElement);
       pdfViewer.registerPluginBatch(plugins);
-
-      // Register additional plugins passed via props
-      plugins.forEach(({ package: pkg, config }) => pdfViewer.registerPlugin(pkg, config));
 
       // Initialize the viewer and load the document
       await pdfViewer.initialize();
       await onInitialized(pdfViewer);
+      pdfViewer.pluginsReady().then(() => setPluginsReady(true));
 
       // Provide the registry to children via context
       setRegistry(pdfViewer);
@@ -39,15 +35,17 @@ export function EmbedPDF({ engine, onInitialized, plugins: getPlugins, children 
     };
 
     initialize().catch(console.error);
-  }, [engine, onInitialized, getPlugins, viewportElement]);
+  }, [engine, onInitialized, plugins]);
 
-  const viewportContextValue = {
-    setViewportRef: (ref: HTMLDivElement) => setViewportElement(ref),
-  };
+  console.log('registry', registry);
+  console.log('isInitializing', isInitializing);
+  console.log('pluginsReady', pluginsReady);
 
   return (
-    <ViewportContext.Provider value={viewportContextValue}>
-      <PDFContext.Provider value={{ registry, isInitializing }}>{children}</PDFContext.Provider>
-    </ViewportContext.Provider>
+    <PDFContext.Provider value={{ registry, isInitializing, pluginsReady }}>
+      {typeof children === 'function'
+        ? children({ registry, isInitializing, pluginsReady })
+        : children}
+    </PDFContext.Provider>
   );
 }

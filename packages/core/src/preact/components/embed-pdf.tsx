@@ -4,19 +4,13 @@ import { useState, useEffect } from 'preact/hooks';
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
-import { PDFContext } from '../context';
-
-interface EmbedPDFState {
-  registry: PluginRegistry | null;
-  isInitializing: boolean;
-  pluginsReady: boolean;
-}
+import { PDFContext, PDFContextState } from '../context';
 
 interface EmbedPDFProps {
   engine: PdfEngine;
   onInitialized: (registry: PluginRegistry) => Promise<void>;
   plugins: PluginBatchRegistration<IPlugin<any>, any>[];
-  children: ComponentChildren | ((state: EmbedPDFState) => ComponentChildren);
+  children: ComponentChildren | ((state: PDFContextState) => ComponentChildren);
 }
 
 export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFProps) {

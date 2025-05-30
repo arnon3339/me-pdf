@@ -14,7 +14,7 @@ import {
   CapabilityNotFoundError,
   PluginConfigurationError,
 } from '../types/errors';
-import { PdfEngine, Rotation } from '@embedpdf/models';
+import { ignore, PdfEngine, Rotation } from '@embedpdf/models';
 import { Action, CoreState, Store, initialCoreState, Reducer } from '../store';
 import { CoreAction } from '../store/actions';
 import { coreReducer } from '../store/reducer';
@@ -43,6 +43,7 @@ export class PluginRegistry {
   private isInitializing = false;
   private initialCoreState: CoreState;
   private pluginsReadyPromise: Promise<void> | null = null;
+  private destroyed = false;
 
   constructor(engine: PdfEngine, config?: PluginRegistryConfig) {
     this.resolver = new DependencyResolver();
@@ -521,6 +522,46 @@ export class PluginRegistry {
     }
     if (!Array.isArray(manifest.optional)) {
       throw new PluginRegistrationError('Manifest must have an optional array');
+    }
+  }
+
+  public async destroy(): Promise<void> {
+    if (this.destroyed) return;
+    this.destroyed = true;
+
+    // 1. destroy plugins (unchanged)
+    for (const plugin of Array.from(this.plugins.values()).reverse()) {
+      await plugin.destroy?.();
+    }
+
+    // 2. sever links the store is holding
+    this.store.destroy();
+
+    // 3. clear our own maps / arrays
+    this.plugins.clear();
+    this.manifests.clear();
+    this.capabilities.clear();
+    this.status.clear();
+    this.pendingRegistrations.length = 0;
+    this.processingRegistrations.length = 0;
+
+    // 4. tear down the engine if it supports it
+    if (this.engine.destroy) {
+      const promise = new Promise<void>((resolve, reject) => {
+        const task = this.engine.destroy?.();
+        if (!task) {
+          resolve();
+          return;
+        }
+        task.wait((success) => {
+          if (success) {
+            resolve();
+          } else {
+            reject(new Error('Failed to destroy engine'));
+          }
+        }, ignore);
+      });
+      await promise;
     }
   }
 }
