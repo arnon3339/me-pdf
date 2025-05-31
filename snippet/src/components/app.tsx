@@ -151,6 +151,7 @@ export interface PluginConfigs {
 export interface PDFViewerConfig {
   src: string;
   worker?: boolean;
+  wasmUrl?: string;
   plugins?: PluginConfigs;
 }
 
@@ -206,17 +207,19 @@ let engineInstance: PdfEngine | null = null;
 
 interface InitializeEngineOptions {
   worker?: boolean;
+  wasmUrl?: string;
 }
 // **Initialize the Pdfium Engine**
 async function initializeEngine(options: InitializeEngineOptions): Promise<PdfEngine> {
+  const wasmUrl = options.wasmUrl || 'https://snippet.embedpdf.com/pdfium.wasm';
   if (options.worker) {
     // Lazy load worker engine only when needed
     const { createWorkerEngine } = await import('./loader-worker');
-    return createWorkerEngine();
+    return createWorkerEngine(wasmUrl);
   } else {
     // Lazy load local engine only when needed
     const { createLocalEngine } = await import('./loader-local');
-    return createLocalEngine();
+    return createLocalEngine(wasmUrl);
   }
 }
 
@@ -1903,7 +1906,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
       }
 
       try {
-        const newEngine = await initializeEngine({ worker: config.worker });
+        const newEngine = await initializeEngine({
+          worker: config.worker,
+          wasmUrl: config.wasmUrl,
+        });
         if (isMounted) {
           engineInstance = newEngine;
           setEngine(newEngine);
