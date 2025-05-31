@@ -30,10 +30,9 @@
     "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
-  "dependencies": {
-    "@embedpdf/models": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@embedpdf/models": "workspace:*",
     "@embedpdf/core": "workspace:*",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",

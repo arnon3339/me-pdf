@@ -1,8 +1,6 @@
-/** @jsxImportSource preact */
-import { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { ScrollStrategy, ScrollerLayout, PageLayout } from '@embedpdf/plugin-scroll';
-import { useRegistry } from '@embedpdf/core/preact';
+import { useRegistry } from '@embedpdf/core/react';
 import { PdfDocumentObject, Rotation } from '@embedpdf/models';
 
 import { useScrollCapability } from '../hooks';
@@ -13,9 +11,9 @@ interface RenderPageProps extends PageLayout {
   document: PdfDocumentObject | null;
 }
 
-type ScrollerProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  renderPage: (props: RenderPageProps) => JSX.Element;
-  overlayElements?: JSX.Element[];
+type ScrollerProps = React.HTMLAttributes<HTMLDivElement> & {
+  renderPage: (props: RenderPageProps) => ReactNode;
+  overlayElements?: ReactNode[];
 };
 
 export function Scroller({ renderPage, overlayElements, ...props }: ScrollerProps) {
