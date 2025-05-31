@@ -36,6 +36,7 @@ export class PluginRegistry {
   private engine: PdfEngine;
   private engineInitialized = false;
   private store: Store<CoreState, CoreAction>;
+  private initPromise: Promise<void> | null = null;
 
   private pendingRegistrations: PluginRegistration[] = [];
   private processingRegistrations: PluginRegistration[] = [];
@@ -62,19 +63,8 @@ export class PluginRegistry {
 
     if (this.engine.initialize) {
       const task = this.engine.initialize();
-      await new Promise<void>((resolve, reject) => {
-        task.wait(
-          (success) => {
-            if (success) {
-              this.engineInitialized = true;
-              resolve();
-            } else {
-              reject(new Error('Engine initialization failed'));
-            }
-          },
-          (error) => reject(new Error(`Engine initialization error: ${error.reason.message}`)),
-        );
-      });
+      await task.toPromise();
+      this.engineInitialized = true;
     } else {
       this.engineInitialized = true;
     }
@@ -163,90 +153,79 @@ export class PluginRegistry {
   }
 
   /**
-   * Initialize all registered plugins in correct dependency order
+   * INITIALISE THE REGISTRY – runs once no-matter-how-many calls   *
    */
   async initialize(): Promise<void> {
-    if (this.initialized) {
-      console.log('initialize already initialized');
-      throw new PluginRegistrationError('Registry is already initialized');
+    if (this.destroyed) {
+      throw new PluginRegistrationError('Registry has been destroyed');
     }
 
-    this.isInitializing = true;
+    // If an initialisation is already in-flight (or finished)
+    // return the very same promise so callers can await it.
+    if (this.initPromise) {
+      return this.initPromise;
+    }
 
-    try {
-      // Ensure engine is initialized first
-      await this.ensureEngineInitialized();
+    // Wrap your existing body in a single promise and cache it
+    this.initPromise = (async () => {
+      if (this.initialized) {
+        throw new PluginRegistrationError('Registry is already initialized');
+      }
 
-      // Process registrations until no new ones are added
-      while (this.pendingRegistrations.length > 0) {
-        // Move current pending registrations to processing
-        this.processingRegistrations = [...this.pendingRegistrations];
-        this.pendingRegistrations = [];
+      this.isInitializing = true;
 
-        console.log('initialize processingRegistrations', this.processingRegistrations);
+      try {
+        /* ---------------- original body starts ------------------ */
+        await this.ensureEngineInitialized();
 
-        // Build dependency graph for current batch
-        for (const reg of this.processingRegistrations) {
-          const dependsOn = new Set<string>();
-          // Consider both required and optional capabilities for load order
-          const allDependencies = [
-            ...reg.package.manifest.requires,
-            ...reg.package.manifest.optional,
-          ];
-          for (const capability of allDependencies) {
-            const provider = this.processingRegistrations.find((r) =>
-              r.package.manifest.provides.includes(capability),
-            );
-            if (provider) {
-              dependsOn.add(provider.package.manifest.id);
+        while (this.pendingRegistrations.length > 0) {
+          this.processingRegistrations = [...this.pendingRegistrations];
+          this.pendingRegistrations = [];
+
+          for (const reg of this.processingRegistrations) {
+            const dependsOn = new Set<string>();
+            const allDeps = [...reg.package.manifest.requires, ...reg.package.manifest.optional];
+            for (const cap of allDeps) {
+              const provider = this.processingRegistrations.find((r) =>
+                r.package.manifest.provides.includes(cap),
+              );
+              if (provider) dependsOn.add(provider.package.manifest.id);
             }
+            this.resolver.addNode(reg.package.manifest.id, [...dependsOn]);
           }
-          this.resolver.addNode(reg.package.manifest.id, Array.from(dependsOn));
+
+          const loadOrder = this.resolver.resolveLoadOrder();
+          for (const id of loadOrder) {
+            const reg = this.processingRegistrations.find((r) => r.package.manifest.id === id)!;
+            await this.initializePlugin(reg.package.manifest, reg.package.create, reg.config);
+          }
+
+          this.processingRegistrations = [];
+          this.resolver = new DependencyResolver();
         }
 
-        // Get load order and initialize current batch
-        const loadOrder = this.resolver.resolveLoadOrder();
-        for (const pluginId of loadOrder) {
-          const registration = this.processingRegistrations.find(
-            (r) => r.package.manifest.id === pluginId,
-          );
-          if (registration) {
-            await this.initializePlugin(
-              registration.package.manifest,
-              registration.package.create,
-              registration.config as Partial<unknown>,
-            );
-          }
-        }
-
-        // Clear processed registrations
-        this.processingRegistrations = [];
-        this.resolver = new DependencyResolver();
-      }
-
-      // Call postInitialize on all plugins after everything is initialized
-      for (const plugin of this.plugins.values()) {
-        if (plugin.postInitialize) {
-          try {
-            await plugin.postInitialize();
-          } catch (error) {
-            console.error(`Error in postInitialize for plugin ${plugin.id}:`, error);
+        for (const plugin of this.plugins.values()) {
+          await plugin.postInitialize?.().catch((e) => {
+            console.error(`Error in postInitialize for plugin ${plugin.id}`, e);
             this.status.set(plugin.id, 'error');
-          }
+          });
         }
-      }
 
-      this.initialized = true;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new CircularDependencyError(
-          `Failed to resolve plugin dependencies: ${error.message}`,
-        );
+        this.initialized = true;
+        /* ----------------- original body ends ------------------- */
+      } catch (err) {
+        if (err instanceof Error) {
+          throw new CircularDependencyError(
+            `Failed to resolve plugin dependencies: ${err.message}`,
+          );
+        }
+        throw err;
+      } finally {
+        this.isInitializing = false;
       }
-      throw error;
-    } finally {
-      this.isInitializing = false;
-    }
+    })();
+
+    return this.initPromise;
   }
 
   /**
@@ -525,19 +504,31 @@ export class PluginRegistry {
     }
   }
 
-  public async destroy(): Promise<void> {
+  isDestroyed(): boolean {
+    return this.destroyed;
+  }
+
+  /**
+   * DESTROY EVERYTHING – waits for any ongoing initialise(), once  *
+   */
+  async destroy(): Promise<void> {
     if (this.destroyed) return;
     this.destroyed = true;
 
-    // 1. destroy plugins (unchanged)
+    // If initialisation is still underway, wait (success OR failure)
+    try {
+      await this.initPromise;
+    } catch {
+      /* ignore – still need to clean up */
+    }
+
+    /* ------- original teardown, unchanged except the guard ------ */
     for (const plugin of Array.from(this.plugins.values()).reverse()) {
       await plugin.destroy?.();
     }
 
-    // 2. sever links the store is holding
     this.store.destroy();
 
-    // 3. clear our own maps / arrays
     this.plugins.clear();
     this.manifests.clear();
     this.capabilities.clear();
@@ -545,23 +536,6 @@ export class PluginRegistry {
     this.pendingRegistrations.length = 0;
     this.processingRegistrations.length = 0;
 
-    // 4. tear down the engine if it supports it
-    if (this.engine.destroy) {
-      const promise = new Promise<void>((resolve, reject) => {
-        const task = this.engine.destroy?.();
-        if (!task) {
-          resolve();
-          return;
-        }
-        task.wait((success) => {
-          if (success) {
-            resolve();
-          } else {
-            reject(new Error('Failed to destroy engine'));
-          }
-        }, ignore);
-      });
-      await promise;
-    }
+    await this.engine.destroy?.().toPromise();
   }
 }

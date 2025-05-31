@@ -69,6 +69,20 @@ export type TaskState<R, D> =
       reason: D;
     };
 
+export class TaskAbortedError extends Error {
+  constructor(reason: string) {
+    super(`Task aborted: ${reason}`);
+    this.name = 'TaskAbortedError';
+  }
+}
+
+export class TaskRejectedError extends Error {
+  constructor(reason: string) {
+    super(`Task rejected: ${reason}`);
+    this.name = 'TaskRejectedError';
+  }
+}
+
 /**
  * Base class of task
  *
@@ -86,6 +100,33 @@ export class Task<R, D> {
    * callbacks that will be executed when task is rejected
    */
   rejectedCallbacks: RejectedCallback<D>[] = [];
+
+  /**
+   * Promise that will be resolved when task is settled
+   */
+  private _promise: Promise<R> | null = null;
+
+  /**
+   * Convert task to promise
+   * @returns promise that will be resolved when task is settled
+   */
+  toPromise(): Promise<R> {
+    if (!this._promise) {
+      this._promise = new Promise((resolve, reject) => {
+        this.wait(
+          (result) => resolve(result),
+          (error) => {
+            if (error.type === 'abort') {
+              reject(new TaskAbortedError(error.reason as string));
+            } else {
+              reject(new TaskRejectedError(error.reason as string));
+            }
+          },
+        );
+      });
+    }
+    return this._promise;
+  }
 
   /**
    * wait for task to be settled

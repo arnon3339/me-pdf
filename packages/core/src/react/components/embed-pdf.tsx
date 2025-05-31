@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
+
 import { PDFContext, PDFContextState } from '../context';
 
 interface EmbedPDFProps {
@@ -16,18 +17,29 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [pluginsReady, setPluginsReady] = useState<boolean>(false);
 
+  const stableOnInit = useCallback(onInitialized, [onInitialized]);
+
   useEffect(() => {
-    console.log('useEffect', engine, onInitialized, plugins);
+    const pdfViewer = new PluginRegistry(engine);
+    pdfViewer.registerPluginBatch(plugins);
+
     const initialize = async () => {
-      const pdfViewer = new PluginRegistry(engine);
-
-      // Register the ViewportPlugin with the container
-      pdfViewer.registerPluginBatch(plugins);
-
-      // Initialize the viewer and load the document
       await pdfViewer.initialize();
-      await onInitialized(pdfViewer);
-      pdfViewer.pluginsReady().then(() => setPluginsReady(true));
+      // if the registry is destroyed, don't do anything
+      if (pdfViewer.isDestroyed()) {
+        return;
+      }
+      await stableOnInit(pdfViewer);
+      // if the registry is destroyed, don't do anything
+      if (pdfViewer.isDestroyed()) {
+        return;
+      }
+
+      pdfViewer.pluginsReady().then(() => {
+        if (!pdfViewer.isDestroyed()) {
+          setPluginsReady(true);
+        }
+      });
 
       // Provide the registry to children via context
       setRegistry(pdfViewer);
@@ -35,11 +47,14 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
     };
 
     initialize().catch(console.error);
-  }, [engine, onInitialized, plugins]);
 
-  console.log('registry', registry);
-  console.log('isInitializing', isInitializing);
-  console.log('pluginsReady', pluginsReady);
+    return () => {
+      pdfViewer.destroy();
+      setRegistry(null);
+      setIsInitializing(true);
+      setPluginsReady(false);
+    };
+  }, [engine, stableOnInit, plugins]);
 
   return (
     <PDFContext.Provider value={{ registry, isInitializing, pluginsReady }}>

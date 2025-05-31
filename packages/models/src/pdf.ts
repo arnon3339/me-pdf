@@ -1872,6 +1872,6 @@ export type PdfEngineMethodArgs<P extends PdfEngineMethodName> = Readonly<
  *
  * @public
  */
-export type PdfEngineMethodReturnType<P extends PdfEngineMethodName> = Readonly<
-  ReturnType<Required<PdfEngine>[P]>
+export type PdfEngineMethodReturnType<P extends PdfEngineMethodName> = ReturnType<
+  Required<PdfEngine>[P]
 >;
