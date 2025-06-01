@@ -177,8 +177,16 @@ export class PluginRegistry {
       try {
         /* ---------------- original body starts ------------------ */
         await this.ensureEngineInitialized();
+        // Check if destroyed after engine initialization
+        if (this.destroyed) {
+          return;
+        }
 
         while (this.pendingRegistrations.length > 0) {
+          // Check if destroyed before processing each batch
+          if (this.destroyed) {
+            return;
+          }
           this.processingRegistrations = [...this.pendingRegistrations];
           this.pendingRegistrations = [];
 
@@ -512,7 +520,7 @@ export class PluginRegistry {
    * DESTROY EVERYTHING – waits for any ongoing initialise(), once  *
    */
   async destroy(): Promise<void> {
-    if (this.destroyed) return;
+    if (this.destroyed) throw new PluginRegistrationError('Registry has already been destroyed');
     this.destroyed = true;
 
     // If initialisation is still underway, wait (success OR failure)
@@ -535,7 +543,5 @@ export class PluginRegistry {
     this.status.clear();
     this.pendingRegistrations.length = 0;
     this.processingRegistrations.length = 0;
-
-    await this.engine.destroy?.().toPromise();
   }
 }
