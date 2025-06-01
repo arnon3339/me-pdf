@@ -3,17 +3,17 @@ import { withIcons } from 'nextra/components'
 import { useMDXComponents as getNextraMDXComponents } from 'nextra/mdx-components'
 import type { MDXComponents } from 'nextra/mdx-components'
 import { removeLinks } from 'nextra/remove-links'
-import type { ComponentProps, FC } from 'react'
+import type { ComponentProps, FC, HTMLAttributes, ReactNode } from 'react'
 import { Link } from './link'
 import { H1, H2, H3, H4, H5, H6 } from './heading'
 import { ClientWrapper } from './wrapper.client'
 import { Sidebar } from '../sidebar'
 import { Table } from './table'
 import { Code } from './code'
-import { Callout } from '../callout'
 import { Pre } from './pre'
 import { PdfMergeTool } from '../tools/pdf-merge'
 import ToolsOverview from '../tools-overview'
+import { Heading, MDXWrapper } from 'nextra'
 
 const Blockquote: FC<ComponentProps<'blockquote'>> = (props) => (
   <blockquote
@@ -24,6 +24,43 @@ const Blockquote: FC<ComponentProps<'blockquote'>> = (props) => (
     {...props}
   />
 )
+
+type WrapperComponentProps = Parameters<MDXWrapper>[0] &
+  HTMLAttributes<HTMLDivElement>
+
+const WrapperComponent = ({
+  toc,
+  children,
+  metadata,
+  bottomContent,
+  ...props
+}: WrapperComponentProps): ReactNode => {
+  // Fix the type issue by properly typing the toc transformation
+  const processedToc: Heading[] = toc.map((item) => ({
+    ...item,
+    value: removeLinks(item.value) as string,
+  }))
+
+  return (
+    <div className="mx-auto flex max-w-7xl px-4 sm:px-6 lg:px-8" {...props}>
+      <Sidebar toc={processedToc} floatTOC={true} />
+
+      <ClientWrapper
+        toc={processedToc}
+        metadata={metadata}
+        bottomContent={bottomContent}
+      >
+        <main
+          data-pagefind-body={
+            (metadata as any).searchable !== false || undefined
+          }
+        >
+          {children}
+        </main>
+      </ClientWrapper>
+    </div>
+  )
+}
 
 const DEFAULT_COMPONENTS = getNextraMDXComponents({
   a: Link,
@@ -60,32 +97,7 @@ const DEFAULT_COMPONENTS = getNextraMDXComponents({
       {...props}
     />
   ),
-  wrapper({ toc, children, metadata, bottomContent, ...props }) {
-    // @ts-expect-error fixme
-    toc = toc.map((item) => ({
-      ...item,
-      value: removeLinks(item.value),
-    }))
-    return (
-      <div className="mx-auto flex max-w-7xl px-4 sm:px-6 lg:px-8" {...props}>
-        <Sidebar toc={toc} floatTOC={true} />
-
-        <ClientWrapper
-          toc={toc}
-          metadata={metadata}
-          bottomContent={bottomContent}
-        >
-          <main
-            data-pagefind-body={
-              (metadata as any).searchable !== false || undefined
-            }
-          >
-            {children}
-          </main>
-        </ClientWrapper>
-      </div>
-    )
-  },
+  wrapper: WrapperComponent,
   PdfMergeTool,
   ToolsOverview,
 })
