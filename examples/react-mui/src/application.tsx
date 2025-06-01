@@ -6,6 +6,8 @@ import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/react';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
+import { RenderPluginPackage } from '@embedpdf/plugin-render';
+import { RenderLayer } from '@embedpdf/plugin-render/react';
 import { CircularProgress } from '@mui/material';
 
 interface AppProps {
@@ -39,6 +41,7 @@ function App({ engine }: AppProps) {
           createPluginRegistration(ScrollPluginPackage, {
             strategy: ScrollStrategy.Horizontal,
           }),
+          createPluginRegistration(RenderPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (
@@ -54,7 +57,13 @@ function App({ engine }: AppProps) {
             >
               {!pluginsReady && <CircularProgress />}
               {pluginsReady && (
-                <Scroller renderPage={({ pageNumber }) => <div>Page {pageNumber}</div>} />
+                <Scroller
+                  renderPage={({ document, width, height, pageIndex }) => (
+                    <div key={document?.id} style={{ width, height }}>
+                      <RenderLayer pageIndex={pageIndex} />
+                    </div>
+                  )}
+                />
               )}
             </Viewport>
           </>
