@@ -45,6 +45,8 @@
     "@types/mdx": "^2.0.8",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
+    "eslint": "^9.28.0",
+    "eslint-config-next": "^15.3.3",
     "exports-loader": "^5.0.0",
     "file-loader": "^6.2.0",
     "fs-extra": "^11.3.0",

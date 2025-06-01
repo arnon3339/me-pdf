@@ -226,9 +226,13 @@ const HeaderAndHero = () => {
                         {'\n'}
                         <span className="text-blue-400">&lt;div</span>{' '}
                         <span className="text-green-400">id</span>=
-                        <span className="text-yellow-300">"pdf-viewer"</span>{' '}
+                        <span className="text-yellow-300">
+                          &quot;pdf-viewer&quot;
+                        </span>{' '}
                         <span className="text-green-400">style</span>=
-                        <span className="text-yellow-300">"height: 500px"</span>
+                        <span className="text-yellow-300">
+                          &quot;height: 500px&quot;
+                        </span>
                         <span className="text-blue-400">&gt;&lt;/div&gt;</span>
                         {'\n\n'}
                         <span className="text-gray-500">
@@ -238,7 +242,9 @@ const HeaderAndHero = () => {
                         <span className="text-blue-400">&lt;script</span>{' '}
                         <span className="text-green-400">async</span>{' '}
                         <span className="text-green-400">type</span>=
-                        <span className="text-yellow-300">"module"</span>
+                        <span className="text-yellow-300">
+                          &quot;module&quot;
+                        </span>
                         <span className="text-blue-400">&gt;</span>
                         {'\n'}
                         {'  '}
@@ -246,7 +252,7 @@ const HeaderAndHero = () => {
                         <span className="text-white">EmbedPDF</span>{' '}
                         <span className="text-purple-400">from</span>{' '}
                         <span className="text-yellow-300">
-                          'https://snippet.embedpdf.com/embedpdf.js'
+                          &apos;https://snippet.embedpdf.com/embedpdf.js&apos;
                         </span>
                         ;{'\n\n'}
                         {'  '}
@@ -258,18 +264,23 @@ const HeaderAndHero = () => {
                         {'\n'}
                         {'    '}
                         <span className="text-red-300">type</span>:
-                        <span className="text-yellow-300">'container'</span>,
-                        {'\n'}
+                        <span className="text-yellow-300">
+                          &apos;container&apos;
+                        </span>
+                        ,{'\n'}
                         {'    '}
                         <span className="text-red-300">target</span>:
                         <span className="text-white">document</span>.
                         <span className="text-blue-300">getElementById</span>(
-                        <span className="text-yellow-300">'pdf-viewer'</span>),
+                        <span className="text-yellow-300">
+                          &apos;pdf-viewer&apos;
+                        </span>
+                        ),
                         {'\n'}
                         {'    '}
                         <span className="text-red-300">src</span>:
                         <span className="text-yellow-300">
-                          'https://snippet.embedpdf.com/ebook.pdf'
+                          &apos;https://snippet.embedpdf.com/ebook.pdf&apos;
                         </span>
                         {'\n'}
                         {'  '}
@@ -309,7 +320,7 @@ const HeaderAndHero = () => {
           {/* Testimonial section */}
           <div className="relative mt-24">
             <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 transform font-serif text-6xl text-gray-200">
-              "
+              &quot;
             </div>
             <div className="relative mx-auto max-w-2xl text-center">
               <p className="mb-4 text-xl italic text-gray-600">
@@ -340,7 +351,7 @@ const HeaderAndHero = () => {
                 Ready to transform your PDF experience?
               </h2>
               <p className="mx-auto mb-8 max-w-2xl text-gray-600">
-                Join thousands of developers who've simplified their PDF
+                Join thousands of developers who&apos;ve simplified their PDF
                 integration with EmbedPDF.
               </p>
               <div className="flex flex-col justify-center gap-4 sm:flex-row">

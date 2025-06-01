@@ -282,20 +282,30 @@ const GettingStartedCard = () => {
               <p className="text-green-400">$ npm install @embedpdf/engine</p>
               <p className="mt-2 text-gray-500"># or with yarn</p>
               <p className="text-green-400">$ yarn add @embedpdf/engine</p>
-              <p className="mt-4 text-gray-400">// Import in your project</p>
+              <p className="mt-4 text-gray-400">
+                {'// Import in your project'}
+              </p>
               <p className="text-blue-300">
                 import {'{ PDFViewer }'} from{' '}
-                <span className="text-orange-300">'@embedpdf/engine'</span>;
+                <span className="text-orange-300">
+                  &apos;@embedpdf/engine&apos;
+                </span>
+                ;
               </p>
-              <p className="mt-2 text-gray-400">// Initialize the viewer</p>
+              <p className="mt-2 text-gray-400">{'// Initialize the viewer'}</p>
               <p className="text-blue-300">
                 const viewer = new PDFViewer({'{'}
                 <br />
                 &nbsp;&nbsp;container:{' '}
-                <span className="text-orange-300">'#pdf-container'</span>,
+                <span className="text-orange-300">
+                  &apos;#pdf-container&apos;
+                </span>
+                ,
                 <br />
                 &nbsp;&nbsp;url:{' '}
-                <span className="text-orange-300">'./document.pdf'</span>
+                <span className="text-orange-300">
+                  &apos;./document.pdf&apos;
+                </span>
                 <br />
                 {'}'});
               </p>
@@ -589,7 +599,7 @@ function MyPDFViewer() {
                 <h2 className="mb-4 text-2xl font-bold">Need Help?</h2>
                 <p className="mb-6 text-gray-600">
                   Join our community for support, discussions, and to contribute
-                  to EmbedPDF's development.
+                  to EmbedPDF&apos;s development.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <a

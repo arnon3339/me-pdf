@@ -72,7 +72,7 @@ export default function GetLastErrorDemo() {
               Error: {result.errorMessage} (Code: {result.errorCode})
             </p>
             <p className="mb-4 rounded-md border border-blue-500 bg-blue-100 px-4 py-3 text-blue-700">
-              Hint: The password is "embedpdf"
+              Hint: The password is &quot;embedpdf&quot;
             </p>
             <div className="flex space-x-2">
               <input
