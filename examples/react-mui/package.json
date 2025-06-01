@@ -16,6 +16,7 @@
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
+    "@embedpdf/plugin-tiling": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/engines": "workspace:*",

@@ -8,7 +8,9 @@ import { Scroller } from '@embedpdf/plugin-scroll/react';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/react';
-import { CircularProgress } from '@mui/material';
+import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
+import { TilingLayer } from '@embedpdf/plugin-tiling/react';
+import { CircularProgress, Box } from '@mui/material';
 
 interface AppProps {
   engine: PdfEngine;
@@ -39,9 +41,14 @@ function App({ engine }: AppProps) {
             viewportGap: 10,
           }),
           createPluginRegistration(ScrollPluginPackage, {
-            strategy: ScrollStrategy.Horizontal,
+            strategy: ScrollStrategy.Vertical,
           }),
           createPluginRegistration(RenderPluginPackage, {}),
+          createPluginRegistration(TilingPluginPackage, {
+            tileSize: 768,
+            overlapPx: 2.5,
+            extraRings: 0,
+          }),
         ]}
       >
         {({ pluginsReady }) => (
@@ -58,10 +65,11 @@ function App({ engine }: AppProps) {
               {!pluginsReady && <CircularProgress />}
               {pluginsReady && (
                 <Scroller
-                  renderPage={({ document, width, height, pageIndex }) => (
-                    <div key={document?.id} style={{ width, height }}>
+                  renderPage={({ document, width, height, pageIndex, scale }) => (
+                    <Box key={document?.id} sx={{ width, height, position: 'relative' }}>
                       <RenderLayer pageIndex={pageIndex} />
-                    </div>
+                      <TilingLayer pageIndex={pageIndex} scale={scale} />
+                    </Box>
                   )}
                 />
               )}

@@ -86,6 +86,9 @@ importers:
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../../packages/plugin-scroll
+      '@embedpdf/plugin-tiling':
+        specifier: workspace:*
+        version: link:../../packages/plugin-tiling
       '@embedpdf/plugin-viewport':
         specifier: workspace:*
         version: link:../../packages/plugin-viewport
