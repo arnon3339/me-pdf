@@ -1,4 +1,4 @@
-import { BasePlugin, PluginRegistry, setPages } from '@embedpdf/core';
+import { BasePlugin, createEmitter, PluginRegistry, setPages } from '@embedpdf/core';
 import { PdfDocumentObject, PdfPageObject } from '@embedpdf/models';
 import { LoaderPlugin } from '@embedpdf/plugin-loader';
 import { SpreadCapability, SpreadMode, SpreadPluginConfig, SpreadState } from './types';
@@ -12,7 +12,8 @@ export class SpreadPlugin extends BasePlugin<
   SpreadAction
 > {
   static readonly id = 'spread' as const;
-  private spreadHandlers: ((spreadMode: SpreadMode) => void)[] = [];
+
+  private readonly spreadEmitter$ = createEmitter<SpreadMode>();
 
   constructor(id: string, registry: PluginRegistry, cfg: SpreadPluginConfig) {
     super(id, registry);
@@ -34,10 +35,9 @@ export class SpreadPlugin extends BasePlugin<
   }
 
   getSpreadPagesObjects(pages: PdfPageObject[]): PdfPageObject[][] {
-    const state = this.getState();
     if (!pages.length) return [];
 
-    switch (state.spreadMode) {
+    switch (this.state.spreadMode) {
       case SpreadMode.None:
         return pages.map((page) => [page]);
 
@@ -60,8 +60,8 @@ export class SpreadPlugin extends BasePlugin<
   }
 
   setSpreadMode(mode: SpreadMode): void {
-    const currentMode = this.getState().spreadMode;
-    const document = this.getCoreState().core.document;
+    const currentMode = this.state.spreadMode;
+    const document = this.coreState.core.document;
     if (!document) {
       throw new Error('Document not loaded');
     }
@@ -73,19 +73,19 @@ export class SpreadPlugin extends BasePlugin<
   }
 
   private notifySpreadChange(spreadMode: SpreadMode): void {
-    this.spreadHandlers.forEach((handler) => handler(spreadMode));
+    this.spreadEmitter$.emit(spreadMode);
   }
 
   protected buildCapability(): SpreadCapability {
     return {
-      onSpreadChange: (handler) => this.spreadHandlers.push(handler),
+      onSpreadChange: this.spreadEmitter$.on,
       setSpreadMode: (mode) => this.setSpreadMode(mode),
-      getSpreadMode: () => this.getState().spreadMode,
+      getSpreadMode: () => this.state.spreadMode,
       getSpreadPagesObjects: (pages) => this.getSpreadPagesObjects(pages),
     };
   }
 
   async destroy(): Promise<void> {
-    this.spreadHandlers = [];
+    this.spreadEmitter$.clear();
   }
 }
