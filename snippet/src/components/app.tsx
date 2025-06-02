@@ -898,7 +898,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'sidebarMenu',
     label: 'Sidebar Menu',
     type: 'menu',
-    children: ['thumbnails', 'outline', 'attachments'],
+    children: ['thumbnails', 'outline' /*, 'attachments'*/],
   },
   thumbnails: {
     id: 'thumbnails',
