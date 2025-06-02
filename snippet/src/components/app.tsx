@@ -36,7 +36,6 @@ import {
   UIPlugin,
   UIPluginConfig,
   UIPluginPackage,
-  hasActive,
   isActive,
   UI_PLUGIN_ID,
 } from '@embedpdf/plugin-ui';
@@ -86,13 +85,9 @@ import {
   SelectionState,
 } from '@embedpdf/plugin-selection';
 import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
-import { TilingPlugin, TilingPluginPackage } from '@embedpdf/plugin-tiling';
+import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
-import {
-  THUMBNAIL_PLUGIN_ID,
-  ThumbnailPlugin,
-  ThumbnailPluginPackage,
-} from '@embedpdf/plugin-thumbnail';
+import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 import {
   ANNOTATION_PLUGIN_ID,
   AnnotationPlugin,
@@ -102,7 +97,7 @@ import {
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 import { PinchWrapper } from '@embedpdf/plugin-zoom/preact';
 import { LoadingIndicator } from './ui/loading-indicator';
-import { PrintPluginPackage, PrintPlugin } from '@embedpdf/plugin-print';
+import { PrintPluginPackage } from '@embedpdf/plugin-print';
 import { PrintProvider } from '@embedpdf/plugin-print/preact';
 import {
   FULLSCREEN_PLUGIN_ID,
@@ -112,6 +107,12 @@ import {
 } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
+import {
+  DOWNLOAD_PLUGIN_ID,
+  DownloadPlugin,
+  DownloadPluginPackage,
+} from '@embedpdf/plugin-download';
+import { Download } from '@embedpdf/plugin-download/preact';
 
 export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
@@ -413,8 +414,11 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcut: 'Shift+D',
     //shortcutLabel: 'D',
     type: 'action',
-    action: () => {
-      console.log('download');
+    action: (registry) => {
+      const download = registry.getPlugin<DownloadPlugin>(DOWNLOAD_PLUGIN_ID)?.provides();
+      if (download) {
+        download.download();
+      }
     },
   },
   openFile: {
@@ -2004,6 +2008,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(PrintPluginPackage, pluginConfigs.print),
           createPluginRegistration(FullscreenPluginPackage, {}),
           createPluginRegistration(BookmarkPluginPackage, {}),
+          createPluginRegistration(DownloadPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (
@@ -2097,6 +2102,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                     {commandMenu}
                   </div>
                   <FilePicker />
+                  <Download />
                 </PrintProvider>
               </FullscreenProvider>
             )}

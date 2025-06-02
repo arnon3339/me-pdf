@@ -1,5 +1,5 @@
 {
-  "name": "@embedpdf/plugin-fullscreen",
+  "name": "@embedpdf/plugin-download",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -32,8 +32,8 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@embedpdf/core": "workspace:*",
     "@embedpdf/models": "workspace:*",
-    "@embedpdf/plugin-loader": "workspace:*",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
