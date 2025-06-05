@@ -18,7 +18,7 @@ export class RotatePlugin extends BasePlugin<RotatePluginConfig, RotateCapabilit
   constructor(id: string, registry: PluginRegistry, cfg: RotatePluginConfig) {
     super(id, registry);
     this.resetReady();
-    const rotation = cfg.defaultRotation ?? this.getCoreState().core.rotation;
+    const rotation = cfg.defaultRotation ?? this.coreState.core.rotation;
     this.setRotation(rotation);
     this.markReady();
   }
@@ -26,7 +26,7 @@ export class RotatePlugin extends BasePlugin<RotatePluginConfig, RotateCapabilit
   async initialize(_config: RotatePluginConfig): Promise<void> {}
 
   private setRotation(rotation: Rotation): void {
-    const pages = this.getCoreState().core.pages;
+    const pages = this.coreState.core.pages;
     if (!pages) {
       throw new Error('Pages not loaded');
     }
@@ -35,12 +35,12 @@ export class RotatePlugin extends BasePlugin<RotatePluginConfig, RotateCapabilit
   }
 
   private rotateForward(): void {
-    const rotation = getNextRotation(this.getCoreState().core.rotation);
+    const rotation = getNextRotation(this.coreState.core.rotation);
     this.setRotation(rotation);
   }
 
   private rotateBackward(): void {
-    const rotation = getPreviousRotation(this.getCoreState().core.rotation);
+    const rotation = getPreviousRotation(this.coreState.core.rotation);
     this.setRotation(rotation);
   }
 
@@ -48,11 +48,11 @@ export class RotatePlugin extends BasePlugin<RotatePluginConfig, RotateCapabilit
     return {
       onRotateChange: this.rotate$.on,
       setRotation: (rotation) => this.setRotation(rotation),
-      getRotation: () => this.getCoreState().core.rotation,
+      getRotation: () => this.coreState.core.rotation,
       rotateForward: () => this.rotateForward(),
       rotateBackward: () => this.rotateBackward(),
       getMatrix: ({ w = 0, h = 0, asString = true } = {}) =>
-        rotationMatrix(this.getCoreState().core.rotation, w, h, asString),
+        rotationMatrix(this.coreState.core.rotation, w, h, asString),
     };
   }
 

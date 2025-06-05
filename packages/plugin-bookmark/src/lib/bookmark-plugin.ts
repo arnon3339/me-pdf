@@ -14,9 +14,7 @@ export class BookmarkPlugin extends BasePlugin<BookmarkPluginConfig, BookmarkCap
     this.engine = engine;
   }
 
-  async initialize(config: BookmarkPluginConfig): Promise<void> {
-    console.log('initialize', config);
-  }
+  async initialize(_: BookmarkPluginConfig): Promise<void> {}
 
   protected buildCapability(): BookmarkCapability {
     return {

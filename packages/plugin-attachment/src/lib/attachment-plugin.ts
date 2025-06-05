@@ -14,9 +14,7 @@ export class AttachmentPlugin extends BasePlugin<AttachmentPluginConfig, Attachm
     this.engine = engine;
   }
 
-  async initialize(config: AttachmentPluginConfig): Promise<void> {
-    console.log('initialize', config);
-  }
+  async initialize(_: AttachmentPluginConfig): Promise<void> {}
 
   protected buildCapability(): AttachmentCapability {
     return {};

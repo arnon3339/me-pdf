@@ -255,9 +255,9 @@ importers:
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
-      '@embedpdf/plugin-loader':
+      '@embedpdf/plugin-interaction-manager':
         specifier: workspace:*
-        version: link:../plugin-loader
+        version: link:../plugin-interaction-manager
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.18
@@ -383,6 +383,62 @@ importers:
         specifier: ^5.0.0
         version: 5.8.3
 
+  packages/plugin-interaction:
+    dependencies:
+      preact:
+        specifier: ^10.26.4
+        version: 10.26.4
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../core
+      '@embedpdf/models':
+        specifier: workspace:*
+        version: link:../models
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.18
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.8.0)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.8.3
+
+  packages/plugin-interaction-manager:
+    dependencies:
+      preact:
+        specifier: ^10.26.4
+        version: 10.26.4
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../core
+      '@embedpdf/models':
+        specifier: workspace:*
+        version: link:../models
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.18
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.8.0)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.8.3
+
   packages/plugin-loader:
     dependencies:
       '@embedpdf/models':
@@ -410,6 +466,40 @@ importers:
       typescript:
         specifier: ^5.0.0
         version: 5.8.2
+
+  packages/plugin-pan:
+    dependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../core
+      preact:
+        specifier: ^10.26.4
+        version: 10.26.4
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@embedpdf/models':
+        specifier: workspace:*
+        version: link:../models
+      '@embedpdf/plugin-interaction-manager':
+        specifier: workspace:*
+        version: link:../plugin-interaction-manager
+      '@embedpdf/plugin-viewport':
+        specifier: workspace:*
+        version: link:../plugin-viewport
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.18
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.8.0)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.8.3
 
   packages/plugin-print:
     dependencies:
@@ -587,6 +677,9 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@embedpdf/plugin-interaction-manager':
+        specifier: workspace:*
+        version: link:../plugin-interaction-manager
       '@embedpdf/plugin-viewport':
         specifier: workspace:*
         version: link:../plugin-viewport
@@ -821,9 +914,15 @@ importers:
       '@embedpdf/plugin-fullscreen':
         specifier: workspace:*
         version: link:../packages/plugin-fullscreen
+      '@embedpdf/plugin-interaction-manager':
+        specifier: workspace:*
+        version: link:../packages/plugin-interaction-manager
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../packages/plugin-loader
+      '@embedpdf/plugin-pan':
+        specifier: workspace:*
+        version: link:../packages/plugin-pan
       '@embedpdf/plugin-print':
         specifier: workspace:*
         version: link:../packages/plugin-print

@@ -1,10 +1,12 @@
 /** @jsxImportSource preact */
 import { ComponentChildren, Fragment, JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { useAnnotationCapability } from '../hooks';
-import { PdfAnnotationObject, PdfAnnotationSubtype } from '@embedpdf/models';
+import { PdfAnnotationObject, PdfAnnotationSubtype, Position } from '@embedpdf/models';
 import { getAnnotationsByPageIndex } from '../../lib/selectors';
 import { HighlightAnnotation } from './annotations/highlight';
+import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/preact';
+import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 
 type AnnotationLayerProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
@@ -15,6 +17,7 @@ type AnnotationLayerProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & 
 export function AnnotationLayer({ pageIndex, scale, style, ...props }: AnnotationLayerProps) {
   const { provides: annotationProvides } = useAnnotationCapability();
   const [annotations, setAnnotations] = useState<PdfAnnotationObject[]>([]);
+  const { register } = usePointerHandlers({ pageIndex });
   const [selectionState, setSelectionState] = useState<{
     selectedPageIndex: number | undefined;
     selectedAnnotationId: number | undefined;
@@ -32,20 +35,27 @@ export function AnnotationLayer({ pageIndex, scale, style, ...props }: Annotatio
     }
   }, [annotationProvides]);
 
-  const handleLayerClick = (e: MouseEvent) => {
-    console.log('handleLayerClick', e.target, e.currentTarget);
-    // Only deselect if clicking directly on the layer (not on an annotation)
-    if (e.target === e.currentTarget && annotationProvides) {
-      annotationProvides.deselectAnnotation();
-    }
-  };
+  const handlers = useMemo(
+    (): PointerEventHandlers<MouseEvent> => ({
+      onPointerDown: (_, pe) => {
+        // Only deselect if clicking directly on the layer (not on an annotation)
+        if (pe.target === pe.currentTarget && annotationProvides) {
+          annotationProvides.deselectAnnotation();
+        }
+      },
+    }),
+    [annotationProvides],
+  );
+
+  useEffect(() => {
+    return register(handlers);
+  }, [register, handlers]);
 
   return (
     <div
       style={{
         ...style,
       }}
-      onClick={handleLayerClick}
       {...props}
     >
       {annotations.map((annotation) => {

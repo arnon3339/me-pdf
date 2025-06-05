@@ -1,16 +1,18 @@
 /** @jsxImportSource preact */
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useSelectionCapability } from '../hooks';
 import { glyphAt } from '@embedpdf/plugin-selection';
-import { PdfPageGeometry, Rect, restorePosition, Rotation, Size } from '@embedpdf/models';
+import { PdfPageGeometry, Rect } from '@embedpdf/models';
+import { useCursor, usePointerHandlers } from '@embedpdf/plugin-interaction-manager/preact';
+import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 
-type Props = { pageIndex: number; scale: number; rotation: Rotation; containerSize: Size };
+type Props = { pageIndex: number; scale: number };
 
-export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Props) {
+export function SelectionLayer({ pageIndex, scale }: Props) {
   const { provides: sel } = useSelectionCapability();
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const { register } = usePointerHandlers({ modeId: 'default', pageIndex });
   const [rects, setRects] = useState<Array<Rect>>([]);
-  const [hoveringText, setHoveringText] = useState(false);
+  const { setCursor, removeCursor } = useCursor();
 
   /* subscribe to rect updates */
   useEffect(() => {
@@ -20,64 +22,56 @@ export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Pr
     });
   }, [sel, pageIndex]);
 
-  /* pointer interaction (framework-specific, but tiny) */
+  /* cheap glyphAt cache for the active page */
+  let geoCache: PdfPageGeometry | undefined;
+  const cachedGlyphAt = useCallback((pt: { x: number; y: number }) => {
+    if (!geoCache) return -1;
+    return glyphAt(geoCache, pt);
+  }, []);
+
+  // Initialize geometry cache
   useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap || !sel) return;
-    const toPt = (e: PointerEvent) => {
-      const r = wrap.getBoundingClientRect();
-      const disp = { x: e.clientX - r.left, y: e.clientY - r.top };
-
-      return restorePosition(containerSize, disp, rotation, scale);
-    };
-    const onDown = (e: PointerEvent) => {
-      if (e.button) return;
-
-      // clear the selection
-      sel.clear();
-      sel.getGeometry(pageIndex).then((geo) => {
-        const g = glyphAt(geo, toPt(e));
-        if (g !== -1) sel.begin(pageIndex, g);
-      });
-      wrap.setPointerCapture(e.pointerId);
-    };
-    const onMove = (e: PointerEvent) => {
-      if (!sel) return;
-      const g = cachedGlyphAt(toPt(e));
-      setHoveringText(g !== -1);
-      if (g !== -1) sel.update(pageIndex, g);
-    };
-    const onUp = () => sel.end();
-
-    /* cheap glyphAt cache for the active page */
-    let geoCache: PdfPageGeometry | undefined;
-    const cachedGlyphAt = (pt: { x: number; y: number }) => {
-      if (!geoCache) return -1;
-      return glyphAt(geoCache, pt);
-    };
+    if (!sel) return;
     sel.getGeometry(pageIndex).then((g) => (geoCache = g));
+  }, [sel, pageIndex]);
 
-    wrap.addEventListener('pointerdown', onDown);
-    wrap.addEventListener('pointermove', onMove);
-    wrap.addEventListener('pointerup', onUp);
-    return () => {
-      wrap.removeEventListener('pointerdown', onDown);
-      wrap.removeEventListener('pointermove', onMove);
-      wrap.removeEventListener('pointerup', onUp);
-    };
-  }, [sel, pageIndex, scale]);
+  const handlers = useMemo(
+    (): PointerEventHandlers => ({
+      onPointerDown: (point) => {
+        if (!sel) return;
+
+        // clear the selection
+        sel.clear();
+        sel.getGeometry(pageIndex).then((geo) => {
+          const g = glyphAt(geo, point);
+          if (g !== -1) sel.begin(pageIndex, g);
+        });
+      },
+      onPointerMove: (point) => {
+        if (!sel) return;
+        const g = cachedGlyphAt(point);
+        if (g !== -1) {
+          setCursor('selection-text', 'text', 10);
+        } else {
+          removeCursor('selection-text');
+        }
+        if (g !== -1) sel.update(pageIndex, g);
+      },
+      onPointerUp: () => {
+        if (!sel) return;
+        sel.end();
+      },
+    }),
+    [sel, pageIndex, cachedGlyphAt],
+  );
+
+  useEffect(() => {
+    if (!register) return;
+    return register(handlers);
+  }, [register, handlers]);
 
   return (
-    <div
-      ref={wrapRef}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        mixBlendMode: 'multiply',
-        isolation: 'isolate',
-        cursor: hoveringText ? 'text' : 'default',
-      }}
-    >
+    <>
       {rects.map((b, i) => (
         <div
           key={i}
@@ -92,6 +86,6 @@ export function SelectionLayer({ pageIndex, scale, rotation, containerSize }: Pr
           }}
         />
       ))}
-    </div>
+    </>
   );
 }

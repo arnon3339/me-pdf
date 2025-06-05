@@ -29,11 +29,7 @@ export function HighlightAnnotation({
     (e: MouseEvent) => {
       e.stopPropagation();
       if (annotationProvides) {
-        if (isSelected) {
-          annotationProvides.deselectAnnotation();
-        } else {
-          annotationProvides.selectAnnotation(pageIndex, annotation.id);
-        }
+        annotationProvides.selectAnnotation(pageIndex, annotation.id);
       }
     },
     [annotationProvides, isSelected, pageIndex, annotation.id],
@@ -53,7 +49,7 @@ export function HighlightAnnotation({
           width: `${annotation.rect.size.width * scale}px`,
           height: `${annotation.rect.size.height * scale}px`,
         }}
-        onClick={handleClick}
+        onMouseDown={handleClick}
       >
         {annotation.segmentRects.map((rect, index) => (
           <div

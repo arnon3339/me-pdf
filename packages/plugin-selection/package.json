@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@embedpdf/plugin-viewport": "workspace:*",
+    "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
@@ -37,6 +38,7 @@
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
+    "@embedpdf/plugin-interaction-manager": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "preact": "^10.26.4"

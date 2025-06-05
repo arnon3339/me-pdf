@@ -914,8 +914,8 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
 
   const handleCommandClick = (command: MenuItem) => {
     if (command.type === 'action') {
-      ui.executeCommand(command.id);
       ui.hideCommandMenu();
+      ui.executeCommand(command.id);
     } else if (command.type === 'menu') {
       pushMenu(command.id);
     }

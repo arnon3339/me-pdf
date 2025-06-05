@@ -26,9 +26,7 @@ export class PrintPlugin extends BasePlugin<PrintPluginConfig, PrintCapability> 
     this.renderCapability = this.registry.getPlugin<RenderPlugin>(RenderPlugin.id)?.provides()!;
   }
 
-  async initialize(config: PrintPluginConfig): Promise<void> {
-    console.log('initialize', config);
-  }
+  async initialize(_config: PrintPluginConfig): Promise<void> {}
 
   protected buildCapability(): PrintCapability {
     return {

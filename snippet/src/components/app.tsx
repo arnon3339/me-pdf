@@ -3,7 +3,7 @@ import { h, Fragment } from 'preact';
 import styles from '../styles/index.css';
 import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration } from '@embedpdf/core';
-import { PdfAnnotationSubtype, PdfEngine, Rotation } from '@embedpdf/models';
+import { PdfAnnotationSubtype, PdfEngine, restorePosition, Rotation } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
   ViewportPluginPackage,
@@ -113,6 +113,18 @@ import {
   DownloadPluginPackage,
 } from '@embedpdf/plugin-download';
 import { Download } from '@embedpdf/plugin-download/preact';
+import {
+  INTERACTION_MANAGER_PLUGIN_ID,
+  InteractionManagerPlugin,
+  InteractionManagerPluginPackage,
+  InteractionManagerState,
+} from '@embedpdf/plugin-interaction-manager';
+import {
+  GlobalPointerProvider,
+  PagePointerProvider,
+} from '@embedpdf/plugin-interaction-manager/preact';
+import { PanMode } from '@embedpdf/plugin-pan/preact';
+import { PanPluginPackage } from '@embedpdf/plugin-pan';
 
 export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
@@ -238,6 +250,7 @@ type State = GlobalStoreState<{
   [SELECTION_PLUGIN_ID]: SelectionState;
   [ANNOTATION_PLUGIN_ID]: AnnotationState;
   [FULLSCREEN_PLUGIN_ID]: FullscreenState;
+  [INTERACTION_MANAGER_PLUGIN_ID]: InteractionManagerState;
 }>;
 
 export const icons: IconRegistry = {
@@ -392,6 +405,10 @@ export const icons: IconRegistry = {
   fileImport: {
     id: 'fileImport',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-file-import"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M5 13v-8a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-5.5m-9.5 -2h7m-3 -3l3 3l-3 3" /></svg>',
+  },
+  hand: {
+    id: 'hand',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-hand-stop"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5" /><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5" /><path d="M14 5.5a1.5 1.5 0 0 1 3 0v6.5" /><path d="M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47" /></svg>',
   },
 };
 
@@ -1216,6 +1233,26 @@ export const menuItems: Record<string, MenuItem<State>> = {
       storeState.plugins.ui.panel.leftPanel.open === true &&
       storeState.plugins.ui.panel.leftPanel.visibleChild === 'leftPanelAnnotationStyle',
   },
+  panMode: {
+    id: 'panMode',
+    label: 'Pan',
+    type: 'action',
+    icon: 'hand',
+    action: (registry) => {
+      const interactionManager = registry
+        .getPlugin<InteractionManagerPlugin>(INTERACTION_MANAGER_PLUGIN_ID)
+        ?.provides();
+      if (!interactionManager) return;
+
+      if (interactionManager.getActiveMode() === 'panMode') {
+        interactionManager.activate('default');
+      } else {
+        interactionManager.activate('panMode');
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'panMode',
+  },
 };
 
 // Define components
@@ -1257,6 +1294,19 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.copy, storeState),
+    }),
+  },
+  panModeButton: {
+    type: 'iconButton',
+    id: 'panModeButton',
+    props: {
+      commandId: 'panMode',
+      active: false,
+      label: 'Pan',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.panMode, storeState),
     }),
   },
   underlineButton: {
@@ -1453,6 +1503,8 @@ export const components: Record<string, UIComponentType<State>> = {
         className: 'hidden @min-[400px]:block @min-[600px]:hidden',
       },
       { componentId: 'zoom', priority: 8, className: 'hidden @min-[600px]:block' },
+      { componentId: 'divider1', priority: 9, className: 'hidden @min-[600px]:flex' },
+      { componentId: 'panModeButton', priority: 10, className: 'hidden @min-[600px]:block' },
     ],
     props: {
       gap: 10,
@@ -2009,6 +2061,8 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(FullscreenPluginPackage, {}),
           createPluginRegistration(BookmarkPluginPackage, {}),
           createPluginRegistration(DownloadPluginPackage, {}),
+          createPluginRegistration(InteractionManagerPluginPackage, {}),
+          createPluginRegistration(PanPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (
@@ -2023,76 +2077,99 @@ export function PDFViewer({ config }: PDFViewerProps) {
                       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
                         {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
                         <div className="relative flex w-full flex-1 overflow-hidden">
-                          <Viewport
+                          <GlobalPointerProvider
                             style={{
                               width: '100%',
                               height: '100%',
-                              flexGrow: 1,
-                              backgroundColor: '#f1f3f5',
-                              overflow: 'auto',
                             }}
                           >
-                            {!pluginsReady && (
-                              <div className="flex h-full w-full items-center justify-center">
-                                <LoadingIndicator size="lg" text="Loading PDF document..." />
-                              </div>
-                            )}
-                            {pluginsReady && (
-                              <PinchWrapper>
-                                <Scroller
-                                  renderPage={({
-                                    pageIndex,
-                                    scale,
-                                    rotation,
-                                    width,
-                                    height,
-                                    rotatedHeight,
-                                    rotatedWidth,
-                                    document,
-                                  }) => (
-                                    <Rotate pageSize={{ width, height }}>
-                                      <div
-                                        key={document?.id}
-                                        className="bg-white"
-                                        style={{ width, height }}
-                                      >
-                                        <RenderLayer
-                                          pageIndex={pageIndex}
-                                          className="absolute left-0 top-0 h-full w-full"
-                                        />
-                                        <TilingLayer
-                                          pageIndex={pageIndex}
-                                          scale={scale}
-                                          className="absolute left-0 top-0 h-full w-full"
-                                        />
-                                        <SearchLayer
-                                          pageIndex={pageIndex}
-                                          scale={scale}
-                                          className="absolute left-0 top-0 h-full w-full"
-                                        />
-                                        <SelectionLayer
-                                          pageIndex={pageIndex}
-                                          scale={scale}
-                                          rotation={rotation}
-                                          containerSize={{
-                                            width: rotatedWidth,
-                                            height: rotatedHeight,
-                                          }}
-                                        />
-                                        <AnnotationLayer
-                                          pageIndex={pageIndex}
-                                          scale={scale}
-                                          className="absolute"
-                                        />
-                                      </div>
-                                    </Rotate>
-                                  )}
-                                  overlayElements={floating.insideScroller}
-                                />
-                              </PinchWrapper>
-                            )}
-                            {floating.outsideScroller}
-                          </Viewport>
+                            <PanMode />
+                            <Viewport
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                flexGrow: 1,
+                                backgroundColor: '#f1f3f5',
+                                overflow: 'auto',
+                              }}
+                            >
+                              {!pluginsReady && (
+                                <div className="flex h-full w-full items-center justify-center">
+                                  <LoadingIndicator size="lg" text="Loading PDF document..." />
+                                </div>
+                              )}
+                              {pluginsReady && (
+                                <PinchWrapper>
+                                  <Scroller
+                                    renderPage={({
+                                      pageIndex,
+                                      scale,
+                                      rotation,
+                                      width,
+                                      height,
+                                      rotatedHeight,
+                                      rotatedWidth,
+                                      document,
+                                    }) => (
+                                      <Rotate pageSize={{ width, height }}>
+                                        <div
+                                          key={document?.id}
+                                          className="bg-white"
+                                          style={{ width, height }}
+                                        >
+                                          <RenderLayer
+                                            pageIndex={pageIndex}
+                                            className="absolute left-0 top-0 h-full w-full"
+                                          />
+                                          <TilingLayer
+                                            pageIndex={pageIndex}
+                                            scale={scale}
+                                            className="absolute left-0 top-0 h-full w-full"
+                                          />
+                                          <SearchLayer
+                                            pageIndex={pageIndex}
+                                            scale={scale}
+                                            className="absolute left-0 top-0 h-full w-full"
+                                          />
+                                          <PagePointerProvider
+                                            convertEventToPoint={(event, element) => {
+                                              const rect = element.getBoundingClientRect();
+                                              const displayPoint = {
+                                                x: event.clientX - rect.left,
+                                                y: event.clientY - rect.top,
+                                              };
+                                              return restorePosition(
+                                                { width: rotatedWidth, height: rotatedHeight },
+                                                displayPoint,
+                                                rotation,
+                                                scale,
+                                              );
+                                            }}
+                                            pageIndex={pageIndex}
+                                            style={{
+                                              position: 'absolute',
+                                              inset: 0,
+                                              mixBlendMode: 'multiply',
+                                              isolation: 'isolate',
+                                            }}
+                                          >
+                                            <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                                            <AnnotationLayer
+                                              pageIndex={pageIndex}
+                                              scale={scale}
+                                              className="absolute"
+                                            />
+                                          </PagePointerProvider>
+                                        </div>
+                                      </Rotate>
+                                    )}
+                                    overlayElements={floating.insideScroller}
+                                  />
+                                </PinchWrapper>
+                              )}
+                              {floating.outsideScroller}
+                            </Viewport>
+                          </GlobalPointerProvider>
                         </div>
                         {panels.right.length > 0 && <Fragment>{panels.right}</Fragment>}
                       </div>
