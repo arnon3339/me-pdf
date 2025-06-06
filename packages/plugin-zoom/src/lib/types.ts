@@ -1,4 +1,5 @@
 import { BasePluginConfig } from '@embedpdf/core';
+import { Rect } from '@embedpdf/models';
 import { ViewportMetrics } from '@embedpdf/plugin-viewport';
 
 /* ------------------------------------------------------------------ */
@@ -49,6 +50,13 @@ export interface ZoomCapability {
   /** absolute requests -------------------------------------------------- */
   zoomIn(): void;
   zoomOut(): void;
+
+  zoomToArea(pageIndex: number, rect: Rect): void;
+
+  /** zoom in on an area -------------------------------------------------- */
+  enableMarqueeZoom(): void;
+  disableMarqueeZoom(): void;
+  isMarqueeZoomActive(): boolean;
 
   getState(): ZoomState;
   getPresets(): ZoomPreset[];

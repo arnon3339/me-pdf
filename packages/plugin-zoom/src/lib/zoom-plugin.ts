@@ -25,6 +25,11 @@ import {
   VerticalZoomFocus,
   ZoomRequest,
 } from './types';
+import {
+  InteractionManagerCapability,
+  InteractionManagerPlugin,
+} from '@embedpdf/plugin-interaction-manager';
+import { Rect } from '@embedpdf/models';
 
 export class ZoomPlugin extends BasePlugin<
   ZoomPluginConfig,
@@ -39,6 +44,7 @@ export class ZoomPlugin extends BasePlugin<
   private readonly zoom$ = createEmitter<ZoomChangeEvent>();
   private readonly viewport: ViewportCapability;
   private readonly scroll: ScrollCapability;
+  private readonly interactionManager: InteractionManagerCapability | null;
   private readonly presets: ZoomPreset[];
   private readonly zoomRanges: ZoomRangeStep[];
 
@@ -52,6 +58,8 @@ export class ZoomPlugin extends BasePlugin<
 
     this.viewport = registry.getPlugin<ViewportPlugin>('viewport')!.provides();
     this.scroll = registry.getPlugin<ScrollPlugin>('scroll')!.provides();
+    const interactionManager = registry.getPlugin<InteractionManagerPlugin>('interaction-manager');
+    this.interactionManager = interactionManager?.provides() ?? null;
     this.minZoom = cfg.minZoom ?? 0.25;
     this.maxZoom = cfg.maxZoom ?? 10;
     this.zoomStep = cfg.zoomStep ?? 0.1;
@@ -66,6 +74,12 @@ export class ZoomPlugin extends BasePlugin<
     this.coreStore.onAction(SET_ROTATION, () => this.recalcAuto(VerticalZoomFocus.Top));
     this.coreStore.onAction(SET_PAGES, () => this.recalcAuto(VerticalZoomFocus.Top));
     this.coreStore.onAction(SET_DOCUMENT, () => this.recalcAuto(VerticalZoomFocus.Top));
+    this.interactionManager?.registerMode({
+      id: 'marqueeZoom',
+      scope: 'page',
+      exclusive: true,
+      cursor: 'zoom-in',
+    });
     this.resetReady();
   }
 
@@ -83,12 +97,20 @@ export class ZoomPlugin extends BasePlugin<
         const cur = this.state.currentZoomLevel;
         return this.handleRequest({ level: cur, delta: -this.stepFor(cur) });
       },
+      zoomToArea: (pageIndex, rect) => this.handleZoomToArea(pageIndex, rect),
       requestZoom: (level, c) => this.handleRequest({ level, center: c }),
       requestZoomBy: (d, c) => {
         const cur = this.state.currentZoomLevel;
         const target = this.toZoom(cur + d);
         return this.handleRequest({ level: target, center: c });
       },
+      enableMarqueeZoom: () => {
+        this.interactionManager?.activate('marqueeZoom');
+      },
+      disableMarqueeZoom: () => {
+        this.interactionManager?.activate('default');
+      },
+      isMarqueeZoomActive: () => this.interactionManager?.getActiveMode() === 'marqueeZoom',
       getState: () => this.state,
       getPresets: () => this.presets,
     };
@@ -293,6 +315,37 @@ export class ZoomPlugin extends BasePlugin<
       desiredScrollLeft: Math.max(0, desiredScrollLeft),
       desiredScrollTop: Math.max(0, desiredScrollTop),
     };
+  }
+
+  private handleZoomToArea(pageIndex: number, rect: Rect) {
+    const vp = this.viewport.getMetrics();
+    const oldZ = this.state.currentZoomLevel;
+
+    /* 1 – numeric zoom so the rect fits -------------------------------- */
+    const targetZoom = this.toZoom(
+      Math.min((vp.clientWidth - 2) / rect.size.width, (vp.clientHeight - 2) / rect.size.height),
+    );
+
+    /* 2 – centre of the rect in *content* coordinates ------------------ */
+    const layout = this.scroll.getLayout();
+    const pageLayout = layout.virtualItems
+      .flatMap((p) => p.pageLayouts)
+      .find((p) => p.pageIndex === pageIndex);
+
+    if (!pageLayout) return;
+
+    const cxContent = pageLayout.x + rect.origin.x + rect.size.width / 2;
+    const cyContent = pageLayout.y + rect.origin.y + rect.size.height / 2;
+
+    /* 3 – viewport coords of that centre *before* zoom ----------------- */
+    const centerVX = cxContent * oldZ - vp.scrollLeft;
+    const centerVY = cyContent * oldZ - vp.scrollTop;
+
+    /* 4 – reuse the generic handler ------------------------------------ */
+    this.handleRequest({
+      level: targetZoom,
+      center: { vx: centerVX, vy: centerVY },
+    });
   }
 
   /** recalculates Automatic / Fit* when viewport or pages change */

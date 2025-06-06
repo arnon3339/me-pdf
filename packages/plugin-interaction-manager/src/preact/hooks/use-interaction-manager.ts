@@ -2,13 +2,15 @@ import { useCapability, usePlugin } from '@embedpdf/core/preact';
 import {
   InteractionManagerPlugin,
   PointerEventHandlers,
-  RegisterHandlersOptions,
 } from '@embedpdf/plugin-interaction-manager';
+import { useState } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 
 export const useInteractionManager = () =>
   usePlugin<InteractionManagerPlugin>(InteractionManagerPlugin.id);
 export const useInteractionManagerCapability = () =>
   useCapability<InteractionManagerPlugin>(InteractionManagerPlugin.id);
+
 export function useCursor() {
   const { provides } = useInteractionManagerCapability();
   return {
@@ -38,4 +40,24 @@ export function usePointerHandlers({ modeId, pageIndex }: UsePointerHandlersOpti
             handlers,
           }),
   };
+}
+
+export function useIsPageExclusive() {
+  const { provides: cap } = useInteractionManagerCapability();
+
+  const [isPageExclusive, setIsPageExclusive] = useState<boolean>(() => {
+    const m = cap?.getActiveInteractionMode();
+    return m?.scope === 'page' && !!m.exclusive;
+  });
+
+  useEffect(() => {
+    if (!cap) return;
+
+    return cap.onModeChange(() => {
+      const mode = cap.getActiveInteractionMode();
+      setIsPageExclusive(mode?.scope === 'page' && !!mode?.exclusive);
+    });
+  }, [cap]);
+
+  return isPageExclusive;
 }
