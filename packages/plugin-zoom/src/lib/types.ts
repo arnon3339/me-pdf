@@ -1,4 +1,5 @@
 import { BasePluginConfig } from '@embedpdf/core';
+import { Rect } from '@embedpdf/models';
 import { ViewportMetrics } from '@embedpdf/plugin-viewport';
 
 /* ------------------------------------------------------------------ */
@@ -50,6 +51,13 @@ export interface ZoomCapability {
   zoomIn(): void;
   zoomOut(): void;
 
+  zoomToArea(pageIndex: number, rect: Rect): void;
+
+  /** zoom in on an area -------------------------------------------------- */
+  enableMarqueeZoom(): void;
+  disableMarqueeZoom(): void;
+  isMarqueeZoomActive(): boolean;
+
   getState(): ZoomState;
   getPresets(): ZoomPreset[];
 }
@@ -95,4 +103,8 @@ export interface ZoomRequest {
   delta?: number;
   center?: Point;
   focus?: VerticalZoomFocus;
+  /** Scroll so that the focal point ends up …
+   *  ▸ `"keep"`   (default) at the same viewport coords
+   *  ▸ `"center"` centred in the viewport  */
+  align?: 'keep' | 'center';
 }

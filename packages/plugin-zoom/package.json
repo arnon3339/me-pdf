@@ -33,6 +33,7 @@
     "@embedpdf/core": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
     "@embedpdf/plugin-scroll": "workspace:*",
+    "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@types/hammerjs": "^2.0.46",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
@@ -40,6 +41,9 @@
   },
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",
+    "@embedpdf/plugin-viewport": "workspace:*",
+    "@embedpdf/plugin-scroll": "workspace:*",
+    "@embedpdf/plugin-interaction-manager": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "preact": "^10.26.4"
