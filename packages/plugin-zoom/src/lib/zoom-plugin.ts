@@ -155,6 +155,7 @@ export class ZoomPlugin extends BasePlugin<
     delta = 0,
     center,
     focus = VerticalZoomFocus.Center,
+    align = 'keep',
   }: ZoomRequest) {
     const metrics = this.viewport.getMetrics();
     const oldZoom = this.state.currentZoomLevel;
@@ -190,6 +191,7 @@ export class ZoomPlugin extends BasePlugin<
       oldZoom,
       newZoom,
       focusPoint,
+      align,
     );
 
     /* ------------------------------------------------------------------ */
@@ -280,6 +282,7 @@ export class ZoomPlugin extends BasePlugin<
     oldZoom: number,
     newZoom: number,
     focus: Point,
+    align: 'keep' | 'center' = 'keep',
   ) {
     /* unscaled content size ------------------------------------------- */
     const layout = this.scroll.getLayout();
@@ -308,8 +311,13 @@ export class ZoomPlugin extends BasePlugin<
     const cy = (vp.scrollTop + focus.vy - vpGap - offYold) / oldZoom;
 
     /* new scroll so that (cx,cy) appears under focus again ------------- */
-    const desiredScrollLeft = cx * newZoom + vpGap + offXnew - focus.vx;
-    const desiredScrollTop = cy * newZoom + vpGap + offYnew - focus.vy;
+    const baseLeft = cx * newZoom + vpGap + offXnew;
+    const baseTop = cy * newZoom + vpGap + offYnew;
+
+    const desiredScrollLeft =
+      align === 'center' ? baseLeft - vp.clientWidth / 2 : baseLeft - focus.vx;
+    const desiredScrollTop =
+      align === 'center' ? baseTop - vp.clientHeight / 2 : baseTop - focus.vy;
 
     return {
       desiredScrollLeft: Math.max(0, desiredScrollLeft),
@@ -319,32 +327,52 @@ export class ZoomPlugin extends BasePlugin<
 
   private handleZoomToArea(pageIndex: number, rect: Rect) {
     const vp = this.viewport.getMetrics();
+    const vpGap = this.viewport.getViewportGap();
     const oldZ = this.state.currentZoomLevel;
+
+    const availableW = vp.clientWidth - 2 * vpGap;
+    const availableH = vp.clientHeight - 2 * vpGap;
 
     /* 1 – numeric zoom so the rect fits -------------------------------- */
     const targetZoom = this.toZoom(
-      Math.min((vp.clientWidth - 2) / rect.size.width, (vp.clientHeight - 2) / rect.size.height),
+      Math.min(availableW / rect.size.width, availableH / rect.size.height),
     );
 
-    /* 2 – centre of the rect in *content* coordinates ------------------ */
+    /* 2 — absolute page position in content coordinates --------------- */
     const layout = this.scroll.getLayout();
-    const pageLayout = layout.virtualItems
-      .flatMap((p) => p.pageLayouts)
-      .find((p) => p.pageIndex === pageIndex);
 
-    if (!pageLayout) return;
+    // the VirtualItem that actually contains the requested page
+    const vItem = layout.virtualItems.find((it) =>
+      it.pageLayouts.some((p) => p.pageIndex === pageIndex),
+    );
+    if (!vItem) return;
 
-    const cxContent = pageLayout.x + rect.origin.x + rect.size.width / 2;
-    const cyContent = pageLayout.y + rect.origin.y + rect.size.height / 2;
+    // the page-layout _inside_ that virtual item
+    const pageRel = vItem.pageLayouts.find((p) => p.pageIndex === pageIndex)!;
 
-    /* 3 – viewport coords of that centre *before* zoom ----------------- */
-    const centerVX = cxContent * oldZ - vp.scrollLeft;
-    const centerVY = cyContent * oldZ - vp.scrollTop;
+    /* add the virtual-item’s own offset to get absolute coords */
+    const pageAbsX = vItem.x + pageRel.x;
+    const pageAbsY = vItem.y + pageRel.y;
+
+    /* 3 — centre of the marquee in content space ---------------------- */
+    const cxContent = pageAbsX + rect.origin.x + rect.size.width / 2;
+    const cyContent = pageAbsY + rect.origin.y + rect.size.height / 2;
+
+    /* 4 – viewport coords of that centre *before* zoom ----------------- */
+    const off = (avail: number, cw: number, z: number) =>
+      cw * z < avail ? (avail - cw * z) / 2 : 0;
+
+    const offXold = off(availableW, layout.totalContentSize.width, oldZ);
+    const offYold = off(availableH, layout.totalContentSize.height, oldZ);
+
+    const centerVX = vpGap + offXold + cxContent * oldZ - vp.scrollLeft;
+    const centerVY = vpGap + offYold + cyContent * oldZ - vp.scrollTop;
 
     /* 4 – reuse the generic handler ------------------------------------ */
     this.handleRequest({
       level: targetZoom,
       center: { vx: centerVX, vy: centerVY },
+      align: 'center',
     });
   }
 

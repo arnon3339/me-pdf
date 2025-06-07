@@ -103,4 +103,8 @@ export interface ZoomRequest {
   delta?: number;
   center?: Point;
   focus?: VerticalZoomFocus;
+  /** Scroll so that the focal point ends up …
+   *  ▸ `"keep"`   (default) at the same viewport coords
+   *  ▸ `"center"` centred in the viewport  */
+  align?: 'keep' | 'center';
 }
