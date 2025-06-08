@@ -15,6 +15,7 @@ import {
   ViewportScrollMetrics,
   ViewportInputMetrics,
   ScrollToPayload,
+  ViewportRect,
 } from './types';
 
 export class ViewportPlugin extends BasePlugin<
@@ -33,6 +34,11 @@ export class ViewportPlugin extends BasePlugin<
     behavior?: ScrollBehavior;
   }>();
   private readonly scrollActivity$ = createBehaviorEmitter<boolean>();
+
+  /* ------------------------------------------------------------------ */
+  /* “live rect” infrastructure                                          */
+  /* ------------------------------------------------------------------ */
+  private rectProvider: (() => ViewportRect) | null = null;
 
   private scrollEndTimer?: number;
   private readonly scrollEndDelay: number;
@@ -57,6 +63,17 @@ export class ViewportPlugin extends BasePlugin<
       getMetrics: () => this.state.viewportMetrics,
       onScrollChange: this.scrollMetrics$.on,
       onViewportChange: this.viewportMetrics$.on,
+      registerRectProvider: (fn) => {
+        this.rectProvider = fn;
+      },
+      getRect: () =>
+        this.rectProvider?.() ?? {
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: 0,
+        },
       setViewportMetrics: (viewportMetrics: ViewportInputMetrics) => {
         this.dispatch(setViewportMetrics(viewportMetrics));
       },
@@ -134,6 +151,7 @@ export class ViewportPlugin extends BasePlugin<
     this.scrollMetrics$.clear();
     this.scrollReq$.clear();
     this.scrollActivity$.clear();
+    this.rectProvider = null;
     if (this.scrollEndTimer) clearTimeout(this.scrollEndTimer);
   }
 }

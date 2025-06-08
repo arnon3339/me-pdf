@@ -12,6 +12,19 @@ export function useViewportRef() {
     const container = containerRef.current;
     if (!container) return;
 
+    /* ---------- live rect provider --------------------------------- */
+    const provideRect = () => {
+      const r = container.getBoundingClientRect();
+      return {
+        left: r.left,
+        top: r.top,
+        right: r.right,
+        bottom: r.bottom,
+        width: r.width,
+      };
+    };
+    viewportProvides.registerRectProvider(provideRect);
+
     // Example: On scroll, call setMetrics
     const onScroll = () => {
       viewportProvides.setViewportScrollMetrics({
@@ -34,7 +47,6 @@ export function useViewportRef() {
         scrollLeft: container.scrollLeft,
         scrollWidth: container.scrollWidth,
         scrollHeight: container.scrollHeight,
-        rect: rect,
       });
     });
     resizeObserver.observe(container);
@@ -49,6 +61,7 @@ export function useViewportRef() {
 
     // Cleanup
     return () => {
+      viewportProvides.registerRectProvider(null);
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
       unsubscribeScrollRequest();

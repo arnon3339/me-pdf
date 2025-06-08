@@ -28,7 +28,6 @@ export interface ViewportInputMetrics {
   clientHeight: number;
   scrollWidth: number;
   scrollHeight: number;
-  rect: ViewportRect;
 }
 
 export interface ViewportMetrics extends ViewportInputMetrics {
@@ -69,4 +68,6 @@ export interface ViewportCapability {
   onScrollChange: EventHook<ViewportScrollMetrics>;
   onScrollActivity: EventHook<boolean>;
   isScrolling: () => boolean;
+  getRect(): ViewportRect;
+  registerRectProvider(fn: (() => ViewportRect) | null): void;
 }

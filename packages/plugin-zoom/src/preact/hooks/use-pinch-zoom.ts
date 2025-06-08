@@ -40,10 +40,11 @@ export function usePinch() {
     const pinchStart = (e: HammerInput) => {
       initialZoom = getState().currentZoomLevel;
 
-      const contRect = viewportProvides.getMetrics();
+      const contRect = viewportProvides.getRect();
+
       lastCenter = {
-        x: e.center.x - contRect.rect.left,
-        y: e.center.y - contRect.rect.top,
+        x: e.center.x - contRect.left,
+        y: e.center.y - contRect.top,
       };
 
       // put the transform-origin under the fingers so the preview feels right
