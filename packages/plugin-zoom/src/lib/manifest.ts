@@ -15,7 +15,7 @@ export const manifest: PluginManifest<ZoomPluginConfig> = {
     enabled: true,
     defaultZoomLevel: ZoomMode.Automatic,
     minZoom: 0.2,
-    maxZoom: 10,
+    maxZoom: 60,
     zoomStep: 0.1,
     zoomRanges: [
       {

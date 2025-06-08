@@ -24,13 +24,6 @@ export const initialState: ViewportState = {
       x: 0,
       y: 0,
     },
-    rect: {
-      left: 0,
-      top: 0,
-      right: 0,
-      bottom: 0,
-      width: 0,
-    },
   },
   isScrolling: false,
 };
@@ -54,7 +47,6 @@ export const viewportReducer: Reducer<ViewportState, ViewportAction> = (
           clientHeight: action.payload.clientHeight,
           scrollWidth: action.payload.scrollWidth,
           scrollHeight: action.payload.scrollHeight,
-          rect: action.payload.rect,
           relativePosition: {
             x:
               action.payload.scrollWidth <= action.payload.clientWidth
