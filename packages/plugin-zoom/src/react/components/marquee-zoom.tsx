@@ -1,7 +1,6 @@
-/** @jsxImportSource preact */
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
-import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/preact';
+import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/react';
 import { Rect } from '@embedpdf/models';
 
 import { useZoomCapability } from '../hooks/use-zoom';

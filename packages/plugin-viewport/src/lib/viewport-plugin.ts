@@ -15,8 +15,8 @@ import {
   ViewportScrollMetrics,
   ViewportInputMetrics,
   ScrollToPayload,
-  ViewportRect,
 } from './types';
+import { Rect } from '@embedpdf/models';
 
 export class ViewportPlugin extends BasePlugin<
   ViewportPluginConfig,
@@ -38,7 +38,7 @@ export class ViewportPlugin extends BasePlugin<
   /* ------------------------------------------------------------------ */
   /* “live rect” infrastructure                                          */
   /* ------------------------------------------------------------------ */
-  private rectProvider: (() => ViewportRect) | null = null;
+  private rectProvider: (() => Rect) | null = null;
 
   private scrollEndTimer?: number;
   private readonly scrollEndDelay: number;
@@ -63,16 +63,13 @@ export class ViewportPlugin extends BasePlugin<
       getMetrics: () => this.state.viewportMetrics,
       onScrollChange: this.scrollMetrics$.on,
       onViewportChange: this.viewportMetrics$.on,
-      registerRectProvider: (fn) => {
+      registerBoundingRectProvider: (fn) => {
         this.rectProvider = fn;
       },
-      getRect: () =>
+      getBoundingRect: (): Rect =>
         this.rectProvider?.() ?? {
-          left: 0,
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: 0,
+          origin: { x: 0, y: 0 },
+          size: { width: 0, height: 0 },
         },
       setViewportMetrics: (viewportMetrics: ViewportInputMetrics) => {
         this.dispatch(setViewportMetrics(viewportMetrics));

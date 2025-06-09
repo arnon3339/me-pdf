@@ -1,11 +1,10 @@
-/** @jsxImportSource preact */
-import { ComponentChildren, JSX } from 'preact';
+import { ReactNode } from 'react';
 
 import { usePinch } from '../hooks';
 
-type PinchWrapperProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
-  children: ComponentChildren;
-  style?: JSX.CSSProperties;
+type PinchWrapperProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'style'> & {
+  children: ReactNode;
+  style?: React.CSSProperties;
 };
 
 export function PinchWrapper({ children, style, ...props }: PinchWrapperProps) {

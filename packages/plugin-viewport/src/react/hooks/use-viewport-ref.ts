@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 
 import { useViewportCapability } from './use-viewport';
+import { Rect } from '@embedpdf/models';
 
 export function useViewportRef() {
   const { provides: viewportProvides } = useViewportCapability();
@@ -13,17 +14,14 @@ export function useViewportRef() {
     if (!container) return;
 
     /* ---------- live rect provider --------------------------------- */
-    const provideRect = () => {
+    const provideRect = (): Rect => {
       const r = container.getBoundingClientRect();
       return {
-        left: r.left,
-        top: r.top,
-        right: r.right,
-        bottom: r.bottom,
-        width: r.width,
+        origin: { x: r.left, y: r.top },
+        size: { width: r.width, height: r.height },
       };
     };
-    viewportProvides.registerRectProvider(provideRect);
+    viewportProvides.registerBoundingRectProvider(provideRect);
 
     // Example: On scroll, call setMetrics
     const onScroll = () => {
@@ -61,7 +59,7 @@ export function useViewportRef() {
 
     // Cleanup
     return () => {
-      viewportProvides.registerRectProvider(null);
+      viewportProvides.registerBoundingRectProvider(null);
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
       unsubscribeScrollRequest();

@@ -1,4 +1,5 @@
 import { BasePluginConfig, EventControlOptions, EventHook } from '@embedpdf/core';
+import { Rect } from '@embedpdf/models';
 
 export interface ViewportState {
   viewportGap: number;
@@ -9,14 +10,6 @@ export interface ViewportState {
 export interface ViewportPluginConfig extends BasePluginConfig {
   viewportGap?: number;
   scrollEndDelay?: number;
-}
-
-export interface ViewportRect {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-  width: number;
 }
 
 export interface ViewportInputMetrics {
@@ -68,6 +61,6 @@ export interface ViewportCapability {
   onScrollChange: EventHook<ViewportScrollMetrics>;
   onScrollActivity: EventHook<boolean>;
   isScrolling: () => boolean;
-  getRect(): ViewportRect;
-  registerRectProvider(fn: (() => ViewportRect) | null): void;
+  getBoundingRect(): Rect;
+  registerBoundingRectProvider(fn: (() => Rect) | null): void;
 }
