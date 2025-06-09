@@ -1,11 +1,12 @@
 import { WebWorkerEngine } from '@embedpdf/engines/worker';
+import { Logger } from '@embedpdf/models';
 
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-ignore injected at build time
 declare const __WEBWORKER_BODY__: string;
 
 /** Builds a Worker without any network request. */
-export function createWorkerEngine(wasmUrl: string): WebWorkerEngine {
+export function createWorkerEngine(wasmUrl: string, logger?: Logger): WebWorkerEngine {
   const worker = new Worker(
     URL.createObjectURL(new Blob([__WEBWORKER_BODY__], { type: 'application/javascript' })),
     {
@@ -16,5 +17,5 @@ export function createWorkerEngine(wasmUrl: string): WebWorkerEngine {
   // Send initialization message with WASM URL
   worker.postMessage({ type: 'INIT_WASM', wasmUrl });
 
-  return new WebWorkerEngine(worker);
+  return new WebWorkerEngine(worker, logger);
 }

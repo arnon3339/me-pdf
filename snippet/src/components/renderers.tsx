@@ -30,6 +30,7 @@ import { ThumbImg, ThumbnailsPane } from '@embedpdf/plugin-thumbnail/preact';
 import { useDebounce } from '@/hooks/use-debounce';
 import {
   ignore,
+  PdfAlphaColor,
   PdfAnnotationSubtype,
   PdfBookmarkObject,
   PdfDocumentObject,
@@ -230,16 +231,66 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
   console.log('selectedAnnotation', selectedAnnotation);
   console.log('annotationMode', annotationMode);
 
-  const applyColor = (c: Color) => {};
-  const Swatch = ({ c }: { c: Color }) => (
-    <button
-      key={`${c.red}-${c.green}-${c.blue}`}
-      className="h-6 w-6 cursor-pointer rounded-full border border-gray-300 outline-none"
-      style={{ backgroundColor: `rgb(${c.red},${c.green},${c.blue})` }}
-      title={`rgb(${c.red},${c.green},${c.blue})`}
-      onClick={() => applyColor(c)}
-    />
-  );
+  const applyColor = (c: Color) => {
+    if (!annotation) return;
+
+    if (selectedAnnotation) {
+      /* paint existing annotation */
+      const prevAlpha = (selectedAnnotation.annotation as any).color?.alpha ?? 255;
+
+      const patch: PdfAlphaColor = {
+        ...c,
+        alpha: prevAlpha,
+      };
+      annotation
+        .updateAnnotationColor(patch)
+        .then((value) => console.log('value', value))
+        .catch((error) => console.error('error', error));
+    } else if (annotationMode != null) {
+      console.log('annotationMode', annotationMode);
+      /* tweak defaults for the active tool */
+      const subtype = annotationMode as StylableSubtype;
+
+      let alpha = 76; // default alpha
+
+      switch (activeType) {
+        case PdfAnnotationSubtype.HIGHLIGHT:
+          alpha = 76;
+          break;
+        case PdfAnnotationSubtype.UNDERLINE:
+          alpha = 255;
+          break;
+        case PdfAnnotationSubtype.STRIKEOUT:
+          alpha = 255;
+          break;
+        case PdfAnnotationSubtype.SQUIGGLY:
+          alpha = 255;
+          break;
+        default:
+          alpha = 76;
+      }
+
+      annotation.setToolDefaults(subtype, {
+        color: { ...c, alpha: 76 }, // sensible default alpha for highlights
+      });
+    }
+  };
+
+  const Swatch = ({ color, activeColor }: { color: Color; activeColor?: PdfAlphaColor }) => {
+    const isActive =
+      activeColor?.red === color.red &&
+      activeColor?.green === color.green &&
+      activeColor?.blue === color.blue;
+    return (
+      <button
+        key={`${color.red}-${color.green}-${color.blue}`}
+        className={`h-5 w-5 cursor-pointer rounded-full border border-gray-400 ${isActive ? 'outline-offset-3 outline outline-2 outline-blue-500' : ''}`}
+        style={{ backgroundColor: `rgb(${color.red},${color.green},${color.blue})` }}
+        title={`rgb(${color.red},${color.green},${color.blue})`}
+        onClick={() => applyColor(color)}
+      />
+    );
+  };
 
   const activeType =
     selectedAnnotation !== null ? selectedAnnotation.annotation.type : annotationMode;
@@ -263,13 +314,29 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
     );
   }
 
+  const getActiveColor = (): PdfAlphaColor | undefined => {
+    if (!selectedAnnotation) return defaultSettings?.color;
+
+    switch (selectedAnnotation.annotation.type) {
+      case PdfAnnotationSubtype.HIGHLIGHT:
+      case PdfAnnotationSubtype.UNDERLINE:
+      case PdfAnnotationSubtype.STRIKEOUT:
+      case PdfAnnotationSubtype.SQUIGGLY:
+        return selectedAnnotation.annotation.color;
+      default:
+        return defaultSettings?.color;
+    }
+  };
+
+  const activeColor = getActiveColor();
+
   return (
     <div className="p-4">
       <h2 className="text-md font-medium">{title}</h2>
       {colorPresets.length ? (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-3">
           {colorPresets.map((c) => (
-            <Swatch c={c} />
+            <Swatch color={c} activeColor={activeColor} />
           ))}
         </div>
       ) : null}

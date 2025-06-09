@@ -40,6 +40,8 @@ import {
   PdfFileUrl,
   PdfGlyphObject,
   PdfPageGeometry,
+  PdfAnnotationObjectBase,
+  PdfAlphaColor,
 } from '@embedpdf/models';
 
 /**
@@ -81,6 +83,15 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     getSignatures: (doc: PdfDocumentObject) => {
       const signatures: PdfSignatureObject[] = [];
       return PdfTaskHelper.resolve(signatures);
+    },
+    setAnnotationColor: (
+      doc: PdfDocumentObject,
+      page: PdfPageObject,
+      annotation: PdfAnnotationObjectBase,
+      color: PdfAlphaColor,
+      which: number = 0,
+    ) => {
+      return PdfTaskHelper.resolve(true);
     },
     getBookmarks: (doc: PdfDocumentObject) => {
       const bookmarks: PdfBookmarkObject[] = [];

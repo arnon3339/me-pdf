@@ -32,6 +32,8 @@ import {
   PdfFileUrl,
   PdfGlyphObject,
   PdfPageGeometry,
+  PdfAlphaColor,
+  PdfAnnotationObjectBase,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -301,6 +303,30 @@ export class WebWorkerEngine implements PdfEngine {
       data: {
         name: 'getMetadata',
         args: [doc],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  setAnnotationColor(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObjectBase,
+    color: PdfAlphaColor,
+    which: number = 0,
+  ) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', doc, page, annotation, color);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'setAnnotationColor',
+        args: [doc, page, annotation, color, which],
       },
     };
     this.proxy(task, request);

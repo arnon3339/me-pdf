@@ -5027,6 +5027,110 @@ export class PdfiumEngine implements PdfEngine {
   }
 
   /**
+   * Change the visible colour (and opacity) of an existing annotation.
+   *
+   * For markup annotations (highlight / underline / strikeout / squiggly) we
+   * first clear the AP dictionary entry, otherwise the stored appearance stream
+   * will override the new tint.  For all other sub-types we keep the existing
+   * AP so custom artwork isn't lost.
+   *
+   * @param doc         logical document object
+   * @param page        logical page object
+   * @param annotation  the annotation we want to recolour
+   * @param colour      RGBA tuple (0-255 per channel)
+   * @param which       0 = stroke/fill colour  (PDFium's "colourType" param)
+   *
+   * @returns `true` when the operation succeeded
+   */
+  public setAnnotationColor(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObjectBase,
+    colour: PdfAlphaColor,
+    which: number = 0, // 0 → "colour" (fill/stroke)
+  ): PdfTask<boolean> {
+    this.logger.debug(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'setAnnotationColor',
+      doc,
+      page,
+      annotation,
+      colour,
+      which,
+    );
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'Begin', doc.id);
+    const task = PdfTaskHelper.create<boolean>();
+
+    try {
+      /* 1 ── sanity & native handles ────────────────────────────────────────── */
+      const ctx = this.cache.getContext(doc.id);
+      if (!ctx) {
+        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'End', doc.id);
+        this.logger.warn(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor: doc closed');
+        task.resolve(false);
+        return task;
+      }
+
+      const pageCtx = ctx.acquirePage(page.index);
+      const annotPtr = this.pdfiumModule.FPDFPage_GetAnnot(pageCtx.pagePtr, annotation.id);
+      if (!annotPtr) {
+        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'End', doc.id);
+        this.logger.warn(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor: annot not found');
+        pageCtx.release();
+        task.resolve(false);
+        return task;
+      }
+
+      /* 2 ── wipe AP if it's a simple markup annotation ─────────────────────── */
+      const shouldClearAP =
+        annotation.type === PdfAnnotationSubtype.HIGHLIGHT ||
+        annotation.type === PdfAnnotationSubtype.UNDERLINE ||
+        annotation.type === PdfAnnotationSubtype.STRIKEOUT ||
+        annotation.type === PdfAnnotationSubtype.SQUIGGLY;
+
+      if (shouldClearAP) {
+        // NULL wide-string → remove the /AP entry
+        this.pdfiumModule.FPDFAnnot_SetAP(
+          annotPtr,
+          AppearanceMode.Normal,
+          /* FPDF_WIDESTRING = */ 0,
+        );
+      }
+
+      /* 3 ── set the new tint (PDFium fails if AP still present) ─────────────── */
+      const ok = this.pdfiumModule.FPDFAnnot_SetColor(
+        annotPtr,
+        which,
+        colour.red & 0xff,
+        colour.green & 0xff,
+        colour.blue & 0xff,
+        (colour.alpha ?? 255) & 0xff,
+      );
+
+      /* 4 ── regenerate appearance & clean-up ───────────────────────────────── */
+      if (ok) {
+        this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
+      }
+
+      this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
+      pageCtx.release();
+
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'End', doc.id);
+      task.resolve(!!ok);
+    } catch (error) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'End', doc.id);
+      this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor: error', error);
+      task.reject({
+        code: PdfErrorCode.Unknown,
+        message: `Failed to set annotation color: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+
+    return task;
+  }
+
+  /**
    * Set the rect of specified annotation
    * @param page - page info that the annotation is belonged to
    * @param pagePtr - pointer of page object

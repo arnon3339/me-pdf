@@ -3,7 +3,15 @@ import { h, Fragment } from 'preact';
 import styles from '../styles/index.css';
 import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration } from '@embedpdf/core';
-import { PdfAnnotationSubtype, PdfEngine, restorePosition, Rotation } from '@embedpdf/models';
+import {
+  AllLogger,
+  ConsoleLogger,
+  PdfAnnotationSubtype,
+  PdfEngine,
+  PerfLogger,
+  restorePosition,
+  Rotation,
+} from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
   ViewportPluginPackage,
@@ -166,6 +174,7 @@ export interface PDFViewerConfig {
   worker?: boolean;
   wasmUrl?: string;
   plugins?: PluginConfigs;
+  log?: boolean;
 }
 
 // **Default Plugin Configurations**
@@ -221,18 +230,22 @@ let engineInstance: PdfEngine | null = null;
 interface InitializeEngineOptions {
   worker?: boolean;
   wasmUrl?: string;
+  log?: boolean;
 }
 // **Initialize the Pdfium Engine**
 async function initializeEngine(options: InitializeEngineOptions): Promise<PdfEngine> {
   const wasmUrl = options.wasmUrl || 'https://snippet.embedpdf.com/pdfium.wasm';
+  const consoleLogger = new ConsoleLogger();
+  const perfLogger = new PerfLogger();
+  const logger = options.log ? new AllLogger([consoleLogger, perfLogger]) : undefined;
   if (options.worker) {
     // Lazy load worker engine only when needed
     const { createWorkerEngine } = await import('./loader-worker');
-    return createWorkerEngine(wasmUrl);
+    return createWorkerEngine(wasmUrl, logger);
   } else {
     // Lazy load local engine only when needed
     const { createLocalEngine } = await import('./loader-local');
-    return createLocalEngine(wasmUrl);
+    return createLocalEngine(wasmUrl, logger);
   }
 }
 
@@ -1808,6 +1821,7 @@ export const components: Record<string, UIComponentType<State>> = {
       selectedAnnotation: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedAnnotation,
       annotationMode: storeState.plugins[ANNOTATION_PLUGIN_ID].annotationMode,
       colorPresets: storeState.plugins[ANNOTATION_PLUGIN_ID].colorPresets,
+      toolDefaults: storeState.plugins[ANNOTATION_PLUGIN_ID].toolDefaults,
     }),
   },
   leftPanelMain: defineComponent<{ visibleChild: string }, LeftPanelMainProps, State>()({
@@ -1994,6 +2008,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
         const newEngine = await initializeEngine({
           worker: config.worker,
           wasmUrl: config.wasmUrl,
+          log: config.log,
         });
         if (isMounted) {
           engineInstance = newEngine;

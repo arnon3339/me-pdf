@@ -1035,6 +1035,10 @@ export interface PdfSquareAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfSquigglyAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.SQUIGGLY;
+  /**
+   * color of squiggly annotation
+   */
+  color?: PdfAlphaColor;
 }
 
 /**
@@ -1045,6 +1049,10 @@ export interface PdfSquigglyAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfUnderlineAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.UNDERLINE;
+  /**
+   * color of underline annotation
+   */
+  color?: PdfAlphaColor;
 }
 
 /**
@@ -1055,6 +1063,10 @@ export interface PdfUnderlineAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfStrikeOutAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.STRIKEOUT;
+  /**
+   * color of strike out annotation
+   */
+  color?: PdfAlphaColor;
 }
 
 /**
@@ -1669,6 +1681,24 @@ export interface PdfEngine {
     doc: PdfDocumentObject,
     page: PdfPageObject,
   ) => PdfTask<PdfAnnotationObject[]>;
+
+  /**
+   * Change the visible colour (and opacity) of an existing annotation.
+   * @param doc - pdf document
+   * @param page - pdf page
+   * @param annotation - the annotation to recolour
+   * @param colour - RGBA color values (0-255 per channel)
+   * @param which - 0 = stroke/fill colour (PDFium's "colourType" param)
+   * @returns task that indicates whether the operation succeeded
+   */
+  setAnnotationColor: (
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObjectBase,
+    colour: PdfAlphaColor,
+    which?: number,
+  ) => PdfTask<boolean>;
+
   /**
    * Create a annotation on specified page
    * @param doc - pdf document

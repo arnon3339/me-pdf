@@ -145,20 +145,18 @@ export class AnnotationPlugin extends BasePlugin<
       return false;
     }
 
+    const page = doc.pages.find((p) => p.index === selected.pageIndex);
+    if (!page) {
+      return false;
+    }
+
     // Update the annotation in the local state first
     this.dispatch(updateAnnotationColor(selected.pageIndex, selected.annotationId, color));
 
     try {
-      // Here you would update the annotation in the PDF engine
-      // This depends on your PDF engine's capabilities
-      // For now, we'll just return true to indicate success
+      const task = this.engine.setAnnotationColor(doc, page, selected.annotation, color);
 
-      // Example of what this might look like:
-      // const page = doc.pages[selected.pageIndex];
-      // const updatedAnnotation = { ...selected.annotation, color };
-      // await this.engine.updatePageAnnotation(doc, page, updatedAnnotation);
-
-      return true;
+      return task.toPromise();
     } catch (error) {
       console.error('Failed to update annotation color:', error);
       return false;

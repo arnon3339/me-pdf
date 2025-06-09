@@ -198,7 +198,7 @@ export class EngineRunner {
         type: 'reject',
         reason: {
           code: PdfErrorCode.NotSupport,
-          message: 'engine method has not supported yet',
+          message: `engine method ${name} is not supported yet`,
         },
       };
       const response: ExecuteResponse = {
@@ -270,6 +270,9 @@ export class EngineRunner {
         task = this.engine[name]!(...args);
         break;
       case 'removePageAnnotation':
+        task = this.engine[name]!(...args);
+        break;
+      case 'setAnnotationColor':
         task = this.engine[name]!(...args);
         break;
       case 'getPageTextRects':

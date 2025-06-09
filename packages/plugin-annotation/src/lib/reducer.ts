@@ -30,7 +30,7 @@ export const initialState = (config: AnnotationPluginConfig): AnnotationState =>
     toolDefaults: {
       [PdfAnnotationSubtype.HIGHLIGHT]: {
         name: 'Highlight',
-        color: { red: 255, green: 255, blue: 0, alpha: 76 },
+        color: { red: 255, green: 205, blue: 69, alpha: 255 },
       },
       [PdfAnnotationSubtype.UNDERLINE]: {
         name: 'Underline',
