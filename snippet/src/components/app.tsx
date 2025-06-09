@@ -6,6 +6,7 @@ import { createPluginRegistration } from '@embedpdf/core';
 import {
   AllLogger,
   ConsoleLogger,
+  pdfAlphaColorToHexOpacity,
   PdfAnnotationSubtype,
   PdfEngine,
   PerfLogger,
@@ -393,19 +394,19 @@ export const icons: IconRegistry = {
   },
   underline: {
     id: 'underline',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h16" stroke="#e44234" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /></svg>',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h16" stroke="currentColor" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M8 10h8" stroke="#000000" /></svg>',
   },
   squiggly: {
     id: 'squiggly',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-wavy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /><path d="M4 20c1.5 -1.5 3.5 -1.5 5 0s3.5 1.5 5 0 3.5 -1.5 5 0" stroke="#e44234" /></svg>',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-wavy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M8 10h8" stroke="#000000" /><path d="M4 20c1.5 -1.5 3.5 -1.5 5 0s3.5 1.5 5 0 3.5 -1.5 5 0" stroke="currentColor" /></svg>',
   },
   strikethrough: {
     id: 'strikethrough',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M4 10h16" stroke="#e44234" /></svg>',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M4 10h16" stroke="currentColor" /></svg>',
   },
   highlight: {
     id: 'highlight',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="#ffcd45" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor"/><path d="M8 10h8" stroke="currentColor"/></svg>',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="currentColor" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000"/><path d="M8 10h8" stroke="#000000"/></svg>',
   },
   palette: {
     id: 'palette',
@@ -1352,10 +1353,14 @@ export const components: Record<string, UIComponentType<State>> = {
       commandId: 'underline',
       active: false,
       label: 'Underline',
+      color: '#e44234',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.underline, storeState),
+      color: pdfAlphaColorToHexOpacity(
+        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.UNDERLINE]!.color,
+      ).hex,
     }),
   },
   squigglyButton: {
@@ -1365,10 +1370,14 @@ export const components: Record<string, UIComponentType<State>> = {
       commandId: 'squiggly',
       active: false,
       label: 'Squiggly',
+      color: '#e44234',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.squiggly, storeState),
+      color: pdfAlphaColorToHexOpacity(
+        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.SQUIGGLY]!.color,
+      ).hex,
     }),
   },
   strikethroughButton: {
@@ -1378,10 +1387,14 @@ export const components: Record<string, UIComponentType<State>> = {
       commandId: 'strikethrough',
       active: false,
       label: 'Strikethrough',
+      color: '#e44234',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.strikethrough, storeState),
+      color: pdfAlphaColorToHexOpacity(
+        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.STRIKEOUT]!.color,
+      ).hex,
     }),
   },
   highlightButton: {
@@ -1391,10 +1404,14 @@ export const components: Record<string, UIComponentType<State>> = {
       commandId: 'highlight',
       active: false,
       label: 'Highlight',
+      color: '#ffcd45',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.highlight, storeState),
+      color: pdfAlphaColorToHexOpacity(
+        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
+      ).hex,
     }),
   },
   highlightSelectionButton: {
@@ -1402,28 +1419,56 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'highlightSelectionButton',
     props: {
       commandId: 'highlightSelection',
+      color: '#ffcd45',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      color: pdfAlphaColorToHexOpacity(
+        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
+      ).hex,
+    }),
   },
   underlineSelectionButton: {
     type: 'iconButton',
     id: 'underlineSelectionButton',
     props: {
       commandId: 'underlineSelection',
+      color: '#e44234',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      color: pdfAlphaColorToHexOpacity(
+        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.UNDERLINE]!.color,
+      ).hex,
+    }),
   },
   strikethroughSelectionButton: {
     type: 'iconButton',
     id: 'strikethroughSelectionButton',
     props: {
       commandId: 'strikethroughSelection',
+      color: '#e44234',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      color: pdfAlphaColorToHexOpacity(
+        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.STRIKEOUT]!.color,
+      ).hex,
+    }),
   },
   squigglySelectionButton: {
     type: 'iconButton',
     id: 'squigglySelectionButton',
     props: {
       commandId: 'squigglySelection',
+      color: '#e44234',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      color: pdfAlphaColorToHexOpacity(
+        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.SQUIGGLY]!.color,
+      ).hex,
+    }),
   },
   viewCtrButton: {
     type: 'iconButton',

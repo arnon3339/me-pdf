@@ -176,6 +176,7 @@ export interface IconButtonProps {
   onClick?: () => void;
   label?: string;
   img?: string;
+  color?: string;
 }
 
 export interface IconButtonComponent<TStore = any>

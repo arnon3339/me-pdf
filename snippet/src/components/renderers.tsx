@@ -54,7 +54,7 @@ import { Color, SelectedAnnotation, StylableSubtype } from '@embedpdf/plugin-ann
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
-  { commandId, onClick, active, ...props },
+  { commandId, onClick, active, color, ...props },
   children,
   context,
 ) => {
@@ -100,7 +100,7 @@ export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
         {!command?.icon && props.img && (
           <img src={props.img} alt={props.label} className="h-5 w-5" />
         )}
-        {command?.icon && <Icon icon={command.icon} className="h-5 w-5" />}
+        {command?.icon && <Icon icon={command.icon} className="h-5 w-5" style={{ color }} />}
       </Button>
     </Tooltip>
   );
@@ -298,7 +298,9 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
     ? annotation?.getToolDefaults(activeType as StylableSubtype)
     : null;
 
-  const title = defaultSettings ? `${defaultSettings.name} Tool` : 'Styles';
+  const title = defaultSettings
+    ? `${defaultSettings.name} ${selectedAnnotation ? 'Annotation' : 'Tool'}`
+    : 'Styles';
 
   if (!activeType) {
     return (

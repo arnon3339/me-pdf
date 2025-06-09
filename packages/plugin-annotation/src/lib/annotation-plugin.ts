@@ -25,7 +25,10 @@ import {
   updateToolDefaults,
   addColorPreset,
 } from './actions';
-import { initialState } from './reducer';
+import {
+  InteractionManagerCapability,
+  InteractionManagerPlugin,
+} from '@embedpdf/plugin-interaction-manager';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -37,11 +40,14 @@ export class AnnotationPlugin extends BasePlugin<
 
   private engine: PdfEngine;
   private readonly state$ = createBehaviorEmitter<AnnotationState>();
+  private readonly interactionManager: InteractionManagerCapability | null;
 
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
     this.engine = engine;
 
+    const interactionManager = registry.getPlugin<InteractionManagerPlugin>('interaction-manager');
+    this.interactionManager = interactionManager?.provides() ?? null;
     this.coreStore.onAction(SET_DOCUMENT, (_action, state) => {
       const doc = state.core.document;
       if (doc) {
@@ -67,6 +73,7 @@ export class AnnotationPlugin extends BasePlugin<
         return this.updateSelectedAnnotationColor(color);
       },
       setAnnotationMode: (mode: PdfAnnotationSubtype | null) => {
+        this.interactionManager?.activate('default');
         this.dispatch(setAnnotationMode(mode));
       },
       getToolDefaults: (subtype) => {
