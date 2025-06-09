@@ -1632,9 +1632,9 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'headerCenter',
     type: 'groupedItems',
     slots: [
-      //{ componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
-      //{ componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
-      //{ componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
+      { componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
+      { componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
+      { componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
     ],
     props: {
       gap: 10,
@@ -1803,6 +1803,12 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'leftPanelAnnotationStyle',
     type: 'custom',
     render: 'leftPanelAnnotationStyle',
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      selectedAnnotation: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedAnnotation,
+      annotationMode: storeState.plugins[ANNOTATION_PLUGIN_ID].annotationMode,
+      colorPresets: storeState.plugins[ANNOTATION_PLUGIN_ID].colorPresets,
+    }),
   },
   leftPanelMain: defineComponent<{ visibleChild: string }, LeftPanelMainProps, State>()({
     id: 'leftPanelMain',

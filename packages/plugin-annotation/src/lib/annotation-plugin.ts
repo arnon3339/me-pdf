@@ -22,7 +22,10 @@ import {
   setAnnotationMode,
   updateAnnotationColor,
   AnnotationAction,
+  updateToolDefaults,
+  addColorPreset,
 } from './actions';
+import { initialState } from './reducer';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -66,6 +69,18 @@ export class AnnotationPlugin extends BasePlugin<
       setAnnotationMode: (mode: PdfAnnotationSubtype | null) => {
         this.dispatch(setAnnotationMode(mode));
       },
+      getToolDefaults: (subtype) => {
+        const defaults = this.state.toolDefaults[subtype];
+        if (!defaults) {
+          throw new Error(`No defaults found for subtype: ${subtype}`);
+        }
+        return defaults;
+      },
+      setToolDefaults: (subtype, patch) => {
+        this.dispatch(updateToolDefaults(subtype, patch));
+      },
+      getColorPresets: () => [...this.state.colorPresets],
+      addColorPreset: (color) => this.dispatch(addColorPreset(color)),
       onStateChange: this.state$.on,
     };
   }

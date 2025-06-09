@@ -30,6 +30,7 @@ import { ThumbImg, ThumbnailsPane } from '@embedpdf/plugin-thumbnail/preact';
 import { useDebounce } from '@/hooks/use-debounce';
 import {
   ignore,
+  PdfAnnotationSubtype,
   PdfBookmarkObject,
   PdfDocumentObject,
   PdfErrorCode,
@@ -48,6 +49,8 @@ import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
 import { useStoreState } from '@embedpdf/core/preact';
+import { Color, SelectedAnnotation, StylableSubtype } from '@embedpdf/plugin-annotation';
+import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
   { commandId, onClick, active, ...props },
@@ -213,12 +216,65 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
   );
 };
 
-export interface LeftPanelAnnotationStyleProps {}
+export interface LeftPanelAnnotationStyleProps {
+  selectedAnnotation: SelectedAnnotation | null;
+  annotationMode: PdfAnnotationSubtype | null;
+  colorPresets: Color[];
+}
 
 export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
   LeftPanelAnnotationStyleProps
 > = (props, children) => {
-  return <div>Left Panel Annotation Style</div>;
+  const { selectedAnnotation, annotationMode, colorPresets } = props;
+  const { provides: annotation } = useAnnotationCapability();
+  console.log('selectedAnnotation', selectedAnnotation);
+  console.log('annotationMode', annotationMode);
+
+  const applyColor = (c: Color) => {};
+  const Swatch = ({ c }: { c: Color }) => (
+    <button
+      key={`${c.red}-${c.green}-${c.blue}`}
+      className="h-6 w-6 cursor-pointer rounded-full border border-gray-300 outline-none"
+      style={{ backgroundColor: `rgb(${c.red},${c.green},${c.blue})` }}
+      title={`rgb(${c.red},${c.green},${c.blue})`}
+      onClick={() => applyColor(c)}
+    />
+  );
+
+  const activeType =
+    selectedAnnotation !== null ? selectedAnnotation.annotation.type : annotationMode;
+  const defaultSettings = activeType
+    ? annotation?.getToolDefaults(activeType as StylableSubtype)
+    : null;
+
+  const title = defaultSettings ? `${defaultSettings.name} Tool` : 'Styles';
+
+  if (!activeType) {
+    return (
+      <div className="p-4">
+        <h2 className="text-md font-medium">{title}</h2>
+        <div className="mt-18 flex flex-col items-center gap-2">
+          <Icon icon="palette" className="h-18 w-18 text-gray-500" />
+          <div className="max-w-[150px] text-center text-sm text-gray-500">
+            Select an annotation to see styles
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <h2 className="text-md font-medium">{title}</h2>
+      {colorPresets.length ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {colorPresets.map((c) => (
+            <Swatch c={c} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 };
 
 export interface LeftPanelMainProps {
