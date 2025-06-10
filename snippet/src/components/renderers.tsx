@@ -228,14 +228,46 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
 > = (props, children) => {
   const { selectedAnnotation, annotationMode, colorPresets } = props;
   const { provides: annotation } = useAnnotationCapability();
-  console.log('selectedAnnotation', selectedAnnotation);
-  console.log('annotationMode', annotationMode);
+  const [localOpacity, setLocalOpacity] = useState<number | null>(null);
+  const debouncedOpacity = useDebounce(localOpacity, 300);
+
+  // Get the current opacity value (either local state or from active color)
+  const activeType =
+    selectedAnnotation !== null ? selectedAnnotation.annotation.type : annotationMode;
+  const defaultSettings = activeType
+    ? annotation?.getToolDefaults(activeType as StylableSubtype)
+    : null;
+
+  const getActiveColor = (): PdfAlphaColor | undefined => {
+    if (!selectedAnnotation) return defaultSettings?.color;
+
+    switch (selectedAnnotation.annotation.type) {
+      case PdfAnnotationSubtype.HIGHLIGHT:
+      case PdfAnnotationSubtype.UNDERLINE:
+      case PdfAnnotationSubtype.STRIKEOUT:
+      case PdfAnnotationSubtype.SQUIGGLY:
+        return selectedAnnotation.annotation.color;
+      default:
+        return defaultSettings?.color;
+    }
+  };
+
+  const activeColor = getActiveColor();
+  const currentOpacity = localOpacity ?? activeColor?.alpha ?? 255;
+
+  // Apply debounced opacity changes
+  useEffect(() => {
+    if (debouncedOpacity !== null) {
+      applyOpacity(debouncedOpacity);
+      setLocalOpacity(null); // Reset local state after applying
+    }
+  }, [debouncedOpacity]);
 
   const applyColor = (c: Color) => {
     if (!annotation) return;
 
     // Get the current alpha value from the active color (what's shown in the slider)
-    const currentAlpha = activeColor?.alpha ?? 255;
+    const currentAlpha = currentOpacity;
 
     if (selectedAnnotation) {
       /* paint existing annotation */
@@ -286,6 +318,10 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
     }
   };
 
+  const handleOpacityChange = (newOpacity: number) => {
+    setLocalOpacity(newOpacity); // Update UI immediately
+  };
+
   const Swatch = ({ color, activeColor }: { color: Color; activeColor?: PdfAlphaColor }) => {
     const isActive =
       activeColor?.red === color.red &&
@@ -301,12 +337,6 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
       />
     );
   };
-
-  const activeType =
-    selectedAnnotation !== null ? selectedAnnotation.annotation.type : annotationMode;
-  const defaultSettings = activeType
-    ? annotation?.getToolDefaults(activeType as StylableSubtype)
-    : null;
 
   const title = defaultSettings
     ? `${defaultSettings.name} ${selectedAnnotation ? 'Annotation' : 'Tool'}`
@@ -325,22 +355,6 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
       </div>
     );
   }
-
-  const getActiveColor = (): PdfAlphaColor | undefined => {
-    if (!selectedAnnotation) return defaultSettings?.color;
-
-    switch (selectedAnnotation.annotation.type) {
-      case PdfAnnotationSubtype.HIGHLIGHT:
-      case PdfAnnotationSubtype.UNDERLINE:
-      case PdfAnnotationSubtype.STRIKEOUT:
-      case PdfAnnotationSubtype.SQUIGGLY:
-        return selectedAnnotation.annotation.color;
-      default:
-        return defaultSettings?.color;
-    }
-  };
-
-  const activeColor = getActiveColor();
 
   return (
     <div className="p-4">
@@ -361,9 +375,9 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
         </label>
         <input
           id="small-range"
-          onChange={(e) => applyOpacity(parseInt(e.currentTarget.value))}
+          onChange={(e) => handleOpacityChange(parseInt(e.currentTarget.value))}
           type="range"
-          value={activeColor?.alpha ?? 255}
+          value={currentOpacity}
           step="1"
           min="0"
           max="255"
