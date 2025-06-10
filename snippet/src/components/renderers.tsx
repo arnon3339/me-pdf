@@ -234,13 +234,14 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
   const applyColor = (c: Color) => {
     if (!annotation) return;
 
+    // Get the current alpha value from the active color (what's shown in the slider)
+    const currentAlpha = activeColor?.alpha ?? 255;
+
     if (selectedAnnotation) {
       /* paint existing annotation */
-      const prevAlpha = (selectedAnnotation.annotation as any).color?.alpha ?? 255;
-
       const patch: PdfAlphaColor = {
         ...c,
-        alpha: prevAlpha,
+        alpha: currentAlpha,
       };
       annotation
         .updateAnnotationColor(patch)
@@ -251,28 +252,37 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
       /* tweak defaults for the active tool */
       const subtype = annotationMode as StylableSubtype;
 
-      let alpha = 76; // default alpha
-
-      switch (activeType) {
-        case PdfAnnotationSubtype.HIGHLIGHT:
-          alpha = 76;
-          break;
-        case PdfAnnotationSubtype.UNDERLINE:
-          alpha = 255;
-          break;
-        case PdfAnnotationSubtype.STRIKEOUT:
-          alpha = 255;
-          break;
-        case PdfAnnotationSubtype.SQUIGGLY:
-          alpha = 255;
-          break;
-        default:
-          alpha = 76;
-      }
-
       annotation.setToolDefaults(subtype, {
-        color: { ...c, alpha: 76 }, // sensible default alpha for highlights
+        color: { ...c, alpha: currentAlpha },
       });
+    }
+  };
+
+  const applyOpacity = (opacity: number) => {
+    if (!annotation) return;
+
+    if (selectedAnnotation) {
+      /* update existing annotation opacity */
+      const currentColor = activeColor;
+      if (currentColor) {
+        const patch: PdfAlphaColor = {
+          ...currentColor,
+          alpha: opacity,
+        };
+        annotation
+          .updateAnnotationColor(patch)
+          .then((value) => console.log('opacity updated', value))
+          .catch((error) => console.error('opacity error', error));
+      }
+    } else if (annotationMode != null) {
+      /* update tool defaults opacity */
+      const subtype = annotationMode as StylableSubtype;
+      const currentDefaults = annotation.getToolDefaults(subtype);
+      if (currentDefaults?.color) {
+        annotation.setToolDefaults(subtype, {
+          color: { ...currentDefaults.color, alpha: opacity },
+        });
+      }
     }
   };
 
@@ -336,12 +346,30 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
     <div className="p-4">
       <h2 className="text-md font-medium">{title}</h2>
       {colorPresets.length ? (
-        <div className="mt-4 flex flex-wrap gap-3">
-          {colorPresets.map((c) => (
-            <Swatch color={c} activeColor={activeColor} />
-          ))}
+        <div className="mt-6">
+          <label class="block text-sm font-medium text-gray-900 dark:text-white">Color</label>
+          <div className="mt-3 flex justify-between">
+            {colorPresets.map((c) => (
+              <Swatch color={c} activeColor={activeColor} />
+            ))}
+          </div>
         </div>
       ) : null}
+      <div className="mt-6">
+        <label for="small-range" class="block text-sm font-medium text-gray-900 dark:text-white">
+          Opacity
+        </label>
+        <input
+          id="small-range"
+          onChange={(e) => applyOpacity(parseInt(e.currentTarget.value))}
+          type="range"
+          value={activeColor?.alpha ?? 255}
+          step="1"
+          min="0"
+          max="255"
+          class="range-sm mb-2 h-1 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
+        />
+      </div>
     </div>
   );
 };

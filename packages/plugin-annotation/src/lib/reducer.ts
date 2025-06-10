@@ -20,6 +20,7 @@ const DEFAULT_COLOR_PRESETS: Color[] = [
   { red: 37, green: 210, blue: 209 },
   { red: 89, green: 124, blue: 226 },
   { red: 197, green: 68, blue: 206 },
+  { red: 125, green: 46, blue: 37 },
 ];
 
 export const initialState = (config: AnnotationPluginConfig): AnnotationState => {
