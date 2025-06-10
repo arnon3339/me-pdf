@@ -172,8 +172,8 @@ export class ZoomPlugin extends BasePlugin<
     if (base === false) {
       return;
     }
-
-    const newZoom = parseFloat(clamp(base + delta, this.minZoom, this.maxZoom).toFixed(2));
+    const exactZoom = clamp(base + delta, this.minZoom, this.maxZoom);
+    const newZoom = Math.floor(exactZoom * 100) / 100;
 
     /* ------------------------------------------------------------------ */
     /* step 2 – figure out the viewport point we should keep under focus   */
@@ -350,7 +350,7 @@ export class ZoomPlugin extends BasePlugin<
     // the page-layout _inside_ that virtual item
     const pageRel = vItem.pageLayouts.find((p) => p.pageIndex === pageIndex)!;
 
-    /* add the virtual-item’s own offset to get absolute coords */
+    /* add the virtual-item's own offset to get absolute coords */
     const pageAbsX = vItem.x + pageRel.x;
     const pageAbsY = vItem.y + pageRel.y;
 
