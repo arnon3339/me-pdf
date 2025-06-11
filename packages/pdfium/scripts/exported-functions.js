@@ -199,4 +199,12 @@ export const functions = {
   FPDF_CreateNewDocument: [[], 'number'],
   FPDF_ImportPagesByIndex: [['number', 'number', 'number', 'number', 'number'], 'boolean'],
   FPDF_ImportPages: [['number', 'number', 'number', 'number'], 'boolean'],
+  FPDFAvail_Create: [['number', 'number'], 'number'],
+  FPDFAvail_Destroy: [['number'], null],
+  FPDFAvail_IsDocAvail: [['number', 'number'], 'number'],
+  FPDFAvail_GetDocument: [['number', 'number'], 'number'],
+  FPDFAvail_GetFirstPageNum: [['number'], 'number'],
+  FPDFAvail_IsPageAvail: [['number', 'number', 'number'], 'number'],
+  FPDFAvail_IsFormAvail: [['number', 'number'], 'number'],
+  FPDFAvail_IsLinearized: [['number'], 'number'],
 };

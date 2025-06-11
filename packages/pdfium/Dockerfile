@@ -58,10 +58,12 @@ RUN mkdir /build/wasm
 COPY build/code/cpp/*.h /build/wasm/
 COPY build/code/cpp/*.cpp /build/wasm/
 COPY build/compile.sh /build/wasm/compile.sh
+COPY build/compile.esm.sh /build/wasm/compile.esm.sh
 COPY build/exported-runtime-methods.txt /build/wasm/exported-runtime-methods.txt
 COPY build/exported-functions.txt /build/wasm/exported-functions.txt
 WORKDIR /build/wasm
 RUN bash -E /build/wasm/compile.sh
+RUN bash -E /build/wasm/compile.esm.sh
 
 FROM scratch AS exportor
 COPY --from=pdfium-wasm /build/wasm /dist

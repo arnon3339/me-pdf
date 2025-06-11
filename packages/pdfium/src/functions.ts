@@ -250,4 +250,12 @@ export const functions = {
     'boolean',
   ] as const,
   FPDF_ImportPages: [['number', 'number', 'number', 'number'] as const, 'boolean'] as const,
+  FPDFAvail_Create: [['number', 'number'] as const, 'number'] as const,
+  FPDFAvail_Destroy: [['number'] as const, null] as const,
+  FPDFAvail_IsDocAvail: [['number', 'number'] as const, 'number'] as const,
+  FPDFAvail_GetDocument: [['number', 'number'] as const, 'number'] as const,
+  FPDFAvail_GetFirstPageNum: [['number'] as const, 'number'] as const,
+  FPDFAvail_IsPageAvail: [['number', 'number', 'number'] as const, 'number'] as const,
+  FPDFAvail_IsFormAvail: [['number', 'number'] as const, 'number'] as const,
+  FPDFAvail_IsLinearized: [['number'] as const, 'number'] as const,
 };
