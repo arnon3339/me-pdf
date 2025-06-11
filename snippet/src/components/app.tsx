@@ -6,6 +6,7 @@ import { createPluginRegistration } from '@embedpdf/core';
 import { PdfAnnotationSubtype, PdfEngine, restorePosition, Rotation } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
+  ViewportPluginConfig,
   ViewportPluginPackage,
   ViewportState,
 } from '@embedpdf/plugin-viewport';
@@ -13,6 +14,7 @@ import { Viewport } from '@embedpdf/plugin-viewport/preact';
 import {
   SCROLL_PLUGIN_ID,
   ScrollPlugin,
+  ScrollPluginConfig,
   ScrollPluginPackage,
   ScrollState,
   ScrollStrategy,
@@ -22,6 +24,7 @@ import {
   SPREAD_PLUGIN_ID,
   SpreadMode,
   SpreadPlugin,
+  SpreadPluginConfig,
   SpreadPluginPackage,
   SpreadState,
 } from '@embedpdf/plugin-spread';
@@ -69,12 +72,18 @@ import {
   ZOOM_PLUGIN_ID,
   ZoomMode,
   ZoomPlugin,
+  ZoomPluginConfig,
   ZoomPluginPackage,
   ZoomState,
 } from '@embedpdf/plugin-zoom';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/preact';
-import { ROTATE_PLUGIN_ID, RotatePlugin, RotatePluginPackage } from '@embedpdf/plugin-rotate';
+import {
+  ROTATE_PLUGIN_ID,
+  RotatePlugin,
+  RotatePluginConfig,
+  RotatePluginPackage,
+} from '@embedpdf/plugin-rotate';
 import { Rotate } from '@embedpdf/plugin-rotate/preact';
 import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/plugin-search';
 import { SearchLayer } from '@embedpdf/plugin-search/preact';
@@ -85,9 +94,9 @@ import {
   SelectionState,
 } from '@embedpdf/plugin-selection';
 import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
-import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
+import { TilingPluginConfig, TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
-import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
+import { ThumbnailPluginConfig, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 import {
   ANNOTATION_PLUGIN_ID,
   AnnotationPlugin,
@@ -97,7 +106,7 @@ import {
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 import { PinchWrapper, MarqueeZoom } from '@embedpdf/plugin-zoom/preact';
 import { LoadingIndicator } from './ui/loading-indicator';
-import { PrintPluginPackage } from '@embedpdf/plugin-print';
+import { PrintPluginConfig, PrintPluginPackage } from '@embedpdf/plugin-print';
 import { PrintProvider } from '@embedpdf/plugin-print/preact';
 import {
   FULLSCREEN_PLUGIN_ID,
@@ -130,35 +139,14 @@ export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
 // **Enhanced Configuration Interface**
 export interface PluginConfigs {
-  viewport?: {
-    viewportGap?: number;
-  };
-  scroll?: {
-    strategy?: ScrollStrategy;
-  };
-  zoom?: {
-    defaultZoomLevel?: ZoomMode;
-  };
-  spread?: {
-    defaultSpreadMode?: SpreadMode;
-  };
-  rotate?: {
-    defaultRotation?: Rotation;
-  };
-  tiling?: {
-    tileSize?: number;
-    overlapPx?: number;
-    extraRings?: number;
-  };
-  thumbnail?: {
-    width?: number;
-    gap?: number;
-    buffer?: number;
-    labelHeight?: number;
-  };
-  print?: {
-    batchSize?: number;
-  };
+  viewport?: ViewportPluginConfig;
+  scroll?: ScrollPluginConfig;
+  zoom?: ZoomPluginConfig;
+  spread?: SpreadPluginConfig;
+  rotate?: RotatePluginConfig;
+  tiling?: TilingPluginConfig;
+  thumbnail?: ThumbnailPluginConfig;
+  print?: PrintPluginConfig;
 }
 
 export interface PDFViewerConfig {
