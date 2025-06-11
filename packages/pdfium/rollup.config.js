@@ -20,7 +20,7 @@ const common = {
   plugins: [
     typescript(),
     nodeResolve({ extensions: ['.js', '.ts'] }),
-    copy({ targets: [{ src: `${SRC}/${WASM}`, dest: DIST }] }),
+    copy({ targets: [{ src: `${SRC}/vendor/${WASM}`, dest: DIST }] }),
   ],
 };
 

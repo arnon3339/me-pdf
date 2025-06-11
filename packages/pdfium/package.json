@@ -50,7 +50,7 @@
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck",
     "prewasm": "node ./scripts/generate-exported-functions.js && node ./scripts/generate-exported-runtime-methods.js",
     "wasm": "make build && pnpm run wasm:copy",
-    "wasm:copy": "cpy ./docker/dist/pdfium.cjs ./src --flat && cpy ./docker/dist/pdfium.wasm ./src --flat && cpy ./docker/dist/pdfium.js ./src --flat",
+    "wasm:copy": "cpy ./docker/dist/pdfium.cjs ./src/vendor --flat && cpy ./docker/dist/pdfium.wasm ./src/vendor --flat && cpy ./docker/dist/pdfium.js ./src/vendor --flat",
     "build:all": "pnpm run wasm && pnpm run build"
   },
   "files": [
