@@ -7,6 +7,7 @@ export default defineConfig({
     index: 'src/index.ts',
     pdfium: 'src/pdfium-engine.ts',
     worker: 'src/webworker-engine.ts',
+    converters: 'src/converters/index.ts',
   },
 
   // one `.d.ts` per entry above
@@ -15,6 +16,7 @@ export default defineConfig({
       index: 'src/index.ts',
       pdfium: 'src/pdfium-engine.ts',
       worker: 'src/webworker-engine.ts',
+      converters: 'src/converters/index.ts',
     },
   },
 

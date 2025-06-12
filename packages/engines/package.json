@@ -21,6 +21,11 @@
       "types": "./dist/worker.d.ts",
       "import": "./dist/worker.js",
       "require": "./dist/worker.cjs"
+    },
+    "./converters": {
+      "types": "./dist/converters.d.ts",
+      "import": "./dist/converters.js",
+      "require": "./dist/converters.cjs"
     }
   },
   "scripts": {

@@ -12,7 +12,6 @@ import {
   SearchResult,
   SearchTarget,
   MatchFlag,
-  compareSearchTarget,
   PdfDestinationObject,
   PdfBookmarkObject,
   PdfDocumentObject,
@@ -82,8 +81,8 @@ import {
   PdfAlphaColor,
   PdfAnnotationState,
   PdfAnnotationStateModel,
-  PdfAnnotationObjectBase,
   quadToRect,
+  PdfImage,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -151,18 +150,35 @@ export enum PdfiumErrorCode {
   XFALayout = 8,
 }
 
-const PAGE_TTL = 5000; // 3 seconds
+/**
+ * Function type for converting ImageData to Blob
+ * In browser: uses OffscreenCanvas
+ * In Node.js: can use Sharp or other image processing libraries
+ */
+export type ImageDataConverter<T = Blob> = (imageData: PdfImage) => Promise<T>;
 
-type CachedPage = {
-  pagePtr: number; // live FPDF_PAGE handle
-  refCount: number; // callers currently using it
-  idleTimer?: ReturnType<typeof setTimeout>;
+export const browserImageDataToBlobConverter: ImageDataConverter<Blob> = (
+  pdfImageData: PdfImage,
+): Promise<Blob> => {
+  // Check if we're in a browser environment
+  if (typeof OffscreenCanvas === 'undefined') {
+    throw new Error(
+      'OffscreenCanvas is not available in this environment. ' +
+        'This converter is intended for browser use only. ' +
+        'Please use createNodeImageDataToBlobConverter() or createNodeCanvasImageDataToBlobConverter() for Node.js.',
+    );
+  }
+
+  const imageData = new ImageData(pdfImageData.data, pdfImageData.width, pdfImageData.height);
+  const off = new OffscreenCanvas(imageData.width, imageData.height);
+  off.getContext('2d')!.putImageData(imageData, 0, 0);
+  return off.convertToBlob({ type: 'image/webp' });
 };
 
 /**
  * Pdf engine that based on pdfium wasm
  */
-export class PdfiumEngine implements PdfEngine {
+export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   /**
    * pdf documents that opened
    */
@@ -172,10 +188,12 @@ export class PdfiumEngine implements PdfEngine {
    * Create an instance of PdfiumEngine
    * @param wasmModule - pdfium wasm module
    * @param logger - logger instance
+   * @param imageDataToBlobConverter - function to convert ImageData to Blob
    */
   constructor(
     private pdfiumModule: WrappedPdfiumModule,
     private logger: Logger = new NoopLogger(),
+    private imageDataConverter: ImageDataConverter<T> = browserImageDataToBlobConverter as ImageDataConverter<T>,
   ) {
     this.cache = new PdfCache(this.pdfiumModule);
   }
@@ -827,12 +845,12 @@ export class PdfiumEngine implements PdfEngine {
   renderPage(
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number,
-    options: PdfRenderOptions,
-  ) {
-    const task = new Task<Blob, PdfErrorReason>();
+    scaleFactor: number = 1,
+    rotation: Rotation = Rotation.Degree0,
+    dpr: number = 1,
+    options: PdfRenderOptions = { withAnnotations: false },
+  ): PdfTask<T> {
+    const task = new Task<T, PdfErrorReason>();
 
     this.logger.debug(
       LOG_SOURCE,
@@ -871,7 +889,7 @@ export class PdfiumEngine implements PdfEngine {
     );
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPage`, 'End', `${doc.id}-${page.index}`);
 
-    this.imageDataToBlob(imageData).then((blob) => task.resolve(blob));
+    this.imageDataConverter(imageData).then((blob) => task.resolve(blob));
 
     return task;
   }
@@ -889,8 +907,8 @@ export class PdfiumEngine implements PdfEngine {
     dpr: number,
     rect: Rect,
     options: PdfRenderOptions,
-  ) {
-    const task = new Task<Blob, PdfErrorReason>();
+  ): PdfTask<T> {
+    const task = new Task<T, PdfErrorReason>();
 
     this.logger.debug(
       LOG_SOURCE,
@@ -939,7 +957,7 @@ export class PdfiumEngine implements PdfEngine {
     );
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPageRect`, 'End', `${doc.id}-${page.index}`);
 
-    this.imageDataToBlob(imageData).then((blob) => task.resolve(blob));
+    this.imageDataConverter(imageData).then((blob) => task.resolve(blob));
 
     return task;
   }
@@ -1434,7 +1452,7 @@ export class PdfiumEngine implements PdfEngine {
     scaleFactor: number,
     rotation: Rotation,
     dpr: number,
-  ) {
+  ): PdfTask<T> {
     this.logger.debug(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -4637,11 +4655,11 @@ export class PdfiumEngine implements PdfEngine {
       bitmapHeapPtr + bitmapHeapLength,
     );
 
-    const imageData = new ImageData(
-      new Uint8ClampedArray(data),
-      rectSize.size.width,
-      rectSize.size.height,
-    );
+    const imageData = {
+      data: new Uint8ClampedArray(data),
+      width: rectSize.size.width,
+      height: rectSize.size.height,
+    };
 
     this.free(bitmapHeapPtr);
 
@@ -5411,19 +5429,5 @@ export class PdfiumEngine implements PdfEngine {
     pageCtx.release();
 
     return pageResults;
-  }
-
-  /**
-   * Convert ImageData to Blob
-   *
-   * @param imageData - ImageData
-   * @returns Blob
-   *
-   * @private
-   */
-  private imageDataToBlob(imageData: ImageData): Promise<Blob> {
-    const off = new OffscreenCanvas(imageData.width, imageData.height);
-    off.getContext('2d')!.putImageData(imageData, 0, 0);
-    return off.convertToBlob({ type: 'image/webp' });
   }
 }

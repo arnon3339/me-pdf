@@ -229,6 +229,19 @@ export class Task<R, D> {
       this.rejectedCallbacks = [];
     }
   }
+
+  /**
+   * fail task with a TaskError from another task
+   * This is a convenience method for error propagation between tasks
+   * @param error - TaskError from another task
+   */
+  fail(error: TaskError<D>) {
+    if (error.type === 'abort') {
+      this.abort(error.reason);
+    } else {
+      this.reject(error.reason);
+    }
+  }
 }
 
 /**

@@ -179,6 +179,12 @@ export enum PdfActionType {
   LaunchAppOrOpenFile = 4,
 }
 
+export type PdfImage = {
+  data: Uint8ClampedArray;
+  width: number;
+  height: number;
+};
+
 /**
  * Representation of pdf action
  *
@@ -1551,7 +1557,7 @@ export class PdfTaskHelper {
  *
  * @public
  */
-export interface PdfEngine {
+export interface PdfEngine<T = Blob> {
   /**
    * Check whether pdf engine supports this feature
    * @param feature - which feature want to check
@@ -1636,7 +1642,7 @@ export interface PdfEngine {
     rotation: Rotation,
     dpr: number,
     options: PdfRenderOptions,
-  ) => PdfTask<Blob>;
+  ) => PdfTask<T>;
   /**
    * Render the specified rect of pdf page
    * @param doc - pdf document
@@ -1656,7 +1662,7 @@ export interface PdfEngine {
     dpr: number,
     rect: Rect,
     options: PdfRenderOptions,
-  ) => PdfTask<Blob>;
+  ) => PdfTask<T>;
   /**
    * Get annotations of pdf page
    * @param doc - pdf document
@@ -1737,7 +1743,7 @@ export interface PdfEngine {
     scaleFactor: number,
     rotation: Rotation,
     dpr: number,
-  ) => PdfTask<Blob>;
+  ) => PdfTask<T>;
   /**
    * Search across all pages in the document
    * @param doc - pdf document
