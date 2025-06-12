@@ -34,7 +34,7 @@ jobs:
       # ─── Set up PNPM 8 (change if you pin another major) ───────────
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 10.4.0
           run_install: false
 
       # ─── Set up Node and cache the pnpm store ──────────────────────
@@ -47,7 +47,7 @@ jobs:
       # ─── Install deps (root + workspaces) ──────────────────────────
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build -r 
-      
+
       # ─── Version-bump PR & publish (Changesets magic) ──────────────
       - name: Version packages and (eventually) publish
         id: changesets
