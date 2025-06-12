@@ -16,7 +16,7 @@ Centralised **type definitions & helper utilities** shared by every EmbedPDF ru
 
 Full reference & examples live at:
 
-**[Official Documentation](https://www.embedpdf.com/docs/models/introduction)**
+**[Official Documentation](https://www.embedpdf.com/docs)**
 
 ## Why `@embedpdf/models`?
 

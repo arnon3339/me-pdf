@@ -44,6 +44,15 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/embedpdf/embed-pdf-viewer",
+    "directory": "packages/plugin-annotation"
+  },
+  "homepage": "https://www.embedpdf.com/docs",
+  "bugs": {
+    "url": "https://github.com/embedpdf/embed-pdf-viewer/issues"
+  },
   "publishConfig": {
     "access": "public"
   }
