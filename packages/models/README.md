@@ -30,7 +30,7 @@ Full reference & examples live at:
 - Logger with pluggable transports & log‑level filtering
 - Promise‑like **Task** abstraction (cancellable / abortable)
 - Rich PDF domain model: documents, pages, bookmarks, annotations, form fields, permissions, search
-- Utility helpers (`unionFlags`, `compareSearchTarget`, `PdfTaskHelper`, …)
+- Utility helpers (`unionFlags`, `PdfTaskHelper`, …)
 
 ## Installation
 
