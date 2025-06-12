@@ -43,8 +43,8 @@
     "@embedpdf/core": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0",
     "preact": "^10.26.4"
   },
   "files": [

@@ -47,7 +47,7 @@ jobs:
 
       # ─── Install deps (root + workspaces) ──────────────────────────
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
+      - run: pnpm run build:packages
 
       # ─── Version-bump PR & publish (Changesets magic) ──────────────
       - name: Version packages and (eventually) publish
