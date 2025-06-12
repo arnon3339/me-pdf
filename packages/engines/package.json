@@ -28,6 +28,11 @@
       "require": "./dist/converters.cjs"
     }
   },
+  "keywords": [
+    "pdf",
+    "pdf-engine",
+    "embedpdf"
+  ],
   "scripts": {
     "build": "tsup",
     "build:watch": "tsup --watch",

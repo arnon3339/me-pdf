@@ -1,6 +1,7 @@
 {
-  "name": "@embedpdf/engines-node-examples",
+  "name": "@embedpdf/example-engines-node",
   "version": "1.0.0",
+  "private": true,
   "description": "Node.js examples for @embedpdf/engines",
   "type": "module",
   "main": "basic-example.js",

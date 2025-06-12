@@ -1,6 +1,7 @@
 {
-  "name": "@embedpdf/pdfium-node-examples",
+  "name": "@embedpdf/example-pdfium-node",
   "version": "1.0.0",
+  "private": true,
   "description": "Node.js examples for @embedpdf/pdfium",
   "type": "module",
   "main": "basic-example.js",
@@ -10,7 +11,7 @@
     "example:text": "node text-extraction-example.js"
   },
   "dependencies": {
-    "@embedpdf/pdfium": "file:../../"
+    "@embedpdf/pdfium": "workspace:*"
   },
   "keywords": [
     "pdf",
