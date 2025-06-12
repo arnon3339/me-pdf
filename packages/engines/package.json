@@ -1,7 +1,7 @@
 {
   "name": "@embedpdf/engines",
   "version": "1.0.0",
-  "description": "core components of embedpdf",
+  "description": "Pluggable runtime layer that abstracts over multiple PDF engines (PDF-ium, Web Workers, mocks, etc.) to provide a unified API for rendering, search, annotation, and other document-level operations in EmbedPDF.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -40,6 +40,15 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/embedpdf/embed-pdf-viewer",
+    "directory": "packages/engines"
+  },
+  "homepage": "https://www.embedpdf.com/docs/engines/introduction",
+  "bugs": {
+    "url": "https://github.com/embedpdf/embed-pdf-viewer/issues"
+  },
   "author": "Bob Singor, Ji Chang",
   "license": "MIT",
   "devDependencies": {
