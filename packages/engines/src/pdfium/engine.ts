@@ -452,7 +452,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  openDocumentFromBuffer(file: PdfFile, password: string) {
+  openDocumentFromBuffer(file: PdfFile, password: string = '') {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromBuffer', file, password);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromBuffer`, 'Begin', file.id);
     const array = new Uint8Array(file.content);
@@ -534,7 +534,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  openDocumentFromLoader(fileLoader: PdfFileLoader, password: string) {
+  openDocumentFromLoader(fileLoader: PdfFileLoader, password: string = '') {
     const { fileLength, callback, ...file } = fileLoader;
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromLoader', file, password);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromLoader`, 'Begin', file.id);
