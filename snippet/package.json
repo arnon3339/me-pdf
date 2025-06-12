@@ -36,7 +36,7 @@
     "@embedpdf/plugin-print": "workspace:*",
     "@embedpdf/plugin-fullscreen": "workspace:*",
     "@embedpdf/plugin-bookmark": "workspace:*",
-    "@embedpdf/plugin-download": "workspace:*",
+    "@embedpdf/plugin-export": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@embedpdf/plugin-pan": "workspace:*",
     "preact": "^10.17.0"

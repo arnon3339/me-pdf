@@ -1,5 +1,5 @@
 {
-  "name": "@embedpdf/plugin-download",
+  "name": "@embedpdf/plugin-export",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -30,10 +30,11 @@
     "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@embedpdf/models": "workspace:*"
+  },
   "devDependencies": {
     "@embedpdf/core": "workspace:*",
-    "@embedpdf/models": "workspace:*",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"

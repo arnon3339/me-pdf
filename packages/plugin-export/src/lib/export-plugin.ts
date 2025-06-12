@@ -1,10 +1,10 @@
 import { BasePlugin, createEmitter, PluginRegistry } from '@embedpdf/core';
 import { PdfEngine, PdfErrorCode, PdfErrorReason, PdfTaskHelper, Task } from '@embedpdf/models';
 
-import { DownloadCapability, DownloadPluginConfig } from './types';
+import { ExportCapability, ExportPluginConfig } from './types';
 
-export class DownloadPlugin extends BasePlugin<DownloadPluginConfig, DownloadCapability> {
-  static readonly id = 'download' as const;
+export class ExportPlugin extends BasePlugin<ExportPluginConfig, ExportCapability> {
+  static readonly id = 'export' as const;
 
   private readonly downloadRequest$ = createEmitter<'download'>();
 
@@ -16,9 +16,9 @@ export class DownloadPlugin extends BasePlugin<DownloadPluginConfig, DownloadCap
     this.engine = engine;
   }
 
-  async initialize(_: DownloadPluginConfig): Promise<void> {}
+  async initialize(_: ExportPluginConfig): Promise<void> {}
 
-  protected buildCapability(): DownloadCapability {
+  protected buildCapability(): ExportCapability {
     return {
       saveAsCopy: this.saveAsCopy.bind(this),
       download: this.download.bind(this),

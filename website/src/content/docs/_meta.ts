@@ -7,6 +7,10 @@ export default {
     title: 'EmbedPDF Snippet',
     type: 'page',
   },
+  engines: {
+    title: 'Engines',
+    type: 'page',
+  },
   index: {
     title: 'Introduction',
     type: 'page',

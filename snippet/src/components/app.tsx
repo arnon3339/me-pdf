@@ -116,12 +116,8 @@ import {
 } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
-import {
-  DOWNLOAD_PLUGIN_ID,
-  DownloadPlugin,
-  DownloadPluginPackage,
-} from '@embedpdf/plugin-download';
-import { Download } from '@embedpdf/plugin-download/preact';
+import { EXPORT_PLUGIN_ID, ExportPlugin, ExportPluginPackage } from '@embedpdf/plugin-export';
+import { Download } from '@embedpdf/plugin-export/react';
 import {
   INTERACTION_MANAGER_PLUGIN_ID,
   InteractionManagerPlugin,
@@ -424,9 +420,9 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcutLabel: 'D',
     type: 'action',
     action: (registry) => {
-      const download = registry.getPlugin<DownloadPlugin>(DOWNLOAD_PLUGIN_ID)?.provides();
-      if (download) {
-        download.download();
+      const exportPlugin = registry.getPlugin<ExportPlugin>(EXPORT_PLUGIN_ID)?.provides();
+      if (exportPlugin) {
+        exportPlugin.download();
       }
     },
   },
@@ -2071,7 +2067,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(PrintPluginPackage, pluginConfigs.print),
           createPluginRegistration(FullscreenPluginPackage, {}),
           createPluginRegistration(BookmarkPluginPackage, {}),
-          createPluginRegistration(DownloadPluginPackage, {}),
+          createPluginRegistration(ExportPluginPackage, {}),
           createPluginRegistration(InteractionManagerPluginPackage, {}),
           createPluginRegistration(PanPluginPackage, {}),
         ]}

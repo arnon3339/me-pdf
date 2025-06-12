@@ -1,21 +1,22 @@
+/** @jsxImportSource preact */
 import { ignore } from '@embedpdf/models';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'preact/hooks';
 
-import { useDownloadCapability } from '../hooks';
+import { useExportCapability } from '../hooks';
 
 export function Download() {
-  const { provides: downloadCapability } = useDownloadCapability();
+  const { provides: exportCapability } = useExportCapability();
   const ref = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    if (!downloadCapability) return;
+    if (!exportCapability) return;
 
-    const unsub = downloadCapability.onRequest(async (action) => {
+    const unsub = exportCapability.onRequest(async (action) => {
       if (action === 'download') {
         const el = ref.current;
         if (!el) return;
 
-        const task = downloadCapability.saveAsCopy();
+        const task = exportCapability.saveAsCopy();
         task.wait((buffer) => {
           const url = URL.createObjectURL(new Blob([buffer]));
           el.href = url;
@@ -27,7 +28,7 @@ export function Download() {
     });
 
     return unsub;
-  }, [downloadCapability]);
+  }, [exportCapability]);
 
   return <a style={{ display: 'none' }} ref={ref} />;
 }
