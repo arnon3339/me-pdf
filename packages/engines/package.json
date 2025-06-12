@@ -43,18 +43,15 @@
   "author": "Bob Singor, Ji Chang",
   "license": "MIT",
   "devDependencies": {
+    "@embedpdf/models": "workspace:*",
+    "@embedpdf/pdfium": "workspace:*",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "@types/jest": "^29.5.14",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5"
   },
-  "dependencies": {
-    "@embedpdf/models": "workspace:*",
-    "@embedpdf/pdfium": "workspace:*",
-    "buffer": "^6.0.3",
-    "process": "^0.11.10"
-  },
+  "dependencies": {},
   "publishConfig": {
     "access": "public"
   }
