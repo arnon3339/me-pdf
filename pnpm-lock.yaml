@@ -177,13 +177,14 @@ importers:
         version: 5.7.3
 
   packages/engines:
-    devDependencies:
+    dependencies:
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
       '@embedpdf/pdfium':
         specifier: workspace:*
         version: link:../pdfium
+    devDependencies:
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
