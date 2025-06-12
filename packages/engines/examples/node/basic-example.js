@@ -17,10 +17,9 @@ async function runExample() {
   const imageConverter = createNodeImageDataToBufferConverter(sharp, 'image/webp');
 
   // Initialize PDFium
-  const pdfiumInstance = await init({});
+  const pdfiumInstance = await init();
   const engine = new PdfiumEngine(pdfiumInstance, consoleLogger, imageConverter);
-
-  await engine.initialize().toPromise();
+  engine.initialize();
 
   const pdfPath = process.argv[2] || join(__dirname, 'sample.pdf');
   const pdfBuffer = await readFile(pdfPath);
