@@ -9,6 +9,7 @@ on:
       - "packages/**"
       - ".changeset/**"
       - "pnpm-lock.yaml"
+  workflow_dispatch: {}
 
 # 2️⃣  Only one release job at a time
 # ──────────────────────────────────────────────────────────────────────
