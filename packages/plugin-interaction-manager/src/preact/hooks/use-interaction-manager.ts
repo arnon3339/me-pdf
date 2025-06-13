@@ -6,7 +6,7 @@ import {
 import { useState } from 'preact/hooks';
 import { useEffect } from 'preact/hooks';
 
-export const useInteractionManager = () =>
+export const useInteractionManagerPlugin = () =>
   usePlugin<InteractionManagerPlugin>(InteractionManagerPlugin.id);
 export const useInteractionManagerCapability = () =>
   useCapability<InteractionManagerPlugin>(InteractionManagerPlugin.id);

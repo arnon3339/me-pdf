@@ -771,6 +771,9 @@ importers:
 
   packages/plugin-tiling:
     dependencies:
+      '@embedpdf/models':
+        specifier: workspace:*
+        version: link:../models
       preact:
         specifier: ^10.26.4
         version: 10.26.4
@@ -784,9 +787,6 @@ importers:
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
-      '@embedpdf/models':
-        specifier: workspace:*
-        version: link:../models
       '@embedpdf/plugin-render':
         specifier: workspace:*
         version: link:../plugin-render

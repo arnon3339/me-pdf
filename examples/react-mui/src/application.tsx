@@ -10,7 +10,15 @@ import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/react';
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/react';
-import { CircularProgress, Box } from '@mui/material';
+import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
+
+import { CircularProgress, Box, AppBar, Toolbar, IconButton, Divider } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
+import { PageSettingsIcon } from './icons';
+import { ZoomControls } from './components/zoom';
 
 interface AppProps {
   engine: PdfEngine;
@@ -18,7 +26,7 @@ interface AppProps {
 
 function App({ engine }: AppProps) {
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       <EmbedPDF
         engine={engine}
         onInitialized={async (initial) => {
@@ -49,10 +57,49 @@ function App({ engine }: AppProps) {
             overlapPx: 2.5,
             extraRings: 0,
           }),
+          createPluginRegistration(ZoomPluginPackage, {
+            defaultZoomLevel: ZoomMode.FitPage,
+          }),
         ]}
       >
         {({ pluginsReady }) => (
           <>
+            <AppBar position="static">
+              <Toolbar variant="dense" disableGutters sx={{ gap: 1.5, px: 1.5 }}>
+                <IconButton edge="start" size="small" color="inherit" aria-label="menu">
+                  <MenuIcon fontSize="small" />
+                </IconButton>
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
+                />
+                <IconButton edge="start" size="small" color="inherit" aria-label="menu">
+                  <ViewSidebarOutlinedIcon fontSize="small" sx={{ transform: 'rotate(180deg)' }} />
+                </IconButton>
+                <IconButton edge="start" size="small" color="inherit" aria-label="menu">
+                  <PageSettingsIcon fontSize="small" />
+                </IconButton>
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
+                />
+                <ZoomControls />
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
+                />
+                <IconButton edge="start" size="small" color="inherit" aria-label="menu">
+                  <BackHandOutlinedIcon fontSize="small" />
+                </IconButton>
+                <Box sx={{ flexGrow: 1 }} />
+                <IconButton edge="start" size="small" color="inherit" aria-label="menu">
+                  <SearchOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Toolbar>
+            </AppBar>
             <Viewport
               style={{
                 width: '100%',
@@ -77,7 +124,7 @@ function App({ engine }: AppProps) {
           </>
         )}
       </EmbedPDF>
-    </>
+    </Box>
   );
 }
 

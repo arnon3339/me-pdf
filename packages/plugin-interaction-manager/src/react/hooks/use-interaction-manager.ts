@@ -5,7 +5,7 @@ import {
 } from '@embedpdf/plugin-interaction-manager';
 import { useState, useEffect } from 'react';
 
-export const useInteractionManager = () =>
+export const useInteractionManagerPlugin = () =>
   usePlugin<InteractionManagerPlugin>(InteractionManagerPlugin.id);
 export const useInteractionManagerCapability = () =>
   useCapability<InteractionManagerPlugin>(InteractionManagerPlugin.id);
