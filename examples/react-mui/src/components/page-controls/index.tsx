@@ -1,5 +1,5 @@
 import { useViewportCapability } from '@embedpdf/plugin-viewport/react';
-import { useScrollCapability } from '@embedpdf/plugin-scroll/react';
+import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { Box, IconButton, TextField, Typography } from '@mui/material';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -7,12 +7,15 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 
 export const PageControls = () => {
   const { provides: viewport } = useViewportCapability();
-  const { provides: scroll } = useScrollCapability();
+  const { currentPage, totalPages, scrollToPage } = useScroll();
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
   const hideTimeoutRef = useRef<NodeJS.Timeout>(null);
+  const [inputValue, setInputValue] = useState<string>(currentPage.toString());
+
+  useEffect(() => {
+    setInputValue(currentPage.toString());
+  }, [currentPage]);
 
   const startHideTimer = useCallback(() => {
     if (hideTimeoutRef.current) {
@@ -35,15 +38,6 @@ export const PageControls = () => {
       }
     });
   }, [viewport, startHideTimer]);
-
-  useEffect(() => {
-    if (!scroll) return;
-
-    return scroll.onPageChange(({ pageNumber, totalPages }) => {
-      setCurrentPage(pageNumber);
-      setTotalPages(totalPages);
-    });
-  }, [scroll]);
 
   useEffect(() => {
     return () => {
@@ -70,7 +64,7 @@ export const PageControls = () => {
     const page = parseInt(pageStr);
 
     if (!isNaN(page) && page >= 1 && page <= totalPages) {
-      scroll?.scrollToPage({
+      scrollToPage?.({
         pageNumber: page,
       });
     }
@@ -78,7 +72,7 @@ export const PageControls = () => {
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
-      scroll?.scrollToPage({
+      scrollToPage?.({
         pageNumber: currentPage - 1,
       });
     }
@@ -86,7 +80,7 @@ export const PageControls = () => {
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-      scroll?.scrollToPage({
+      scrollToPage?.({
         pageNumber: currentPage + 1,
       });
     }
@@ -114,7 +108,7 @@ export const PageControls = () => {
           bgcolor: '#f8f9fa',
           borderRadius: 1,
           border: '1px solid #cfd4da',
-          p: 1,
+          p: 0.5,
         }}
       >
         <IconButton onClick={handlePreviousPage} disabled={currentPage === 1} size="small">
@@ -124,23 +118,22 @@ export const PageControls = () => {
         <form onSubmit={handlePageChange} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <TextField
             name="page"
-            value={currentPage}
+            value={inputValue}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
-              if (value) {
-                const page = parseInt(value);
-                if (page >= 1 && page <= totalPages) {
-                  setCurrentPage(page);
-                }
-              }
+              setInputValue(value);
             }}
-            inputProps={{
-              style: {
-                width: '32px',
-                height: '32px',
-                padding: '4px',
-                textAlign: 'center',
-                fontSize: '14px',
+            slotProps={{
+              input: {
+                inputProps: {
+                  style: {
+                    width: '32px',
+                    height: '25px',
+                    padding: '4px',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                  },
+                },
               },
             }}
             variant="outlined"
