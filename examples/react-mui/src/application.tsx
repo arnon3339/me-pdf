@@ -17,8 +17,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
+
 import { PageSettingsIcon } from './icons';
-import { ZoomControls } from './components/zoom';
+import { ZoomControls } from './components/zoom-controls';
+import { PageControls } from './components/page-controls';
 
 interface AppProps {
   engine: PdfEngine;
@@ -113,13 +115,17 @@ function App({ engine }: AppProps) {
               {pluginsReady && (
                 <Scroller
                   renderPage={({ document, width, height, pageIndex, scale }) => (
-                    <Box key={document?.id} sx={{ width, height, position: 'relative' }}>
+                    <Box
+                      key={document?.id}
+                      sx={{ width, height, position: 'relative', backgroundColor: 'white' }}
+                    >
                       <RenderLayer pageIndex={pageIndex} />
                       <TilingLayer pageIndex={pageIndex} scale={scale} />
                     </Box>
                   )}
                 />
               )}
+              <PageControls />
             </Viewport>
           </>
         )}

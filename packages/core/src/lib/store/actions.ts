@@ -7,6 +7,15 @@ export const SET_SCALE = 'SET_SCALE';
 export const SET_ROTATION = 'SET_ROTATION';
 export const SET_PAGES = 'SET_PAGES';
 
+export const CORE_ACTION_TYPES = [
+  LOAD_DOCUMENT,
+  SET_DOCUMENT,
+  SET_DOCUMENT_ERROR,
+  SET_SCALE,
+  SET_ROTATION,
+  SET_PAGES,
+] as const;
+
 // Action Type Interfaces
 export interface LoadDocumentAction {
   type: typeof LOAD_DOCUMENT;
