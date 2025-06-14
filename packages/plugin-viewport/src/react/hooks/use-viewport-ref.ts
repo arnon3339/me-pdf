@@ -1,14 +1,14 @@
+import { Rect } from '@embedpdf/models';
 import { useLayoutEffect, useRef } from 'react';
 
-import { useViewportCapability } from './use-viewport';
-import { Rect } from '@embedpdf/models';
+import { useViewportPlugin } from './use-viewport';
 
 export function useViewportRef() {
-  const { provides: viewportProvides } = useViewportCapability();
+  const { plugin: viewportPlugin } = useViewportPlugin();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (!viewportProvides) return;
+    if (!viewportPlugin) return;
 
     const container = containerRef.current;
     if (!container) return;
@@ -21,11 +21,11 @@ export function useViewportRef() {
         size: { width: r.width, height: r.height },
       };
     };
-    viewportProvides.registerBoundingRectProvider(provideRect);
+    viewportPlugin.registerBoundingRectProvider(provideRect);
 
     // Example: On scroll, call setMetrics
     const onScroll = () => {
-      viewportProvides.setViewportScrollMetrics({
+      viewportPlugin.setViewportScrollMetrics({
         scrollTop: container.scrollTop,
         scrollLeft: container.scrollLeft,
       });
@@ -34,9 +34,7 @@ export function useViewportRef() {
 
     // Example: On resize, call setMetrics
     const resizeObserver = new ResizeObserver(() => {
-      const rect = container.getBoundingClientRect();
-
-      viewportProvides.setViewportMetrics({
+      viewportPlugin.setViewportResizeMetrics({
         width: container.offsetWidth,
         height: container.offsetHeight,
         clientWidth: container.clientWidth,
@@ -49,9 +47,10 @@ export function useViewportRef() {
     });
     resizeObserver.observe(container);
 
-    const unsubscribeScrollRequest = viewportProvides.onScrollRequest(
+    const unsubscribeScrollRequest = viewportPlugin.onScrollRequest(
       ({ x, y, behavior = 'auto' }) => {
         requestAnimationFrame(() => {
+          console.log('scrollTo', x, y, behavior);
           container.scrollTo({ left: x, top: y, behavior });
         });
       },
@@ -59,12 +58,13 @@ export function useViewportRef() {
 
     // Cleanup
     return () => {
-      viewportProvides.registerBoundingRectProvider(null);
+      console.log('unmount');
+      viewportPlugin.registerBoundingRectProvider(null);
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
       unsubscribeScrollRequest();
     };
-  }, [viewportProvides]);
+  }, [viewportPlugin]);
 
   // Return the ref so your React code can attach it to a div
   return containerRef;

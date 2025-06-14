@@ -226,6 +226,8 @@ export class ScrollPlugin extends BasePlugin<
       onScroll: this.scroll$.on,
       onPageChange: this.pageChange$.on,
       onScrollerData: this.scrollerLayout$.on,
+      getCurrentPage: () => this.currentPage,
+      getTotalPages: () => this.state.totalPages,
       scrollToPage: (options: ScrollToPageOptions) => {
         const { pageNumber, behavior = 'smooth', pageCoordinates, center = false } = options;
         const virtualItems = this.getVirtualItemsFromState();

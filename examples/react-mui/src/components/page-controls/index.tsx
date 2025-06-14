@@ -70,7 +70,9 @@ export const PageControls = () => {
     }
   };
 
-  const handlePreviousPage = () => {
+  const handlePreviousPage = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.currentTarget.blur();
     if (currentPage > 1) {
       scrollToPage?.({
         pageNumber: currentPage - 1,
@@ -78,7 +80,9 @@ export const PageControls = () => {
     }
   };
 
-  const handleNextPage = () => {
+  const handleNextPage = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.currentTarget.blur();
     if (currentPage < totalPages) {
       scrollToPage?.({
         pageNumber: currentPage + 1,

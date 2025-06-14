@@ -50,17 +50,11 @@ export interface ScrollToPayload {
 export interface ViewportCapability {
   getViewportGap: () => number;
   getMetrics: () => ViewportMetrics;
-  setViewportMetrics: (metrics: ViewportInputMetrics) => void;
-  setViewportScrollMetrics: (metrics: ViewportScrollMetrics) => void;
-  onViewportChange: (
-    handler: (metrics: ViewportMetrics) => void,
-    options?: EventControlOptions,
-  ) => (metrics: ViewportMetrics) => void;
   scrollTo(position: ScrollToPayload): void;
-  onScrollRequest: EventHook<ScrollToPayload>;
+  onViewportChange: EventHook<ViewportMetrics>;
+  onViewportResize: EventHook<ViewportMetrics>;
   onScrollChange: EventHook<ViewportScrollMetrics>;
   onScrollActivity: EventHook<boolean>;
   isScrolling: () => boolean;
   getBoundingRect(): Rect;
-  registerBoundingRectProvider(fn: (() => Rect) | null): void;
 }
