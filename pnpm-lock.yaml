@@ -92,6 +92,9 @@ importers:
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../../packages/plugin-scroll
+      '@embedpdf/plugin-search':
+        specifier: workspace:*
+        version: link:../../packages/plugin-search
       '@embedpdf/plugin-tiling':
         specifier: workspace:*
         version: link:../../packages/plugin-tiling
@@ -771,6 +774,9 @@ importers:
 
   packages/plugin-tiling:
     dependencies:
+      '@embedpdf/models':
+        specifier: workspace:*
+        version: link:../models
       preact:
         specifier: ^10.26.4
         version: 10.26.4
@@ -784,9 +790,6 @@ importers:
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
-      '@embedpdf/models':
-        specifier: workspace:*
-        version: link:../models
       '@embedpdf/plugin-render':
         specifier: workspace:*
         version: link:../plugin-render

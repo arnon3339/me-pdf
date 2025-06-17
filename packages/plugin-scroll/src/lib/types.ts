@@ -5,6 +5,7 @@ import { VirtualItem } from './types/virtual-item';
 
 export interface ScrollState extends ScrollMetrics {
   virtualItems: VirtualItem[];
+  totalPages: number;
   totalContentSize: { width: number; height: number };
   desiredScrollPosition: { x: number; y: number };
   strategy: ScrollStrategy;
@@ -84,11 +85,18 @@ export interface ScrollToPageOptions {
   center?: boolean;
 }
 
+export interface PageChangePayload {
+  pageNumber: number;
+  totalPages: number;
+}
+
 export interface ScrollCapability {
   onScrollerData: EventHook<ScrollerLayout>;
   onStateChange: EventHook<ScrollState>;
   onScroll: EventHook<ScrollMetrics>;
-  onPageChange: EventHook<number>;
+  getCurrentPage(): number;
+  getTotalPages(): number;
+  onPageChange: EventHook<PageChangePayload>;
   onLayoutChange: EventHook<LayoutChangePayload>;
   scrollToPage(options: ScrollToPageOptions): void;
   scrollToNextPage(behavior?: ScrollBehavior): void;

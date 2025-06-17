@@ -162,5 +162,11 @@ export interface SearchCapability {
    * @param handler - Handler function called when state changes
    * @returns Function to unsubscribe the handler
    */
-  onStateChange: (handler: (state: SearchState) => void) => () => void;
+  onStateChange: EventHook<SearchState>;
+
+  /**
+   * Get the current search state
+   * @returns The current search state
+   */
+  getState: () => SearchState;
 }

@@ -1,5 +1,6 @@
 import { Reducer, Action, StoreState, StoreListener, PluginListener } from './types';
 import { PluginStore } from './plugin-store';
+import { CORE_ACTION_TYPES } from './actions';
 
 /**
  * A generic, type-safe store class managing core and plugin states, reducers, and subscriptions.
@@ -245,10 +246,10 @@ export class Store<CoreState, CoreAction extends Action = Action> {
    * Helper method to check if an action is a CoreAction.
    * Adjust if you have a more refined way to differentiate CoreAction vs. any other Action.
    */
-  private isCoreAction(action: Action): action is CoreAction {
+  public isCoreAction(action: Action): action is CoreAction {
     // In many codebases you'd do something more robust here
     // or rely on TypeScript's narrowing logic if possible.
-    return (action as CoreAction).type !== undefined;
+    return CORE_ACTION_TYPES.includes(action.type as (typeof CORE_ACTION_TYPES)[number]);
   }
 
   /**

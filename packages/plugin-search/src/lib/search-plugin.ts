@@ -35,6 +35,7 @@ export class SearchPlugin extends BasePlugin<
   private readonly searchResult$ = createBehaviorEmitter<SearchAllPagesResult>();
   private readonly searchActiveResultChange$ = createBehaviorEmitter<number>();
   private readonly searchResultState$ = createBehaviorEmitter<SearchResultState>();
+  private readonly searchState$ = createBehaviorEmitter<SearchState>();
 
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
@@ -47,14 +48,14 @@ export class SearchPlugin extends BasePlugin<
 
   private handleDocumentLoaded(doc: PdfDocumentObject): void {
     this.currentDocument = doc;
-    if (this.getState().active) {
+    if (this.state.active) {
       this.startSearchSession();
     }
   }
 
   private handleLoaderEvent(event: LoaderEvent): void {
     if (event.type === 'error' || (event.type === 'start' && this.currentDocument)) {
-      if (this.getState().active) {
+      if (this.state.active) {
         this.stopSearchSession();
       }
       this.currentDocument = undefined;
@@ -75,6 +76,7 @@ export class SearchPlugin extends BasePlugin<
       showAllResults: newState.showAllResults,
       active: newState.active,
     });
+    this.searchState$.emit(newState);
   }
 
   protected buildCapability(): SearchCapability {
@@ -86,26 +88,23 @@ export class SearchPlugin extends BasePlugin<
       previousResult: this.previousResult.bind(this),
       goToResult: this.goToResult.bind(this),
       setShowAllResults: (showAll) => this.dispatch(setShowAllResults(showAll)),
-      getShowAllResults: () => this.getState().showAllResults,
+      getShowAllResults: () => this.state.showAllResults,
       onSearchResult: this.searchResult$.on,
       onSearchStart: this.searchStart$.on,
       onSearchStop: this.searchStop$.on,
       onActiveResultChange: this.searchActiveResultChange$.on,
       onSearchResultStateChange: this.searchResultState$.on,
-      onStateChange: (handler) => {
-        const unsubscribe = this.subscribe((_, state) => handler(state));
-        return unsubscribe;
-      },
-      getFlags: () => this.getState().flags,
+      onStateChange: this.searchState$.on,
+      getFlags: () => this.state.flags,
       setFlags: (flags) => this.setFlags(flags),
+      getState: () => this.state,
     };
   }
 
   private setFlags(flags: MatchFlag[]): void {
-    const state = this.getState();
     this.dispatch(setSearchFlags(flags));
-    if (state.active) {
-      this.searchAllPages(state.query, true);
+    if (this.state.active) {
+      this.searchAllPages(this.state.query, true);
     }
   }
 
@@ -142,10 +141,9 @@ export class SearchPlugin extends BasePlugin<
     force: boolean = false,
   ): Promise<SearchAllPagesResult> {
     const trimmedKeyword = keyword.trim();
-    const state = this.getState();
 
-    if (state.query === trimmedKeyword && !force) {
-      return { results: state.results, total: state.total };
+    if (this.state.query === trimmedKeyword && !force) {
+      return { results: this.state.results, total: this.state.total };
     }
 
     this.dispatch(startSearch(trimmedKeyword));
@@ -159,12 +157,12 @@ export class SearchPlugin extends BasePlugin<
       return { results: [], total: 0 };
     }
 
-    if (!state.active) {
+    if (!this.state.active) {
       this.startSearchSession();
     }
 
     return new Promise<SearchAllPagesResult>((resolve) => {
-      this.engine.searchAllPages(this.currentDocument!, trimmedKeyword, state.flags).wait(
+      this.engine.searchAllPages(this.currentDocument!, trimmedKeyword, this.state.flags).wait(
         (results) => {
           const activeResultIndex = results.total > 0 ? 0 : -1;
           this.dispatch(setSearchResults(results.results, results.total, activeResultIndex));
@@ -184,28 +182,29 @@ export class SearchPlugin extends BasePlugin<
   }
 
   private nextResult(): number {
-    const state = this.getState();
-    if (state.results.length === 0) {
+    if (this.state.results.length === 0) {
       return -1;
     }
     const nextIndex =
-      state.activeResultIndex >= state.results.length - 1 ? 0 : state.activeResultIndex + 1;
+      this.state.activeResultIndex >= this.state.results.length - 1
+        ? 0
+        : this.state.activeResultIndex + 1;
     return this.goToResult(nextIndex);
   }
 
   private previousResult(): number {
-    const state = this.getState();
-    if (state.results.length === 0) {
+    if (this.state.results.length === 0) {
       return -1;
     }
     const prevIndex =
-      state.activeResultIndex <= 0 ? state.results.length - 1 : state.activeResultIndex - 1;
+      this.state.activeResultIndex <= 0
+        ? this.state.results.length - 1
+        : this.state.activeResultIndex - 1;
     return this.goToResult(prevIndex);
   }
 
   private goToResult(index: number): number {
-    const state = this.getState();
-    if (state.results.length === 0 || index < 0 || index >= state.results.length) {
+    if (this.state.results.length === 0 || index < 0 || index >= this.state.results.length) {
       return -1;
     }
     this.dispatch(setActiveResultIndex(index));
@@ -214,7 +213,7 @@ export class SearchPlugin extends BasePlugin<
   }
 
   async destroy(): Promise<void> {
-    if (this.getState().active && this.currentDocument) {
+    if (this.state.active && this.currentDocument) {
       this.stopSearchSession();
     }
     this.searchResult$.clear();
@@ -222,5 +221,6 @@ export class SearchPlugin extends BasePlugin<
     this.searchStop$.clear();
     this.searchActiveResultChange$.clear();
     this.searchResultState$.clear();
+    this.searchState$.clear();
   }
 }
