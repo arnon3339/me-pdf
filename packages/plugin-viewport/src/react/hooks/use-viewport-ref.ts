@@ -58,7 +58,6 @@ export function useViewportRef() {
 
     // Cleanup
     return () => {
-      console.log('unmount');
       viewportPlugin.registerBoundingRectProvider(null);
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();

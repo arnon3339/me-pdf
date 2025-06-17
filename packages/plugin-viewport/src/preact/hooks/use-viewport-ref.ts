@@ -34,7 +34,7 @@ export function useViewportRef() {
 
     // Example: On resize, call setMetrics
     const resizeObserver = new ResizeObserver(() => {
-      viewportPlugin.setViewportMetrics({
+      viewportPlugin.setViewportResizeMetrics({
         width: container.offsetWidth,
         height: container.offsetHeight,
         clientWidth: container.clientWidth,

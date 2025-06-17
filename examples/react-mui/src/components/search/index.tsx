@@ -55,7 +55,7 @@ const HitLine = ({
         },
       }}
     >
-      <Typography variant="body2" noWrap>
+      <Typography variant="body2">
         {hit.context.truncatedLeft && '… '}
         {hit.context.before}
         <Box component="span" sx={{ color: 'primary.main', fontWeight: 'bold' }}>

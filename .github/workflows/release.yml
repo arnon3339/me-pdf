@@ -30,7 +30,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NPM_TOKEN:    ${{ secrets.NPM_TOKEN }}
-      
+
     steps:
       # ─── Check out the repo ────────────────────────────────────────
       - uses: actions/checkout@v4
@@ -60,3 +60,4 @@ jobs:
           commit: "chore: version packages"
           title:  "chore: version packages"
           publish: pnpm ci:publish         # defined in root package.json
+          createGithubReleases: true 
