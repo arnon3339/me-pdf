@@ -1,4 +1,11 @@
-import { BasePlugin, PluginRegistry, createEmitter, createBehaviorEmitter } from '@embedpdf/core';
+import {
+  BasePlugin,
+  PluginRegistry,
+  createEmitter,
+  createBehaviorEmitter,
+  Listener,
+  EventListener,
+} from '@embedpdf/core';
 
 import {
   ViewportAction,
@@ -26,6 +33,7 @@ export class ViewportPlugin extends BasePlugin<
 > {
   static readonly id = 'viewport' as const;
 
+  private readonly viewportResize$ = createBehaviorEmitter<ViewportMetrics>();
   private readonly viewportMetrics$ = createBehaviorEmitter<ViewportMetrics>();
   private readonly scrollMetrics$ = createBehaviorEmitter<ViewportScrollMetrics>();
   private readonly scrollReq$ = createEmitter<{
@@ -61,43 +69,49 @@ export class ViewportPlugin extends BasePlugin<
     return {
       getViewportGap: () => this.state.viewportGap,
       getMetrics: () => this.state.viewportMetrics,
-      onScrollChange: this.scrollMetrics$.on,
-      onViewportChange: this.viewportMetrics$.on,
-      registerBoundingRectProvider: (fn) => {
-        this.rectProvider = fn;
-      },
       getBoundingRect: (): Rect =>
         this.rectProvider?.() ?? {
           origin: { x: 0, y: 0 },
           size: { width: 0, height: 0 },
         },
-      setViewportMetrics: (viewportMetrics: ViewportInputMetrics) => {
-        this.dispatch(setViewportMetrics(viewportMetrics));
-      },
-      setViewportScrollMetrics: this.setViewportScrollMetrics.bind(this),
       scrollTo: (pos: ScrollToPayload) => this.scrollTo(pos),
-      onScrollRequest: this.scrollReq$.on,
       isScrolling: () => this.state.isScrolling,
+      onScrollChange: this.scrollMetrics$.on,
+      onViewportChange: this.viewportMetrics$.on,
+      onViewportResize: this.viewportResize$.on,
       onScrollActivity: this.scrollActivity$.on,
     };
   }
 
-  private bumpScrollActivity() {
-    if (this.scrollEndTimer) clearTimeout(this.scrollEndTimer);
-    this.scrollEndTimer = window.setTimeout(() => {
-      this.dispatch(setScrollActivity(false));
-      this.scrollEndTimer = undefined;
-    }, this.scrollEndDelay);
+  public setViewportResizeMetrics(viewportMetrics: ViewportInputMetrics) {
+    this.dispatch(setViewportMetrics(viewportMetrics));
+    this.viewportResize$.emit(this.state.viewportMetrics);
   }
 
-  private setViewportScrollMetrics(scrollMetrics: ViewportScrollMetrics) {
+  public setViewportScrollMetrics(scrollMetrics: ViewportScrollMetrics) {
     if (
       scrollMetrics.scrollTop !== this.state.viewportMetrics.scrollTop ||
       scrollMetrics.scrollLeft !== this.state.viewportMetrics.scrollLeft
     ) {
       this.dispatch(setViewportScrollMetrics(scrollMetrics));
       this.bumpScrollActivity();
+      this.scrollMetrics$.emit({
+        scrollTop: scrollMetrics.scrollTop,
+        scrollLeft: scrollMetrics.scrollLeft,
+      });
     }
+  }
+
+  public onScrollRequest(listener: Listener<ScrollToPayload>) {
+    return this.scrollReq$.on(listener);
+  }
+
+  public registerBoundingRectProvider(provider: (() => Rect) | null) {
+    this.rectProvider = provider;
+  }
+
+  private bumpScrollActivity() {
+    this.debouncedDispatch(setScrollActivity(false), this.scrollEndDelay);
   }
 
   private scrollTo(pos: ScrollToPayload) {
@@ -127,10 +141,6 @@ export class ViewportPlugin extends BasePlugin<
   override onStoreUpdated(prevState: ViewportState, newState: ViewportState): void {
     if (prevState !== newState) {
       this.viewportMetrics$.emit(newState.viewportMetrics);
-      this.scrollMetrics$.emit({
-        scrollTop: newState.viewportMetrics.scrollTop,
-        scrollLeft: newState.viewportMetrics.scrollLeft,
-      });
       if (prevState.isScrolling !== newState.isScrolling) {
         this.scrollActivity$.emit(newState.isScrolling);
       }
@@ -145,6 +155,7 @@ export class ViewportPlugin extends BasePlugin<
     super.destroy();
     // Clear out any handlers
     this.viewportMetrics$.clear();
+    this.viewportResize$.clear();
     this.scrollMetrics$.clear();
     this.scrollReq$.clear();
     this.scrollActivity$.clear();

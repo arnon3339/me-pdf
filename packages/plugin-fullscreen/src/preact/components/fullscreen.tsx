@@ -3,7 +3,7 @@ import { setFullscreen } from '@embedpdf/plugin-fullscreen';
 import { ComponentChildren, JSX } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 
-import { useFullscreen, useFullscreenCapability } from '../hooks';
+import { useFullscreenPlugin, useFullscreenCapability } from '../hooks';
 
 type FullscreenProviderProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
   children: ComponentChildren;
@@ -12,7 +12,7 @@ type FullscreenProviderProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'>
 
 export function FullscreenProvider({ children, ...props }: FullscreenProviderProps) {
   const { provides: fullscreenCapability } = useFullscreenCapability();
-  const { plugin } = useFullscreen();
+  const { plugin } = useFullscreenPlugin();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -43,6 +43,7 @@ export class ZoomPlugin extends BasePlugin<
   /* ------------------------------------------------------------------ */
   private readonly zoom$ = createEmitter<ZoomChangeEvent>();
   private readonly viewport: ViewportCapability;
+  private readonly viewportPlugin: ViewportPlugin;
   private readonly scroll: ScrollCapability;
   private readonly interactionManager: InteractionManagerCapability | null;
   private readonly presets: ZoomPreset[];
@@ -56,7 +57,8 @@ export class ZoomPlugin extends BasePlugin<
   constructor(id: string, registry: PluginRegistry, cfg: ZoomPluginConfig) {
     super(id, registry);
 
-    this.viewport = registry.getPlugin<ViewportPlugin>('viewport')!.provides();
+    this.viewportPlugin = registry.getPlugin<ViewportPlugin>('viewport')!;
+    this.viewport = this.viewportPlugin.provides();
     this.scroll = registry.getPlugin<ScrollPlugin>('scroll')!.provides();
     const interactionManager = registry.getPlugin<InteractionManagerPlugin>('interaction-manager');
     this.interactionManager = interactionManager?.provides() ?? null;
@@ -67,7 +69,7 @@ export class ZoomPlugin extends BasePlugin<
     this.zoomRanges = this.normalizeRanges(cfg.zoomRanges ?? []);
     this.dispatch(setInitialZoomLevel(cfg.defaultZoomLevel));
     /* keep "automatic" modes up to date -------------------------------- */
-    this.viewport.onViewportChange(() => this.recalcAuto(VerticalZoomFocus.Top), {
+    this.viewport.onViewportResize(() => this.recalcAuto(VerticalZoomFocus.Top), {
       mode: 'debounce',
       wait: 150,
     });
@@ -199,7 +201,7 @@ export class ZoomPlugin extends BasePlugin<
     /* ------------------------------------------------------------------ */
 
     if (!isNaN(desiredScrollLeft) && !isNaN(desiredScrollTop)) {
-      this.viewport.setViewportScrollMetrics({
+      this.viewportPlugin.setViewportScrollMetrics({
         scrollLeft: desiredScrollLeft,
         scrollTop: desiredScrollTop,
       });
