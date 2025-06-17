@@ -50,7 +50,6 @@ export function useViewportRef() {
     const unsubscribeScrollRequest = viewportPlugin.onScrollRequest(
       ({ x, y, behavior = 'auto' }) => {
         requestAnimationFrame(() => {
-          console.log('scrollTo', x, y, behavior);
           container.scrollTo({ left: x, top: y, behavior });
         });
       },
