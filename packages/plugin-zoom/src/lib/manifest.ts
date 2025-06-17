@@ -43,6 +43,21 @@ export const manifest: PluginManifest<ZoomPluginConfig> = {
         max: 10.0,
         step: 0.8,
       },
+      {
+        min: 10.0,
+        max: 20.0,
+        step: 1.6,
+      },
+      {
+        min: 20.0,
+        max: 40.0,
+        step: 3.2,
+      },
+      {
+        min: 40.0,
+        max: 60.0,
+        step: 6.4,
+      },
     ],
     presets: [
       {
