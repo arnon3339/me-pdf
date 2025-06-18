@@ -20,6 +20,7 @@ concurrency:
 permissions:
   contents: write             # create tags + version-bump PR
   id-token: write             # provenance for npm provenance
+  pull-requests: write         # create version-bump PR
 
 env:
   CI: true
@@ -60,4 +61,3 @@ jobs:
           commit: "chore: version packages"
           title:  "chore: version packages"
           publish: pnpm ci:publish         # defined in root package.json
-          createGithubReleases: true 

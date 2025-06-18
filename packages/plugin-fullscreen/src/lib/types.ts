@@ -10,5 +10,7 @@ export interface FullscreenCapability {
   isFullscreen: () => boolean;
   enableFullscreen: () => void;
   exitFullscreen: () => void;
+  toggleFullscreen: () => void;
   onRequest: EventHook<'enter' | 'exit'>;
+  onStateChange: EventHook<FullscreenState>;
 }

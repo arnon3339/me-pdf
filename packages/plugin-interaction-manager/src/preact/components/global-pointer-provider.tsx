@@ -7,9 +7,14 @@ import { useInteractionManagerCapability } from '../hooks';
 
 interface GlobalPointerProviderProps extends JSX.HTMLAttributes<HTMLDivElement> {
   children: ComponentChildren;
+  style?: JSX.CSSProperties;
 }
 
-export const GlobalPointerProvider = ({ children, ...props }: GlobalPointerProviderProps) => {
+export const GlobalPointerProvider = ({
+  children,
+  style,
+  ...props
+}: GlobalPointerProviderProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { provides: cap } = useInteractionManagerCapability();
 
@@ -20,7 +25,15 @@ export const GlobalPointerProvider = ({ children, ...props }: GlobalPointerProvi
   }, [cap]);
 
   return (
-    <div ref={ref} {...props}>
+    <div
+      ref={ref}
+      style={{
+        width: '100%',
+        height: '100%',
+        ...style,
+      }}
+      {...props}
+    >
       {children}
     </div>
   );

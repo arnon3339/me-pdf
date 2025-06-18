@@ -83,18 +83,36 @@ importers:
       '@embedpdf/pdfium':
         specifier: workspace:*
         version: link:../../packages/pdfium
+      '@embedpdf/plugin-export':
+        specifier: workspace:*
+        version: link:../../packages/plugin-export
+      '@embedpdf/plugin-fullscreen':
+        specifier: workspace:*
+        version: link:../../packages/plugin-fullscreen
+      '@embedpdf/plugin-interaction-manager':
+        specifier: workspace:*
+        version: link:../../packages/plugin-interaction-manager
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../../packages/plugin-loader
+      '@embedpdf/plugin-pan':
+        specifier: workspace:*
+        version: link:../../packages/plugin-pan
       '@embedpdf/plugin-render':
         specifier: workspace:*
         version: link:../../packages/plugin-render
+      '@embedpdf/plugin-rotate':
+        specifier: workspace:*
+        version: link:../../packages/plugin-rotate
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../../packages/plugin-scroll
       '@embedpdf/plugin-search':
         specifier: workspace:*
         version: link:../../packages/plugin-search
+      '@embedpdf/plugin-spread':
+        specifier: workspace:*
+        version: link:../../packages/plugin-spread
       '@embedpdf/plugin-tiling':
         specifier: workspace:*
         version: link:../../packages/plugin-tiling
@@ -430,6 +448,9 @@ importers:
 
   packages/plugin-interaction-manager:
     dependencies:
+      '@embedpdf/models':
+        specifier: workspace:*
+        version: link:../models
       preact:
         specifier: ^10.26.4
         version: 10.26.4
@@ -443,9 +464,6 @@ importers:
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
-      '@embedpdf/models':
-        specifier: workspace:*
-        version: link:../models
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.18

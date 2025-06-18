@@ -92,6 +92,8 @@ export interface InteractionManagerCapability {
   onCursorChange: EventHook<string>;
   /** subscribe to handler changes */
   onHandlerChange: EventHook<InteractionManagerState>;
+  /** subscribe to state changes */
+  onStateChange: EventHook<InteractionManagerState>;
   /** framework helpers -------------------------------------------------------------- */
   /** Returns the *merged* handler set for the current mode + given scope.
    *  Used by the PointerInteractionProvider inside each page / at the root. */

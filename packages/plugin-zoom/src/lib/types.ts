@@ -1,4 +1,4 @@
-import { BasePluginConfig } from '@embedpdf/core';
+import { BasePluginConfig, EventHook } from '@embedpdf/core';
 import { Rect } from '@embedpdf/models';
 import { ViewportMetrics } from '@embedpdf/plugin-viewport';
 
@@ -40,7 +40,9 @@ export interface ZoomChangeEvent {
 
 export interface ZoomCapability {
   /** subscribe – returns the unsubscribe function */
-  onZoomChange(handler: (e: ZoomChangeEvent) => void): () => void;
+  onZoomChange: EventHook<ZoomChangeEvent>;
+  /** subscribe – returns the unsubscribe function */
+  onStateChange: EventHook<ZoomState>;
 
   /** absolute requests -------------------------------------------------- */
   requestZoom(level: ZoomLevel, center?: Point): void;
@@ -56,6 +58,7 @@ export interface ZoomCapability {
   /** zoom in on an area -------------------------------------------------- */
   enableMarqueeZoom(): void;
   disableMarqueeZoom(): void;
+  toggleMarqueeZoom(): void;
   isMarqueeZoomActive(): boolean;
 
   getState(): ZoomState;
@@ -90,7 +93,6 @@ export interface ZoomPluginConfig extends BasePluginConfig {
 export interface ZoomState {
   zoomLevel: ZoomLevel; // last **requested** level
   currentZoomLevel: number; // actual numeric factor
-  zoomReady: boolean; // whether the zoom is ready to be used
 }
 
 export enum VerticalZoomFocus {
