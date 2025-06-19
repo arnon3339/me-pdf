@@ -21,7 +21,7 @@ permissions:
   contents: write             # create tags + version-bump PR
   id-token: write             # provenance for npm provenance
   pull-requests: write         # create version-bump PR
-
+  
 env:
   CI: true
 
