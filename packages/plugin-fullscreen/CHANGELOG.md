@@ -1,5 +1,11 @@
 # @embedpdf/plugin-fullscreen
 
+## 1.0.2
+
+### Patch Changes
+
+- [#18](https://github.com/embedpdf/embed-pdf-viewer/pull/18) by [@bobsingor](https://github.com/bobsingor) – Add missing react package for MUI example to work
+
 ## 1.0.1
 
 ### Patch Changes
