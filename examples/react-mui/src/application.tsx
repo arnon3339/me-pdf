@@ -29,6 +29,7 @@ import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export';
 import { Download } from '@embedpdf/plugin-export/react';
+import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 
 import { CircularProgress, Box } from '@mui/material';
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
@@ -79,6 +80,7 @@ const plugins = [
   createPluginRegistration(SpreadPluginPackage),
   createPluginRegistration(FullscreenPluginPackage),
   createPluginRegistration(ExportPluginPackage),
+  createPluginRegistration(ThumbnailPluginPackage),
 ];
 
 const drawerComponents: DrawerComponent[] = [

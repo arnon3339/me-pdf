@@ -24,6 +24,7 @@
     "@embedpdf/plugin-spread": "workspace:*",
     "@embedpdf/plugin-fullscreen": "workspace:*",
     "@embedpdf/plugin-export": "workspace:*",
+    "@embedpdf/plugin-thumbnail": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/engines": "workspace:*",
