@@ -1,12 +1,10 @@
-/** @jsxImportSource preact */
-import { ComponentChildren, JSX } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'react';
 import { ThumbMeta, WindowState } from '@embedpdf/plugin-thumbnail';
 import { useThumbnailCapability } from '../hooks';
 
-type ThumbnailsProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
-  style?: JSX.CSSProperties;
-  children: (m: ThumbMeta) => ComponentChildren;
+type ThumbnailsProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'style' | 'children'> & {
+  style?: React.CSSProperties;
+  children: (m: ThumbMeta) => React.ReactNode;
   selectedPage?: number;
   scrollOptions?: ScrollIntoViewOptions;
 };

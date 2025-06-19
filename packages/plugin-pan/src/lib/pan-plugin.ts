@@ -32,6 +32,13 @@ export class PanPlugin extends BasePlugin<PanPluginConfig, PanCapability> {
     return {
       enablePan: () => this.interactionManager.activate('panMode'),
       disablePan: () => this.interactionManager.activate('default'),
+      togglePan: () => {
+        if (this.interactionManager.getActiveMode() === 'panMode') {
+          this.interactionManager.activate('default');
+        } else {
+          this.interactionManager.activate('panMode');
+        }
+      },
     };
   }
 }

@@ -2084,12 +2084,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
                         {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
                         <div className="relative flex w-full flex-1 overflow-hidden">
-                          <GlobalPointerProvider
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                            }}
-                          >
+                          <GlobalPointerProvider>
                             <PanMode />
                             <Viewport
                               style={{
@@ -2139,26 +2134,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                             className="absolute left-0 top-0 h-full w-full"
                                           />
                                           <PagePointerProvider
-                                            convertEventToPoint={(event, element) => {
-                                              const rect = element.getBoundingClientRect();
-                                              const displayPoint = {
-                                                x: event.clientX - rect.left,
-                                                y: event.clientY - rect.top,
-                                              };
-                                              return restorePosition(
-                                                { width: rotatedWidth, height: rotatedHeight },
-                                                displayPoint,
-                                                rotation,
-                                                scale,
-                                              );
-                                            }}
+                                            rotation={rotation}
+                                            scale={scale}
+                                            pageWidth={rotatedWidth}
+                                            pageHeight={rotatedHeight}
                                             pageIndex={pageIndex}
-                                            style={{
-                                              position: 'absolute',
-                                              inset: 0,
-                                              mixBlendMode: 'multiply',
-                                              isolation: 'isolate',
-                                            }}
                                           >
                                             <MarqueeZoom
                                               pageIndex={pageIndex}

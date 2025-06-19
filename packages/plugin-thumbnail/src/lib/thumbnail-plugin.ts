@@ -8,7 +8,7 @@ import {
 } from '@embedpdf/core';
 import { ThumbMeta, ThumbnailPluginConfig, WindowState } from './types';
 import { ThumbnailCapability } from './types';
-import { PdfErrorReason, Task } from '@embedpdf/models';
+import { ignore, PdfErrorReason, Task } from '@embedpdf/models';
 import { RenderCapability, RenderPlugin } from '@embedpdf/plugin-render';
 
 export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, ThumbnailCapability> {
@@ -135,6 +135,11 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     });
 
     this.taskCache.set(idx, task);
+
+    task.wait(ignore, () => {
+      this.taskCache.delete(idx);
+    });
+
     return task;
   }
 }

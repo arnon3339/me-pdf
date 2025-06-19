@@ -6,31 +6,44 @@ import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/react';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
+import { FilePicker } from '@embedpdf/plugin-loader/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/react';
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/react';
 import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
+import { MarqueeZoom } from '@embedpdf/plugin-zoom/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search';
+import { SearchLayer } from '@embedpdf/plugin-search/react';
+import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager';
+import {
+  GlobalPointerProvider,
+  PagePointerProvider,
+} from '@embedpdf/plugin-interaction-manager/react';
+import { PanPluginPackage } from '@embedpdf/plugin-pan';
+import { PanMode } from '@embedpdf/plugin-pan/react';
+import { RotatePluginPackage } from '@embedpdf/plugin-rotate';
+import { Rotate } from '@embedpdf/plugin-rotate/react';
+import { SpreadPluginPackage } from '@embedpdf/plugin-spread';
+import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen';
+import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/react';
+import { ExportPluginPackage } from '@embedpdf/plugin-export';
+import { Download } from '@embedpdf/plugin-export/react';
+import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 
-import { CircularProgress, Box, AppBar, Toolbar, IconButton, Divider, Drawer } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
+import { CircularProgress, Box } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
-import { useState } from 'react';
 
-import { PageSettingsIcon } from './icons';
-import { ZoomControls } from './components/zoom-controls';
 import { PageControls } from './components/page-controls';
 import { Search } from './components/search';
-import { SearchLayer } from '@embedpdf/plugin-search/react';
+import { Drawer, DrawerComponent, DrawerProvider } from './components/drawer-system';
+import { Sidebar } from './components/sidebar';
+import { Toolbar } from './components/toolbar';
+import { ViewSidebarReverseIcon } from './icons';
 
 interface AppProps {
   engine: PdfEngine;
 }
-
-const DRAWER_WIDTH = 280; // Width of the sidebars
 
 const plugins = [
   createPluginRegistration(LoaderPluginPackage, {
@@ -51,7 +64,7 @@ const plugins = [
   createPluginRegistration(ScrollPluginPackage, {
     strategy: ScrollStrategy.Vertical,
   }),
-  createPluginRegistration(RenderPluginPackage, {}),
+  createPluginRegistration(RenderPluginPackage),
   createPluginRegistration(TilingPluginPackage, {
     tileSize: 768,
     overlapPx: 2.5,
@@ -60,18 +73,36 @@ const plugins = [
   createPluginRegistration(ZoomPluginPackage, {
     defaultZoomLevel: ZoomMode.FitPage,
   }),
-  createPluginRegistration(SearchPluginPackage, {}),
+  createPluginRegistration(SearchPluginPackage),
+  createPluginRegistration(InteractionManagerPluginPackage),
+  createPluginRegistration(PanPluginPackage),
+  createPluginRegistration(RotatePluginPackage),
+  createPluginRegistration(SpreadPluginPackage),
+  createPluginRegistration(FullscreenPluginPackage),
+  createPluginRegistration(ExportPluginPackage),
+  createPluginRegistration(ThumbnailPluginPackage),
+];
+
+const drawerComponents: DrawerComponent[] = [
+  {
+    id: 'search',
+    component: Search,
+    icon: SearchOutlinedIcon,
+    label: 'Search',
+    position: 'right',
+  },
+  {
+    id: 'sidebar',
+    component: Sidebar,
+    icon: ViewSidebarReverseIcon,
+    label: 'Sidebar',
+    position: 'left',
+  },
 ];
 
 function App({ engine }: AppProps) {
-  const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
-  const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
-
-  const toggleLeftDrawer = () => setLeftDrawerOpen(!leftDrawerOpen);
-  const toggleRightDrawer = () => setRightDrawerOpen(!rightDrawerOpen);
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+    <DrawerProvider components={drawerComponents}>
       <EmbedPDF
         engine={engine}
         onInitialized={async (initial) => {
@@ -80,153 +111,117 @@ function App({ engine }: AppProps) {
         plugins={plugins}
       >
         {({ pluginsReady }) => (
-          <>
-            <AppBar position="static">
-              <Toolbar variant="dense" disableGutters sx={{ gap: 1.5, px: 1.5 }}>
-                <IconButton edge="start" size="small" color="inherit" aria-label="menu">
-                  <MenuIcon fontSize="small" />
-                </IconButton>
-                <Divider
-                  orientation="vertical"
-                  flexItem
-                  sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
-                />
-                <IconButton
-                  edge="start"
-                  size="small"
-                  color="inherit"
-                  aria-label="toggle left sidebar"
-                  onClick={toggleLeftDrawer}
-                >
-                  <ViewSidebarOutlinedIcon fontSize="small" sx={{ transform: 'rotate(180deg)' }} />
-                </IconButton>
-                <IconButton edge="start" size="small" color="inherit" aria-label="menu">
-                  <PageSettingsIcon fontSize="small" />
-                </IconButton>
-                <Divider
-                  orientation="vertical"
-                  flexItem
-                  sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
-                />
-                <ZoomControls />
-                <Divider
-                  orientation="vertical"
-                  flexItem
-                  sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
-                />
-                <IconButton edge="start" size="small" color="inherit" aria-label="menu">
-                  <BackHandOutlinedIcon fontSize="small" />
-                </IconButton>
-                <Box sx={{ flexGrow: 1 }} />
-                <IconButton
-                  edge="start"
-                  size="small"
-                  color="inherit"
-                  aria-label="toggle search"
-                  onClick={toggleRightDrawer}
-                >
-                  <SearchOutlinedIcon fontSize="small" />
-                </IconButton>
-              </Toolbar>
-            </AppBar>
+          <FullscreenProvider>
+            <Box
+              sx={{
+                height: '100%',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                userSelect: 'none',
+              }}
+            >
+              <Toolbar />
 
-            {/* Main content area with sidebars */}
-            <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-              {/* Left Sidebar */}
-              <Drawer
-                variant="persistent"
-                anchor="left"
-                open={leftDrawerOpen}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      width: DRAWER_WIDTH,
-                      boxSizing: 'border-box',
-                      position: 'relative',
-                      height: '100%',
-                      transition: 'none !important',
-                    },
-                  },
-                }}
-                sx={{
-                  width: leftDrawerOpen ? DRAWER_WIDTH : 0,
-                  flexShrink: 0,
-                  transition: 'none',
-                }}
-              >
-                <Box sx={{ p: 2 }}>
-                  {/* Add your left sidebar content here */}
-                  <h3>Left Sidebar</h3>
-                </Box>
-              </Drawer>
+              {/* Main content area with sidebars */}
+              <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+                {/* Left Sidebar */}
+                <Drawer position="left" />
 
-              {/* Main Viewport */}
-              <Box
-                sx={{
-                  flex: '1 1 0', // grow / shrink, flex-basis 0
-                  minWidth: 0, // allow shrinking inside flex row
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                }}
-              >
-                <Viewport
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    flexGrow: 1,
-                    backgroundColor: '#f1f3f5',
-                    overflow: 'auto',
+                {/* Main Viewport */}
+                <Box
+                  sx={{
+                    flex: '1 1 0', // grow / shrink, flex-basis 0
+                    minWidth: 0, // allow shrinking inside flex row
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
                   }}
                 >
-                  {!pluginsReady && <CircularProgress />}
-                  {pluginsReady && (
-                    <Scroller
-                      renderPage={({ document, width, height, pageIndex, scale }) => (
+                  <GlobalPointerProvider>
+                    <PanMode />
+                    <Viewport
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        flexGrow: 1,
+                        backgroundColor: '#f1f3f5',
+                        overflow: 'auto',
+                      }}
+                    >
+                      {!pluginsReady && (
                         <Box
-                          key={document?.id}
-                          sx={{ width, height, position: 'relative', backgroundColor: 'white' }}
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: '100%',
+                            width: '100%',
+                          }}
                         >
-                          <RenderLayer pageIndex={pageIndex} />
-                          <TilingLayer pageIndex={pageIndex} scale={scale} />
-                          <SearchLayer pageIndex={pageIndex} scale={scale} />
+                          <CircularProgress size={48} />
                         </Box>
                       )}
-                    />
-                  )}
-                  <PageControls />
-                </Viewport>
-              </Box>
+                      {pluginsReady && (
+                        <Scroller
+                          renderPage={({
+                            document,
+                            width,
+                            height,
+                            pageIndex,
+                            scale,
+                            rotatedHeight,
+                            rotatedWidth,
+                            rotation,
+                          }) => (
+                            <Rotate pageSize={{ width, height }}>
+                              <Box
+                                key={document?.id}
+                                sx={{
+                                  width,
+                                  height,
+                                  position: 'relative',
+                                  backgroundColor: 'white',
+                                }}
+                              >
+                                <RenderLayer pageIndex={pageIndex} />
+                                <TilingLayer pageIndex={pageIndex} scale={scale} />
+                                <SearchLayer pageIndex={pageIndex} scale={scale} />
+                                <PagePointerProvider
+                                  pageIndex={pageIndex}
+                                  pageWidth={rotatedWidth}
+                                  pageHeight={rotatedHeight}
+                                  rotation={rotation}
+                                  scale={scale}
+                                >
+                                  <MarqueeZoom
+                                    pageIndex={pageIndex}
+                                    scale={scale}
+                                    pageWidth={width}
+                                    pageHeight={height}
+                                  />
+                                </PagePointerProvider>
+                              </Box>
+                            </Rotate>
+                          )}
+                        />
+                      )}
+                      <PageControls />
+                    </Viewport>
+                  </GlobalPointerProvider>
+                </Box>
 
-              {/* Right Sidebar */}
-              <Drawer
-                variant="persistent"
-                anchor="right"
-                open={rightDrawerOpen}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      width: DRAWER_WIDTH,
-                      boxSizing: 'border-box',
-                      position: 'relative',
-                      height: '100%',
-                      transition: 'none !important',
-                    },
-                  },
-                }}
-                sx={{
-                  width: rightDrawerOpen ? DRAWER_WIDTH : 0,
-                  flexShrink: 0,
-                  transition: 'none',
-                }}
-              >
-                <Search />
-              </Drawer>
+                {/* Right Sidebar */}
+                <Drawer position="right" />
+              </Box>
             </Box>
-          </>
+            <Download />
+            <FilePicker />
+          </FullscreenProvider>
         )}
       </EmbedPDF>
-    </Box>
+    </DrawerProvider>
   );
 }
 

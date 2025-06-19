@@ -8,6 +8,7 @@ import {
   SET_DOCUMENT,
   getPagesWithRotatedSize,
   SET_ROTATION,
+  createBehaviorEmitter,
 } from '@embedpdf/core';
 import { ScrollPlugin, ScrollCapability } from '@embedpdf/plugin-scroll';
 import { ViewportPlugin, ViewportCapability, ViewportMetrics } from '@embedpdf/plugin-viewport';
@@ -42,6 +43,7 @@ export class ZoomPlugin extends BasePlugin<
   /* internals                                                           */
   /* ------------------------------------------------------------------ */
   private readonly zoom$ = createEmitter<ZoomChangeEvent>();
+  private readonly state$ = createBehaviorEmitter<ZoomState>();
   private readonly viewport: ViewportCapability;
   private readonly viewportPlugin: ViewportPlugin;
   private readonly scroll: ScrollCapability;
@@ -91,6 +93,7 @@ export class ZoomPlugin extends BasePlugin<
   protected buildCapability(): ZoomCapability {
     return {
       onZoomChange: this.zoom$.on,
+      onStateChange: this.state$.on,
       zoomIn: () => {
         const cur = this.state.currentZoomLevel;
         return this.handleRequest({ level: cur, delta: this.stepFor(cur) });
@@ -111,6 +114,13 @@ export class ZoomPlugin extends BasePlugin<
       },
       disableMarqueeZoom: () => {
         this.interactionManager?.activate('default');
+      },
+      toggleMarqueeZoom: () => {
+        if (this.interactionManager?.getActiveMode() === 'marqueeZoom') {
+          this.interactionManager?.activate('default');
+        } else {
+          this.interactionManager?.activate('marqueeZoom');
+        }
       },
       isMarqueeZoomActive: () => this.interactionManager?.getActiveMode() === 'marqueeZoom',
       getState: () => this.state,
@@ -387,5 +397,9 @@ export class ZoomPlugin extends BasePlugin<
       s.zoomLevel === ZoomMode.FitWidth
     )
       this.handleRequest({ level: s.zoomLevel, focus });
+  }
+
+  override onStoreUpdated(_prevState: ZoomState, newState: ZoomState): void {
+    this.state$.emit(newState);
   }
 }

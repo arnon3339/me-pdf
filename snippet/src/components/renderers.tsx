@@ -1030,7 +1030,7 @@ export const thumbnailsRender: ComponentRenderFunction<ThumbnailsRenderProps> = 
   const { provides: scroll } = useScrollCapability();
 
   return (
-    <ThumbnailsPane className="flex-1">
+    <ThumbnailsPane className="flex-1" selectedPage={props.currentPage}>
       {(m) => (
         <div
           key={m.pageIndex}

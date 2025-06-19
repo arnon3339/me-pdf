@@ -61,4 +61,3 @@ jobs:
           commit: "chore: version packages"
           title:  "chore: version packages"
           publish: pnpm ci:publish         # defined in root package.json
-          createGithubReleases: true 
