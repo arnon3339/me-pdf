@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 import { DrawerComponent, DrawerPosition, DrawerState } from './types';
+import { useIsMobile } from '../../hooks/use-is-mobile';
 
 interface DrawerProviderProps {
   children: React.ReactNode;
@@ -18,6 +19,8 @@ interface DrawerContextType {
 const DrawerContext = createContext<DrawerContextType | null>(null);
 
 export const DrawerProvider: React.FC<DrawerProviderProps> = ({ children, components }) => {
+  const isMobile = useIsMobile();
+
   const [drawerStates, setDrawerStates] = useState<Record<DrawerPosition, DrawerState>>({
     left: { isOpen: false, activeComponentId: null },
     right: { isOpen: false, activeComponentId: null },
@@ -28,18 +31,27 @@ export const DrawerProvider: React.FC<DrawerProviderProps> = ({ children, compon
 
   const showComponent = useCallback(
     (id: string) => {
-      const component = registeredComponents.find((comp) => comp.id === id);
+      const component = registeredComponents.find((c) => c.id === id);
       if (!component) return;
 
-      setDrawerStates((prev) => ({
-        ...prev,
-        [component.position]: {
-          isOpen: true,
-          activeComponentId: id,
-        },
-      }));
+      setDrawerStates((prev) => {
+        // If we’re on mobile, close every drawer first
+        if (isMobile) {
+          return {
+            left: { isOpen: false, activeComponentId: null },
+            right: { isOpen: false, activeComponentId: null },
+            [component.position]: { isOpen: true, activeComponentId: id },
+          };
+        }
+
+        // desktop behaviour (unchanged)
+        return {
+          ...prev,
+          [component.position]: { isOpen: true, activeComponentId: id },
+        };
+      });
     },
-    [registeredComponents],
+    [registeredComponents, isMobile],
   );
 
   const hideComponent = useCallback((position: DrawerPosition) => {

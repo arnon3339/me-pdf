@@ -33,6 +33,7 @@ import { SpreadMode } from '@embedpdf/plugin-spread';
 import { useFullscreen } from '@embedpdf/plugin-fullscreen/react';
 import { useExportCapability } from '@embedpdf/plugin-export/react';
 import { useLoaderCapability } from '@embedpdf/plugin-loader/react';
+import { useIsMobile } from '../../hooks/use-is-mobile';
 
 export const Toolbar = () => {
   const { provides: panProvider, isPanning } = usePan();
@@ -41,6 +42,8 @@ export const Toolbar = () => {
   const { provides: fullscreenProvider, state: fullscreenState } = useFullscreen();
   const { provides: exportProvider } = useExportCapability();
   const { provides: loaderProvider } = useLoaderCapability();
+  const isMobile = useIsMobile();
+
   // Menu state for page settings
   const [pageSettingsAnchorEl, setPageSettingsAnchorEl] = useState<null | HTMLElement>(null);
   const pageSettingsOpen = Boolean(pageSettingsAnchorEl);
@@ -230,14 +233,18 @@ export const Toolbar = () => {
           sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
         />
         <ZoomControls />
-        <Divider
-          orientation="vertical"
-          flexItem
-          sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
-        />
-        <ToggleIconButton isOpen={isPanning} onClick={handleTogglePanMode}>
-          <BackHandOutlinedIcon fontSize="small" />
-        </ToggleIconButton>
+        {!isMobile && (
+          <>
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ backgroundColor: 'white', my: 1.2, opacity: 0.5 }}
+            />
+            <ToggleIconButton isOpen={isPanning} onClick={handleTogglePanMode}>
+              <BackHandOutlinedIcon fontSize="small" />
+            </ToggleIconButton>
+          </>
+        )}
         <Box sx={{ flexGrow: 1 }} />
         <DrawerToggleButton componentId="search" />
       </MuiToolbar>
