@@ -13,34 +13,33 @@ interface DrawerProps extends Omit<MuiDrawerProps, 'anchor' | 'variant'> {
 }
 
 export const Drawer: React.FC<DrawerProps> = ({ position, width = 280, ...muiDrawerProps }) => {
-  const { drawerStates, getActiveComponent, hideComponent } = useDrawer();
   const isMobile = useIsMobile();
+  const [expanded, setExpanded] = useState(false); // 50 vh  →  100 vh
+  const startY = useRef<number | null>(null);
 
+  const beginDrag = (y: number) => (startY.current = y);
+  const moveDrag = (y: number) => {
+    if (startY.current == null) return;
+    const delta = y - startY.current;
+    if (delta < -50) {
+      // dragged ≥ 50 px up
+      setExpanded(true);
+      startY.current = null;
+    } else if (delta > 50) {
+      // dragged ≥ 50 px down
+      setExpanded(false);
+      startY.current = null;
+    }
+  };
+  const endDrag = () => (startY.current = null);
+
+  const { drawerStates, getActiveComponent, hideComponent } = useDrawer();
   const { isOpen } = drawerStates[position];
   const activeComponent = getActiveComponent(position);
   const ActiveComponent = activeComponent?.component;
 
   /* ──────────────── MOBILE BOTTOM-SHEET ──────────────── */
   if (isMobile) {
-    const [expanded, setExpanded] = useState(false); // 50 vh  →  100 vh
-    const startY = useRef<number | null>(null);
-
-    const beginDrag = (y: number) => (startY.current = y);
-    const moveDrag = (y: number) => {
-      if (startY.current == null) return;
-      const delta = y - startY.current;
-      if (delta < -50) {
-        // dragged ≥ 50 px up
-        setExpanded(true);
-        startY.current = null;
-      } else if (delta > 50) {
-        // dragged ≥ 50 px down
-        setExpanded(false);
-        startY.current = null;
-      }
-    };
-    const endDrag = () => (startY.current = null);
-
     const paperSx = {
       height: expanded ? '100vh' : '50vh',
       overflow: 'visible',
@@ -51,13 +50,12 @@ export const Drawer: React.FC<DrawerProps> = ({ position, width = 280, ...muiDra
       <SwipeableDrawer
         anchor="bottom"
         open={isOpen}
+        onClose={() => hideComponent(position)}
         onOpen={() => {
           /* already open at half-sheet */
         }}
-        onClose={(_, __) => hideComponent(position)}
         disableDiscovery
         slotProps={{ paper: { sx: paperSx } }}
-        {...muiDrawerProps}
       >
         {/* ── Grab-handle & close-button ───────────────── */}
         <Box

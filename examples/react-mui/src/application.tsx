@@ -32,7 +32,6 @@ import { Download } from '@embedpdf/plugin-export/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 
 import { CircularProgress, Box } from '@mui/material';
-import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 
 import { PageControls } from './components/page-controls';
@@ -40,6 +39,7 @@ import { Search } from './components/search';
 import { Drawer, DrawerComponent, DrawerProvider } from './components/drawer-system';
 import { Sidebar } from './components/sidebar';
 import { Toolbar } from './components/toolbar';
+import { ViewSidebarReverseIcon } from './icons';
 
 interface AppProps {
   engine: PdfEngine;
@@ -94,7 +94,7 @@ const drawerComponents: DrawerComponent[] = [
   {
     id: 'sidebar',
     component: Sidebar,
-    icon: ViewSidebarOutlinedIcon,
+    icon: ViewSidebarReverseIcon,
     label: 'Sidebar',
     position: 'left',
   },
