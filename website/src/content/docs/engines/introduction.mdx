@@ -54,7 +54,7 @@ init();
 #### Using the Worker Engine
 
 ```typescript filename="main.ts" copy
-import { WebWorkerEngine } from '@embedpdf/engines';
+import { WebWorkerEngine } from '@embedpdf/engines/worker';
 
 // Create worker and engine
 const worker = new Worker(new URL('./webworker.ts', import.meta.url), { 
