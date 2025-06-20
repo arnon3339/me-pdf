@@ -1,5 +1,5 @@
 import createPdfium from './vendor/pdfium.cjs';
-import type { PdfiumRuntimeMethods } from './runtime';
+import type { PdfiumRuntimeMethods } from './vendor/runtime-methods';
 import { createWrappedModule, type PdfiumModule, type WrappedPdfiumModule } from './base';
 
 // Re-export all types from base

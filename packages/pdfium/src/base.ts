@@ -1,9 +1,9 @@
 import type { PdfiumModule } from './vendor/pdfium';
-import type { PdfiumRuntimeMethods } from './runtime';
-import { functions } from './functions';
+import type { PdfiumRuntimeMethods } from './vendor/runtime-methods';
+import { functions } from './vendor/functions';
 
 export type { PdfiumModule } from './vendor/pdfium';
-export type { PdfiumRuntimeMethods } from './runtime';
+export type { PdfiumRuntimeMethods } from './vendor/runtime-methods';
 
 /**
  * Name of JavaScript type
