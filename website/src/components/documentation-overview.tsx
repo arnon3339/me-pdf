@@ -35,6 +35,19 @@ const packages = [
     lastUpdated: 'May 29, 2025',
   },
   {
+    id: 'engine',
+    name: '@embedpdf/engines',
+    description:
+      'Pluggable rendering engines for EmbedPDF. Ships with PdfiumEngine – a high‑level, promise‑first wrapper with advanced PDF processing capabilities.',
+    icon: <Zap className="h-6 w-6 text-white" />,
+    color: 'from-blue-600 to-cyan-600',
+    tags: ['High-level API', 'Universal Runtime', 'TypeScript', 'PDFium'],
+    sections: [{ title: 'Introduction', url: '/docs/engines/introduction' }],
+    url: '/docs/engines/introduction',
+    latestVersion: '1.0.0',
+    lastUpdated: 'May 29, 2025',
+  },
+  {
     id: 'pdfium',
     name: '@embedpdf/pdfium',
     description:
