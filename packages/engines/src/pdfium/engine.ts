@@ -460,13 +460,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const filePtr = this.malloc(length);
     this.pdfiumModule.pdfium.HEAPU8.set(array, filePtr);
 
-    const passwordBytesSize = new TextEncoder().encode(password).length + 1;
-    const passwordPtr = this.malloc(passwordBytesSize);
-    this.pdfiumModule.pdfium.stringToUTF8(password, passwordPtr, passwordBytesSize);
-
-    const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, passwordPtr);
-
-    this.free(passwordPtr);
+    const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, password);
 
     if (!docPtr) {
       const lastError = this.pdfiumModule.FPDF_GetLastError();
@@ -486,7 +480,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const sizePtr = this.malloc(8);
     for (let index = 0; index < pageCount; index++) {
       const result = this.pdfiumModule.FPDF_GetPageSizeByIndexF(docPtr, index, sizePtr);
-      if (result === 0) {
+      if (!result) {
         const lastError = this.pdfiumModule.FPDF_GetLastError();
         this.logger.error(
           LOG_SOURCE,
@@ -495,7 +489,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         );
         this.free(sizePtr);
         this.pdfiumModule.FPDF_CloseDocument(docPtr);
-        this.free(passwordPtr);
         this.free(filePtr);
         this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromBuffer`, 'End', file.id);
         return PdfTaskHelper.reject<PdfDocumentObject>({
@@ -578,14 +571,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.pdfiumModule.pdfium.setValue(fileAccessPtr + 4, callbackPtr, 'i32');
     this.pdfiumModule.pdfium.setValue(fileAccessPtr + 8, 0, 'i32');
 
-    // Set up password
-    const passwordBytesSize = new TextEncoder().encode(password).length + 1;
-    const passwordPtr = this.malloc(passwordBytesSize);
-    this.pdfiumModule.pdfium.stringToUTF8(password, passwordPtr, passwordBytesSize);
-
     // Load document
-    const docPtr = this.pdfiumModule.FPDF_LoadCustomDocument(fileAccessPtr, passwordPtr);
-    this.free(passwordPtr);
+    const docPtr = this.pdfiumModule.FPDF_LoadCustomDocument(fileAccessPtr, password);
 
     if (!docPtr) {
       const lastError = this.pdfiumModule.FPDF_GetLastError();
@@ -609,7 +596,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const sizePtr = this.malloc(8);
     for (let index = 0; index < pageCount; index++) {
       const result = this.pdfiumModule.FPDF_GetPageSizeByIndexF(docPtr, index, sizePtr);
-      if (result === 0) {
+      if (!result) {
         const lastError = this.pdfiumModule.FPDF_GetLastError();
         this.logger.error(
           LOG_SOURCE,
@@ -618,7 +605,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         );
         this.free(sizePtr);
         this.pdfiumModule.FPDF_CloseDocument(docPtr);
-        this.free(passwordPtr);
         this.free(fileAccessPtr);
         this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromLoader`, 'End', file.id);
         return PdfTaskHelper.reject<PdfDocumentObject>({
@@ -1930,7 +1916,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const filePtr = this.malloc(length);
       this.pdfiumModule.pdfium.HEAPU8.set(array, filePtr);
 
-      const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, 0);
+      const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, '');
       if (!docPtr) {
         const lastError = this.pdfiumModule.FPDF_GetLastError();
         this.logger.error(
@@ -1953,7 +1939,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       }
       ptrs.push({ filePtr, docPtr });
 
-      if (!this.pdfiumModule.FPDF_ImportPages(newDocPtr, docPtr, 0, 0)) {
+      if (!this.pdfiumModule.FPDF_ImportPages(newDocPtr, docPtr, '', 0)) {
         this.pdfiumModule.FPDF_CloseDocument(newDocPtr);
 
         for (const ptr of ptrs) {
@@ -2040,31 +2026,19 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         // Convert 0-based indices to 1-based for PDFium and join with commas
         const pageString = validPageIndices.map((index) => index + 1).join(',');
 
-        // Allocate memory for the page string
-        const pageStringPtr = this.malloc(pageString.length + 1); // +1 for null terminator
-
         try {
-          // Copy the string to the allocated memory
-          for (let i = 0; i < pageString.length; i++) {
-            this.pdfiumModule.pdfium.setValue(pageStringPtr + i, pageString.charCodeAt(i), 'i8');
-          }
-          // Add null terminator
-          this.pdfiumModule.pdfium.setValue(pageStringPtr + pageString.length, 0, 'i8');
-
           // Import all specified pages at once from this document
           if (
             !this.pdfiumModule.FPDF_ImportPages(
               newDocPtr,
               ctx.docPtr,
-              pageStringPtr,
+              pageString,
               0, // Insert at the beginning
             )
           ) {
             throw new Error(`Failed to import pages ${pageString} from document ${config.docId}`);
           }
         } finally {
-          // Always free the allocated memory
-          this.free(pageStringPtr);
         }
       }
 

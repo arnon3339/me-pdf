@@ -69,16 +69,16 @@ export type TaskState<R, D> =
       reason: D;
     };
 
-export class TaskAbortedError extends Error {
-  constructor(reason: string) {
-    super(`Task aborted: ${reason}`);
+export class TaskAbortedError<D> extends Error {
+  constructor(reason: D) {
+    super(`Task aborted: ${JSON.stringify(reason)}`);
     this.name = 'TaskAbortedError';
   }
 }
 
-export class TaskRejectedError extends Error {
-  constructor(reason: string) {
-    super(`Task rejected: ${reason}`);
+export class TaskRejectedError<D> extends Error {
+  constructor(reason: D) {
+    super(`Task rejected: ${JSON.stringify(reason)}`);
     this.name = 'TaskRejectedError';
   }
 }
@@ -117,9 +117,9 @@ export class Task<R, D> {
           (result) => resolve(result),
           (error) => {
             if (error.type === 'abort') {
-              reject(new TaskAbortedError(error.reason as string));
+              reject(new TaskAbortedError(error.reason));
             } else {
-              reject(new TaskRejectedError(error.reason as string));
+              reject(new TaskRejectedError(error.reason));
             }
           },
         );

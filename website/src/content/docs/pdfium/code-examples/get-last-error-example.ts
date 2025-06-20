@@ -8,26 +8,12 @@ export async function openProtectedPdf(pdfData: Uint8Array, password?: string) {
   const filePtr = pdfium.pdfium.wasmExports.malloc(pdfData.length)
   pdfium.pdfium.HEAPU8.set(pdfData, filePtr)
 
-  // Convert password to null-terminated UTF-8 string pointer if provided
-  let passwordPtr = 0
-  if (password) {
-    const encoder = new TextEncoder()
-    const passwordBytes = encoder.encode(password + '\0')
-    passwordPtr = pdfium.pdfium.wasmExports.malloc(passwordBytes.length)
-    pdfium.pdfium.HEAPU8.set(passwordBytes, passwordPtr)
-  }
-
   // Try to load the PDF document with optional password
   const docPtr = pdfium.FPDF_LoadMemDocument(
     filePtr,
     pdfData.length,
-    passwordPtr,
+    password || '',
   )
-
-  // Clean up password memory if allocated
-  if (passwordPtr) {
-    pdfium.pdfium.wasmExports.free(passwordPtr)
-  }
 
   // Check if document loaded successfully
   if (!docPtr) {

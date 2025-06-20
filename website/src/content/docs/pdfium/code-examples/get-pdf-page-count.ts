@@ -7,7 +7,7 @@ async function getPdfPageCount(pdfData: Uint8Array) {
   // Step 2: Load the PDF document
   const filePtr = pdfium.pdfium.wasmExports.malloc(pdfData.length)
   pdfium.pdfium.HEAPU8.set(pdfData, filePtr)
-  const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, 0)
+  const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, '')
 
   if (!docPtr) {
     const error = pdfium.FPDF_GetLastError()

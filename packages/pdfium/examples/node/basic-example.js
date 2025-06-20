@@ -66,7 +66,7 @@ class PDFiumNodeExample {
       this.pdfDocument = this.pdfiumInstance.FPDF_LoadMemDocument(
         this.pdfDataPtr,
         pdfBuffer.length,
-        null,
+        '',
       );
 
       if (!this.pdfDocument) {

@@ -13,7 +13,7 @@ export async function loadPdfForTextExtraction(pdfData: Uint8Array) {
   pdfium.pdfium.HEAPU8.set(pdfData, filePtr)
 
   // Load the document
-  const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, 0)
+  const docPtr = pdfium.FPDF_LoadMemDocument(filePtr, pdfData.length, '')
 
   if (!docPtr) {
     const error = pdfium.FPDF_GetLastError()

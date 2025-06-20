@@ -27,176 +27,463 @@ var createPdfium = (() => {
       readyPromiseReject = reject;
     });
     [
-      '_malloc',
-      '_free',
-      '_PDFiumExt_Init',
-      '_PDFiumExt_OpenFileWriter',
-      '_PDFiumExt_CloseFileWriter',
-      '_PDFiumExt_GetFileWriterSize',
-      '_PDFiumExt_GetFileWriterData',
-      '_PDFiumExt_OpenFormFillInfo',
-      '_PDFiumExt_CloseFormFillInfo',
-      '_PDFiumExt_InitFormFillEnvironment',
-      '_PDFiumExt_ExitFormFillEnvironment',
-      '_PDFiumExt_SaveAsCopy',
-      '_FPDF_LoadCustomDocument',
-      '_FPDF_LoadMemDocument',
-      '_FPDF_GetPageSizeByIndexF',
-      '_FPDF_GetLastError',
-      '_FPDF_GetPageCount',
-      '_FPDF_GetPageWidthF',
-      '_FPDF_GetPageHeightF',
-      '_FPDF_CloseDocument',
-      '_FPDF_GetDocPermissions',
-      '_FPDF_GetDocUserPermissions',
-      '_FPDF_DestroyLibrary',
-      '_FPDF_GetMetaText',
-      '_FPDFBitmap_FillRect',
-      '_FPDFBitmap_Create',
-      '_FPDFBitmap_CreateEx',
-      '_FPDFBitmap_GetBuffer',
-      '_FPDFBitmap_GetWidth',
-      '_FPDFBitmap_GetHeight',
-      '_FPDFBitmap_GetFormat',
-      '_FPDFBitmap_Destroy',
-      '_FPDFPageObj_Destroy',
-      '_FPDFPageObj_NewImageObj',
-      '_FPDFPageObj_GetMatrix',
-      '_FPDFPageObj_SetMatrix',
-      '_FPDFPageObj_GetBounds',
-      '_FPDFPageObj_Transform',
-      '_FPDFPageObj_GetStrokeColor',
-      '_FPDFPageObj_GetFillColor',
-      '_FPDFImageObj_SetBitmap',
-      '_FPDFImageObj_GetBitmap',
-      '_FPDFPath_CountSegments',
-      '_FPDFPath_GetPathSegment',
-      '_FPDFPathSegment_GetType',
-      '_FPDFPathSegment_GetPoint',
-      '_FPDFPathSegment_GetClose',
-      '_FPDFFormObj_CountObjects',
-      '_FPDFFormObj_GetObject',
-      '_FPDFBookmark_GetFirstChild',
-      '_FPDFBookmark_GetNextSibling',
-      '_FPDFBookmark_Find',
-      '_FPDFBookmark_GetTitle',
-      '_FPDFBookmark_GetAction',
-      '_FPDFBookmark_GetDest',
-      '_FPDFAction_GetType',
-      '_FPDFAction_GetFilePath',
-      '_FPDFAction_GetDest',
-      '_FPDFAction_GetURIPath',
-      '_FPDFDest_GetDestPageIndex',
-      '_FPDFDest_GetView',
-      '_FPDFDest_GetLocationInPage',
-      '_FPDF_LoadPage',
-      '_FPDF_RenderPageBitmap',
-      '_FPDF_PageToDevice',
-      '_FPDF_DeviceToPage',
-      '_FPDFPage_GetAnnotCount',
-      '_FPDFPage_GetAnnot',
-      '_FPDFPage_GetAnnotIndex',
-      '_FPDFPage_CreateAnnot',
-      '_FPDFPage_InsertObject',
-      '_FPDFPage_RemoveAnnot',
-      '_FPDFPage_GenerateContent',
-      '_FPDFPage_Flatten',
-      '_FPDF_ClosePage',
-      '_FPDFAnnot_GetSubtype',
-      '_FPDFAnnot_GetAP',
-      '_FPDFAnnot_SetAP',
-      '_FPDFAnnot_HasAttachmentPoints',
-      '_FPDFAnnot_SetAttachmentPoints',
-      '_FPDFAnnot_CountAttachmentPoints',
-      '_FPDFAnnot_AppendAttachmentPoints',
-      '_FPDFAnnot_GetAttachmentPoints',
-      '_FPDFAnnot_GetObjectCount',
-      '_FPDFAnnot_GetObject',
-      '_FPDFAnnot_AppendObject',
-      '_FPDFAnnot_GetRect',
-      '_FPDFAnnot_SetRect',
-      '_FPDFAnnot_GetLink',
-      '_FPDFAnnot_GetFormFieldType',
-      '_FPDFAnnot_GetFormFieldFlags',
-      '_FPDFAnnot_GetFormFieldName',
-      '_FPDFAnnot_GetFormFieldAlternateName',
-      '_FPDFAnnot_GetFormFieldValue',
-      '_FPDFAnnot_GetOptionCount',
-      '_FPDFAnnot_GetOptionLabel',
-      '_FPDFAnnot_IsOptionSelected',
-      '_FPDFAnnot_IsChecked',
-      '_FPDFAnnot_GetStringValue',
-      '_FPDFAnnot_GetColor',
-      '_FPDFAnnot_SetColor',
-      '_FPDFAnnot_GetLinkedAnnot',
-      '_FPDFAnnot_GetInkListCount',
-      '_FPDFAnnot_GetInkListPath',
-      '_FPDFAnnot_AddInkStroke',
-      '_FPDFAnnot_RemoveInkList',
-      '_FPDFAnnot_GetVertices',
-      '_FPDFAnnot_GetLine',
-      '_FPDFPageObj_GetType',
-      '_FPDFLink_GetDest',
-      '_FPDFLink_GetAction',
-      '_FPDFText_LoadPage',
-      '_FPDFText_CountChars',
-      '_FPDFText_CountRects',
-      '_FPDFText_GetCharAngle',
-      '_FPDFText_GetUnicode',
-      '_FPDFText_GetTextObject',
-      '_FPDFText_GetLooseCharBox',
-      '_FPDFText_GetRect',
-      '_FPDFText_GetCharIndexAtPos',
-      '_FPDFText_GetFontSize',
-      '_FPDFText_GetFontInfo',
-      '_FPDFText_GetBoundedText',
-      '_FPDFText_FindStart',
-      '_FPDFText_FindNext',
-      '_FPDFText_FindPrev',
-      '_FPDFText_GetSchResultIndex',
-      '_FPDFText_GetSchCount',
-      '_FPDFText_FindClose',
-      '_FPDFText_ClosePage',
-      '_FPDFText_GetText',
-      '_FPDFText_GetCharBox',
-      '_FPDFPage_CloseAnnot',
-      '_FPDFDoc_GetAttachmentCount',
-      '_FPDFDoc_GetAttachment',
-      '_FPDFAttachment_GetName',
-      '_FPDFAttachment_GetStringValue',
-      '_FPDFAttachment_GetFile',
+      '_FORM_CanRedo',
+      '_FORM_CanUndo',
+      '_FORM_DoDocumentAAction',
+      '_FORM_DoDocumentJSAction',
+      '_FORM_DoDocumentOpenAction',
+      '_FORM_DoPageAAction',
+      '_FORM_ForceToKillFocus',
+      '_FORM_GetFocusedAnnot',
+      '_FORM_GetFocusedText',
+      '_FORM_GetSelectedText',
+      '_FORM_IsIndexSelected',
       '_FORM_OnAfterLoadPage',
       '_FORM_OnBeforeClosePage',
-      '_FPDFAnnot_SetFocusableSubtypes',
-      '_FPDFAnnot_GetFocusableSubtypesCount',
-      '_FPDFAnnot_GetFocusableSubtypes',
-      '_FORM_SetFocusedAnnot',
-      '_FORM_SetIndexSelected',
+      '_FORM_OnChar',
+      '_FORM_OnFocus',
       '_FORM_OnKeyDown',
       '_FORM_OnKeyUp',
-      '_FORM_OnChar',
-      '_FORM_SelectAllText',
+      '_FORM_OnLButtonDoubleClick',
+      '_FORM_OnLButtonDown',
+      '_FORM_OnLButtonUp',
+      '_FORM_OnMouseMove',
+      '_FORM_OnMouseWheel',
+      '_FORM_OnRButtonDown',
+      '_FORM_OnRButtonUp',
+      '_FORM_Redo',
+      '_FORM_ReplaceAndKeepSelection',
       '_FORM_ReplaceSelection',
-      '_FORM_ForceToKillFocus',
+      '_FORM_SelectAllText',
+      '_FORM_SetFocusedAnnot',
+      '_FORM_SetIndexSelected',
+      '_FORM_Undo',
+      '_FPDF_AddInstalledFont',
+      '_FPDF_CloseDocument',
+      '_FPDF_ClosePage',
+      '_FPDF_CloseXObject',
+      '_FPDF_CopyViewerPreferences',
+      '_FPDF_CountNamedDests',
+      '_FPDF_CreateClipPath',
+      '_FPDF_CreateNewDocument',
+      '_FPDF_DestroyClipPath',
+      '_FPDF_DestroyLibrary',
+      '_FPDF_DeviceToPage',
+      '_FPDF_DocumentHasValidCrossReferenceTable',
+      '_FPDF_FFLDraw',
+      '_FPDF_FreeDefaultSystemFontInfo',
+      '_FPDF_GetDefaultSystemFontInfo',
+      '_FPDF_GetDefaultTTFMap',
+      '_FPDF_GetDefaultTTFMapCount',
+      '_FPDF_GetDefaultTTFMapEntry',
+      '_FPDF_GetDocPermissions',
+      '_FPDF_GetDocUserPermissions',
+      '_FPDF_GetFileIdentifier',
+      '_FPDF_GetFileVersion',
+      '_FPDF_GetFormType',
+      '_FPDF_GetLastError',
+      '_FPDF_GetMetaText',
+      '_FPDF_GetNamedDest',
+      '_FPDF_GetNamedDestByName',
+      '_FPDF_GetPageAAction',
+      '_FPDF_GetPageBoundingBox',
+      '_FPDF_GetPageCount',
+      '_FPDF_GetPageHeight',
+      '_FPDF_GetPageHeightF',
+      '_FPDF_GetPageLabel',
+      '_FPDF_GetPageSizeByIndex',
+      '_FPDF_GetPageSizeByIndexF',
+      '_FPDF_GetPageWidth',
+      '_FPDF_GetPageWidthF',
+      '_FPDF_GetSecurityHandlerRevision',
       '_FPDF_GetSignatureCount',
       '_FPDF_GetSignatureObject',
-      '_FPDFSignatureObj_GetContents',
-      '_FPDFSignatureObj_GetByteRange',
-      '_FPDFSignatureObj_GetSubFilter',
-      '_FPDFSignatureObj_GetReason',
-      '_FPDFSignatureObj_GetTime',
-      '_FPDFSignatureObj_GetDocMDPPermission',
-      '_FPDF_CreateNewDocument',
-      '_FPDF_ImportPagesByIndex',
+      '_FPDF_GetTrailerEnds',
+      '_FPDF_GetXFAPacketContent',
+      '_FPDF_GetXFAPacketCount',
+      '_FPDF_GetXFAPacketName',
+      '_FPDF_ImportNPagesToOne',
       '_FPDF_ImportPages',
+      '_FPDF_ImportPagesByIndex',
+      '_FPDF_InitLibrary',
+      '_FPDF_InitLibraryWithConfig',
+      '_FPDF_LoadCustomDocument',
+      '_FPDF_LoadDocument',
+      '_FPDF_LoadMemDocument',
+      '_FPDF_LoadMemDocument64',
+      '_FPDF_LoadPage',
+      '_FPDF_LoadXFA',
+      '_FPDF_MovePages',
+      '_FPDF_NewFormObjectFromXObject',
+      '_FPDF_NewXObjectFromPage',
+      '_FPDF_PageToDevice',
+      '_FPDF_RemoveFormFieldHighlight',
+      '_FPDF_RenderPage_Close',
+      '_FPDF_RenderPage_Continue',
+      '_FPDF_RenderPageBitmap',
+      '_FPDF_RenderPageBitmap_Start',
+      '_FPDF_RenderPageBitmapWithColorScheme_Start',
+      '_FPDF_RenderPageBitmapWithMatrix',
+      '_FPDF_SaveAsCopy',
+      '_FPDF_SaveWithVersion',
+      '_FPDF_SetFormFieldHighlightAlpha',
+      '_FPDF_SetFormFieldHighlightColor',
+      '_FPDF_SetSandBoxPolicy',
+      '_FPDF_SetSystemFontInfo',
+      '_FPDF_StructElement_Attr_CountChildren',
+      '_FPDF_StructElement_Attr_GetBlobValue',
+      '_FPDF_StructElement_Attr_GetBooleanValue',
+      '_FPDF_StructElement_Attr_GetChildAtIndex',
+      '_FPDF_StructElement_Attr_GetCount',
+      '_FPDF_StructElement_Attr_GetName',
+      '_FPDF_StructElement_Attr_GetNumberValue',
+      '_FPDF_StructElement_Attr_GetStringValue',
+      '_FPDF_StructElement_Attr_GetType',
+      '_FPDF_StructElement_Attr_GetValue',
+      '_FPDF_StructElement_CountChildren',
+      '_FPDF_StructElement_GetActualText',
+      '_FPDF_StructElement_GetAltText',
+      '_FPDF_StructElement_GetAttributeAtIndex',
+      '_FPDF_StructElement_GetAttributeCount',
+      '_FPDF_StructElement_GetChildAtIndex',
+      '_FPDF_StructElement_GetChildMarkedContentID',
+      '_FPDF_StructElement_GetID',
+      '_FPDF_StructElement_GetLang',
+      '_FPDF_StructElement_GetMarkedContentID',
+      '_FPDF_StructElement_GetMarkedContentIdAtIndex',
+      '_FPDF_StructElement_GetMarkedContentIdCount',
+      '_FPDF_StructElement_GetObjType',
+      '_FPDF_StructElement_GetParent',
+      '_FPDF_StructElement_GetStringAttribute',
+      '_FPDF_StructElement_GetTitle',
+      '_FPDF_StructElement_GetType',
+      '_FPDF_StructTree_Close',
+      '_FPDF_StructTree_CountChildren',
+      '_FPDF_StructTree_GetChildAtIndex',
+      '_FPDF_StructTree_GetForPage',
+      '_FPDF_VIEWERREF_GetDuplex',
+      '_FPDF_VIEWERREF_GetName',
+      '_FPDF_VIEWERREF_GetNumCopies',
+      '_FPDF_VIEWERREF_GetPrintPageRange',
+      '_FPDF_VIEWERREF_GetPrintPageRangeCount',
+      '_FPDF_VIEWERREF_GetPrintPageRangeElement',
+      '_FPDF_VIEWERREF_GetPrintScaling',
+      '_FPDFAction_GetDest',
+      '_FPDFAction_GetFilePath',
+      '_FPDFAction_GetType',
+      '_FPDFAction_GetURIPath',
+      '_FPDFAnnot_AddFileAttachment',
+      '_FPDFAnnot_AddInkStroke',
+      '_FPDFAnnot_AppendAttachmentPoints',
+      '_FPDFAnnot_AppendObject',
+      '_FPDFAnnot_CountAttachmentPoints',
+      '_FPDFAnnot_GetAP',
+      '_FPDFAnnot_GetAttachmentPoints',
+      '_FPDFAnnot_GetBorder',
+      '_FPDFAnnot_GetColor',
+      '_FPDFAnnot_GetFileAttachment',
+      '_FPDFAnnot_GetFlags',
+      '_FPDFAnnot_GetFocusableSubtypes',
+      '_FPDFAnnot_GetFocusableSubtypesCount',
+      '_FPDFAnnot_GetFontColor',
+      '_FPDFAnnot_GetFontSize',
+      '_FPDFAnnot_GetFormAdditionalActionJavaScript',
+      '_FPDFAnnot_GetFormControlCount',
+      '_FPDFAnnot_GetFormControlIndex',
+      '_FPDFAnnot_GetFormFieldAlternateName',
+      '_FPDFAnnot_GetFormFieldAtPoint',
+      '_FPDFAnnot_GetFormFieldExportValue',
+      '_FPDFAnnot_GetFormFieldFlags',
+      '_FPDFAnnot_GetFormFieldName',
+      '_FPDFAnnot_GetFormFieldType',
+      '_FPDFAnnot_GetFormFieldValue',
+      '_FPDFAnnot_GetInkListCount',
+      '_FPDFAnnot_GetInkListPath',
+      '_FPDFAnnot_GetLine',
+      '_FPDFAnnot_GetLink',
+      '_FPDFAnnot_GetLinkedAnnot',
+      '_FPDFAnnot_GetNumberValue',
+      '_FPDFAnnot_GetObject',
+      '_FPDFAnnot_GetObjectCount',
+      '_FPDFAnnot_GetOptionCount',
+      '_FPDFAnnot_GetOptionLabel',
+      '_FPDFAnnot_GetRect',
+      '_FPDFAnnot_GetStringValue',
+      '_FPDFAnnot_GetSubtype',
+      '_FPDFAnnot_GetValueType',
+      '_FPDFAnnot_GetVertices',
+      '_FPDFAnnot_HasAttachmentPoints',
+      '_FPDFAnnot_HasKey',
+      '_FPDFAnnot_IsChecked',
+      '_FPDFAnnot_IsObjectSupportedSubtype',
+      '_FPDFAnnot_IsOptionSelected',
+      '_FPDFAnnot_IsSupportedSubtype',
+      '_FPDFAnnot_RemoveInkList',
+      '_FPDFAnnot_RemoveObject',
+      '_FPDFAnnot_SetAP',
+      '_FPDFAnnot_SetAttachmentPoints',
+      '_FPDFAnnot_SetBorder',
+      '_FPDFAnnot_SetColor',
+      '_FPDFAnnot_SetFlags',
+      '_FPDFAnnot_SetFocusableSubtypes',
+      '_FPDFAnnot_SetFormFieldFlags',
+      '_FPDFAnnot_SetRect',
+      '_FPDFAnnot_SetStringValue',
+      '_FPDFAnnot_SetURI',
+      '_FPDFAnnot_UpdateObject',
+      '_FPDFAttachment_GetFile',
+      '_FPDFAttachment_GetName',
+      '_FPDFAttachment_GetStringValue',
+      '_FPDFAttachment_GetSubtype',
+      '_FPDFAttachment_GetValueType',
+      '_FPDFAttachment_HasKey',
+      '_FPDFAttachment_SetFile',
+      '_FPDFAttachment_SetStringValue',
       '_FPDFAvail_Create',
       '_FPDFAvail_Destroy',
-      '_FPDFAvail_IsDocAvail',
       '_FPDFAvail_GetDocument',
       '_FPDFAvail_GetFirstPageNum',
-      '_FPDFAvail_IsPageAvail',
+      '_FPDFAvail_IsDocAvail',
       '_FPDFAvail_IsFormAvail',
       '_FPDFAvail_IsLinearized',
+      '_FPDFAvail_IsPageAvail',
+      '_FPDFBitmap_Create',
+      '_FPDFBitmap_CreateEx',
+      '_FPDFBitmap_Destroy',
+      '_FPDFBitmap_FillRect',
+      '_FPDFBitmap_GetBuffer',
+      '_FPDFBitmap_GetFormat',
+      '_FPDFBitmap_GetHeight',
+      '_FPDFBitmap_GetStride',
+      '_FPDFBitmap_GetWidth',
+      '_FPDFBookmark_Find',
+      '_FPDFBookmark_GetAction',
+      '_FPDFBookmark_GetCount',
+      '_FPDFBookmark_GetDest',
+      '_FPDFBookmark_GetFirstChild',
+      '_FPDFBookmark_GetNextSibling',
+      '_FPDFBookmark_GetTitle',
+      '_FPDFCatalog_IsTagged',
+      '_FPDFCatalog_SetLanguage',
+      '_FPDFClipPath_CountPaths',
+      '_FPDFClipPath_CountPathSegments',
+      '_FPDFClipPath_GetPathSegment',
+      '_FPDFDest_GetDestPageIndex',
+      '_FPDFDest_GetLocationInPage',
+      '_FPDFDest_GetView',
+      '_FPDFDoc_AddAttachment',
+      '_FPDFDoc_CloseJavaScriptAction',
+      '_FPDFDoc_DeleteAttachment',
+      '_FPDFDOC_ExitFormFillEnvironment',
+      '_FPDFDoc_GetAttachment',
+      '_FPDFDoc_GetAttachmentCount',
+      '_FPDFDoc_GetJavaScriptAction',
+      '_FPDFDoc_GetJavaScriptActionCount',
+      '_FPDFDoc_GetPageMode',
+      '_FPDFDOC_InitFormFillEnvironment',
+      '_FPDFFont_Close',
+      '_FPDFFont_GetAscent',
+      '_FPDFFont_GetBaseFontName',
+      '_FPDFFont_GetDescent',
+      '_FPDFFont_GetFamilyName',
+      '_FPDFFont_GetFlags',
+      '_FPDFFont_GetFontData',
+      '_FPDFFont_GetGlyphPath',
+      '_FPDFFont_GetGlyphWidth',
+      '_FPDFFont_GetIsEmbedded',
+      '_FPDFFont_GetItalicAngle',
+      '_FPDFFont_GetWeight',
+      '_FPDFFormObj_CountObjects',
+      '_FPDFFormObj_GetObject',
+      '_FPDFGlyphPath_CountGlyphSegments',
+      '_FPDFGlyphPath_GetGlyphPathSegment',
+      '_FPDFImageObj_GetBitmap',
+      '_FPDFImageObj_GetIccProfileDataDecoded',
+      '_FPDFImageObj_GetImageDataDecoded',
+      '_FPDFImageObj_GetImageDataRaw',
+      '_FPDFImageObj_GetImageFilter',
+      '_FPDFImageObj_GetImageFilterCount',
+      '_FPDFImageObj_GetImageMetadata',
+      '_FPDFImageObj_GetImagePixelSize',
+      '_FPDFImageObj_GetRenderedBitmap',
+      '_FPDFImageObj_LoadJpegFile',
+      '_FPDFImageObj_LoadJpegFileInline',
+      '_FPDFImageObj_SetBitmap',
+      '_FPDFImageObj_SetMatrix',
+      '_FPDFJavaScriptAction_GetName',
+      '_FPDFJavaScriptAction_GetScript',
+      '_FPDFLink_CloseWebLinks',
+      '_FPDFLink_CountQuadPoints',
+      '_FPDFLink_CountRects',
+      '_FPDFLink_CountWebLinks',
+      '_FPDFLink_Enumerate',
+      '_FPDFLink_GetAction',
+      '_FPDFLink_GetAnnot',
+      '_FPDFLink_GetAnnotRect',
+      '_FPDFLink_GetDest',
+      '_FPDFLink_GetLinkAtPoint',
+      '_FPDFLink_GetLinkZOrderAtPoint',
+      '_FPDFLink_GetQuadPoints',
+      '_FPDFLink_GetRect',
+      '_FPDFLink_GetTextRange',
+      '_FPDFLink_GetURL',
+      '_FPDFLink_LoadWebLinks',
+      '_FPDFPage_CloseAnnot',
+      '_FPDFPage_CountObjects',
+      '_FPDFPage_CreateAnnot',
+      '_FPDFPage_Delete',
+      '_FPDFPage_Flatten',
+      '_FPDFPage_FormFieldZOrderAtPoint',
+      '_FPDFPage_GenerateContent',
+      '_FPDFPage_GetAnnot',
+      '_FPDFPage_GetAnnotCount',
+      '_FPDFPage_GetAnnotIndex',
+      '_FPDFPage_GetArtBox',
+      '_FPDFPage_GetBleedBox',
+      '_FPDFPage_GetCropBox',
+      '_FPDFPage_GetDecodedThumbnailData',
+      '_FPDFPage_GetMediaBox',
+      '_FPDFPage_GetObject',
+      '_FPDFPage_GetRawThumbnailData',
+      '_FPDFPage_GetRotation',
+      '_FPDFPage_GetThumbnailAsBitmap',
+      '_FPDFPage_GetTrimBox',
+      '_FPDFPage_HasFormFieldAtPoint',
+      '_FPDFPage_HasTransparency',
+      '_FPDFPage_InsertClipPath',
+      '_FPDFPage_InsertObject',
+      '_FPDFPage_New',
+      '_FPDFPage_RemoveAnnot',
+      '_FPDFPage_RemoveObject',
+      '_FPDFPage_SetArtBox',
+      '_FPDFPage_SetBleedBox',
+      '_FPDFPage_SetCropBox',
+      '_FPDFPage_SetMediaBox',
+      '_FPDFPage_SetRotation',
+      '_FPDFPage_SetTrimBox',
+      '_FPDFPage_TransformAnnots',
+      '_FPDFPage_TransFormWithClip',
+      '_FPDFPageObj_AddMark',
+      '_FPDFPageObj_CountMarks',
+      '_FPDFPageObj_CreateNewPath',
+      '_FPDFPageObj_CreateNewRect',
+      '_FPDFPageObj_CreateTextObj',
+      '_FPDFPageObj_Destroy',
+      '_FPDFPageObj_GetBounds',
+      '_FPDFPageObj_GetClipPath',
+      '_FPDFPageObj_GetDashArray',
+      '_FPDFPageObj_GetDashCount',
+      '_FPDFPageObj_GetDashPhase',
+      '_FPDFPageObj_GetFillColor',
+      '_FPDFPageObj_GetIsActive',
+      '_FPDFPageObj_GetLineCap',
+      '_FPDFPageObj_GetLineJoin',
+      '_FPDFPageObj_GetMark',
+      '_FPDFPageObj_GetMarkedContentID',
+      '_FPDFPageObj_GetMatrix',
+      '_FPDFPageObj_GetRotatedBounds',
+      '_FPDFPageObj_GetStrokeColor',
+      '_FPDFPageObj_GetStrokeWidth',
+      '_FPDFPageObj_GetType',
+      '_FPDFPageObj_HasTransparency',
+      '_FPDFPageObj_NewImageObj',
+      '_FPDFPageObj_NewTextObj',
+      '_FPDFPageObj_RemoveMark',
+      '_FPDFPageObj_SetBlendMode',
+      '_FPDFPageObj_SetDashArray',
+      '_FPDFPageObj_SetDashPhase',
+      '_FPDFPageObj_SetFillColor',
+      '_FPDFPageObj_SetIsActive',
+      '_FPDFPageObj_SetLineCap',
+      '_FPDFPageObj_SetLineJoin',
+      '_FPDFPageObj_SetMatrix',
+      '_FPDFPageObj_SetStrokeColor',
+      '_FPDFPageObj_SetStrokeWidth',
+      '_FPDFPageObj_Transform',
+      '_FPDFPageObj_TransformClipPath',
+      '_FPDFPageObj_TransformF',
+      '_FPDFPageObjMark_CountParams',
+      '_FPDFPageObjMark_GetName',
+      '_FPDFPageObjMark_GetParamBlobValue',
+      '_FPDFPageObjMark_GetParamIntValue',
+      '_FPDFPageObjMark_GetParamKey',
+      '_FPDFPageObjMark_GetParamStringValue',
+      '_FPDFPageObjMark_GetParamValueType',
+      '_FPDFPageObjMark_RemoveParam',
+      '_FPDFPageObjMark_SetBlobParam',
+      '_FPDFPageObjMark_SetIntParam',
+      '_FPDFPageObjMark_SetStringParam',
+      '_FPDFPath_BezierTo',
+      '_FPDFPath_Close',
+      '_FPDFPath_CountSegments',
+      '_FPDFPath_GetDrawMode',
+      '_FPDFPath_GetPathSegment',
+      '_FPDFPath_LineTo',
+      '_FPDFPath_MoveTo',
+      '_FPDFPath_SetDrawMode',
+      '_FPDFPathSegment_GetClose',
+      '_FPDFPathSegment_GetPoint',
+      '_FPDFPathSegment_GetType',
+      '_FPDFSignatureObj_GetByteRange',
+      '_FPDFSignatureObj_GetContents',
+      '_FPDFSignatureObj_GetDocMDPPermission',
+      '_FPDFSignatureObj_GetReason',
+      '_FPDFSignatureObj_GetSubFilter',
+      '_FPDFSignatureObj_GetTime',
+      '_FPDFText_ClosePage',
+      '_FPDFText_CountChars',
+      '_FPDFText_CountRects',
+      '_FPDFText_FindClose',
+      '_FPDFText_FindNext',
+      '_FPDFText_FindPrev',
+      '_FPDFText_FindStart',
+      '_FPDFText_GetBoundedText',
+      '_FPDFText_GetCharAngle',
+      '_FPDFText_GetCharBox',
+      '_FPDFText_GetCharIndexAtPos',
+      '_FPDFText_GetCharIndexFromTextIndex',
+      '_FPDFText_GetCharOrigin',
+      '_FPDFText_GetFillColor',
+      '_FPDFText_GetFontInfo',
+      '_FPDFText_GetFontSize',
+      '_FPDFText_GetFontWeight',
+      '_FPDFText_GetLooseCharBox',
+      '_FPDFText_GetMatrix',
+      '_FPDFText_GetRect',
+      '_FPDFText_GetSchCount',
+      '_FPDFText_GetSchResultIndex',
+      '_FPDFText_GetStrokeColor',
+      '_FPDFText_GetText',
+      '_FPDFText_GetTextIndexFromCharIndex',
+      '_FPDFText_GetTextObject',
+      '_FPDFText_GetUnicode',
+      '_FPDFText_HasUnicodeMapError',
+      '_FPDFText_IsGenerated',
+      '_FPDFText_IsHyphen',
+      '_FPDFText_LoadCidType2Font',
+      '_FPDFText_LoadFont',
+      '_FPDFText_LoadPage',
+      '_FPDFText_LoadStandardFont',
+      '_FPDFText_SetCharcodes',
+      '_FPDFText_SetText',
+      '_FPDFTextObj_GetFont',
+      '_FPDFTextObj_GetFontSize',
+      '_FPDFTextObj_GetRenderedBitmap',
+      '_FPDFTextObj_GetText',
+      '_FPDFTextObj_GetTextRenderMode',
+      '_FPDFTextObj_SetTextRenderMode',
+      '_PDFiumExt_CloseFileWriter',
+      '_PDFiumExt_CloseFormFillInfo',
+      '_PDFiumExt_ExitFormFillEnvironment',
+      '_PDFiumExt_GetFileWriterData',
+      '_PDFiumExt_GetFileWriterSize',
+      '_PDFiumExt_Init',
+      '_PDFiumExt_InitFormFillEnvironment',
+      '_PDFiumExt_OpenFileWriter',
+      '_PDFiumExt_OpenFormFillInfo',
+      '_PDFiumExt_SaveAsCopy',
+      '_malloc',
+      '_free',
       '_memory',
       '___indirect_function_table',
       'onRuntimeInitialized',
@@ -4262,6 +4549,24 @@ var createPdfium = (() => {
       }
     }
 
+    var convertI32PairToI53Checked = (lo, hi) => {
+      assert(lo == lo >>> 0 || lo == (lo | 0)); // lo should either be a i32 or a u32
+      assert(hi === (hi | 0)); // hi should be a i32
+      return (hi + 0x200000) >>> 0 < 0x400001 - !!lo ? (lo >>> 0) + hi * 4294967296 : NaN;
+    };
+    function ___syscall_ftruncate64(fd, length_low, length_high) {
+      var length = convertI32PairToI53Checked(length_low, length_high);
+
+      try {
+        if (isNaN(length)) return 61;
+        FS.ftruncate(fd, length);
+        return 0;
+      } catch (e) {
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+        return -e.errno;
+      }
+    }
+
     var stringToUTF8 = (str, outPtr, maxBytesToWrite) => {
       assert(
         typeof maxBytesToWrite == 'number',
@@ -4528,11 +4833,6 @@ var createPdfium = (() => {
       throw Infinity;
     };
 
-    var convertI32PairToI53Checked = (lo, hi) => {
-      assert(lo == lo >>> 0 || lo == (lo | 0)); // lo should either be a i32 or a u32
-      assert(hi === (hi | 0)); // hi should be a i32
-      return (hi + 0x200000) >>> 0 < 0x400001 - !!lo ? (lo >>> 0) + hi * 4294967296 : NaN;
-    };
     function __gmtime_js(time_low, time_high, tmPtr) {
       var time = convertI32PairToI53Checked(time_low, time_high);
 
@@ -4864,6 +5164,19 @@ var createPdfium = (() => {
       }
     }
 
+    function _fd_sync(fd) {
+      try {
+        var stream = SYSCALLS.getStreamFromFD(fd);
+        if (stream.stream_ops?.fsync) {
+          return stream.stream_ops.fsync(stream);
+        }
+        return 0; // we can't do anything synchronously; the in-memory FS is already synced to
+      } catch (e) {
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+        return e.errno;
+      }
+    }
+
     /** @param {number=} offset */
     var doWritev = (stream, iov, iovcnt, offset) => {
       var ret = 0;
@@ -4914,92 +5227,39 @@ var createPdfium = (() => {
       return func;
     };
 
-    var getCFunc = (ident) => {
-      var func = Module['_' + ident]; // closure exported function
-      assert(func, 'Cannot call unknown function ' + ident + ', make sure it is exported');
-      return func;
-    };
+    var UTF16Decoder = typeof TextDecoder != 'undefined' ? new TextDecoder('utf-16le') : undefined;
+    var UTF16ToString = (ptr, maxBytesToRead) => {
+      assert(ptr % 2 == 0, 'Pointer passed to UTF16ToString must be aligned to two bytes!');
+      var endPtr = ptr;
+      // TextDecoder needs to know the byte length in advance, it doesn't stop on
+      // null terminator by itself.
+      // Also, use the length info to avoid running tiny strings through
+      // TextDecoder, since .subarray() allocates garbage.
+      var idx = endPtr >> 1;
+      var maxIdx = idx + maxBytesToRead / 2;
+      // If maxBytesToRead is not passed explicitly, it will be undefined, and this
+      // will always evaluate to true. This saves on code size.
+      while (!(idx >= maxIdx) && HEAPU16[idx]) ++idx;
+      endPtr = idx << 1;
 
-    var writeArrayToMemory = (array, buffer) => {
-      assert(
-        array.length >= 0,
-        'writeArrayToMemory array must have a length (should be an array or typed array)',
-      );
-      HEAP8.set(array, buffer);
-    };
+      if (endPtr - ptr > 32 && UTF16Decoder)
+        return UTF16Decoder.decode(HEAPU8.subarray(ptr, endPtr));
 
-    var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
-    var stringToUTF8OnStack = (str) => {
-      var size = lengthBytesUTF8(str) + 1;
-      var ret = stackAlloc(size);
-      stringToUTF8(str, ret, size);
-      return ret;
-    };
+      // Fallback: decode without UTF16Decoder
+      var str = '';
 
-    /**
-     * @param {string|null=} returnType
-     * @param {Array=} argTypes
-     * @param {Arguments|Array=} args
-     * @param {Object=} opts
-     */
-    var ccall = (ident, returnType, argTypes, args, opts) => {
-      // For fast lookup of conversion functions
-      var toC = {
-        string: (str) => {
-          var ret = 0;
-          if (str !== null && str !== undefined && str !== 0) {
-            // null string
-            ret = stringToUTF8OnStack(str);
-          }
-          return ret;
-        },
-        array: (arr) => {
-          var ret = stackAlloc(arr.length);
-          writeArrayToMemory(arr, ret);
-          return ret;
-        },
-      };
-
-      function convertReturnValue(ret) {
-        if (returnType === 'string') {
-          return UTF8ToString(ret);
-        }
-        if (returnType === 'boolean') return Boolean(ret);
-        return ret;
+      // If maxBytesToRead is not passed explicitly, it will be undefined, and the
+      // for-loop's condition will always evaluate to true. The loop is then
+      // terminated on the first null char.
+      for (var i = 0; !(i >= maxBytesToRead / 2); ++i) {
+        var codeUnit = HEAP16[(ptr + i * 2) >> 1];
+        if (codeUnit == 0) break;
+        // fromCharCode constructs a character from a UTF-16 code unit, so we can
+        // pass the UTF16 string right through.
+        str += String.fromCharCode(codeUnit);
       }
 
-      var func = getCFunc(ident);
-      var cArgs = [];
-      var stack = 0;
-      assert(returnType !== 'array', 'Return type should not be "array".');
-      if (args) {
-        for (var i = 0; i < args.length; i++) {
-          var converter = toC[argTypes[i]];
-          if (converter) {
-            if (stack === 0) stack = stackSave();
-            cArgs[i] = converter(args[i]);
-          } else {
-            cArgs[i] = args[i];
-          }
-        }
-      }
-      var ret = func(...cArgs);
-      function onDone(ret) {
-        if (stack !== 0) stackRestore(stack);
-        return convertReturnValue(ret);
-      }
-
-      ret = onDone(ret);
-      return ret;
-    };
-
-    /**
-     * @param {string=} returnType
-     * @param {Array=} argTypes
-     * @param {Object=} opts
-     */
-    var cwrap = (ident, returnType, argTypes, opts) => {
-      return (...args) => ccall(ident, returnType, argTypes, args, opts);
+      return str;
     };
 
     var uleb128Encode = (n, target) => {
@@ -5212,45 +5472,98 @@ var createPdfium = (() => {
       return ret;
     };
 
+    var getCFunc = (ident) => {
+      var func = Module['_' + ident]; // closure exported function
+      assert(func, 'Cannot call unknown function ' + ident + ', make sure it is exported');
+      return func;
+    };
+
+    var writeArrayToMemory = (array, buffer) => {
+      assert(
+        array.length >= 0,
+        'writeArrayToMemory array must have a length (should be an array or typed array)',
+      );
+      HEAP8.set(array, buffer);
+    };
+
+    var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
+    var stringToUTF8OnStack = (str) => {
+      var size = lengthBytesUTF8(str) + 1;
+      var ret = stackAlloc(size);
+      stringToUTF8(str, ret, size);
+      return ret;
+    };
+
+    /**
+     * @param {string|null=} returnType
+     * @param {Array=} argTypes
+     * @param {Arguments|Array=} args
+     * @param {Object=} opts
+     */
+    var ccall = (ident, returnType, argTypes, args, opts) => {
+      // For fast lookup of conversion functions
+      var toC = {
+        string: (str) => {
+          var ret = 0;
+          if (str !== null && str !== undefined && str !== 0) {
+            // null string
+            ret = stringToUTF8OnStack(str);
+          }
+          return ret;
+        },
+        array: (arr) => {
+          var ret = stackAlloc(arr.length);
+          writeArrayToMemory(arr, ret);
+          return ret;
+        },
+      };
+
+      function convertReturnValue(ret) {
+        if (returnType === 'string') {
+          return UTF8ToString(ret);
+        }
+        if (returnType === 'boolean') return Boolean(ret);
+        return ret;
+      }
+
+      var func = getCFunc(ident);
+      var cArgs = [];
+      var stack = 0;
+      assert(returnType !== 'array', 'Return type should not be "array".');
+      if (args) {
+        for (var i = 0; i < args.length; i++) {
+          var converter = toC[argTypes[i]];
+          if (converter) {
+            if (stack === 0) stack = stackSave();
+            cArgs[i] = converter(args[i]);
+          } else {
+            cArgs[i] = args[i];
+          }
+        }
+      }
+      var ret = func(...cArgs);
+      function onDone(ret) {
+        if (stack !== 0) stackRestore(stack);
+        return convertReturnValue(ret);
+      }
+
+      ret = onDone(ret);
+      return ret;
+    };
+
+    /**
+     * @param {string=} returnType
+     * @param {Array=} argTypes
+     * @param {Object=} opts
+     */
+    var cwrap = (ident, returnType, argTypes, opts) => {
+      return (...args) => ccall(ident, returnType, argTypes, args, opts);
+    };
+
     var removeFunction = (index) => {
       functionsInTableMap.delete(getWasmTableEntry(index));
       setWasmTableEntry(index, null);
       freeTableIndexes.push(index);
-    };
-
-    var UTF16Decoder = typeof TextDecoder != 'undefined' ? new TextDecoder('utf-16le') : undefined;
-    var UTF16ToString = (ptr, maxBytesToRead) => {
-      assert(ptr % 2 == 0, 'Pointer passed to UTF16ToString must be aligned to two bytes!');
-      var endPtr = ptr;
-      // TextDecoder needs to know the byte length in advance, it doesn't stop on
-      // null terminator by itself.
-      // Also, use the length info to avoid running tiny strings through
-      // TextDecoder, since .subarray() allocates garbage.
-      var idx = endPtr >> 1;
-      var maxIdx = idx + maxBytesToRead / 2;
-      // If maxBytesToRead is not passed explicitly, it will be undefined, and this
-      // will always evaluate to true. This saves on code size.
-      while (!(idx >= maxIdx) && HEAPU16[idx]) ++idx;
-      endPtr = idx << 1;
-
-      if (endPtr - ptr > 32 && UTF16Decoder)
-        return UTF16Decoder.decode(HEAPU8.subarray(ptr, endPtr));
-
-      // Fallback: decode without UTF16Decoder
-      var str = '';
-
-      // If maxBytesToRead is not passed explicitly, it will be undefined, and the
-      // for-loop's condition will always evaluate to true. The loop is then
-      // terminated on the first null char.
-      for (var i = 0; !(i >= maxBytesToRead / 2); ++i) {
-        var codeUnit = HEAP16[(ptr + i * 2) >> 1];
-        if (codeUnit == 0) break;
-        // fromCharCode constructs a character from a UTF-16 code unit, so we can
-        // pass the UTF16 string right through.
-        str += String.fromCharCode(codeUnit);
-      }
-
-      return str;
     };
 
     var stringToUTF16 = (str, outPtr, maxBytesToWrite) => {
@@ -5289,6 +5602,8 @@ var createPdfium = (() => {
       __syscall_fcntl64: ___syscall_fcntl64,
       /** @export */
       __syscall_fstat64: ___syscall_fstat64,
+      /** @export */
+      __syscall_ftruncate64: ___syscall_ftruncate64,
       /** @export */
       __syscall_getdents64: ___syscall_getdents64,
       /** @export */
@@ -5332,6 +5647,8 @@ var createPdfium = (() => {
       /** @export */
       fd_seek: _fd_seek,
       /** @export */
+      fd_sync: _fd_sync,
+      /** @export */
       fd_write: _fd_write,
       /** @export */
       invoke_ii,
@@ -5351,6 +5668,10 @@ var createPdfium = (() => {
     var wasmExports = createWasm();
     var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors', 0);
     var _PDFiumExt_Init = (Module['_PDFiumExt_Init'] = createExportWrapper('PDFiumExt_Init', 0));
+    var _FPDF_InitLibraryWithConfig = (Module['_FPDF_InitLibraryWithConfig'] = createExportWrapper(
+      'FPDF_InitLibraryWithConfig',
+      1,
+    ));
     var _PDFiumExt_OpenFileWriter = (Module['_PDFiumExt_OpenFileWriter'] = createExportWrapper(
       'PDFiumExt_OpenFileWriter',
       0,
@@ -5367,6 +5688,7 @@ var createPdfium = (() => {
       'PDFiumExt_SaveAsCopy',
       2,
     ));
+    var _FPDF_SaveAsCopy = (Module['_FPDF_SaveAsCopy'] = createExportWrapper('FPDF_SaveAsCopy', 3));
     var _PDFiumExt_OpenFormFillInfo = (Module['_PDFiumExt_OpenFormFillInfo'] = createExportWrapper(
       'PDFiumExt_OpenFormFillInfo',
       0,
@@ -5375,8 +5697,14 @@ var createPdfium = (() => {
       createExportWrapper('PDFiumExt_CloseFormFillInfo', 1));
     var _PDFiumExt_InitFormFillEnvironment = (Module['_PDFiumExt_InitFormFillEnvironment'] =
       createExportWrapper('PDFiumExt_InitFormFillEnvironment', 2));
+    var _FPDFDOC_InitFormFillEnvironment = (Module['_FPDFDOC_InitFormFillEnvironment'] =
+      createExportWrapper('FPDFDOC_InitFormFillEnvironment', 2));
     var _PDFiumExt_ExitFormFillEnvironment = (Module['_PDFiumExt_ExitFormFillEnvironment'] =
       createExportWrapper('PDFiumExt_ExitFormFillEnvironment', 1));
+    var _FPDFDOC_ExitFormFillEnvironment = (Module['_FPDFDOC_ExitFormFillEnvironment'] =
+      createExportWrapper('FPDFDOC_ExitFormFillEnvironment', 1));
+    var _FPDFAnnot_IsSupportedSubtype = (Module['_FPDFAnnot_IsSupportedSubtype'] =
+      createExportWrapper('FPDFAnnot_IsSupportedSubtype', 1));
     var _FPDFPage_CreateAnnot = (Module['_FPDFPage_CreateAnnot'] = createExportWrapper(
       'FPDFPage_CreateAnnot',
       2,
@@ -5405,6 +5733,12 @@ var createPdfium = (() => {
       'FPDFAnnot_GetSubtype',
       1,
     ));
+    var _FPDFAnnot_IsObjectSupportedSubtype = (Module['_FPDFAnnot_IsObjectSupportedSubtype'] =
+      createExportWrapper('FPDFAnnot_IsObjectSupportedSubtype', 1));
+    var _FPDFAnnot_UpdateObject = (Module['_FPDFAnnot_UpdateObject'] = createExportWrapper(
+      'FPDFAnnot_UpdateObject',
+      2,
+    ));
     var _FPDFAnnot_AddInkStroke = (Module['_FPDFAnnot_AddInkStroke'] = createExportWrapper(
       'FPDFAnnot_AddInkStroke',
       3,
@@ -5423,6 +5757,10 @@ var createPdfium = (() => {
     ));
     var _FPDFAnnot_GetObject = (Module['_FPDFAnnot_GetObject'] = createExportWrapper(
       'FPDFAnnot_GetObject',
+      2,
+    ));
+    var _FPDFAnnot_RemoveObject = (Module['_FPDFAnnot_RemoveObject'] = createExportWrapper(
+      'FPDFAnnot_RemoveObject',
       2,
     ));
     var _FPDFAnnot_SetColor = (Module['_FPDFAnnot_SetColor'] = createExportWrapper(
@@ -5467,9 +5805,33 @@ var createPdfium = (() => {
       'FPDFAnnot_GetLine',
       3,
     ));
+    var _FPDFAnnot_SetBorder = (Module['_FPDFAnnot_SetBorder'] = createExportWrapper(
+      'FPDFAnnot_SetBorder',
+      4,
+    ));
+    var _FPDFAnnot_GetBorder = (Module['_FPDFAnnot_GetBorder'] = createExportWrapper(
+      'FPDFAnnot_GetBorder',
+      4,
+    ));
+    var _FPDFAnnot_HasKey = (Module['_FPDFAnnot_HasKey'] = createExportWrapper(
+      'FPDFAnnot_HasKey',
+      2,
+    ));
+    var _FPDFAnnot_GetValueType = (Module['_FPDFAnnot_GetValueType'] = createExportWrapper(
+      'FPDFAnnot_GetValueType',
+      2,
+    ));
+    var _FPDFAnnot_SetStringValue = (Module['_FPDFAnnot_SetStringValue'] = createExportWrapper(
+      'FPDFAnnot_SetStringValue',
+      3,
+    ));
     var _FPDFAnnot_GetStringValue = (Module['_FPDFAnnot_GetStringValue'] = createExportWrapper(
       'FPDFAnnot_GetStringValue',
       4,
+    ));
+    var _FPDFAnnot_GetNumberValue = (Module['_FPDFAnnot_GetNumberValue'] = createExportWrapper(
+      'FPDFAnnot_GetNumberValue',
+      3,
     ));
     var _FPDFAnnot_SetAP = (Module['_FPDFAnnot_SetAP'] = createExportWrapper('FPDFAnnot_SetAP', 3));
     var _FPDFAnnot_GetAP = (Module['_FPDFAnnot_GetAP'] = createExportWrapper('FPDFAnnot_GetAP', 4));
@@ -5477,8 +5839,20 @@ var createPdfium = (() => {
       'FPDFAnnot_GetLinkedAnnot',
       2,
     ));
+    var _FPDFAnnot_GetFlags = (Module['_FPDFAnnot_GetFlags'] = createExportWrapper(
+      'FPDFAnnot_GetFlags',
+      1,
+    ));
+    var _FPDFAnnot_SetFlags = (Module['_FPDFAnnot_SetFlags'] = createExportWrapper(
+      'FPDFAnnot_SetFlags',
+      2,
+    ));
     var _FPDFAnnot_GetFormFieldFlags = (Module['_FPDFAnnot_GetFormFieldFlags'] =
       createExportWrapper('FPDFAnnot_GetFormFieldFlags', 2));
+    var _FPDFAnnot_SetFormFieldFlags = (Module['_FPDFAnnot_SetFormFieldFlags'] =
+      createExportWrapper('FPDFAnnot_SetFormFieldFlags', 3));
+    var _FPDFAnnot_GetFormFieldAtPoint = (Module['_FPDFAnnot_GetFormFieldAtPoint'] =
+      createExportWrapper('FPDFAnnot_GetFormFieldAtPoint', 3));
     var _FPDFAnnot_GetFormFieldName = (Module['_FPDFAnnot_GetFormFieldName'] = createExportWrapper(
       'FPDFAnnot_GetFormFieldName',
       4,
@@ -5487,6 +5861,9 @@ var createPdfium = (() => {
       'FPDFAnnot_GetFormFieldType',
       2,
     ));
+    var _FPDFAnnot_GetFormAdditionalActionJavaScript = (Module[
+      '_FPDFAnnot_GetFormAdditionalActionJavaScript'
+    ] = createExportWrapper('FPDFAnnot_GetFormAdditionalActionJavaScript', 5));
     var _FPDFAnnot_GetFormFieldAlternateName = (Module['_FPDFAnnot_GetFormFieldAlternateName'] =
       createExportWrapper('FPDFAnnot_GetFormFieldAlternateName', 4));
     var _FPDFAnnot_GetFormFieldValue = (Module['_FPDFAnnot_GetFormFieldValue'] =
@@ -5503,6 +5880,14 @@ var createPdfium = (() => {
       'FPDFAnnot_IsOptionSelected',
       3,
     ));
+    var _FPDFAnnot_GetFontSize = (Module['_FPDFAnnot_GetFontSize'] = createExportWrapper(
+      'FPDFAnnot_GetFontSize',
+      3,
+    ));
+    var _FPDFAnnot_GetFontColor = (Module['_FPDFAnnot_GetFontColor'] = createExportWrapper(
+      'FPDFAnnot_GetFontColor',
+      5,
+    ));
     var _FPDFAnnot_IsChecked = (Module['_FPDFAnnot_IsChecked'] = createExportWrapper(
       'FPDFAnnot_IsChecked',
       2,
@@ -5517,23 +5902,69 @@ var createPdfium = (() => {
       'FPDFAnnot_GetLink',
       1,
     ));
+    var _FPDFAnnot_GetFormControlCount = (Module['_FPDFAnnot_GetFormControlCount'] =
+      createExportWrapper('FPDFAnnot_GetFormControlCount', 2));
+    var _FPDFAnnot_GetFormControlIndex = (Module['_FPDFAnnot_GetFormControlIndex'] =
+      createExportWrapper('FPDFAnnot_GetFormControlIndex', 2));
+    var _FPDFAnnot_GetFormFieldExportValue = (Module['_FPDFAnnot_GetFormFieldExportValue'] =
+      createExportWrapper('FPDFAnnot_GetFormFieldExportValue', 4));
+    var _FPDFAnnot_SetURI = (Module['_FPDFAnnot_SetURI'] = createExportWrapper(
+      'FPDFAnnot_SetURI',
+      2,
+    ));
+    var _FPDFAnnot_GetFileAttachment = (Module['_FPDFAnnot_GetFileAttachment'] =
+      createExportWrapper('FPDFAnnot_GetFileAttachment', 1));
+    var _FPDFAnnot_AddFileAttachment = (Module['_FPDFAnnot_AddFileAttachment'] =
+      createExportWrapper('FPDFAnnot_AddFileAttachment', 2));
     var _FPDFDoc_GetAttachmentCount = (Module['_FPDFDoc_GetAttachmentCount'] = createExportWrapper(
       'FPDFDoc_GetAttachmentCount',
       1,
     ));
+    var _FPDFDoc_AddAttachment = (Module['_FPDFDoc_AddAttachment'] = createExportWrapper(
+      'FPDFDoc_AddAttachment',
+      2,
+    ));
     var _FPDFDoc_GetAttachment = (Module['_FPDFDoc_GetAttachment'] = createExportWrapper(
       'FPDFDoc_GetAttachment',
+      2,
+    ));
+    var _FPDFDoc_DeleteAttachment = (Module['_FPDFDoc_DeleteAttachment'] = createExportWrapper(
+      'FPDFDoc_DeleteAttachment',
       2,
     ));
     var _FPDFAttachment_GetName = (Module['_FPDFAttachment_GetName'] = createExportWrapper(
       'FPDFAttachment_GetName',
       3,
     ));
+    var _FPDFAttachment_HasKey = (Module['_FPDFAttachment_HasKey'] = createExportWrapper(
+      'FPDFAttachment_HasKey',
+      2,
+    ));
+    var _FPDFAttachment_GetValueType = (Module['_FPDFAttachment_GetValueType'] =
+      createExportWrapper('FPDFAttachment_GetValueType', 2));
+    var _FPDFAttachment_SetStringValue = (Module['_FPDFAttachment_SetStringValue'] =
+      createExportWrapper('FPDFAttachment_SetStringValue', 3));
     var _FPDFAttachment_GetStringValue = (Module['_FPDFAttachment_GetStringValue'] =
       createExportWrapper('FPDFAttachment_GetStringValue', 4));
+    var _FPDFAttachment_SetFile = (Module['_FPDFAttachment_SetFile'] = createExportWrapper(
+      'FPDFAttachment_SetFile',
+      4,
+    ));
     var _FPDFAttachment_GetFile = (Module['_FPDFAttachment_GetFile'] = createExportWrapper(
       'FPDFAttachment_GetFile',
       4,
+    ));
+    var _FPDFAttachment_GetSubtype = (Module['_FPDFAttachment_GetSubtype'] = createExportWrapper(
+      'FPDFAttachment_GetSubtype',
+      3,
+    ));
+    var _FPDFCatalog_IsTagged = (Module['_FPDFCatalog_IsTagged'] = createExportWrapper(
+      'FPDFCatalog_IsTagged',
+      1,
+    ));
+    var _FPDFCatalog_SetLanguage = (Module['_FPDFCatalog_SetLanguage'] = createExportWrapper(
+      'FPDFCatalog_SetLanguage',
+      2,
     ));
     var _FPDFAvail_Create = (Module['_FPDFAvail_Create'] = createExportWrapper(
       'FPDFAvail_Create',
@@ -5577,6 +6008,10 @@ var createPdfium = (() => {
       'FPDFBookmark_GetTitle',
       3,
     ));
+    var _FPDFBookmark_GetCount = (Module['_FPDFBookmark_GetCount'] = createExportWrapper(
+      'FPDFBookmark_GetCount',
+      1,
+    ));
     var _FPDFBookmark_Find = (Module['_FPDFBookmark_Find'] = createExportWrapper(
       'FPDFBookmark_Find',
       2,
@@ -5617,6 +6052,12 @@ var createPdfium = (() => {
       'FPDFDest_GetLocationInPage',
       7,
     ));
+    var _FPDFLink_GetLinkAtPoint = (Module['_FPDFLink_GetLinkAtPoint'] = createExportWrapper(
+      'FPDFLink_GetLinkAtPoint',
+      3,
+    ));
+    var _FPDFLink_GetLinkZOrderAtPoint = (Module['_FPDFLink_GetLinkZOrderAtPoint'] =
+      createExportWrapper('FPDFLink_GetLinkZOrderAtPoint', 3));
     var _FPDFLink_GetDest = (Module['_FPDFLink_GetDest'] = createExportWrapper(
       'FPDFLink_GetDest',
       2,
@@ -5625,13 +6066,55 @@ var createPdfium = (() => {
       'FPDFLink_GetAction',
       1,
     ));
+    var _FPDFLink_Enumerate = (Module['_FPDFLink_Enumerate'] = createExportWrapper(
+      'FPDFLink_Enumerate',
+      3,
+    ));
+    var _FPDFLink_GetAnnot = (Module['_FPDFLink_GetAnnot'] = createExportWrapper(
+      'FPDFLink_GetAnnot',
+      2,
+    ));
+    var _FPDFLink_GetAnnotRect = (Module['_FPDFLink_GetAnnotRect'] = createExportWrapper(
+      'FPDFLink_GetAnnotRect',
+      2,
+    ));
+    var _FPDFLink_CountQuadPoints = (Module['_FPDFLink_CountQuadPoints'] = createExportWrapper(
+      'FPDFLink_CountQuadPoints',
+      1,
+    ));
+    var _FPDFLink_GetQuadPoints = (Module['_FPDFLink_GetQuadPoints'] = createExportWrapper(
+      'FPDFLink_GetQuadPoints',
+      3,
+    ));
+    var _FPDF_GetPageAAction = (Module['_FPDF_GetPageAAction'] = createExportWrapper(
+      'FPDF_GetPageAAction',
+      2,
+    ));
+    var _FPDF_GetFileIdentifier = (Module['_FPDF_GetFileIdentifier'] = createExportWrapper(
+      'FPDF_GetFileIdentifier',
+      4,
+    ));
     var _FPDF_GetMetaText = (Module['_FPDF_GetMetaText'] = createExportWrapper(
       'FPDF_GetMetaText',
+      4,
+    ));
+    var _FPDF_GetPageLabel = (Module['_FPDF_GetPageLabel'] = createExportWrapper(
+      'FPDF_GetPageLabel',
       4,
     ));
     var _FPDFPageObj_NewImageObj = (Module['_FPDFPageObj_NewImageObj'] = createExportWrapper(
       'FPDFPageObj_NewImageObj',
       1,
+    ));
+    var _FPDFImageObj_LoadJpegFile = (Module['_FPDFImageObj_LoadJpegFile'] = createExportWrapper(
+      'FPDFImageObj_LoadJpegFile',
+      4,
+    ));
+    var _FPDFImageObj_LoadJpegFileInline = (Module['_FPDFImageObj_LoadJpegFileInline'] =
+      createExportWrapper('FPDFImageObj_LoadJpegFileInline', 4));
+    var _FPDFImageObj_SetMatrix = (Module['_FPDFImageObj_SetMatrix'] = createExportWrapper(
+      'FPDFImageObj_SetMatrix',
+      7,
     ));
     var _FPDFImageObj_SetBitmap = (Module['_FPDFImageObj_SetBitmap'] = createExportWrapper(
       'FPDFImageObj_SetBitmap',
@@ -5641,21 +6124,112 @@ var createPdfium = (() => {
       'FPDFImageObj_GetBitmap',
       1,
     ));
+    var _FPDFImageObj_GetRenderedBitmap = (Module['_FPDFImageObj_GetRenderedBitmap'] =
+      createExportWrapper('FPDFImageObj_GetRenderedBitmap', 3));
+    var _FPDFImageObj_GetImageDataDecoded = (Module['_FPDFImageObj_GetImageDataDecoded'] =
+      createExportWrapper('FPDFImageObj_GetImageDataDecoded', 3));
+    var _FPDFImageObj_GetImageDataRaw = (Module['_FPDFImageObj_GetImageDataRaw'] =
+      createExportWrapper('FPDFImageObj_GetImageDataRaw', 3));
+    var _FPDFImageObj_GetImageFilterCount = (Module['_FPDFImageObj_GetImageFilterCount'] =
+      createExportWrapper('FPDFImageObj_GetImageFilterCount', 1));
+    var _FPDFImageObj_GetImageFilter = (Module['_FPDFImageObj_GetImageFilter'] =
+      createExportWrapper('FPDFImageObj_GetImageFilter', 4));
+    var _FPDFImageObj_GetImageMetadata = (Module['_FPDFImageObj_GetImageMetadata'] =
+      createExportWrapper('FPDFImageObj_GetImageMetadata', 3));
+    var _FPDFImageObj_GetImagePixelSize = (Module['_FPDFImageObj_GetImagePixelSize'] =
+      createExportWrapper('FPDFImageObj_GetImagePixelSize', 3));
+    var _FPDFImageObj_GetIccProfileDataDecoded = (Module['_FPDFImageObj_GetIccProfileDataDecoded'] =
+      createExportWrapper('FPDFImageObj_GetIccProfileDataDecoded', 5));
     var _FPDF_CreateNewDocument = (Module['_FPDF_CreateNewDocument'] = createExportWrapper(
       'FPDF_CreateNewDocument',
       0,
+    ));
+    var _FPDFPage_Delete = (Module['_FPDFPage_Delete'] = createExportWrapper('FPDFPage_Delete', 2));
+    var _FPDF_MovePages = (Module['_FPDF_MovePages'] = createExportWrapper('FPDF_MovePages', 4));
+    var _FPDFPage_New = (Module['_FPDFPage_New'] = createExportWrapper('FPDFPage_New', 4));
+    var _FPDFPage_GetRotation = (Module['_FPDFPage_GetRotation'] = createExportWrapper(
+      'FPDFPage_GetRotation',
+      1,
     ));
     var _FPDFPage_InsertObject = (Module['_FPDFPage_InsertObject'] = createExportWrapper(
       'FPDFPage_InsertObject',
       2,
     ));
+    var _FPDFPage_RemoveObject = (Module['_FPDFPage_RemoveObject'] = createExportWrapper(
+      'FPDFPage_RemoveObject',
+      2,
+    ));
+    var _FPDFPage_CountObjects = (Module['_FPDFPage_CountObjects'] = createExportWrapper(
+      'FPDFPage_CountObjects',
+      1,
+    ));
+    var _FPDFPage_GetObject = (Module['_FPDFPage_GetObject'] = createExportWrapper(
+      'FPDFPage_GetObject',
+      2,
+    ));
+    var _FPDFPage_HasTransparency = (Module['_FPDFPage_HasTransparency'] = createExportWrapper(
+      'FPDFPage_HasTransparency',
+      1,
+    ));
     var _FPDFPageObj_Destroy = (Module['_FPDFPageObj_Destroy'] = createExportWrapper(
       'FPDFPageObj_Destroy',
       1,
     ));
+    var _FPDFPageObj_GetMarkedContentID = (Module['_FPDFPageObj_GetMarkedContentID'] =
+      createExportWrapper('FPDFPageObj_GetMarkedContentID', 1));
+    var _FPDFPageObj_CountMarks = (Module['_FPDFPageObj_CountMarks'] = createExportWrapper(
+      'FPDFPageObj_CountMarks',
+      1,
+    ));
+    var _FPDFPageObj_GetMark = (Module['_FPDFPageObj_GetMark'] = createExportWrapper(
+      'FPDFPageObj_GetMark',
+      2,
+    ));
+    var _FPDFPageObj_AddMark = (Module['_FPDFPageObj_AddMark'] = createExportWrapper(
+      'FPDFPageObj_AddMark',
+      2,
+    ));
+    var _FPDFPageObj_RemoveMark = (Module['_FPDFPageObj_RemoveMark'] = createExportWrapper(
+      'FPDFPageObj_RemoveMark',
+      2,
+    ));
+    var _FPDFPageObjMark_GetName = (Module['_FPDFPageObjMark_GetName'] = createExportWrapper(
+      'FPDFPageObjMark_GetName',
+      4,
+    ));
+    var _FPDFPageObjMark_CountParams = (Module['_FPDFPageObjMark_CountParams'] =
+      createExportWrapper('FPDFPageObjMark_CountParams', 1));
+    var _FPDFPageObjMark_GetParamKey = (Module['_FPDFPageObjMark_GetParamKey'] =
+      createExportWrapper('FPDFPageObjMark_GetParamKey', 5));
+    var _FPDFPageObjMark_GetParamValueType = (Module['_FPDFPageObjMark_GetParamValueType'] =
+      createExportWrapper('FPDFPageObjMark_GetParamValueType', 2));
+    var _FPDFPageObjMark_GetParamIntValue = (Module['_FPDFPageObjMark_GetParamIntValue'] =
+      createExportWrapper('FPDFPageObjMark_GetParamIntValue', 3));
+    var _FPDFPageObjMark_GetParamStringValue = (Module['_FPDFPageObjMark_GetParamStringValue'] =
+      createExportWrapper('FPDFPageObjMark_GetParamStringValue', 5));
+    var _FPDFPageObjMark_GetParamBlobValue = (Module['_FPDFPageObjMark_GetParamBlobValue'] =
+      createExportWrapper('FPDFPageObjMark_GetParamBlobValue', 5));
+    var _FPDFPageObj_HasTransparency = (Module['_FPDFPageObj_HasTransparency'] =
+      createExportWrapper('FPDFPageObj_HasTransparency', 1));
+    var _FPDFPageObjMark_SetIntParam = (Module['_FPDFPageObjMark_SetIntParam'] =
+      createExportWrapper('FPDFPageObjMark_SetIntParam', 5));
+    var _FPDFPageObjMark_SetStringParam = (Module['_FPDFPageObjMark_SetStringParam'] =
+      createExportWrapper('FPDFPageObjMark_SetStringParam', 5));
+    var _FPDFPageObjMark_SetBlobParam = (Module['_FPDFPageObjMark_SetBlobParam'] =
+      createExportWrapper('FPDFPageObjMark_SetBlobParam', 6));
+    var _FPDFPageObjMark_RemoveParam = (Module['_FPDFPageObjMark_RemoveParam'] =
+      createExportWrapper('FPDFPageObjMark_RemoveParam', 3));
     var _FPDFPageObj_GetType = (Module['_FPDFPageObj_GetType'] = createExportWrapper(
       'FPDFPageObj_GetType',
       1,
+    ));
+    var _FPDFPageObj_GetIsActive = (Module['_FPDFPageObj_GetIsActive'] = createExportWrapper(
+      'FPDFPageObj_GetIsActive',
+      2,
+    ));
+    var _FPDFPageObj_SetIsActive = (Module['_FPDFPageObj_SetIsActive'] = createExportWrapper(
+      'FPDFPageObj_SetIsActive',
+      2,
     ));
     var _FPDFPage_GenerateContent = (Module['_FPDFPage_GenerateContent'] = createExportWrapper(
       'FPDFPage_GenerateContent',
@@ -5665,6 +6239,10 @@ var createPdfium = (() => {
       'FPDFPageObj_Transform',
       7,
     ));
+    var _FPDFPageObj_TransformF = (Module['_FPDFPageObj_TransformF'] = createExportWrapper(
+      'FPDFPageObj_TransformF',
+      2,
+    ));
     var _FPDFPageObj_GetMatrix = (Module['_FPDFPageObj_GetMatrix'] = createExportWrapper(
       'FPDFPageObj_GetMatrix',
       2,
@@ -5672,6 +6250,22 @@ var createPdfium = (() => {
     var _FPDFPageObj_SetMatrix = (Module['_FPDFPageObj_SetMatrix'] = createExportWrapper(
       'FPDFPageObj_SetMatrix',
       2,
+    ));
+    var _FPDFPageObj_SetBlendMode = (Module['_FPDFPageObj_SetBlendMode'] = createExportWrapper(
+      'FPDFPageObj_SetBlendMode',
+      2,
+    ));
+    var _FPDFPage_TransformAnnots = (Module['_FPDFPage_TransformAnnots'] = createExportWrapper(
+      'FPDFPage_TransformAnnots',
+      7,
+    ));
+    var _FPDFPage_SetRotation = (Module['_FPDFPage_SetRotation'] = createExportWrapper(
+      'FPDFPage_SetRotation',
+      2,
+    ));
+    var _FPDFPageObj_SetFillColor = (Module['_FPDFPageObj_SetFillColor'] = createExportWrapper(
+      'FPDFPageObj_SetFillColor',
+      5,
     ));
     var _FPDFPageObj_GetFillColor = (Module['_FPDFPageObj_GetFillColor'] = createExportWrapper(
       'FPDFPageObj_GetFillColor',
@@ -5681,9 +6275,59 @@ var createPdfium = (() => {
       'FPDFPageObj_GetBounds',
       5,
     ));
+    var _FPDFPageObj_GetRotatedBounds = (Module['_FPDFPageObj_GetRotatedBounds'] =
+      createExportWrapper('FPDFPageObj_GetRotatedBounds', 2));
+    var _FPDFPageObj_SetStrokeColor = (Module['_FPDFPageObj_SetStrokeColor'] = createExportWrapper(
+      'FPDFPageObj_SetStrokeColor',
+      5,
+    ));
     var _FPDFPageObj_GetStrokeColor = (Module['_FPDFPageObj_GetStrokeColor'] = createExportWrapper(
       'FPDFPageObj_GetStrokeColor',
       5,
+    ));
+    var _FPDFPageObj_SetStrokeWidth = (Module['_FPDFPageObj_SetStrokeWidth'] = createExportWrapper(
+      'FPDFPageObj_SetStrokeWidth',
+      2,
+    ));
+    var _FPDFPageObj_GetStrokeWidth = (Module['_FPDFPageObj_GetStrokeWidth'] = createExportWrapper(
+      'FPDFPageObj_GetStrokeWidth',
+      2,
+    ));
+    var _FPDFPageObj_GetLineJoin = (Module['_FPDFPageObj_GetLineJoin'] = createExportWrapper(
+      'FPDFPageObj_GetLineJoin',
+      1,
+    ));
+    var _FPDFPageObj_SetLineJoin = (Module['_FPDFPageObj_SetLineJoin'] = createExportWrapper(
+      'FPDFPageObj_SetLineJoin',
+      2,
+    ));
+    var _FPDFPageObj_GetLineCap = (Module['_FPDFPageObj_GetLineCap'] = createExportWrapper(
+      'FPDFPageObj_GetLineCap',
+      1,
+    ));
+    var _FPDFPageObj_SetLineCap = (Module['_FPDFPageObj_SetLineCap'] = createExportWrapper(
+      'FPDFPageObj_SetLineCap',
+      2,
+    ));
+    var _FPDFPageObj_GetDashPhase = (Module['_FPDFPageObj_GetDashPhase'] = createExportWrapper(
+      'FPDFPageObj_GetDashPhase',
+      2,
+    ));
+    var _FPDFPageObj_SetDashPhase = (Module['_FPDFPageObj_SetDashPhase'] = createExportWrapper(
+      'FPDFPageObj_SetDashPhase',
+      2,
+    ));
+    var _FPDFPageObj_GetDashCount = (Module['_FPDFPageObj_GetDashCount'] = createExportWrapper(
+      'FPDFPageObj_GetDashCount',
+      1,
+    ));
+    var _FPDFPageObj_GetDashArray = (Module['_FPDFPageObj_GetDashArray'] = createExportWrapper(
+      'FPDFPageObj_GetDashArray',
+      3,
+    ));
+    var _FPDFPageObj_SetDashArray = (Module['_FPDFPageObj_SetDashArray'] = createExportWrapper(
+      'FPDFPageObj_SetDashArray',
+      4,
     ));
     var _FPDFFormObj_CountObjects = (Module['_FPDFFormObj_CountObjects'] = createExportWrapper(
       'FPDFFormObj_CountObjects',
@@ -5693,6 +6337,14 @@ var createPdfium = (() => {
       'FPDFFormObj_GetObject',
       2,
     ));
+    var _FPDFPageObj_CreateNewPath = (Module['_FPDFPageObj_CreateNewPath'] = createExportWrapper(
+      'FPDFPageObj_CreateNewPath',
+      2,
+    ));
+    var _FPDFPageObj_CreateNewRect = (Module['_FPDFPageObj_CreateNewRect'] = createExportWrapper(
+      'FPDFPageObj_CreateNewRect',
+      4,
+    ));
     var _FPDFPath_CountSegments = (Module['_FPDFPath_CountSegments'] = createExportWrapper(
       'FPDFPath_CountSegments',
       1,
@@ -5700,6 +6352,21 @@ var createPdfium = (() => {
     var _FPDFPath_GetPathSegment = (Module['_FPDFPath_GetPathSegment'] = createExportWrapper(
       'FPDFPath_GetPathSegment',
       2,
+    ));
+    var _FPDFPath_MoveTo = (Module['_FPDFPath_MoveTo'] = createExportWrapper('FPDFPath_MoveTo', 3));
+    var _FPDFPath_LineTo = (Module['_FPDFPath_LineTo'] = createExportWrapper('FPDFPath_LineTo', 3));
+    var _FPDFPath_BezierTo = (Module['_FPDFPath_BezierTo'] = createExportWrapper(
+      'FPDFPath_BezierTo',
+      7,
+    ));
+    var _FPDFPath_Close = (Module['_FPDFPath_Close'] = createExportWrapper('FPDFPath_Close', 1));
+    var _FPDFPath_SetDrawMode = (Module['_FPDFPath_SetDrawMode'] = createExportWrapper(
+      'FPDFPath_SetDrawMode',
+      3,
+    ));
+    var _FPDFPath_GetDrawMode = (Module['_FPDFPath_GetDrawMode'] = createExportWrapper(
+      'FPDFPath_GetDrawMode',
+      3,
     ));
     var _FPDFPathSegment_GetPoint = (Module['_FPDFPathSegment_GetPoint'] = createExportWrapper(
       'FPDFPathSegment_GetPoint',
@@ -5713,15 +6380,157 @@ var createPdfium = (() => {
       'FPDFPathSegment_GetClose',
       1,
     ));
+    var _FPDFPageObj_NewTextObj = (Module['_FPDFPageObj_NewTextObj'] = createExportWrapper(
+      'FPDFPageObj_NewTextObj',
+      3,
+    ));
+    var _FPDFText_SetText = (Module['_FPDFText_SetText'] = createExportWrapper(
+      'FPDFText_SetText',
+      2,
+    ));
+    var _FPDFText_SetCharcodes = (Module['_FPDFText_SetCharcodes'] = createExportWrapper(
+      'FPDFText_SetCharcodes',
+      3,
+    ));
+    var _FPDFText_LoadFont = (Module['_FPDFText_LoadFont'] = createExportWrapper(
+      'FPDFText_LoadFont',
+      5,
+    ));
+    var _FPDFText_LoadStandardFont = (Module['_FPDFText_LoadStandardFont'] = createExportWrapper(
+      'FPDFText_LoadStandardFont',
+      2,
+    ));
+    var _FPDFText_LoadCidType2Font = (Module['_FPDFText_LoadCidType2Font'] = createExportWrapper(
+      'FPDFText_LoadCidType2Font',
+      6,
+    ));
+    var _FPDFTextObj_GetFontSize = (Module['_FPDFTextObj_GetFontSize'] = createExportWrapper(
+      'FPDFTextObj_GetFontSize',
+      2,
+    ));
+    var _FPDFTextObj_GetText = (Module['_FPDFTextObj_GetText'] = createExportWrapper(
+      'FPDFTextObj_GetText',
+      4,
+    ));
+    var _FPDFTextObj_GetRenderedBitmap = (Module['_FPDFTextObj_GetRenderedBitmap'] =
+      createExportWrapper('FPDFTextObj_GetRenderedBitmap', 4));
+    var _FPDFFont_Close = (Module['_FPDFFont_Close'] = createExportWrapper('FPDFFont_Close', 1));
+    var _FPDFPageObj_CreateTextObj = (Module['_FPDFPageObj_CreateTextObj'] = createExportWrapper(
+      'FPDFPageObj_CreateTextObj',
+      3,
+    ));
+    var _FPDFTextObj_GetTextRenderMode = (Module['_FPDFTextObj_GetTextRenderMode'] =
+      createExportWrapper('FPDFTextObj_GetTextRenderMode', 1));
+    var _FPDFTextObj_SetTextRenderMode = (Module['_FPDFTextObj_SetTextRenderMode'] =
+      createExportWrapper('FPDFTextObj_SetTextRenderMode', 2));
+    var _FPDFTextObj_GetFont = (Module['_FPDFTextObj_GetFont'] = createExportWrapper(
+      'FPDFTextObj_GetFont',
+      1,
+    ));
+    var _FPDFFont_GetBaseFontName = (Module['_FPDFFont_GetBaseFontName'] = createExportWrapper(
+      'FPDFFont_GetBaseFontName',
+      3,
+    ));
+    var _FPDFFont_GetFamilyName = (Module['_FPDFFont_GetFamilyName'] = createExportWrapper(
+      'FPDFFont_GetFamilyName',
+      3,
+    ));
+    var _FPDFFont_GetFontData = (Module['_FPDFFont_GetFontData'] = createExportWrapper(
+      'FPDFFont_GetFontData',
+      4,
+    ));
+    var _FPDFFont_GetIsEmbedded = (Module['_FPDFFont_GetIsEmbedded'] = createExportWrapper(
+      'FPDFFont_GetIsEmbedded',
+      1,
+    ));
+    var _FPDFFont_GetFlags = (Module['_FPDFFont_GetFlags'] = createExportWrapper(
+      'FPDFFont_GetFlags',
+      1,
+    ));
+    var _FPDFFont_GetWeight = (Module['_FPDFFont_GetWeight'] = createExportWrapper(
+      'FPDFFont_GetWeight',
+      1,
+    ));
+    var _FPDFFont_GetItalicAngle = (Module['_FPDFFont_GetItalicAngle'] = createExportWrapper(
+      'FPDFFont_GetItalicAngle',
+      2,
+    ));
+    var _FPDFFont_GetAscent = (Module['_FPDFFont_GetAscent'] = createExportWrapper(
+      'FPDFFont_GetAscent',
+      3,
+    ));
+    var _FPDFFont_GetDescent = (Module['_FPDFFont_GetDescent'] = createExportWrapper(
+      'FPDFFont_GetDescent',
+      3,
+    ));
+    var _FPDFFont_GetGlyphWidth = (Module['_FPDFFont_GetGlyphWidth'] = createExportWrapper(
+      'FPDFFont_GetGlyphWidth',
+      4,
+    ));
+    var _FPDFFont_GetGlyphPath = (Module['_FPDFFont_GetGlyphPath'] = createExportWrapper(
+      'FPDFFont_GetGlyphPath',
+      3,
+    ));
+    var _FPDFGlyphPath_CountGlyphSegments = (Module['_FPDFGlyphPath_CountGlyphSegments'] =
+      createExportWrapper('FPDFGlyphPath_CountGlyphSegments', 1));
+    var _FPDFGlyphPath_GetGlyphPathSegment = (Module['_FPDFGlyphPath_GetGlyphPathSegment'] =
+      createExportWrapper('FPDFGlyphPath_GetGlyphPathSegment', 2));
+    var _FPDFDoc_GetPageMode = (Module['_FPDFDoc_GetPageMode'] = createExportWrapper(
+      'FPDFDoc_GetPageMode',
+      1,
+    ));
     var _FPDFPage_Flatten = (Module['_FPDFPage_Flatten'] = createExportWrapper(
       'FPDFPage_Flatten',
       2,
     ));
+    var _FPDFPage_HasFormFieldAtPoint = (Module['_FPDFPage_HasFormFieldAtPoint'] =
+      createExportWrapper('FPDFPage_HasFormFieldAtPoint', 4));
+    var _FPDFPage_FormFieldZOrderAtPoint = (Module['_FPDFPage_FormFieldZOrderAtPoint'] =
+      createExportWrapper('FPDFPage_FormFieldZOrderAtPoint', 4));
     var _malloc = (Module['_malloc'] = createExportWrapper('malloc', 1));
     var _free = (Module['_free'] = createExportWrapper('free', 1));
+    var _FORM_OnMouseMove = (Module['_FORM_OnMouseMove'] = createExportWrapper(
+      'FORM_OnMouseMove',
+      5,
+    ));
+    var _FORM_OnMouseWheel = (Module['_FORM_OnMouseWheel'] = createExportWrapper(
+      'FORM_OnMouseWheel',
+      6,
+    ));
+    var _FORM_OnFocus = (Module['_FORM_OnFocus'] = createExportWrapper('FORM_OnFocus', 5));
+    var _FORM_OnLButtonDown = (Module['_FORM_OnLButtonDown'] = createExportWrapper(
+      'FORM_OnLButtonDown',
+      5,
+    ));
+    var _FORM_OnLButtonUp = (Module['_FORM_OnLButtonUp'] = createExportWrapper(
+      'FORM_OnLButtonUp',
+      5,
+    ));
+    var _FORM_OnLButtonDoubleClick = (Module['_FORM_OnLButtonDoubleClick'] = createExportWrapper(
+      'FORM_OnLButtonDoubleClick',
+      5,
+    ));
+    var _FORM_OnRButtonDown = (Module['_FORM_OnRButtonDown'] = createExportWrapper(
+      'FORM_OnRButtonDown',
+      5,
+    ));
+    var _FORM_OnRButtonUp = (Module['_FORM_OnRButtonUp'] = createExportWrapper(
+      'FORM_OnRButtonUp',
+      5,
+    ));
     var _FORM_OnKeyDown = (Module['_FORM_OnKeyDown'] = createExportWrapper('FORM_OnKeyDown', 4));
     var _FORM_OnKeyUp = (Module['_FORM_OnKeyUp'] = createExportWrapper('FORM_OnKeyUp', 4));
     var _FORM_OnChar = (Module['_FORM_OnChar'] = createExportWrapper('FORM_OnChar', 4));
+    var _FORM_GetFocusedText = (Module['_FORM_GetFocusedText'] = createExportWrapper(
+      'FORM_GetFocusedText',
+      4,
+    ));
+    var _FORM_GetSelectedText = (Module['_FORM_GetSelectedText'] = createExportWrapper(
+      'FORM_GetSelectedText',
+      4,
+    ));
+    var _FORM_ReplaceAndKeepSelection = (Module['_FORM_ReplaceAndKeepSelection'] =
+      createExportWrapper('FORM_ReplaceAndKeepSelection', 3));
     var _FORM_ReplaceSelection = (Module['_FORM_ReplaceSelection'] = createExportWrapper(
       'FORM_ReplaceSelection',
       3,
@@ -5730,14 +6539,29 @@ var createPdfium = (() => {
       'FORM_SelectAllText',
       2,
     ));
+    var _FORM_CanUndo = (Module['_FORM_CanUndo'] = createExportWrapper('FORM_CanUndo', 2));
+    var _FORM_CanRedo = (Module['_FORM_CanRedo'] = createExportWrapper('FORM_CanRedo', 2));
+    var _FORM_Undo = (Module['_FORM_Undo'] = createExportWrapper('FORM_Undo', 2));
+    var _FORM_Redo = (Module['_FORM_Redo'] = createExportWrapper('FORM_Redo', 2));
     var _FORM_ForceToKillFocus = (Module['_FORM_ForceToKillFocus'] = createExportWrapper(
       'FORM_ForceToKillFocus',
       1,
+    ));
+    var _FORM_GetFocusedAnnot = (Module['_FORM_GetFocusedAnnot'] = createExportWrapper(
+      'FORM_GetFocusedAnnot',
+      3,
     ));
     var _FORM_SetFocusedAnnot = (Module['_FORM_SetFocusedAnnot'] = createExportWrapper(
       'FORM_SetFocusedAnnot',
       2,
     ));
+    var _FPDF_FFLDraw = (Module['_FPDF_FFLDraw'] = createExportWrapper('FPDF_FFLDraw', 9));
+    var _FPDF_SetFormFieldHighlightColor = (Module['_FPDF_SetFormFieldHighlightColor'] =
+      createExportWrapper('FPDF_SetFormFieldHighlightColor', 3));
+    var _FPDF_SetFormFieldHighlightAlpha = (Module['_FPDF_SetFormFieldHighlightAlpha'] =
+      createExportWrapper('FPDF_SetFormFieldHighlightAlpha', 2));
+    var _FPDF_RemoveFormFieldHighlight = (Module['_FPDF_RemoveFormFieldHighlight'] =
+      createExportWrapper('FPDF_RemoveFormFieldHighlight', 1));
     var _FORM_OnAfterLoadPage = (Module['_FORM_OnAfterLoadPage'] = createExportWrapper(
       'FORM_OnAfterLoadPage',
       2,
@@ -5746,10 +6570,40 @@ var createPdfium = (() => {
       'FORM_OnBeforeClosePage',
       2,
     ));
+    var _FORM_DoDocumentJSAction = (Module['_FORM_DoDocumentJSAction'] = createExportWrapper(
+      'FORM_DoDocumentJSAction',
+      1,
+    ));
+    var _FORM_DoDocumentOpenAction = (Module['_FORM_DoDocumentOpenAction'] = createExportWrapper(
+      'FORM_DoDocumentOpenAction',
+      1,
+    ));
+    var _FORM_DoDocumentAAction = (Module['_FORM_DoDocumentAAction'] = createExportWrapper(
+      'FORM_DoDocumentAAction',
+      2,
+    ));
+    var _FORM_DoPageAAction = (Module['_FORM_DoPageAAction'] = createExportWrapper(
+      'FORM_DoPageAAction',
+      3,
+    ));
     var _FORM_SetIndexSelected = (Module['_FORM_SetIndexSelected'] = createExportWrapper(
       'FORM_SetIndexSelected',
       4,
     ));
+    var _FORM_IsIndexSelected = (Module['_FORM_IsIndexSelected'] = createExportWrapper(
+      'FORM_IsIndexSelected',
+      3,
+    ));
+    var _FPDFDoc_GetJavaScriptActionCount = (Module['_FPDFDoc_GetJavaScriptActionCount'] =
+      createExportWrapper('FPDFDoc_GetJavaScriptActionCount', 1));
+    var _FPDFDoc_GetJavaScriptAction = (Module['_FPDFDoc_GetJavaScriptAction'] =
+      createExportWrapper('FPDFDoc_GetJavaScriptAction', 2));
+    var _FPDFDoc_CloseJavaScriptAction = (Module['_FPDFDoc_CloseJavaScriptAction'] =
+      createExportWrapper('FPDFDoc_CloseJavaScriptAction', 1));
+    var _FPDFJavaScriptAction_GetName = (Module['_FPDFJavaScriptAction_GetName'] =
+      createExportWrapper('FPDFJavaScriptAction_GetName', 3));
+    var _FPDFJavaScriptAction_GetScript = (Module['_FPDFJavaScriptAction_GetScript'] =
+      createExportWrapper('FPDFJavaScriptAction_GetScript', 3));
     var _FPDF_ImportPagesByIndex = (Module['_FPDF_ImportPagesByIndex'] = createExportWrapper(
       'FPDF_ImportPagesByIndex',
       5,
@@ -5758,6 +6612,45 @@ var createPdfium = (() => {
       'FPDF_ImportPages',
       4,
     ));
+    var _FPDF_ImportNPagesToOne = (Module['_FPDF_ImportNPagesToOne'] = createExportWrapper(
+      'FPDF_ImportNPagesToOne',
+      5,
+    ));
+    var _FPDF_NewXObjectFromPage = (Module['_FPDF_NewXObjectFromPage'] = createExportWrapper(
+      'FPDF_NewXObjectFromPage',
+      3,
+    ));
+    var _FPDF_CloseXObject = (Module['_FPDF_CloseXObject'] = createExportWrapper(
+      'FPDF_CloseXObject',
+      1,
+    ));
+    var _FPDF_NewFormObjectFromXObject = (Module['_FPDF_NewFormObjectFromXObject'] =
+      createExportWrapper('FPDF_NewFormObjectFromXObject', 1));
+    var _FPDF_CopyViewerPreferences = (Module['_FPDF_CopyViewerPreferences'] = createExportWrapper(
+      'FPDF_CopyViewerPreferences',
+      2,
+    ));
+    var _FPDF_RenderPageBitmapWithColorScheme_Start = (Module[
+      '_FPDF_RenderPageBitmapWithColorScheme_Start'
+    ] = createExportWrapper('FPDF_RenderPageBitmapWithColorScheme_Start', 10));
+    var _FPDF_RenderPageBitmap_Start = (Module['_FPDF_RenderPageBitmap_Start'] =
+      createExportWrapper('FPDF_RenderPageBitmap_Start', 9));
+    var _FPDF_RenderPage_Continue = (Module['_FPDF_RenderPage_Continue'] = createExportWrapper(
+      'FPDF_RenderPage_Continue',
+      2,
+    ));
+    var _FPDF_RenderPage_Close = (Module['_FPDF_RenderPage_Close'] = createExportWrapper(
+      'FPDF_RenderPage_Close',
+      1,
+    ));
+    var _FPDF_SaveWithVersion = (Module['_FPDF_SaveWithVersion'] = createExportWrapper(
+      'FPDF_SaveWithVersion',
+      4,
+    ));
+    var _FPDFText_GetCharIndexFromTextIndex = (Module['_FPDFText_GetCharIndexFromTextIndex'] =
+      createExportWrapper('FPDFText_GetCharIndexFromTextIndex', 2));
+    var _FPDFText_GetTextIndexFromCharIndex = (Module['_FPDFText_GetTextIndexFromCharIndex'] =
+      createExportWrapper('FPDFText_GetTextIndexFromCharIndex', 2));
     var _FPDF_GetSignatureCount = (Module['_FPDF_GetSignatureCount'] = createExportWrapper(
       'FPDF_GetSignatureCount',
       1,
@@ -5782,6 +6675,110 @@ var createPdfium = (() => {
     ));
     var _FPDFSignatureObj_GetDocMDPPermission = (Module['_FPDFSignatureObj_GetDocMDPPermission'] =
       createExportWrapper('FPDFSignatureObj_GetDocMDPPermission', 1));
+    var _FPDF_StructTree_GetForPage = (Module['_FPDF_StructTree_GetForPage'] = createExportWrapper(
+      'FPDF_StructTree_GetForPage',
+      1,
+    ));
+    var _FPDF_StructTree_Close = (Module['_FPDF_StructTree_Close'] = createExportWrapper(
+      'FPDF_StructTree_Close',
+      1,
+    ));
+    var _FPDF_StructTree_CountChildren = (Module['_FPDF_StructTree_CountChildren'] =
+      createExportWrapper('FPDF_StructTree_CountChildren', 1));
+    var _FPDF_StructTree_GetChildAtIndex = (Module['_FPDF_StructTree_GetChildAtIndex'] =
+      createExportWrapper('FPDF_StructTree_GetChildAtIndex', 2));
+    var _FPDF_StructElement_GetAltText = (Module['_FPDF_StructElement_GetAltText'] =
+      createExportWrapper('FPDF_StructElement_GetAltText', 3));
+    var _FPDF_StructElement_GetActualText = (Module['_FPDF_StructElement_GetActualText'] =
+      createExportWrapper('FPDF_StructElement_GetActualText', 3));
+    var _FPDF_StructElement_GetID = (Module['_FPDF_StructElement_GetID'] = createExportWrapper(
+      'FPDF_StructElement_GetID',
+      3,
+    ));
+    var _FPDF_StructElement_GetLang = (Module['_FPDF_StructElement_GetLang'] = createExportWrapper(
+      'FPDF_StructElement_GetLang',
+      3,
+    ));
+    var _FPDF_StructElement_GetAttributeCount = (Module['_FPDF_StructElement_GetAttributeCount'] =
+      createExportWrapper('FPDF_StructElement_GetAttributeCount', 1));
+    var _FPDF_StructElement_GetAttributeAtIndex = (Module[
+      '_FPDF_StructElement_GetAttributeAtIndex'
+    ] = createExportWrapper('FPDF_StructElement_GetAttributeAtIndex', 2));
+    var _FPDF_StructElement_GetStringAttribute = (Module['_FPDF_StructElement_GetStringAttribute'] =
+      createExportWrapper('FPDF_StructElement_GetStringAttribute', 4));
+    var _FPDF_StructElement_GetMarkedContentID = (Module['_FPDF_StructElement_GetMarkedContentID'] =
+      createExportWrapper('FPDF_StructElement_GetMarkedContentID', 1));
+    var _FPDF_StructElement_GetType = (Module['_FPDF_StructElement_GetType'] = createExportWrapper(
+      'FPDF_StructElement_GetType',
+      3,
+    ));
+    var _FPDF_StructElement_GetObjType = (Module['_FPDF_StructElement_GetObjType'] =
+      createExportWrapper('FPDF_StructElement_GetObjType', 3));
+    var _FPDF_StructElement_GetTitle = (Module['_FPDF_StructElement_GetTitle'] =
+      createExportWrapper('FPDF_StructElement_GetTitle', 3));
+    var _FPDF_StructElement_CountChildren = (Module['_FPDF_StructElement_CountChildren'] =
+      createExportWrapper('FPDF_StructElement_CountChildren', 1));
+    var _FPDF_StructElement_GetChildAtIndex = (Module['_FPDF_StructElement_GetChildAtIndex'] =
+      createExportWrapper('FPDF_StructElement_GetChildAtIndex', 2));
+    var _FPDF_StructElement_GetChildMarkedContentID = (Module[
+      '_FPDF_StructElement_GetChildMarkedContentID'
+    ] = createExportWrapper('FPDF_StructElement_GetChildMarkedContentID', 2));
+    var _FPDF_StructElement_GetParent = (Module['_FPDF_StructElement_GetParent'] =
+      createExportWrapper('FPDF_StructElement_GetParent', 1));
+    var _FPDF_StructElement_Attr_GetCount = (Module['_FPDF_StructElement_Attr_GetCount'] =
+      createExportWrapper('FPDF_StructElement_Attr_GetCount', 1));
+    var _FPDF_StructElement_Attr_GetName = (Module['_FPDF_StructElement_Attr_GetName'] =
+      createExportWrapper('FPDF_StructElement_Attr_GetName', 5));
+    var _FPDF_StructElement_Attr_GetValue = (Module['_FPDF_StructElement_Attr_GetValue'] =
+      createExportWrapper('FPDF_StructElement_Attr_GetValue', 2));
+    var _FPDF_StructElement_Attr_GetType = (Module['_FPDF_StructElement_Attr_GetType'] =
+      createExportWrapper('FPDF_StructElement_Attr_GetType', 1));
+    var _FPDF_StructElement_Attr_GetBooleanValue = (Module[
+      '_FPDF_StructElement_Attr_GetBooleanValue'
+    ] = createExportWrapper('FPDF_StructElement_Attr_GetBooleanValue', 2));
+    var _FPDF_StructElement_Attr_GetNumberValue = (Module[
+      '_FPDF_StructElement_Attr_GetNumberValue'
+    ] = createExportWrapper('FPDF_StructElement_Attr_GetNumberValue', 2));
+    var _FPDF_StructElement_Attr_GetStringValue = (Module[
+      '_FPDF_StructElement_Attr_GetStringValue'
+    ] = createExportWrapper('FPDF_StructElement_Attr_GetStringValue', 4));
+    var _FPDF_StructElement_Attr_GetBlobValue = (Module['_FPDF_StructElement_Attr_GetBlobValue'] =
+      createExportWrapper('FPDF_StructElement_Attr_GetBlobValue', 4));
+    var _FPDF_StructElement_Attr_CountChildren = (Module['_FPDF_StructElement_Attr_CountChildren'] =
+      createExportWrapper('FPDF_StructElement_Attr_CountChildren', 1));
+    var _FPDF_StructElement_Attr_GetChildAtIndex = (Module[
+      '_FPDF_StructElement_Attr_GetChildAtIndex'
+    ] = createExportWrapper('FPDF_StructElement_Attr_GetChildAtIndex', 2));
+    var _FPDF_StructElement_GetMarkedContentIdCount = (Module[
+      '_FPDF_StructElement_GetMarkedContentIdCount'
+    ] = createExportWrapper('FPDF_StructElement_GetMarkedContentIdCount', 1));
+    var _FPDF_StructElement_GetMarkedContentIdAtIndex = (Module[
+      '_FPDF_StructElement_GetMarkedContentIdAtIndex'
+    ] = createExportWrapper('FPDF_StructElement_GetMarkedContentIdAtIndex', 2));
+    var _FPDF_AddInstalledFont = (Module['_FPDF_AddInstalledFont'] = createExportWrapper(
+      'FPDF_AddInstalledFont',
+      3,
+    ));
+    var _FPDF_SetSystemFontInfo = (Module['_FPDF_SetSystemFontInfo'] = createExportWrapper(
+      'FPDF_SetSystemFontInfo',
+      1,
+    ));
+    var _FPDF_GetDefaultTTFMap = (Module['_FPDF_GetDefaultTTFMap'] = createExportWrapper(
+      'FPDF_GetDefaultTTFMap',
+      0,
+    ));
+    var _FPDF_GetDefaultTTFMapCount = (Module['_FPDF_GetDefaultTTFMapCount'] = createExportWrapper(
+      'FPDF_GetDefaultTTFMapCount',
+      0,
+    ));
+    var _FPDF_GetDefaultTTFMapEntry = (Module['_FPDF_GetDefaultTTFMapEntry'] = createExportWrapper(
+      'FPDF_GetDefaultTTFMapEntry',
+      1,
+    ));
+    var _FPDF_GetDefaultSystemFontInfo = (Module['_FPDF_GetDefaultSystemFontInfo'] =
+      createExportWrapper('FPDF_GetDefaultSystemFontInfo', 0));
+    var _FPDF_FreeDefaultSystemFontInfo = (Module['_FPDF_FreeDefaultSystemFontInfo'] =
+      createExportWrapper('FPDF_FreeDefaultSystemFontInfo', 1));
     var _FPDFText_LoadPage = (Module['_FPDFText_LoadPage'] = createExportWrapper(
       'FPDFText_LoadPage',
       1,
@@ -5802,6 +6799,16 @@ var createPdfium = (() => {
       'FPDFText_GetTextObject',
       2,
     ));
+    var _FPDFText_IsGenerated = (Module['_FPDFText_IsGenerated'] = createExportWrapper(
+      'FPDFText_IsGenerated',
+      2,
+    ));
+    var _FPDFText_IsHyphen = (Module['_FPDFText_IsHyphen'] = createExportWrapper(
+      'FPDFText_IsHyphen',
+      2,
+    ));
+    var _FPDFText_HasUnicodeMapError = (Module['_FPDFText_HasUnicodeMapError'] =
+      createExportWrapper('FPDFText_HasUnicodeMapError', 2));
     var _FPDFText_GetFontSize = (Module['_FPDFText_GetFontSize'] = createExportWrapper(
       'FPDFText_GetFontSize',
       2,
@@ -5809,6 +6816,18 @@ var createPdfium = (() => {
     var _FPDFText_GetFontInfo = (Module['_FPDFText_GetFontInfo'] = createExportWrapper(
       'FPDFText_GetFontInfo',
       5,
+    ));
+    var _FPDFText_GetFontWeight = (Module['_FPDFText_GetFontWeight'] = createExportWrapper(
+      'FPDFText_GetFontWeight',
+      2,
+    ));
+    var _FPDFText_GetFillColor = (Module['_FPDFText_GetFillColor'] = createExportWrapper(
+      'FPDFText_GetFillColor',
+      6,
+    ));
+    var _FPDFText_GetStrokeColor = (Module['_FPDFText_GetStrokeColor'] = createExportWrapper(
+      'FPDFText_GetStrokeColor',
+      6,
     ));
     var _FPDFText_GetCharAngle = (Module['_FPDFText_GetCharAngle'] = createExportWrapper(
       'FPDFText_GetCharAngle',
@@ -5821,6 +6840,14 @@ var createPdfium = (() => {
     var _FPDFText_GetLooseCharBox = (Module['_FPDFText_GetLooseCharBox'] = createExportWrapper(
       'FPDFText_GetLooseCharBox',
       3,
+    ));
+    var _FPDFText_GetMatrix = (Module['_FPDFText_GetMatrix'] = createExportWrapper(
+      'FPDFText_GetMatrix',
+      3,
+    ));
+    var _FPDFText_GetCharOrigin = (Module['_FPDFText_GetCharOrigin'] = createExportWrapper(
+      'FPDFText_GetCharOrigin',
+      4,
     ));
     var _FPDFText_GetCharIndexAtPos = (Module['_FPDFText_GetCharIndexAtPos'] = createExportWrapper(
       'FPDFText_GetCharIndexAtPos',
@@ -5866,18 +6893,147 @@ var createPdfium = (() => {
       'FPDFText_FindClose',
       1,
     ));
+    var _FPDFLink_LoadWebLinks = (Module['_FPDFLink_LoadWebLinks'] = createExportWrapper(
+      'FPDFLink_LoadWebLinks',
+      1,
+    ));
+    var _FPDFLink_CountWebLinks = (Module['_FPDFLink_CountWebLinks'] = createExportWrapper(
+      'FPDFLink_CountWebLinks',
+      1,
+    ));
+    var _FPDFLink_GetURL = (Module['_FPDFLink_GetURL'] = createExportWrapper('FPDFLink_GetURL', 4));
+    var _FPDFLink_CountRects = (Module['_FPDFLink_CountRects'] = createExportWrapper(
+      'FPDFLink_CountRects',
+      2,
+    ));
+    var _FPDFLink_GetRect = (Module['_FPDFLink_GetRect'] = createExportWrapper(
+      'FPDFLink_GetRect',
+      7,
+    ));
+    var _FPDFLink_GetTextRange = (Module['_FPDFLink_GetTextRange'] = createExportWrapper(
+      'FPDFLink_GetTextRange',
+      4,
+    ));
+    var _FPDFLink_CloseWebLinks = (Module['_FPDFLink_CloseWebLinks'] = createExportWrapper(
+      'FPDFLink_CloseWebLinks',
+      1,
+    ));
+    var _FPDFPage_GetDecodedThumbnailData = (Module['_FPDFPage_GetDecodedThumbnailData'] =
+      createExportWrapper('FPDFPage_GetDecodedThumbnailData', 3));
+    var _FPDFPage_GetRawThumbnailData = (Module['_FPDFPage_GetRawThumbnailData'] =
+      createExportWrapper('FPDFPage_GetRawThumbnailData', 3));
+    var _FPDFPage_GetThumbnailAsBitmap = (Module['_FPDFPage_GetThumbnailAsBitmap'] =
+      createExportWrapper('FPDFPage_GetThumbnailAsBitmap', 1));
+    var _FPDFPage_SetMediaBox = (Module['_FPDFPage_SetMediaBox'] = createExportWrapper(
+      'FPDFPage_SetMediaBox',
+      5,
+    ));
+    var _FPDFPage_SetCropBox = (Module['_FPDFPage_SetCropBox'] = createExportWrapper(
+      'FPDFPage_SetCropBox',
+      5,
+    ));
+    var _FPDFPage_SetBleedBox = (Module['_FPDFPage_SetBleedBox'] = createExportWrapper(
+      'FPDFPage_SetBleedBox',
+      5,
+    ));
+    var _FPDFPage_SetTrimBox = (Module['_FPDFPage_SetTrimBox'] = createExportWrapper(
+      'FPDFPage_SetTrimBox',
+      5,
+    ));
+    var _FPDFPage_SetArtBox = (Module['_FPDFPage_SetArtBox'] = createExportWrapper(
+      'FPDFPage_SetArtBox',
+      5,
+    ));
+    var _FPDFPage_GetMediaBox = (Module['_FPDFPage_GetMediaBox'] = createExportWrapper(
+      'FPDFPage_GetMediaBox',
+      5,
+    ));
+    var _FPDFPage_GetCropBox = (Module['_FPDFPage_GetCropBox'] = createExportWrapper(
+      'FPDFPage_GetCropBox',
+      5,
+    ));
+    var _FPDFPage_GetBleedBox = (Module['_FPDFPage_GetBleedBox'] = createExportWrapper(
+      'FPDFPage_GetBleedBox',
+      5,
+    ));
+    var _FPDFPage_GetTrimBox = (Module['_FPDFPage_GetTrimBox'] = createExportWrapper(
+      'FPDFPage_GetTrimBox',
+      5,
+    ));
+    var _FPDFPage_GetArtBox = (Module['_FPDFPage_GetArtBox'] = createExportWrapper(
+      'FPDFPage_GetArtBox',
+      5,
+    ));
+    var _FPDFPage_TransFormWithClip = (Module['_FPDFPage_TransFormWithClip'] = createExportWrapper(
+      'FPDFPage_TransFormWithClip',
+      3,
+    ));
+    var _FPDFPageObj_TransformClipPath = (Module['_FPDFPageObj_TransformClipPath'] =
+      createExportWrapper('FPDFPageObj_TransformClipPath', 7));
+    var _FPDFPageObj_GetClipPath = (Module['_FPDFPageObj_GetClipPath'] = createExportWrapper(
+      'FPDFPageObj_GetClipPath',
+      1,
+    ));
+    var _FPDFClipPath_CountPaths = (Module['_FPDFClipPath_CountPaths'] = createExportWrapper(
+      'FPDFClipPath_CountPaths',
+      1,
+    ));
+    var _FPDFClipPath_CountPathSegments = (Module['_FPDFClipPath_CountPathSegments'] =
+      createExportWrapper('FPDFClipPath_CountPathSegments', 2));
+    var _FPDFClipPath_GetPathSegment = (Module['_FPDFClipPath_GetPathSegment'] =
+      createExportWrapper('FPDFClipPath_GetPathSegment', 3));
+    var _FPDF_CreateClipPath = (Module['_FPDF_CreateClipPath'] = createExportWrapper(
+      'FPDF_CreateClipPath',
+      4,
+    ));
+    var _FPDF_DestroyClipPath = (Module['_FPDF_DestroyClipPath'] = createExportWrapper(
+      'FPDF_DestroyClipPath',
+      1,
+    ));
+    var _FPDFPage_InsertClipPath = (Module['_FPDFPage_InsertClipPath'] = createExportWrapper(
+      'FPDFPage_InsertClipPath',
+      2,
+    ));
+    var _FPDF_InitLibrary = (Module['_FPDF_InitLibrary'] = createExportWrapper(
+      'FPDF_InitLibrary',
+      0,
+    ));
     var _FPDF_DestroyLibrary = (Module['_FPDF_DestroyLibrary'] = createExportWrapper(
       'FPDF_DestroyLibrary',
       0,
     ));
+    var _FPDF_SetSandBoxPolicy = (Module['_FPDF_SetSandBoxPolicy'] = createExportWrapper(
+      'FPDF_SetSandBoxPolicy',
+      2,
+    ));
+    var _FPDF_LoadDocument = (Module['_FPDF_LoadDocument'] = createExportWrapper(
+      'FPDF_LoadDocument',
+      2,
+    ));
+    var _FPDF_GetFormType = (Module['_FPDF_GetFormType'] = createExportWrapper(
+      'FPDF_GetFormType',
+      1,
+    ));
+    var _FPDF_LoadXFA = (Module['_FPDF_LoadXFA'] = createExportWrapper('FPDF_LoadXFA', 1));
     var _FPDF_LoadMemDocument = (Module['_FPDF_LoadMemDocument'] = createExportWrapper(
       'FPDF_LoadMemDocument',
+      3,
+    ));
+    var _FPDF_LoadMemDocument64 = (Module['_FPDF_LoadMemDocument64'] = createExportWrapper(
+      'FPDF_LoadMemDocument64',
       3,
     ));
     var _FPDF_LoadCustomDocument = (Module['_FPDF_LoadCustomDocument'] = createExportWrapper(
       'FPDF_LoadCustomDocument',
       2,
     ));
+    var _FPDF_GetFileVersion = (Module['_FPDF_GetFileVersion'] = createExportWrapper(
+      'FPDF_GetFileVersion',
+      2,
+    ));
+    var _FPDF_DocumentHasValidCrossReferenceTable = (Module[
+      '_FPDF_DocumentHasValidCrossReferenceTable'
+    ] = createExportWrapper('FPDF_DocumentHasValidCrossReferenceTable', 1));
     var _FPDF_GetDocPermissions = (Module['_FPDF_GetDocPermissions'] = createExportWrapper(
       'FPDF_GetDocPermissions',
       1,
@@ -5886,6 +7042,8 @@ var createPdfium = (() => {
       'FPDF_GetDocUserPermissions',
       1,
     ));
+    var _FPDF_GetSecurityHandlerRevision = (Module['_FPDF_GetSecurityHandlerRevision'] =
+      createExportWrapper('FPDF_GetSecurityHandlerRevision', 1));
     var _FPDF_GetPageCount = (Module['_FPDF_GetPageCount'] = createExportWrapper(
       'FPDF_GetPageCount',
       1,
@@ -5895,14 +7053,28 @@ var createPdfium = (() => {
       'FPDF_GetPageWidthF',
       1,
     ));
+    var _FPDF_GetPageWidth = (Module['_FPDF_GetPageWidth'] = createExportWrapper(
+      'FPDF_GetPageWidth',
+      1,
+    ));
     var _FPDF_GetPageHeightF = (Module['_FPDF_GetPageHeightF'] = createExportWrapper(
       'FPDF_GetPageHeightF',
       1,
+    ));
+    var _FPDF_GetPageHeight = (Module['_FPDF_GetPageHeight'] = createExportWrapper(
+      'FPDF_GetPageHeight',
+      1,
+    ));
+    var _FPDF_GetPageBoundingBox = (Module['_FPDF_GetPageBoundingBox'] = createExportWrapper(
+      'FPDF_GetPageBoundingBox',
+      2,
     ));
     var _FPDF_RenderPageBitmap = (Module['_FPDF_RenderPageBitmap'] = createExportWrapper(
       'FPDF_RenderPageBitmap',
       8,
     ));
+    var _FPDF_RenderPageBitmapWithMatrix = (Module['_FPDF_RenderPageBitmapWithMatrix'] =
+      createExportWrapper('FPDF_RenderPageBitmapWithMatrix', 5));
     var _FPDF_ClosePage = (Module['_FPDF_ClosePage'] = createExportWrapper('FPDF_ClosePage', 1));
     var _FPDF_CloseDocument = (Module['_FPDF_CloseDocument'] = createExportWrapper(
       'FPDF_CloseDocument',
@@ -5948,12 +7120,67 @@ var createPdfium = (() => {
       'FPDFBitmap_GetHeight',
       1,
     ));
+    var _FPDFBitmap_GetStride = (Module['_FPDFBitmap_GetStride'] = createExportWrapper(
+      'FPDFBitmap_GetStride',
+      1,
+    ));
     var _FPDFBitmap_Destroy = (Module['_FPDFBitmap_Destroy'] = createExportWrapper(
       'FPDFBitmap_Destroy',
       1,
     ));
     var _FPDF_GetPageSizeByIndexF = (Module['_FPDF_GetPageSizeByIndexF'] = createExportWrapper(
       'FPDF_GetPageSizeByIndexF',
+      3,
+    ));
+    var _FPDF_GetPageSizeByIndex = (Module['_FPDF_GetPageSizeByIndex'] = createExportWrapper(
+      'FPDF_GetPageSizeByIndex',
+      4,
+    ));
+    var _FPDF_VIEWERREF_GetPrintScaling = (Module['_FPDF_VIEWERREF_GetPrintScaling'] =
+      createExportWrapper('FPDF_VIEWERREF_GetPrintScaling', 1));
+    var _FPDF_VIEWERREF_GetNumCopies = (Module['_FPDF_VIEWERREF_GetNumCopies'] =
+      createExportWrapper('FPDF_VIEWERREF_GetNumCopies', 1));
+    var _FPDF_VIEWERREF_GetPrintPageRange = (Module['_FPDF_VIEWERREF_GetPrintPageRange'] =
+      createExportWrapper('FPDF_VIEWERREF_GetPrintPageRange', 1));
+    var _FPDF_VIEWERREF_GetPrintPageRangeCount = (Module['_FPDF_VIEWERREF_GetPrintPageRangeCount'] =
+      createExportWrapper('FPDF_VIEWERREF_GetPrintPageRangeCount', 1));
+    var _FPDF_VIEWERREF_GetPrintPageRangeElement = (Module[
+      '_FPDF_VIEWERREF_GetPrintPageRangeElement'
+    ] = createExportWrapper('FPDF_VIEWERREF_GetPrintPageRangeElement', 2));
+    var _FPDF_VIEWERREF_GetDuplex = (Module['_FPDF_VIEWERREF_GetDuplex'] = createExportWrapper(
+      'FPDF_VIEWERREF_GetDuplex',
+      1,
+    ));
+    var _FPDF_VIEWERREF_GetName = (Module['_FPDF_VIEWERREF_GetName'] = createExportWrapper(
+      'FPDF_VIEWERREF_GetName',
+      4,
+    ));
+    var _FPDF_CountNamedDests = (Module['_FPDF_CountNamedDests'] = createExportWrapper(
+      'FPDF_CountNamedDests',
+      1,
+    ));
+    var _FPDF_GetNamedDestByName = (Module['_FPDF_GetNamedDestByName'] = createExportWrapper(
+      'FPDF_GetNamedDestByName',
+      2,
+    ));
+    var _FPDF_GetNamedDest = (Module['_FPDF_GetNamedDest'] = createExportWrapper(
+      'FPDF_GetNamedDest',
+      4,
+    ));
+    var _FPDF_GetXFAPacketCount = (Module['_FPDF_GetXFAPacketCount'] = createExportWrapper(
+      'FPDF_GetXFAPacketCount',
+      1,
+    ));
+    var _FPDF_GetXFAPacketName = (Module['_FPDF_GetXFAPacketName'] = createExportWrapper(
+      'FPDF_GetXFAPacketName',
+      4,
+    ));
+    var _FPDF_GetXFAPacketContent = (Module['_FPDF_GetXFAPacketContent'] = createExportWrapper(
+      'FPDF_GetXFAPacketContent',
+      5,
+    ));
+    var _FPDF_GetTrailerEnds = (Module['_FPDF_GetTrailerEnds'] = createExportWrapper(
+      'FPDF_GetTrailerEnds',
       3,
     ));
     var _fflush = createExportWrapper('fflush', 1);
@@ -5975,9 +7202,11 @@ var createPdfium = (() => {
       (__emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'])(a0);
     var _emscripten_stack_get_current = () =>
       (_emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'])();
-    var dynCall_j = (Module['dynCall_j'] = createExportWrapper('dynCall_j', 1));
     var dynCall_ji = (Module['dynCall_ji'] = createExportWrapper('dynCall_ji', 2));
+    var dynCall_jij = (Module['dynCall_jij'] = createExportWrapper('dynCall_jij', 4));
     var dynCall_iiij = (Module['dynCall_iiij'] = createExportWrapper('dynCall_iiij', 5));
+    var dynCall_iij = (Module['dynCall_iij'] = createExportWrapper('dynCall_iij', 4));
+    var dynCall_j = (Module['dynCall_j'] = createExportWrapper('dynCall_j', 1));
     var dynCall_jji = (Module['dynCall_jji'] = createExportWrapper('dynCall_jji', 4));
     var dynCall_iji = (Module['dynCall_iji'] = createExportWrapper('dynCall_iji', 4));
     var dynCall_viijii = (Module['dynCall_viijii'] = createExportWrapper('dynCall_viijii', 7));
