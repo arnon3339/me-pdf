@@ -1,5 +1,13 @@
 # @embedpdf/core
 
+## 1.0.4
+
+### Patch Changes
+
+- [#24](https://github.com/embedpdf/embed-pdf-viewer/pull/24) by [@bobsingor](https://github.com/bobsingor) – Move PDF engine hook to the engine package for consistency
+
+- [`90bd467`](https://github.com/embedpdf/embed-pdf-viewer/commit/90bd46772b83b9b87b5c5886646193f308e7fdad) by [@bobsingor](https://github.com/bobsingor) – Add usePdfWorkerEngine to make engine initialization more straightforward
+
 ## 1.0.3
 
 ## 1.0.2
