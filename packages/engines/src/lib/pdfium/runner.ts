@@ -1,5 +1,5 @@
 import { init } from '@embedpdf/pdfium';
-import { EngineRunner } from '../webworker';
+import { EngineRunner } from '../webworker/runner';
 import { PdfiumEngine } from './engine';
 
 /**
