@@ -1,3 +1,4 @@
+export * from './use-pdf-worker-engine';
 export * from './use-capability';
 export * from './use-registry';
 export * from './use-store-state';

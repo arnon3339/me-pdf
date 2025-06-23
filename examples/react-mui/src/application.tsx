@@ -1,6 +1,5 @@
 import { createPluginRegistration } from '@embedpdf/core';
-import { EmbedPDF } from '@embedpdf/core/react';
-import { PdfEngine } from '@embedpdf/models';
+import { EmbedPDF, usePdfWorkerEngine } from '@embedpdf/core/react';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
@@ -31,7 +30,7 @@ import { ExportPluginPackage } from '@embedpdf/plugin-export';
 import { Download } from '@embedpdf/plugin-export/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Alert } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 
 import { PageControls } from './components/page-controls';
@@ -40,10 +39,6 @@ import { Drawer, DrawerComponent, DrawerProvider } from './components/drawer-sys
 import { Sidebar } from './components/sidebar';
 import { Toolbar } from './components/toolbar';
 import { ViewSidebarReverseIcon } from './icons';
-
-interface AppProps {
-  engine: PdfEngine;
-}
 
 const plugins = [
   createPluginRegistration(LoaderPluginPackage, {
@@ -100,7 +95,33 @@ const drawerComponents: DrawerComponent[] = [
   },
 ];
 
-function App({ engine }: AppProps) {
+const WORKER_URL = new URL('./webworker.ts', import.meta.url);
+
+function App() {
+  const { engine, isLoading, error } = usePdfWorkerEngine({
+    workerUrl: WORKER_URL,
+  });
+
+  if (error) {
+    return <Alert severity="error">Failed to initialize PDF viewer: {error.message}</Alert>;
+  }
+
+  if (isLoading || !engine) {
+    return (
+      <Box
+        sx={{
+          height: '100%',
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress size={48} />
+      </Box>
+    );
+  }
+
   return (
     <DrawerProvider components={drawerComponents}>
       <EmbedPDF
