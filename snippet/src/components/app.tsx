@@ -3,7 +3,8 @@ import { h, Fragment } from 'preact';
 import styles from '../styles/index.css';
 import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration } from '@embedpdf/core';
-import { PdfAnnotationSubtype, PdfEngine, restorePosition, Rotation } from '@embedpdf/models';
+import { usePdfiumEngine } from '@embedpdf/engines/preact';
+import { PdfAnnotationSubtype, Rotation } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
   ViewportPluginConfig,
@@ -197,27 +198,6 @@ function mergePluginConfigs(userConfigs: PluginConfigs = {}): Required<PluginCon
     thumbnail: { ...DEFAULT_PLUGIN_CONFIGS.thumbnail, ...userConfigs.thumbnail },
     print: { ...DEFAULT_PLUGIN_CONFIGS.print, ...userConfigs.print },
   };
-}
-
-// **Singleton Engine Instance**
-let engineInstance: PdfEngine | null = null;
-
-interface InitializeEngineOptions {
-  worker?: boolean;
-  wasmUrl?: string;
-}
-// **Initialize the Pdfium Engine**
-async function initializeEngine(options: InitializeEngineOptions): Promise<PdfEngine> {
-  const wasmUrl = options.wasmUrl || 'https://snippet.embedpdf.com/pdfium.wasm';
-  if (options.worker) {
-    // Lazy load worker engine only when needed
-    const { createWorkerEngine } = await import('./loader-worker');
-    return createWorkerEngine(wasmUrl);
-  } else {
-    // Lazy load local engine only when needed
-    const { createLocalEngine } = await import('./loader-local');
-    return createLocalEngine(wasmUrl);
-  }
 }
 
 // **Props for the PDFViewer Component**
@@ -1957,42 +1937,15 @@ export const uiConfig: UIPluginConfig = {
 };
 
 export function PDFViewer({ config }: PDFViewerProps) {
-  const [engine, setEngine] = useState<PdfEngine | null>(engineInstance);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function setupEngine() {
-      if (engineInstance) {
-        setEngine(engineInstance);
-        return;
-      }
-
-      try {
-        const newEngine = await initializeEngine({
-          worker: config.worker,
-          wasmUrl: config.wasmUrl,
-        });
-        if (isMounted) {
-          engineInstance = newEngine;
-          setEngine(newEngine);
-        }
-      } catch (error) {
-        console.error('Failed to initialize PDF engine:', error);
-      }
-    }
-
-    setupEngine();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [config.worker]);
+  const { engine, isLoading } = usePdfiumEngine({
+    wasmUrl: config.wasmUrl ?? 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm',
+    worker: config.worker,
+  });
 
   // **Merge user configurations with defaults**
   const pluginConfigs = mergePluginConfigs(config.plugins);
 
-  if (!engine)
+  if (!engine || isLoading)
     return (
       <>
         <style>{styles}</style>

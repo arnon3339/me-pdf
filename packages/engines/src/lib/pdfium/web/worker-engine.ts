@@ -1,0 +1,21 @@
+import { WebWorkerEngine } from '../../webworker/engine';
+
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-ignore injected at build time
+declare const __WEBWORKER_BODY__: string;
+
+/**
+ * Zero-config helper:
+ *   const engine = createDefaultWorkerEngine('/wasm/pdfium.wasm');
+ */
+export function createPdfiumEngine(wasmUrl: string) {
+  const worker = new Worker(
+    URL.createObjectURL(new Blob([__WEBWORKER_BODY__], { type: 'application/javascript' })),
+    {
+      type: 'module',
+    },
+  );
+
+  worker.postMessage({ type: 'wasmInit', wasmUrl });
+  return new WebWorkerEngine(worker);
+}

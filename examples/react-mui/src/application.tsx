@@ -1,5 +1,6 @@
 import { createPluginRegistration } from '@embedpdf/core';
-import { EmbedPDF, usePdfWorkerEngine } from '@embedpdf/core/react';
+import { EmbedPDF } from '@embedpdf/core/react';
+import { usePdfiumEngine } from '@embedpdf/engines/react';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
@@ -95,11 +96,9 @@ const drawerComponents: DrawerComponent[] = [
   },
 ];
 
-const WORKER_URL = new URL('./webworker.ts', import.meta.url);
-
 function App() {
-  const { engine, isLoading, error } = usePdfWorkerEngine({
-    workerUrl: WORKER_URL,
+  const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm',
   });
 
   if (error) {

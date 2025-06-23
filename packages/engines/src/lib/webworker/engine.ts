@@ -194,14 +194,12 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId('General');
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
-    task.wait(
-      () => {
-        this.worker.removeEventListener('message', this.handle);
-      },
-      () => {
-        this.worker.removeEventListener('message', this.handle);
-      },
-    );
+    const finish = () => {
+      this.worker.removeEventListener('message', this.handle);
+      this.worker.terminate();
+    };
+
+    task.wait(finish, finish);
 
     const request: ExecuteRequest = {
       id: requestId,
