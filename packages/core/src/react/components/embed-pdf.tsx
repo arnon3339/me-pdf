@@ -7,7 +7,7 @@ import { PDFContext, PDFContextState } from '../context';
 
 interface EmbedPDFProps {
   engine: PdfEngine;
-  onInitialized: (registry: PluginRegistry) => Promise<void>;
+  onInitialized?: (registry: PluginRegistry) => Promise<void>;
   plugins: PluginBatchRegistration<IPlugin<any>, any>[];
   children: React.ReactNode | ((state: PDFContextState) => React.ReactNode);
 }

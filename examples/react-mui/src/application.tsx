@@ -102,7 +102,19 @@ function App() {
   });
 
   if (error) {
-    return <Alert severity="error">Failed to initialize PDF viewer: {error.message}</Alert>;
+    return (
+      <Box
+        sx={{
+          height: '100%',
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Alert severity="error">Failed to initialize PDF viewer:</Alert>
+      </Box>
+    );
   }
 
   if (isLoading || !engine) {
@@ -123,13 +135,7 @@ function App() {
 
   return (
     <DrawerProvider components={drawerComponents}>
-      <EmbedPDF
-        engine={engine}
-        onInitialized={async (initial) => {
-          console.log('initial', initial);
-        }}
-        plugins={plugins}
-      >
+      <EmbedPDF engine={engine} plugins={plugins}>
         {({ pluginsReady }) => (
           <FullscreenProvider>
             <Box
