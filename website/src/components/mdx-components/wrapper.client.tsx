@@ -6,6 +6,7 @@ import { useEffect } from 'react'
 import { setToc, useConfig } from '../stores'
 import { Pagination } from '../pagination'
 import { Breadcrumb } from '../breadcrumb'
+import NeedHelp from '../need-help'
 
 export const ClientWrapper: MDXWrapper = ({
   toc,
@@ -54,6 +55,7 @@ export const ClientWrapper: MDXWrapper = ({
             <div className="x:mt-16" />
           )}
           {themeContext.pagination && <Pagination />}
+          <NeedHelp />
         </article>
       )}
     </>
