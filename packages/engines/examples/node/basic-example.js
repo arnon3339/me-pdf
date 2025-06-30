@@ -14,7 +14,7 @@ const __dirname = dirname(__filename);
 async function runExample() {
   const consoleLogger = new ConsoleLogger();
 
-  const imageConverter = createNodeImageDataToBufferConverter(sharp, 'image/webp');
+  const imageConverter = createNodeImageDataToBufferConverter(sharp);
 
   // Initialize PDFium
   const pdfiumInstance = await init();

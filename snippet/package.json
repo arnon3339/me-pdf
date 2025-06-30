@@ -39,6 +39,7 @@
     "@embedpdf/plugin-export": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@embedpdf/plugin-pan": "workspace:*",
+    "@embedpdf/plugin-capture": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {

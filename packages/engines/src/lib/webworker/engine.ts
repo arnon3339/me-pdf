@@ -32,6 +32,7 @@ import {
   PdfFileUrl,
   PdfGlyphObject,
   PdfPageGeometry,
+  ImageConversionTypes,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -410,6 +411,7 @@ export class WebWorkerEngine implements PdfEngine {
     rotation: Rotation,
     dpr: number,
     options: PdfRenderOptions,
+    imageType: ImageConversionTypes = 'image/webp',
   ) {
     this.logger.debug(
       LOG_SOURCE,
@@ -430,7 +432,7 @@ export class WebWorkerEngine implements PdfEngine {
       type: 'ExecuteRequest',
       data: {
         name: 'renderPage',
-        args: [doc, page, scaleFactor, rotation, dpr, options],
+        args: [doc, page, scaleFactor, rotation, dpr, options, imageType],
       },
     };
     this.proxy(task, request);
@@ -451,6 +453,7 @@ export class WebWorkerEngine implements PdfEngine {
     dpr: number,
     rect: Rect,
     options: PdfRenderOptions,
+    imageType: ImageConversionTypes = 'image/webp',
   ) {
     this.logger.debug(
       LOG_SOURCE,
@@ -472,7 +475,7 @@ export class WebWorkerEngine implements PdfEngine {
       type: 'ExecuteRequest',
       data: {
         name: 'renderPageRect',
-        args: [doc, page, scaleFactor, rotation, dpr, rect, options],
+        args: [doc, page, scaleFactor, rotation, dpr, rect, options, imageType],
       },
     };
     this.proxy(task, request);
