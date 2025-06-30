@@ -1187,6 +1187,13 @@ export function unionFlags(flags: MatchFlag[]) {
 }
 
 /**
+ * Image conversion types
+ *
+ * @public
+ */
+export type ImageConversionTypes = 'image/webp' | 'image/png' | 'image/jpeg';
+
+/**
  * Targe for searching
  *
  * @public
@@ -1642,6 +1649,7 @@ export interface PdfEngine<T = Blob> {
     rotation: Rotation,
     dpr: number,
     options: PdfRenderOptions,
+    imageType?: ImageConversionTypes,
   ) => PdfTask<T>;
   /**
    * Render the specified rect of pdf page
@@ -1662,6 +1670,7 @@ export interface PdfEngine<T = Blob> {
     dpr: number,
     rect: Rect,
     options: PdfRenderOptions,
+    imageType?: ImageConversionTypes,
   ) => PdfTask<T>;
   /**
    * Get annotations of pdf page

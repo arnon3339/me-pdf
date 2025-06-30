@@ -83,6 +83,7 @@ import {
   PdfAnnotationStateModel,
   quadToRect,
   PdfImage,
+  ImageConversionTypes,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -155,10 +156,14 @@ export enum PdfiumErrorCode {
  * In browser: uses OffscreenCanvas
  * In Node.js: can use Sharp or other image processing libraries
  */
-export type ImageDataConverter<T = Blob> = (imageData: PdfImage) => Promise<T>;
+export type ImageDataConverter<T = Blob> = (
+  imageData: PdfImage,
+  imageType?: ImageConversionTypes,
+) => Promise<T>;
 
 export const browserImageDataToBlobConverter: ImageDataConverter<Blob> = (
   pdfImageData: PdfImage,
+  imageType: ImageConversionTypes = 'image/webp',
 ): Promise<Blob> => {
   // Check if we're in a browser environment
   if (typeof OffscreenCanvas === 'undefined') {
@@ -172,7 +177,7 @@ export const browserImageDataToBlobConverter: ImageDataConverter<Blob> = (
   const imageData = new ImageData(pdfImageData.data, pdfImageData.width, pdfImageData.height);
   const off = new OffscreenCanvas(imageData.width, imageData.height);
   off.getContext('2d')!.putImageData(imageData, 0, 0);
-  return off.convertToBlob({ type: 'image/webp' });
+  return off.convertToBlob({ type: imageType });
 };
 
 /**
@@ -835,6 +840,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     rotation: Rotation = Rotation.Degree0,
     dpr: number = 1,
     options: PdfRenderOptions = { withAnnotations: false },
+    imageType: ImageConversionTypes = 'image/webp',
   ): PdfTask<T> {
     const task = new Task<T, PdfErrorReason>();
 
@@ -875,7 +881,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     );
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPage`, 'End', `${doc.id}-${page.index}`);
 
-    this.imageDataConverter(imageData).then((blob) => task.resolve(blob));
+    this.imageDataConverter(imageData, imageType).then((blob) => task.resolve(blob));
 
     return task;
   }
@@ -893,6 +899,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     dpr: number,
     rect: Rect,
     options: PdfRenderOptions,
+    imageType: ImageConversionTypes = 'image/webp',
   ): PdfTask<T> {
     const task = new Task<T, PdfErrorReason>();
 
@@ -943,7 +950,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     );
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPageRect`, 'End', `${doc.id}-${page.index}`);
 
-    this.imageDataConverter(imageData).then((blob) => task.resolve(blob));
+    this.imageDataConverter(imageData, imageType).then((blob) => task.resolve(blob));
 
     return task;
   }

@@ -3,7 +3,10 @@
  * In browser: uses OffscreenCanvas
  * In Node.js: can use Sharp or other image processing libraries
  */
-export type ImageDataConverter<T = Blob> = (imageData: ImageData) => Promise<T>;
+export type ImageDataConverter<T = Blob> = (
+  imageData: ImageData,
+  imageType?: ImageConversionTypes,
+) => Promise<T>;
 
 export type ImageConversionTypes = 'image/webp' | 'image/png' | 'image/jpeg';
 /**
@@ -12,6 +15,7 @@ export type ImageConversionTypes = 'image/webp' | 'image/png' | 'image/jpeg';
  */
 export const browserImageDataToBlobConverter: ImageDataConverter = (
   imageData: ImageData,
+  imageType: ImageConversionTypes = 'image/webp',
 ): Promise<Blob> => {
   // Check if we're in a browser environment
   if (typeof OffscreenCanvas === 'undefined') {
@@ -24,30 +28,8 @@ export const browserImageDataToBlobConverter: ImageDataConverter = (
 
   const off = new OffscreenCanvas(imageData.width, imageData.height);
   off.getContext('2d')!.putImageData(imageData, 0, 0);
-  return off.convertToBlob({ type: 'image/webp' });
+  return off.convertToBlob({ type: imageType });
 };
-
-/**
- * Create a browser implementation with custom image type
- */
-export function createBrowserImageDataToBlobConverter(
-  imageType: ImageConversionTypes = 'image/webp',
-): ImageDataConverter {
-  return (imageData: ImageData): Promise<Blob> => {
-    // Check if we're in a browser environment
-    if (typeof OffscreenCanvas === 'undefined') {
-      throw new Error(
-        'OffscreenCanvas is not available in this environment. ' +
-          'This converter is intended for browser use only. ' +
-          'Please use createNodeImageDataToBlobConverter() or createNodeCanvasImageDataToBlobConverter() for Node.js.',
-      );
-    }
-
-    const off = new OffscreenCanvas(imageData.width, imageData.height);
-    off.getContext('2d')!.putImageData(imageData, 0, 0);
-    return off.convertToBlob({ type: imageType });
-  };
-}
 
 /**
  * Node.js implementation using Sharp
@@ -64,9 +46,11 @@ export function createBrowserImageDataToBlobConverter(
  */
 export function createNodeImageDataToBufferConverter(
   sharp: any, // Using 'any' to avoid requiring sharp as a dependency
-  imageType: ImageConversionTypes = 'image/webp',
 ): ImageDataConverter<Buffer> {
-  return async (imageData: ImageData): Promise<Buffer> => {
+  return async (
+    imageData: ImageData,
+    imageType: ImageConversionTypes = 'image/webp',
+  ): Promise<Buffer> => {
     const { width, height, data } = imageData;
 
     // Convert ImageData to Sharp format
@@ -118,9 +102,11 @@ export function createNodeImageDataToBufferConverter(
  */
 export function createNodeCanvasImageDataToBlobConverter(
   createCanvas: any, // Using 'any' to avoid requiring canvas as a dependency
-  imageType: ImageConversionTypes = 'image/webp',
 ): ImageDataConverter<Buffer> {
-  return async (imageData: ImageData): Promise<Buffer> => {
+  return async (
+    imageData: ImageData,
+    imageType: ImageConversionTypes = 'image/webp',
+  ): Promise<Buffer> => {
     const { width, height } = imageData;
 
     // Create a canvas and put the image data
@@ -163,9 +149,11 @@ export function createNodeCanvasImageDataToBlobConverter(
  */
 export function createCustomImageDataToBlobConverter(
   processor: (imageData: ImageData) => Promise<Buffer>,
-  imageType: ImageConversionTypes = 'image/webp',
 ): ImageDataConverter {
-  return async (imageData: ImageData): Promise<Blob> => {
+  return async (
+    imageData: ImageData,
+    imageType: ImageConversionTypes = 'image/webp',
+  ): Promise<Blob> => {
     const buffer = await processor(imageData);
     return new Blob([buffer], { type: imageType });
   };
@@ -178,9 +166,12 @@ export function createCustomImageDataToBlobConverter(
  * @returns ImageDataToBlobConverter<Buffer>
  */
 export function createCustomImageDataToBufferConverter(
-  processor: (imageData: ImageData) => Promise<Buffer>,
+  processor: (imageData: ImageData, imageType: ImageConversionTypes) => Promise<Buffer>,
 ): ImageDataConverter<Buffer> {
-  return async (imageData: ImageData): Promise<Buffer> => {
-    return await processor(imageData);
+  return async (
+    imageData: ImageData,
+    imageType: ImageConversionTypes = 'image/webp',
+  ): Promise<Buffer> => {
+    return await processor(imageData, imageType);
   };
 }

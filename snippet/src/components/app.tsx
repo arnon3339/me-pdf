@@ -131,6 +131,10 @@ import {
 } from '@embedpdf/plugin-interaction-manager/preact';
 import { PanMode } from '@embedpdf/plugin-pan/preact';
 import { PanPluginPackage } from '@embedpdf/plugin-pan';
+import { CAPTURE_PLUGIN_ID, CapturePlugin, CapturePluginPackage } from '@embedpdf/plugin-capture';
+import { MarqueeCapture } from '@embedpdf/plugin-capture/preact';
+import { Capture } from './capture';
+import { HintLayer } from './hint-layer';
 
 export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
@@ -378,6 +382,10 @@ export const icons: IconRegistry = {
     id: 'zoomInArea',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-zoom-in-area"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 13v4" /><path d="M13 15h4" /><path d="M15 15m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0" /><path d="M22 22l-3 -3" /><path d="M6 18h-1a2 2 0 0 1 -2 -2v-1" /><path d="M3 11v-1" /><path d="M3 6v-1a2 2 0 0 1 2 -2h1" /><path d="M10 3h1" /><path d="M15 3h1a2 2 0 0 1 2 2v1" /></svg>',
   },
+  screenshot: {
+    id: 'screenshot',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-screenshot"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 19a2 2 0 0 1 -2 -2" /><path d="M5 13v-2" /><path d="M5 7a2 2 0 0 1 2 -2" /><path d="M11 5h2" /><path d="M17 5a2 2 0 0 1 2 2" /><path d="M19 11v2" /><path d="M19 17v4" /><path d="M21 19h-4" /><path d="M13 19h-2" /></svg>',
+  },
 };
 
 export const menuItems: Record<string, MenuItem<State>> = {
@@ -388,7 +396,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcut: 'Shift+M',
     //shortcutLabel: 'M',
     type: 'menu',
-    children: ['openFile', 'download', 'enterFS', 'print'],
+    children: ['openFile', 'download', 'enterFS', 'screenshot', 'print'],
     active: (storeState) =>
       storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'menuCtr',
   },
@@ -445,6 +453,24 @@ export const menuItems: Record<string, MenuItem<State>> = {
         }
       }
     },
+  },
+  screenshot: {
+    id: 'screenshot',
+    icon: 'screenshot',
+    label: 'Screenshot',
+    type: 'action',
+    action: (registry) => {
+      const capture = registry.getPlugin<CapturePlugin>(CAPTURE_PLUGIN_ID)?.provides();
+      if (!capture) return;
+
+      if (capture.isMarqueeCaptureActive()) {
+        capture.disableMarqueeCapture();
+      } else {
+        capture.enableMarqueeCapture();
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'marqueeCapture',
   },
   save: {
     id: 'save',
@@ -2023,6 +2049,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(ExportPluginPackage, {}),
           createPluginRegistration(InteractionManagerPluginPackage, {}),
           createPluginRegistration(PanPluginPackage, {}),
+          createPluginRegistration(CapturePluginPackage, {
+            scale: 2,
+            imageType: 'image/png',
+          }),
         ]}
       >
         {({ pluginsReady }) => (
@@ -2086,6 +2116,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                             scale={scale}
                                             className="absolute left-0 top-0 h-full w-full"
                                           />
+                                          <HintLayer />
                                           <PagePointerProvider
                                             rotation={rotation}
                                             scale={scale}
@@ -2094,6 +2125,12 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                             pageIndex={pageIndex}
                                           >
                                             <MarqueeZoom
+                                              pageIndex={pageIndex}
+                                              scale={scale}
+                                              pageWidth={width}
+                                              pageHeight={height}
+                                            />
+                                            <MarqueeCapture
                                               pageIndex={pageIndex}
                                               scale={scale}
                                               pageWidth={width}
@@ -2126,6 +2163,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                   </div>
                   <FilePicker />
                   <Download />
+                  <Capture />
                 </PrintProvider>
               </FullscreenProvider>
             )}

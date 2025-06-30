@@ -1,5 +1,5 @@
 import { BasePluginConfig } from '@embedpdf/core';
-import { PdfErrorReason, Rect, Rotation, Task } from '@embedpdf/models';
+import { ImageConversionTypes, PdfErrorReason, Rect, Rotation, Task } from '@embedpdf/models';
 
 export interface RenderPluginConfig extends BasePluginConfig {}
 
@@ -12,6 +12,7 @@ export interface RenderPageRectOptions {
   options?: {
     withAnnotations: boolean;
   };
+  imageType?: ImageConversionTypes;
 }
 
 export interface RenderPageOptions {
@@ -22,6 +23,7 @@ export interface RenderPageOptions {
   options?: {
     withAnnotations: boolean;
   };
+  imageType?: ImageConversionTypes;
 }
 
 export interface RenderCapability {
