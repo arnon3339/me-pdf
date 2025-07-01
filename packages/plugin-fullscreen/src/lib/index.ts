@@ -22,3 +22,4 @@ export * from './fullscreen-plugin';
 export * from './types';
 export * from './manifest';
 export * from './actions';
+export { initialState };

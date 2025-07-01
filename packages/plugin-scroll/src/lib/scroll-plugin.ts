@@ -30,11 +30,12 @@ import {
   LayoutChangePayload,
   ScrollerLayout,
   ScrollToPageOptions,
+  PageChangePayload,
 } from './types';
 import { BaseScrollStrategy, ScrollStrategyConfig } from './strategies/base-strategy';
 import { VerticalScrollStrategy } from './strategies/vertical-strategy';
 import { HorizontalScrollStrategy } from './strategies/horizontal-strategy';
-import { updateScrollState, ScrollAction } from './actions';
+import { updateScrollState, ScrollAction, updateTotalPages } from './actions';
 import { VirtualItem } from './types/virtual-item';
 import { getScrollerLayout } from './selectors';
 
@@ -63,7 +64,7 @@ export class ScrollPlugin extends BasePlugin<
   private readonly scroll$ = createBehaviorEmitter<ScrollMetrics>();
   private readonly state$ = createBehaviorEmitter<ScrollState>();
   private readonly scrollerLayout$ = createBehaviorEmitter<ScrollerLayout>();
-  private readonly pageChange$ = createEmitter<number>();
+  private readonly pageChange$ = createBehaviorEmitter<PageChangePayload>();
 
   constructor(
     public readonly id: string,
@@ -93,9 +94,12 @@ export class ScrollPlugin extends BasePlugin<
       mode: 'throttle',
       wait: 250,
     });
-    this.coreStore.onAction(SET_DOCUMENT, (_action, state) =>
-      this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
-    );
+    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => {
+      const totalPages = state.core.pages.length;
+      this.dispatch(updateTotalPages(totalPages));
+      this.pageChange$.emit({ pageNumber: this.currentPage, totalPages });
+      this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics());
+    });
     this.coreStore.onAction(SET_ROTATION, (_action, state) =>
       this.refreshAll(getPagesWithRotatedSize(state.core), this.viewport.getMetrics()),
     );
@@ -133,7 +137,7 @@ export class ScrollPlugin extends BasePlugin<
 
       if (emit.metrics.currentPage !== this.currentPage) {
         this.currentPage = emit.metrics.currentPage;
-        this.pageChange$.emit(this.currentPage);
+        this.pageChange$.emit({ pageNumber: this.currentPage, totalPages: this.state.totalPages });
       }
     }
 
@@ -222,6 +226,8 @@ export class ScrollPlugin extends BasePlugin<
       onScroll: this.scroll$.on,
       onPageChange: this.pageChange$.on,
       onScrollerData: this.scrollerLayout$.on,
+      getCurrentPage: () => this.currentPage,
+      getTotalPages: () => this.state.totalPages,
       scrollToPage: (options: ScrollToPageOptions) => {
         const { pageNumber, behavior = 'smooth', pageCoordinates, center = false } = options;
         const virtualItems = this.getVirtualItemsFromState();

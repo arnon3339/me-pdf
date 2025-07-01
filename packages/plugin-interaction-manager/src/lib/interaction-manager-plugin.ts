@@ -1,4 +1,4 @@
-import { BasePlugin, createEmitter, PluginRegistry } from '@embedpdf/core';
+import { BasePlugin, createBehaviorEmitter, createEmitter, PluginRegistry } from '@embedpdf/core';
 
 import {
   InteractionManagerCapability,
@@ -45,6 +45,7 @@ export class InteractionManagerPlugin extends BasePlugin<
   private readonly onModeChange$ = createEmitter<InteractionManagerState>();
   private readonly onHandlerChange$ = createEmitter<InteractionManagerState>();
   private readonly onCursorChange$ = createEmitter<string>();
+  private readonly onStateChange$ = createBehaviorEmitter<InteractionManagerState>();
 
   constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
@@ -65,6 +66,7 @@ export class InteractionManagerPlugin extends BasePlugin<
       onModeChange: this.onModeChange$.on,
       onCursorChange: this.onCursorChange$.on,
       onHandlerChange: this.onHandlerChange$.on,
+      onStateChange: this.onStateChange$.on,
       getActiveMode: () => this.state.activeMode,
       getActiveInteractionMode: () => this.getActiveInteractionMode(),
       finish: () => this.activate('default'),
@@ -198,6 +200,10 @@ export class InteractionManagerPlugin extends BasePlugin<
       this.dispatch(setCursor(top.cursor));
       this.onCursorChange$.emit(top.cursor);
     }
+  }
+
+  override onStoreUpdated(_: InteractionManagerState, newState: InteractionManagerState): void {
+    this.onStateChange$.emit(newState);
   }
 
   private activeModeIsExclusive(): boolean {

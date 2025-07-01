@@ -1,11 +1,11 @@
 {
   "name": "@embedpdf/models",
-  "version": "0.0.0",
+  "version": "1.0.5",
   "private": false,
-  "description": "core models of embedpdf",
+  "description": "Shared type definitions, data models, and utility helpers (geometry, tasks, logging, PDF primitives) that underpin every package in the EmbedPDF ecosystem.",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.cjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -26,6 +26,15 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/embedpdf/embed-pdf-viewer",
+    "directory": "packages/models"
+  },
+  "homepage": "https://www.embedpdf.com/docs",
+  "bugs": {
+    "url": "https://github.com/embedpdf/embed-pdf-viewer/issues"
+  },
   "author": "Bob Singor, Ji Chang",
   "license": "MIT",
   "devDependencies": {

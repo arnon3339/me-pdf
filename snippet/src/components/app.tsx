@@ -3,18 +3,11 @@ import { h, Fragment } from 'preact';
 import styles from '../styles/index.css';
 import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration } from '@embedpdf/core';
-import {
-  AllLogger,
-  ConsoleLogger,
-  pdfAlphaColorToHexOpacity,
-  PdfAnnotationSubtype,
-  PdfEngine,
-  PerfLogger,
-  restorePosition,
-  Rotation,
-} from '@embedpdf/models';
+import { usePdfiumEngine } from '@embedpdf/engines/preact';
+import { pdfAlphaColorToHexOpacity, PdfAnnotationSubtype, Rotation } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
+  ViewportPluginConfig,
   ViewportPluginPackage,
   ViewportState,
 } from '@embedpdf/plugin-viewport';
@@ -22,6 +15,7 @@ import { Viewport } from '@embedpdf/plugin-viewport/preact';
 import {
   SCROLL_PLUGIN_ID,
   ScrollPlugin,
+  ScrollPluginConfig,
   ScrollPluginPackage,
   ScrollState,
   ScrollStrategy,
@@ -31,6 +25,7 @@ import {
   SPREAD_PLUGIN_ID,
   SpreadMode,
   SpreadPlugin,
+  SpreadPluginConfig,
   SpreadPluginPackage,
   SpreadState,
 } from '@embedpdf/plugin-spread';
@@ -78,12 +73,18 @@ import {
   ZOOM_PLUGIN_ID,
   ZoomMode,
   ZoomPlugin,
+  ZoomPluginConfig,
   ZoomPluginPackage,
   ZoomState,
 } from '@embedpdf/plugin-zoom';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/preact';
-import { ROTATE_PLUGIN_ID, RotatePlugin, RotatePluginPackage } from '@embedpdf/plugin-rotate';
+import {
+  ROTATE_PLUGIN_ID,
+  RotatePlugin,
+  RotatePluginConfig,
+  RotatePluginPackage,
+} from '@embedpdf/plugin-rotate';
 import { Rotate } from '@embedpdf/plugin-rotate/preact';
 import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/plugin-search';
 import { SearchLayer } from '@embedpdf/plugin-search/preact';
@@ -94,9 +95,9 @@ import {
   SelectionState,
 } from '@embedpdf/plugin-selection';
 import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
-import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
+import { TilingPluginConfig, TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
-import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
+import { ThumbnailPluginConfig, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 import {
   ANNOTATION_PLUGIN_ID,
   AnnotationPlugin,
@@ -106,7 +107,7 @@ import {
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 import { PinchWrapper, MarqueeZoom } from '@embedpdf/plugin-zoom/preact';
 import { LoadingIndicator } from './ui/loading-indicator';
-import { PrintPluginPackage } from '@embedpdf/plugin-print';
+import { PrintPluginConfig, PrintPluginPackage } from '@embedpdf/plugin-print';
 import { PrintProvider } from '@embedpdf/plugin-print/preact';
 import {
   FULLSCREEN_PLUGIN_ID,
@@ -116,12 +117,8 @@ import {
 } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
-import {
-  DOWNLOAD_PLUGIN_ID,
-  DownloadPlugin,
-  DownloadPluginPackage,
-} from '@embedpdf/plugin-download';
-import { Download } from '@embedpdf/plugin-download/preact';
+import { EXPORT_PLUGIN_ID, ExportPlugin, ExportPluginPackage } from '@embedpdf/plugin-export';
+import { Download } from '@embedpdf/plugin-export/react';
 import {
   INTERACTION_MANAGER_PLUGIN_ID,
   InteractionManagerPlugin,
@@ -134,40 +131,23 @@ import {
 } from '@embedpdf/plugin-interaction-manager/preact';
 import { PanMode } from '@embedpdf/plugin-pan/preact';
 import { PanPluginPackage } from '@embedpdf/plugin-pan';
+import { CAPTURE_PLUGIN_ID, CapturePlugin, CapturePluginPackage } from '@embedpdf/plugin-capture';
+import { MarqueeCapture } from '@embedpdf/plugin-capture/preact';
+import { Capture } from './capture';
+import { HintLayer } from './hint-layer';
 
 export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
 // **Enhanced Configuration Interface**
 export interface PluginConfigs {
-  viewport?: {
-    viewportGap?: number;
-  };
-  scroll?: {
-    strategy?: ScrollStrategy;
-  };
-  zoom?: {
-    defaultZoomLevel?: ZoomMode;
-  };
-  spread?: {
-    defaultSpreadMode?: SpreadMode;
-  };
-  rotate?: {
-    defaultRotation?: Rotation;
-  };
-  tiling?: {
-    tileSize?: number;
-    overlapPx?: number;
-    extraRings?: number;
-  };
-  thumbnail?: {
-    width?: number;
-    gap?: number;
-    buffer?: number;
-    labelHeight?: number;
-  };
-  print?: {
-    batchSize?: number;
-  };
+  viewport?: ViewportPluginConfig;
+  scroll?: ScrollPluginConfig;
+  zoom?: ZoomPluginConfig;
+  spread?: SpreadPluginConfig;
+  rotate?: RotatePluginConfig;
+  tiling?: TilingPluginConfig;
+  thumbnail?: ThumbnailPluginConfig;
+  print?: PrintPluginConfig;
 }
 
 export interface PDFViewerConfig {
@@ -223,31 +203,6 @@ function mergePluginConfigs(userConfigs: PluginConfigs = {}): Required<PluginCon
     thumbnail: { ...DEFAULT_PLUGIN_CONFIGS.thumbnail, ...userConfigs.thumbnail },
     print: { ...DEFAULT_PLUGIN_CONFIGS.print, ...userConfigs.print },
   };
-}
-
-// **Singleton Engine Instance**
-let engineInstance: PdfEngine | null = null;
-
-interface InitializeEngineOptions {
-  worker?: boolean;
-  wasmUrl?: string;
-  log?: boolean;
-}
-// **Initialize the Pdfium Engine**
-async function initializeEngine(options: InitializeEngineOptions): Promise<PdfEngine> {
-  const wasmUrl = options.wasmUrl || 'https://snippet.embedpdf.com/pdfium.wasm';
-  const consoleLogger = new ConsoleLogger();
-  const perfLogger = new PerfLogger();
-  const logger = options.log ? new AllLogger([consoleLogger, perfLogger]) : undefined;
-  if (options.worker) {
-    // Lazy load worker engine only when needed
-    const { createWorkerEngine } = await import('./loader-worker');
-    return createWorkerEngine(wasmUrl, logger);
-  } else {
-    // Lazy load local engine only when needed
-    const { createLocalEngine } = await import('./loader-local');
-    return createLocalEngine(wasmUrl, logger);
-  }
 }
 
 // **Props for the PDFViewer Component**
@@ -428,6 +383,10 @@ export const icons: IconRegistry = {
     id: 'zoomInArea',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-zoom-in-area"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 13v4" /><path d="M13 15h4" /><path d="M15 15m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0" /><path d="M22 22l-3 -3" /><path d="M6 18h-1a2 2 0 0 1 -2 -2v-1" /><path d="M3 11v-1" /><path d="M3 6v-1a2 2 0 0 1 2 -2h1" /><path d="M10 3h1" /><path d="M15 3h1a2 2 0 0 1 2 2v1" /></svg>',
   },
+  screenshot: {
+    id: 'screenshot',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-screenshot"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 19a2 2 0 0 1 -2 -2" /><path d="M5 13v-2" /><path d="M5 7a2 2 0 0 1 2 -2" /><path d="M11 5h2" /><path d="M17 5a2 2 0 0 1 2 2" /><path d="M19 11v2" /><path d="M19 17v4" /><path d="M21 19h-4" /><path d="M13 19h-2" /></svg>',
+  },
 };
 
 export const menuItems: Record<string, MenuItem<State>> = {
@@ -438,7 +397,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcut: 'Shift+M',
     //shortcutLabel: 'M',
     type: 'menu',
-    children: ['openFile', 'download', 'enterFS', 'print'],
+    children: ['openFile', 'download', 'enterFS', 'screenshot', 'print'],
     active: (storeState) =>
       storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'menuCtr',
   },
@@ -450,9 +409,9 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcutLabel: 'D',
     type: 'action',
     action: (registry) => {
-      const download = registry.getPlugin<DownloadPlugin>(DOWNLOAD_PLUGIN_ID)?.provides();
-      if (download) {
-        download.download();
+      const exportPlugin = registry.getPlugin<ExportPlugin>(EXPORT_PLUGIN_ID)?.provides();
+      if (exportPlugin) {
+        exportPlugin.download();
       }
     },
   },
@@ -495,6 +454,24 @@ export const menuItems: Record<string, MenuItem<State>> = {
         }
       }
     },
+  },
+  screenshot: {
+    id: 'screenshot',
+    icon: 'screenshot',
+    label: 'Screenshot',
+    type: 'action',
+    action: (registry) => {
+      const capture = registry.getPlugin<CapturePlugin>(CAPTURE_PLUGIN_ID)?.provides();
+      if (!capture) return;
+
+      if (capture.isMarqueeCaptureActive()) {
+        capture.disableMarqueeCapture();
+      } else {
+        capture.enableMarqueeCapture();
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'marqueeCapture',
   },
   save: {
     id: 'save',
@@ -2038,43 +2015,15 @@ export const uiConfig: UIPluginConfig = {
 };
 
 export function PDFViewer({ config }: PDFViewerProps) {
-  const [engine, setEngine] = useState<PdfEngine | null>(engineInstance);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function setupEngine() {
-      if (engineInstance) {
-        setEngine(engineInstance);
-        return;
-      }
-
-      try {
-        const newEngine = await initializeEngine({
-          worker: config.worker,
-          wasmUrl: config.wasmUrl,
-          log: config.log,
-        });
-        if (isMounted) {
-          engineInstance = newEngine;
-          setEngine(newEngine);
-        }
-      } catch (error) {
-        console.error('Failed to initialize PDF engine:', error);
-      }
-    }
-
-    setupEngine();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [config.worker]);
+  const { engine, isLoading } = usePdfiumEngine({
+    wasmUrl: config.wasmUrl ?? 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm',
+    worker: config.worker,
+  });
 
   // **Merge user configurations with defaults**
   const pluginConfigs = mergePluginConfigs(config.plugins);
 
-  if (!engine)
+  if (!engine || isLoading)
     return (
       <>
         <style>{styles}</style>
@@ -2149,9 +2098,13 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(PrintPluginPackage, pluginConfigs.print),
           createPluginRegistration(FullscreenPluginPackage, {}),
           createPluginRegistration(BookmarkPluginPackage, {}),
-          createPluginRegistration(DownloadPluginPackage, {}),
+          createPluginRegistration(ExportPluginPackage, {}),
           createPluginRegistration(InteractionManagerPluginPackage, {}),
           createPluginRegistration(PanPluginPackage, {}),
+          createPluginRegistration(CapturePluginPackage, {
+            scale: 2,
+            imageType: 'image/png',
+          }),
         ]}
       >
         {({ pluginsReady }) => (
@@ -2166,12 +2119,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
                         {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
                         <div className="relative flex w-full flex-1 overflow-hidden">
-                          <GlobalPointerProvider
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                            }}
-                          >
+                          <GlobalPointerProvider>
                             <PanMode />
                             <Viewport
                               style={{
@@ -2220,29 +2168,21 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                             scale={scale}
                                             className="absolute left-0 top-0 h-full w-full"
                                           />
+                                          <HintLayer />
                                           <PagePointerProvider
-                                            convertEventToPoint={(event, element) => {
-                                              const rect = element.getBoundingClientRect();
-                                              const displayPoint = {
-                                                x: event.clientX - rect.left,
-                                                y: event.clientY - rect.top,
-                                              };
-                                              return restorePosition(
-                                                { width: rotatedWidth, height: rotatedHeight },
-                                                displayPoint,
-                                                rotation,
-                                                scale,
-                                              );
-                                            }}
+                                            rotation={rotation}
+                                            scale={scale}
+                                            pageWidth={rotatedWidth}
+                                            pageHeight={rotatedHeight}
                                             pageIndex={pageIndex}
-                                            style={{
-                                              position: 'absolute',
-                                              inset: 0,
-                                              mixBlendMode: 'multiply',
-                                              isolation: 'isolate',
-                                            }}
                                           >
                                             <MarqueeZoom
+                                              pageIndex={pageIndex}
+                                              scale={scale}
+                                              pageWidth={width}
+                                              pageHeight={height}
+                                            />
+                                            <MarqueeCapture
                                               pageIndex={pageIndex}
                                               scale={scale}
                                               pageWidth={width}
@@ -2275,6 +2215,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                   </div>
                   <FilePicker />
                   <Download />
+                  <Capture />
                 </PrintProvider>
               </FullscreenProvider>
             )}

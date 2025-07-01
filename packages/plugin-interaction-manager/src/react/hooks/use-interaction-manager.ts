@@ -1,14 +1,33 @@
 import { useCapability, usePlugin } from '@embedpdf/core/react';
 import {
+  initialState,
   InteractionManagerPlugin,
+  InteractionManagerState,
   PointerEventHandlers,
 } from '@embedpdf/plugin-interaction-manager';
 import { useState, useEffect } from 'react';
 
-export const useInteractionManager = () =>
+export const useInteractionManagerPlugin = () =>
   usePlugin<InteractionManagerPlugin>(InteractionManagerPlugin.id);
 export const useInteractionManagerCapability = () =>
   useCapability<InteractionManagerPlugin>(InteractionManagerPlugin.id);
+
+export function useInteractionManager() {
+  const { provides } = useInteractionManagerCapability();
+  const [state, setState] = useState<InteractionManagerState>(initialState);
+
+  useEffect(() => {
+    if (!provides) return;
+    return provides.onStateChange((state) => {
+      setState(state);
+    });
+  }, [provides]);
+
+  return {
+    provides,
+    state,
+  };
+}
 
 export function useCursor() {
   const { provides } = useInteractionManagerCapability();

@@ -43,6 +43,21 @@ export const manifest: PluginManifest<ZoomPluginConfig> = {
         max: 10.0,
         step: 0.8,
       },
+      {
+        min: 10.0,
+        max: 20.0,
+        step: 1.6,
+      },
+      {
+        min: 20.0,
+        max: 40.0,
+        step: 3.2,
+      },
+      {
+        min: 40.0,
+        max: 60.0,
+        step: 6.4,
+      },
     ],
     presets: [
       {
@@ -58,28 +73,24 @@ export const manifest: PluginManifest<ZoomPluginConfig> = {
         value: ZoomMode.Automatic,
       },
       {
-        name: '10%',
-        value: 0.1,
-      },
-      {
-        name: '20%',
-        value: 0.2,
-      },
-      {
-        name: '30%',
-        value: 0.3,
+        name: '25%',
+        value: 0.25,
       },
       {
         name: '50%',
         value: 0.5,
       },
       {
-        name: '70%',
-        value: 0.7,
-      },
-      {
         name: '100%',
         value: 1,
+      },
+      {
+        name: '125%',
+        value: 1.25,
+      },
+      {
+        name: '150%',
+        value: 1.5,
       },
       {
         name: '200%',
@@ -88,6 +99,14 @@ export const manifest: PluginManifest<ZoomPluginConfig> = {
       {
         name: '400%',
         value: 4,
+      },
+      {
+        name: '800%',
+        value: 8,
+      },
+      {
+        name: '1600%',
+        value: 16,
       },
     ],
   },

@@ -6,7 +6,6 @@ import { ZoomState, ZoomMode } from './types';
 export const initialState: ZoomState = {
   zoomLevel: ZoomMode.Automatic,
   currentZoomLevel: 1,
-  zoomReady: false,
 };
 
 export const zoomReducer: Reducer<ZoomState, ZoomAction> = (state = initialState, action) => {
@@ -16,7 +15,6 @@ export const zoomReducer: Reducer<ZoomState, ZoomAction> = (state = initialState
         ...state,
         zoomLevel: action.payload.zoomLevel,
         currentZoomLevel: action.payload.currentZoomLevel,
-        zoomReady: true,
       };
     case SET_INITIAL_ZOOM_LEVEL:
       return {

@@ -21,3 +21,4 @@ export const InteractionManagerPluginPackage: PluginPackage<
 export * from './interaction-manager-plugin';
 export * from './types';
 export * from './manifest';
+export * from './reducer';

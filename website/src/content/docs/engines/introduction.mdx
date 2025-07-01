@@ -1,0 +1,157 @@
+---
+title: Introduction
+description: Getting started with @embedpdf/engines - high-level PDF rendering engines for browser and Node.js environments
+---
+
+# @embedpdf/engines
+
+`@embedpdf/engines` provides high-level, promise-first PDF rendering engines built on top of low-level WASM modules like `@embedpdf/pdfium`. It offers pluggable engines that work seamlessly across browsers, Node.js, and serverless environments with full TypeScript support.
+
+## Key Features
+
+- **High-level abstraction** – handles tasks, DPR scaling, annotation color resolution, range/linearized loading
+- **Universal runtimes** – works in browsers, Node.js, and serverless environments  
+- **Typed & composable** – 100% TypeScript with generics for custom image pipelines
+- **Worker-optimized** – built-in web worker support for non-blocking PDF processing
+
+## Installation
+
+```sh npm2yarn
+npm i @embedpdf/engines @embedpdf/pdfium
+```
+
+## Usage Patterns
+
+There are three main ways to use `@embedpdf/engines` depending on your environment and performance requirements:
+
+### 1. Web Worker (Recommended for Browsers)
+
+Using a web worker is the **recommended approach** for browser environments as it:
+- Keeps PDF processing off the main thread
+- Prevents UI blocking during intensive operations
+- Allows for better resource management
+- Enables concurrent processing
+
+#### Setting up the Worker
+
+First, create a web worker file:
+
+```typescript filename="webworker.ts" copy
+import { PdfiumEngineRunner } from '@embedpdf/engines';
+
+async function init() {
+  const response = await fetch(
+    'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm'
+  );
+  const wasmBinary = await response.arrayBuffer();
+  const runner = new PdfiumEngineRunner(wasmBinary);
+  runner.prepare();
+}
+
+init();
+```
+
+#### Using the Worker Engine
+
+```typescript filename="main.ts" copy
+import { WebWorkerEngine } from '@embedpdf/engines/worker';
+
+// Create worker and engine
+const worker = new Worker(new URL('./webworker.ts', import.meta.url), { 
+  type: 'module' 
+});
+const engine = new WebWorkerEngine(worker);
+
+// Wait for initialization
+await engine.initialize().toPromise();
+
+// Use the engine
+const document = await engine
+  .openDocumentUrl({ id: 'demo', url: '/demo.pdf' })
+  .toPromise();
+
+const blob = await engine
+  .renderPage(document, document.pages[0])
+  .toPromise();
+```
+
+### 2. Direct Engine (Browser Main Thread)
+
+For simpler use cases or when worker setup is not feasible:
+
+```typescript
+import { init } from '@embedpdf/pdfium';
+import { PdfiumEngine } from '@embedpdf/engines/pdfium';
+
+const response = await fetch(
+  'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm'
+);
+const wasmBinary = await response.arrayBuffer();
+
+// Initialize PDFium
+const pdfium = await init({ wasmBinary });
+
+// Create engine
+const engine = new PdfiumEngine(pdfium);
+engine.initialize();
+
+// Use the engine
+const document = await engine
+  .openDocumentUrl({ id: 'demo', url: '/demo.pdf' })
+  .toPromise();
+
+const blob = await engine
+  .renderPage(document, document.pages[0])
+  .toPromise();
+```
+
+### 3. Node.js Environment
+
+Node.js usage requires image converters since browser APIs like `OffscreenCanvas` aren't available:
+
+```typescript
+import { readFile } from 'fs/promises';
+import sharp from 'sharp';
+import { init } from '@embedpdf/pdfium';
+import { PdfiumEngine } from '@embedpdf/engines/pdfium';
+import { createNodeImageDataToBufferConverter } from '@embedpdf/engines/converters';
+import { ConsoleLogger } from '@embedpdf/models';
+
+async function processPDF() {
+  const logger = new ConsoleLogger();
+  
+  // Create image converter using Sharp
+  const imageConverter = createNodeImageDataToBufferConverter(sharp, 'image/webp');
+
+  // Initialize PDFium
+  const pdfiumInstance = await init();
+  const engine = new PdfiumEngine(pdfiumInstance, logger, imageConverter);
+  engine.initialize();
+
+  // Load and process PDF
+  const pdfBuffer = await readFile('document.pdf');
+  const document = await engine
+    .openDocumentFromBuffer({
+      id: 'sample',
+      content: pdfBuffer,
+    })
+    .toPromise();
+
+  // Render page - returns Buffer instead of Blob
+  const imageBuffer = await engine
+    .renderPage(document, document.pages[0])
+    .toPromise();
+    
+  await writeFile('output.webp', imageBuffer);
+  await engine.closeDocument(document).toPromise();
+}
+```
+
+## Why Use Web Workers?
+
+Web workers provide significant advantages for PDF processing:
+
+1. **Non-blocking UI** - PDF rendering happens off the main thread
+2. **Better performance** - Dedicated thread for intensive WASM operations
+3. **Memory isolation** - WASM memory is contained within the worker
+4. **Error isolation** - Worker crashes don't affect the main application

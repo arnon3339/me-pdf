@@ -1,6 +1,7 @@
 {
   "name": "@embedpdf/snippet",
   "version": "1.0.0",
+  "private": true,
   "main": "dist/embedpdf.js",
   "types": "dist/embedpdf.d.ts",
   "license": "MIT",
@@ -35,9 +36,10 @@
     "@embedpdf/plugin-print": "workspace:*",
     "@embedpdf/plugin-fullscreen": "workspace:*",
     "@embedpdf/plugin-bookmark": "workspace:*",
-    "@embedpdf/plugin-download": "workspace:*",
+    "@embedpdf/plugin-export": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@embedpdf/plugin-pan": "workspace:*",
+    "@embedpdf/plugin-capture": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {
@@ -50,7 +52,6 @@
     "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-commonjs": "^25.0.4",
     "@rollup/plugin-node-resolve": "^15.2.1",
-    "@rollup/plugin-replace": "^5.0.2",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.2",
     "@rollup/plugin-url": "^8.0.1",

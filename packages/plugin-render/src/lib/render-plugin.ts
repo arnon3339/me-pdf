@@ -31,6 +31,7 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
     dpr = 1,
     rotation = Rotation.Degree0,
     options = { withAnnotations: false },
+    imageType = 'image/webp',
   }: RenderPageOptions) {
     const coreState = this.coreState.core;
 
@@ -43,7 +44,15 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
       throw new Error('page does not exist');
     }
 
-    return this.engine.renderPage(coreState.document, page, scaleFactor, rotation, dpr, options);
+    return this.engine.renderPage(
+      coreState.document,
+      page,
+      scaleFactor,
+      rotation,
+      dpr,
+      options,
+      imageType,
+    );
   }
 
   private renderPageRect({
@@ -53,6 +62,7 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
     rect,
     rotation = Rotation.Degree0,
     options = { withAnnotations: false },
+    imageType = 'image/webp',
   }: RenderPageRectOptions) {
     const coreState = this.coreState.core;
 
@@ -73,6 +83,7 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
       dpr,
       rect,
       options,
+      imageType,
     );
   }
 }

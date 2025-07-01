@@ -12,11 +12,8 @@ import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import url from '@rollup/plugin-url';
 import terser from '@rollup/plugin-terser';
-import replace from '@rollup/plugin-replace';
 import copy from 'rollup-plugin-copy';
 import alias from '@rollup/plugin-alias';
-
-import { bundleWorker } from './tools/build-worker.js';
 
 // Check if we are in 'development' mode
 const isDev = process.env.ROLLUP_WATCH;
@@ -45,10 +42,6 @@ export default [
             dest: 'dist',
           },
         ],
-      }),
-      replace({
-        preventAssignment: true,
-        values: { __WEBWORKER_BODY__: JSON.stringify(await bundleWorker()) },
       }),
       url({
         include: ['**/*.svg'],

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h, ComponentChildren } from 'preact';
-import { useState, useEffect, useCallback } from 'preact/hooks';
+import { useState, useEffect, useCallback, useRef } from 'preact/hooks';
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
@@ -9,7 +9,7 @@ import { PDFContext, PDFContextState } from '../context';
 
 interface EmbedPDFProps {
   engine: PdfEngine;
-  onInitialized: (registry: PluginRegistry) => Promise<void>;
+  onInitialized?: (registry: PluginRegistry) => Promise<void>;
   plugins: PluginBatchRegistration<IPlugin<any>, any>[];
   children: ComponentChildren | ((state: PDFContextState) => ComponentChildren);
 }
@@ -18,8 +18,11 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
   const [registry, setRegistry] = useState<PluginRegistry | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [pluginsReady, setPluginsReady] = useState<boolean>(false);
+  const initRef = useRef<EmbedPDFProps['onInitialized']>(onInitialized);
 
-  const stableOnInit = useCallback(onInitialized, [onInitialized]);
+  useEffect(() => {
+    initRef.current = onInitialized; // update without triggering re-runs
+  }, [onInitialized]);
 
   useEffect(() => {
     const pdfViewer = new PluginRegistry(engine);
@@ -31,7 +34,7 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
       if (pdfViewer.isDestroyed()) {
         return;
       }
-      await stableOnInit(pdfViewer);
+      await initRef.current?.(pdfViewer);
       // if the registry is destroyed, don't do anything
       if (pdfViewer.isDestroyed()) {
         return;
@@ -56,7 +59,7 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
       setIsInitializing(true);
       setPluginsReady(false);
     };
-  }, [engine, stableOnInit, plugins]);
+  }, [engine, plugins]);
 
   return (
     <PDFContext.Provider value={{ registry, isInitializing, pluginsReady }}>

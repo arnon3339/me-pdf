@@ -1,6 +1,6 @@
 {
   "name": "embedpdf",
-  "private": false,
+  "private": true,
   "version": "0.0.0",
   "packageManager": "pnpm@10.4.0",
   "scripts": {
@@ -15,18 +15,25 @@
     "clean": "turbo run clean && rimraf .turbo/cache",
     "build:fresh": "pnpm clean && turbo run build",
     "build": "turbo run build",
+    "build:react-mui": "turbo run build --filter=\"./packages/*\" --filter=\"./examples/react-mui\"",
+    "build:packages": "turbo run build --filter=\"./packages/*\"",
     "build:snippet": "turbo run build --filter=\"./packages/*\" --filter=\"./snippet\"",
     "build:watch": "ROARR_LOG=true turbowatch ./config/turbowatch.config.ts | roarr",
     "watch": "turbo watch",
     "watch:packages": "turbo watch build --filter=\"./packages/*\"",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,jsx,json,css,md}\"",
+    "changeset": "changeset",
+    "ci:publish": "pnpm publish -r --access public"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.4",
+    "@changesets/get-github-info": "^0.6.0",
     "@roarr/cli": "^5.12.4",
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
+    "dotenv": "^16.3.1",
     "eslint": "^9.27.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.31.0",

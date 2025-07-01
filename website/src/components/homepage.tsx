@@ -18,6 +18,7 @@ import { Typescript } from '@/components/icons/typescript'
 import { Scribble2 } from '@/components/icons/scribble2'
 import Link from 'next/link'
 import PDFViewer from './pdf-viewer'
+import NeedHelp from './need-help'
 
 // Animated blobs for the background
 const AnimatedBackground = () => {

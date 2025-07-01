@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { useFullscreen, useFullscreenCapability } from '../hooks';
+import { useFullscreenPlugin, useFullscreenCapability } from '../hooks';
 
 type FullscreenProviderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'style'> & {
   children: React.ReactNode;
@@ -9,7 +9,7 @@ type FullscreenProviderProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'style
 
 export function FullscreenProvider({ children, ...props }: FullscreenProviderProps) {
   const { provides: fullscreenCapability } = useFullscreenCapability();
-  const { plugin } = useFullscreen();
+  const { plugin } = useFullscreenPlugin();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

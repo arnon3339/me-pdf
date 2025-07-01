@@ -8,6 +8,7 @@ import {
   SET_DOCUMENT,
   getPagesWithRotatedSize,
   SET_ROTATION,
+  createBehaviorEmitter,
 } from '@embedpdf/core';
 import { ScrollPlugin, ScrollCapability } from '@embedpdf/plugin-scroll';
 import { ViewportPlugin, ViewportCapability, ViewportMetrics } from '@embedpdf/plugin-viewport';
@@ -42,7 +43,9 @@ export class ZoomPlugin extends BasePlugin<
   /* internals                                                           */
   /* ------------------------------------------------------------------ */
   private readonly zoom$ = createEmitter<ZoomChangeEvent>();
+  private readonly state$ = createBehaviorEmitter<ZoomState>();
   private readonly viewport: ViewportCapability;
+  private readonly viewportPlugin: ViewportPlugin;
   private readonly scroll: ScrollCapability;
   private readonly interactionManager: InteractionManagerCapability | null;
   private readonly presets: ZoomPreset[];
@@ -56,7 +59,8 @@ export class ZoomPlugin extends BasePlugin<
   constructor(id: string, registry: PluginRegistry, cfg: ZoomPluginConfig) {
     super(id, registry);
 
-    this.viewport = registry.getPlugin<ViewportPlugin>('viewport')!.provides();
+    this.viewportPlugin = registry.getPlugin<ViewportPlugin>('viewport')!;
+    this.viewport = this.viewportPlugin.provides();
     this.scroll = registry.getPlugin<ScrollPlugin>('scroll')!.provides();
     const interactionManager = registry.getPlugin<InteractionManagerPlugin>('interaction-manager');
     this.interactionManager = interactionManager?.provides() ?? null;
@@ -67,7 +71,7 @@ export class ZoomPlugin extends BasePlugin<
     this.zoomRanges = this.normalizeRanges(cfg.zoomRanges ?? []);
     this.dispatch(setInitialZoomLevel(cfg.defaultZoomLevel));
     /* keep "automatic" modes up to date -------------------------------- */
-    this.viewport.onViewportChange(() => this.recalcAuto(VerticalZoomFocus.Top), {
+    this.viewport.onViewportResize(() => this.recalcAuto(VerticalZoomFocus.Top), {
       mode: 'debounce',
       wait: 150,
     });
@@ -89,6 +93,7 @@ export class ZoomPlugin extends BasePlugin<
   protected buildCapability(): ZoomCapability {
     return {
       onZoomChange: this.zoom$.on,
+      onStateChange: this.state$.on,
       zoomIn: () => {
         const cur = this.state.currentZoomLevel;
         return this.handleRequest({ level: cur, delta: this.stepFor(cur) });
@@ -109,6 +114,13 @@ export class ZoomPlugin extends BasePlugin<
       },
       disableMarqueeZoom: () => {
         this.interactionManager?.activate('default');
+      },
+      toggleMarqueeZoom: () => {
+        if (this.interactionManager?.getActiveMode() === 'marqueeZoom') {
+          this.interactionManager?.activate('default');
+        } else {
+          this.interactionManager?.activate('marqueeZoom');
+        }
       },
       isMarqueeZoomActive: () => this.interactionManager?.getActiveMode() === 'marqueeZoom',
       getState: () => this.state,
@@ -172,8 +184,8 @@ export class ZoomPlugin extends BasePlugin<
     if (base === false) {
       return;
     }
-
-    const newZoom = parseFloat(clamp(base + delta, this.minZoom, this.maxZoom).toFixed(2));
+    const exactZoom = clamp(base + delta, this.minZoom, this.maxZoom);
+    const newZoom = Math.floor(exactZoom * 100) / 100;
 
     /* ------------------------------------------------------------------ */
     /* step 2 – figure out the viewport point we should keep under focus   */
@@ -199,7 +211,7 @@ export class ZoomPlugin extends BasePlugin<
     /* ------------------------------------------------------------------ */
 
     if (!isNaN(desiredScrollLeft) && !isNaN(desiredScrollTop)) {
-      this.viewport.setViewportScrollMetrics({
+      this.viewportPlugin.setViewportScrollMetrics({
         scrollLeft: desiredScrollLeft,
         scrollTop: desiredScrollTop,
       });
@@ -350,7 +362,7 @@ export class ZoomPlugin extends BasePlugin<
     // the page-layout _inside_ that virtual item
     const pageRel = vItem.pageLayouts.find((p) => p.pageIndex === pageIndex)!;
 
-    /* add the virtual-item’s own offset to get absolute coords */
+    /* add the virtual-item's own offset to get absolute coords */
     const pageAbsX = vItem.x + pageRel.x;
     const pageAbsY = vItem.y + pageRel.y;
 
@@ -385,5 +397,9 @@ export class ZoomPlugin extends BasePlugin<
       s.zoomLevel === ZoomMode.FitWidth
     )
       this.handleRequest({ level: s.zoomLevel, focus });
+  }
+
+  override onStoreUpdated(_prevState: ZoomState, newState: ZoomState): void {
+    this.state$.emit(newState);
   }
 }

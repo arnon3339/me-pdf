@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h, JSX, ComponentChildren } from 'preact';
-import { useUI, useUICapability } from '../hooks';
+import { useUICapability } from '../hooks';
 import { ComponentWrapper } from './component-wrapper';
 import { UIComponent } from '@embedpdf/plugin-ui';
 

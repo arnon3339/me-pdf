@@ -7,12 +7,17 @@ import { arePropsEqual } from './math';
 export type Listener<T = any> = (value: T) => void;
 export type Unsubscribe = () => void;
 
+/* ------------------------------------------------------------------ */
+/* EventListener                                                      */
+/* ------------------------------------------------------------------ */
+export type EventListener<T> =
+  | ((listener: Listener<T>) => Unsubscribe)
+  | ((listener: Listener<T>, options?: EventControlOptions) => Unsubscribe);
+
 /* ------------------------------------------------------------ */
 /* helpers for typing `.on()` with an optional second argument  */
 /* ------------------------------------------------------------ */
-export type EventHook<T = any> =
-  | ((listener: Listener<T>) => Unsubscribe)
-  | ((listener: Listener<T>, options?: EventControlOptions) => Unsubscribe);
+export type EventHook<T = any> = EventListener<T>;
 /* ------------------------------------------------------------------ */
 /* minimal “dumb” emitter (no value cache, no equality)               */
 /* ------------------------------------------------------------------ */

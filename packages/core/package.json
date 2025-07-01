@@ -1,9 +1,9 @@
 {
   "name": "@embedpdf/core",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.cjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -40,8 +40,8 @@
     "@embedpdf/engines": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0",
     "preact": "^10.26.4"
   },
   "files": [

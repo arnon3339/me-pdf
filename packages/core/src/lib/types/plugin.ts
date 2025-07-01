@@ -14,7 +14,7 @@ export interface IPlugin<TConfig = unknown> {
 }
 
 export interface BasePluginConfig {
-  enabled: boolean;
+  enabled?: boolean;
 }
 
 export interface PluginRegistryConfig {

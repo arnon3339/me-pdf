@@ -1,6 +1,11 @@
 import { Reducer, CoreState, SET_SCALE, SetScaleAction } from '@embedpdf/core';
 import { ScrollState, ScrollStrategy, ScrollPluginConfig, ScrollMetrics } from './types';
-import { ScrollAction, UPDATE_SCROLL_STATE, SET_DESIRED_SCROLL_POSITION } from './actions';
+import {
+  ScrollAction,
+  UPDATE_SCROLL_STATE,
+  SET_DESIRED_SCROLL_POSITION,
+  UPDATE_TOTAL_PAGES,
+} from './actions';
 
 export const defaultScrollMetrics: ScrollMetrics = {
   currentPage: 1,
@@ -17,6 +22,7 @@ export const initialState: (coreState: CoreState, config: ScrollPluginConfig) =>
   config,
 ) => ({
   virtualItems: [],
+  totalPages: coreState.pages.length,
   totalContentSize: { width: 0, height: 0 },
   desiredScrollPosition: { x: 0, y: 0 },
   strategy: config.strategy ?? ScrollStrategy.Vertical,
@@ -30,6 +36,8 @@ export const scrollReducer: Reducer<ScrollState, ScrollAction | SetScaleAction> 
   action,
 ) => {
   switch (action.type) {
+    case UPDATE_TOTAL_PAGES:
+      return { ...state, totalPages: action.payload };
     case SET_SCALE:
       return { ...state, scale: action.payload };
     case UPDATE_SCROLL_STATE:

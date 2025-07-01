@@ -2,8 +2,7 @@ em++ $(ls *.cpp) \
   /build/pdfium/out/prod/obj/libpdfium.a \
   -g \
   -v \
-  -sEXPORT_ES6=1 \
-  -sENVIRONMENT=worker \
+  -sENVIRONMENT=node,worker,web,shell \
   -sMODULARIZE=1 \
   -sWASM=1 \
   -sALLOW_MEMORY_GROWTH=1 \
@@ -21,4 +20,4 @@ em++ $(ls *.cpp) \
   -Wall \
   --no-entry \
   -o \
-  ./pdfium.js
+  ./pdfium.cjs

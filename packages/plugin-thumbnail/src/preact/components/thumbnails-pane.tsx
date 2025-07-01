@@ -7,9 +7,16 @@ import { useThumbnailCapability } from '../hooks';
 type ThumbnailsProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
   style?: JSX.CSSProperties;
   children: (m: ThumbMeta) => ComponentChildren;
+  selectedPage?: number;
+  scrollOptions?: ScrollIntoViewOptions;
 };
 
-export function ThumbnailsPane({ style, ...props }: ThumbnailsProps) {
+export function ThumbnailsPane({
+  style,
+  selectedPage,
+  scrollOptions = { behavior: 'smooth', block: 'nearest', inline: 'nearest' },
+  ...props
+}: ThumbnailsProps) {
   const { provides: thumbs } = useThumbnailCapability();
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -36,6 +43,31 @@ export function ThumbnailsPane({ style, ...props }: ThumbnailsProps) {
       thumbs.setViewport(vp.scrollTop, vp.clientHeight);
     }
   }, [window, thumbs]);
+
+  /* 4️⃣ whenever selectedPage or window changes, ensure it’s visible */
+  useEffect(() => {
+    if (!selectedPage || !window) return;
+
+    const item = window.items.find((it) => it.pageIndex + 1 === selectedPage);
+    if (!item) return; // not in current window yet → wait for next update
+
+    const vp = viewportRef.current;
+    if (!vp) return;
+
+    // Scroll only if the item is above or below the viewport “padding” zone
+    const margin = 8; // px
+    if (item.top < vp.scrollTop + margin) {
+      vp.scrollTo({ top: item.top, ...scrollOptions });
+    } else if (
+      item.top + item.wrapperHeight + item.labelHeight >
+      vp.scrollTop + vp.clientHeight - margin
+    ) {
+      vp.scrollTo({
+        top: item.top + item.wrapperHeight + item.labelHeight - vp.clientHeight,
+        ...scrollOptions,
+      });
+    }
+  }, [selectedPage, window, scrollOptions]);
 
   return (
     <div ref={viewportRef} style={{ overflowY: 'auto', position: 'relative', ...style }} {...props}>

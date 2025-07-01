@@ -1,9 +1,9 @@
 {
   "name": "@embedpdf/plugin-tiling",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.cjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -30,9 +30,10 @@
     "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@embedpdf/models": "workspace:*"
+  },
   "devDependencies": {
-    "@embedpdf/models": "workspace:*",
     "@embedpdf/core": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
     "@embedpdf/plugin-scroll": "workspace:*",
@@ -43,14 +44,23 @@
   },
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0",
     "preact": "^10.26.4"
   },
   "files": [
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/embedpdf/embed-pdf-viewer",
+    "directory": "packages/plugin-tiling"
+  },
+  "homepage": "https://www.embedpdf.com/docs",
+  "bugs": {
+    "url": "https://github.com/embedpdf/embed-pdf-viewer/issues"
+  },
   "publishConfig": {
     "access": "public"
   }
