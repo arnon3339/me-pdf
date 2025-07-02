@@ -15,7 +15,7 @@ export function createPdfiumEngine(wasmUrl: string, logger?: Logger): WebWorkerE
   );
 
   // Send initialization message with WASM URL
-  worker.postMessage({ type: 'INIT_WASM', wasmUrl });
+  worker.postMessage({ type: 'wasmInit', wasmUrl });
 
   return new WebWorkerEngine(worker, logger);
 }
