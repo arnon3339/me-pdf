@@ -5,15 +5,16 @@ import {
   SET_SELECTION,
   START_SELECTION,
   END_SELECTION,
-  SET_RECTS,
-  SET_ALL_RECTS,
   CLEAR_SELECTION,
   RESET,
+  SET_SLICES,
+  SET_RECTS,
 } from './actions';
 
 export const initialState: SelectionState = {
   geometry: {},
   rects: {},
+  slices: {},
   selection: null,
   active: false,
   selecting: false,
@@ -34,9 +35,9 @@ export const selectionReducer = (state = initialState, action: SelectionAction):
     case CLEAR_SELECTION:
       return { ...state, selecting: false, selection: null, rects: {}, active: false };
     case SET_RECTS:
-      return { ...state, rects: { ...state.rects, [action.payload.page]: action.payload.rects } };
-    case SET_ALL_RECTS:
       return { ...state, rects: action.payload };
+    case SET_SLICES:
+      return { ...state, slices: action.payload };
     case RESET:
       return initialState;
     default:

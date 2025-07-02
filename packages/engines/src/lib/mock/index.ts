@@ -42,6 +42,7 @@ import {
   PdfPageGeometry,
   PdfAnnotationObjectBase,
   PdfAlphaColor,
+  PageTextSlice,
 } from '@embedpdf/models';
 
 /**
@@ -312,6 +313,9 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     },
     extractText: (pdf: PdfDocumentObject, pageIndexes: number[]) => {
       return PdfTaskHelper.resolve('');
+    },
+    getTextSlices: (doc: PdfDocumentObject, slices: PageTextSlice[]) => {
+      return PdfTaskHelper.resolve([] as string[]);
     },
     getPageGlyphs: (doc: PdfDocumentObject, page: PdfPageObject) => {
       return PdfTaskHelper.resolve([] as PdfGlyphObject[]);
