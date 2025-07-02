@@ -14,6 +14,7 @@ import {
   setRects,
   clearSelection,
   reset,
+  setAllRects,
 } from './actions';
 import { PdfEngine, PdfDocumentObject, PdfPageGeometry, TaskError, Rect } from '@embedpdf/models';
 import { createBehaviorEmitter } from '@embedpdf/core';
@@ -109,10 +110,16 @@ export class SelectionPlugin extends BasePlugin<
   }
 
   private updateRectsForRange(range: SelectionRangeX) {
+    const allRects: Record<number, Rect[]> = {};
+
     for (let p = range.start.page; p <= range.end.page; p++) {
-      const rects = this.buildRectsForPage(p); // existing pure fn
-      this.dispatch(setRects(p, rects));
+      const rects = this.buildRectsForPage(p);
+      if (rects.length > 0) {
+        allRects[p] = rects;
+      }
     }
+
+    this.dispatch(setAllRects(allRects));
   }
 
   private updateSelection(page: number, index: number) {
