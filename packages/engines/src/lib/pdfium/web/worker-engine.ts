@@ -10,7 +10,7 @@ declare const __WEBWORKER_BODY__: string;
  * Zero-config helper:
  *   const engine = createDefaultWorkerEngine('/wasm/pdfium.wasm');
  */
-export function createPdfiumEngine(wasmUrl: string, logger: Logger) {
+export function createPdfiumEngine(wasmUrl: string, logger?: Logger) {
   const worker = new Worker(
     URL.createObjectURL(new Blob([__WEBWORKER_BODY__], { type: 'application/javascript' })),
     {
