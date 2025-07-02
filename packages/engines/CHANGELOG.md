@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.0.6
+
+### Patch Changes
+
+- [#29](https://github.com/embedpdf/embed-pdf-viewer/pull/29) by [@bobsingor](https://github.com/bobsingor) – Improve text selection and add ability to get text for a specific selection
+
 ## 1.0.5
 
 ### Patch Changes
