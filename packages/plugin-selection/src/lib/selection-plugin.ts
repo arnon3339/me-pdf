@@ -1,21 +1,4 @@
-import { BasePlugin, PluginRegistry, SET_DOCUMENT } from '@embedpdf/core';
-import {
-  SelectionCapability,
-  SelectionPluginConfig,
-  SelectionRangeX,
-  SelectionState,
-} from './types';
-import {
-  cachePageGeometry,
-  setSelection,
-  SelectionAction,
-  endSelection,
-  startSelection,
-  clearSelection,
-  reset,
-  setRects,
-  setSlices,
-} from './actions';
+import { BasePlugin, PluginRegistry, SET_DOCUMENT, createBehaviorEmitter } from '@embedpdf/core';
 import {
   PdfEngine,
   PdfDocumentObject,
@@ -27,8 +10,25 @@ import {
   ignore,
   PageTextSlice,
 } from '@embedpdf/models';
-import { createBehaviorEmitter } from '@embedpdf/core';
+
+import {
+  cachePageGeometry,
+  setSelection,
+  SelectionAction,
+  endSelection,
+  startSelection,
+  clearSelection,
+  reset,
+  setRects,
+  setSlices,
+} from './actions';
 import * as selector from './selectors';
+import {
+  SelectionCapability,
+  SelectionPluginConfig,
+  SelectionRangeX,
+  SelectionState,
+} from './types';
 import { sliceBounds, rectsWithinSlice } from './utils';
 
 export class SelectionPlugin extends BasePlugin<
@@ -70,8 +70,9 @@ export class SelectionPlugin extends BasePlugin<
   buildCapability(): SelectionCapability {
     return {
       getGeometry: (p) => this.getOrLoadGeometry(p),
-      getHighlightRects: (p) => selector.selectRectsForPage(this.state, p),
-      getBoundingRect: (p) => selector.selectBoundingRectForPage(this.state, p),
+      getHighlightRectsForPage: (p) => selector.selectRectsForPage(this.state, p),
+      getHighlightRects: () => this.state.rects,
+      getBoundingRectForPage: (p) => selector.selectBoundingRectForPage(this.state, p),
       getBoundingRects: () => selector.selectBoundingRectsForAllPages(this.state),
       begin: (p, i) => this.beginSelection(p, i),
       update: (p, i) => this.updateSelection(p, i),
@@ -155,8 +156,12 @@ export class SelectionPlugin extends BasePlugin<
   }
 
   private getSelectedText(): PdfTask<string[]> {
-    if (!this.doc || !this.state.selection)
-      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Doc Not Found' });
+    if (!this.doc || !this.state.selection) {
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.NotFound,
+        message: 'Doc Not Found or No Selection',
+      });
+    }
 
     const sel = this.state.selection;
     const req: PageTextSlice[] = [];
