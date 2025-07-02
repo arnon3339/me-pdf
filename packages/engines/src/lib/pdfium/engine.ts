@@ -84,7 +84,6 @@ import {
   quadToRect,
   PdfImage,
   ImageConversionTypes,
-  PdfAnnotationObjectBase,
   PageTextSlice,
   stripPdfUnwantedMarkers,
 } from '@embedpdf/models';
