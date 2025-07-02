@@ -85,6 +85,8 @@ import {
   PdfImage,
   ImageConversionTypes,
   PdfAnnotationObjectBase,
+  PageTextSlice,
+  stripPdfUnwantedMarkers,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1896,6 +1898,69 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const text = strings.join('\n\n');
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `ExtractText`, 'End', doc.id);
     return PdfTaskHelper.resolve(text);
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.getTextSlices}
+   *
+   * @public
+   */
+  getTextSlices(doc: PdfDocumentObject, slices: PageTextSlice[]): PdfTask<string[]> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getTextSlices', doc, slices);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'Begin', doc.id);
+
+    /* ⚠︎ 1 — trivial case */
+    if (slices.length === 0) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'End', doc.id);
+      return PdfTaskHelper.resolve<string[]>([]);
+    }
+
+    /* ⚠︎ 2 — document must be open */
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    try {
+      /* keep caller order */
+      const out = new Array<string>(slices.length);
+
+      /* group → open each page once */
+      const byPage = new Map<number, { slice: PageTextSlice; pos: number }[]>();
+      slices.forEach((s, i) => {
+        (byPage.get(s.pageIndex) ?? byPage.set(s.pageIndex, []).get(s.pageIndex))!.push({
+          slice: s,
+          pos: i,
+        });
+      });
+
+      for (const [pageIdx, list] of byPage) {
+        const pageCtx = ctx.acquirePage(pageIdx);
+        const textPagePtr = pageCtx.getTextPage();
+
+        for (const { slice, pos } of list) {
+          const bufPtr = this.malloc(2 * (slice.charCount + 1)); // UTF-16 + NIL
+          this.pdfiumModule.FPDFText_GetText(textPagePtr, slice.charIndex, slice.charCount, bufPtr);
+          out[pos] = stripPdfUnwantedMarkers(this.pdfiumModule.pdfium.UTF16ToString(bufPtr));
+          this.free(bufPtr);
+        }
+        pageCtx.release();
+      }
+
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'End', doc.id);
+      return PdfTaskHelper.resolve(out);
+    } catch (e) {
+      this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'getTextSlices error', e);
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: String(e),
+      });
+    }
   }
 
   /**

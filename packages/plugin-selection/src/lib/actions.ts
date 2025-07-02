@@ -8,7 +8,7 @@ export const START_SELECTION = 'START_SELECTION';
 export const END_SELECTION = 'END_SELECTION';
 export const CLEAR_SELECTION = 'CLEAR_SELECTION';
 export const SET_RECTS = 'SET_RECTS';
-export const SET_ALL_RECTS = 'SET_ALL_RECTS';
+export const SET_SLICES = 'SET_SLICES';
 export const RESET = 'RESET';
 
 export interface CachePageGeometryAction extends Action {
@@ -34,12 +34,12 @@ export interface ClearSelectionAction extends Action {
 
 export interface SetRectsAction extends Action {
   type: typeof SET_RECTS;
-  payload: { page: number; rects: Rect[] };
+  payload: Record<number, Rect[]>;
 }
 
-export interface SetAllRectsAction extends Action {
-  type: typeof SET_ALL_RECTS;
-  payload: Record<number, Rect[]>;
+export interface SetSlicesAction extends Action {
+  type: typeof SET_SLICES;
+  payload: Record<number, { start: number; count: number }>;
 }
 
 export interface ResetAction extends Action {
@@ -53,7 +53,7 @@ export type SelectionAction =
   | EndSelectionAction
   | ClearSelectionAction
   | SetRectsAction
-  | SetAllRectsAction
+  | SetSlicesAction
   | ResetAction;
 
 export const cachePageGeometry = (page: number, geo: PdfPageGeometry): CachePageGeometryAction => ({
@@ -72,14 +72,13 @@ export const endSelection = (): EndSelectionAction => ({ type: END_SELECTION });
 
 export const clearSelection = (): ClearSelectionAction => ({ type: CLEAR_SELECTION });
 
-export const setRects = (page: number, rects: Rect[]): SetRectsAction => ({
+export const setRects = (allRects: Record<number, Rect[]>): SetRectsAction => ({
   type: SET_RECTS,
-  payload: { page, rects },
-});
-
-export const setAllRects = (allRects: Record<number, Rect[]>): SetAllRectsAction => ({
-  type: SET_ALL_RECTS,
   payload: allRects,
 });
+
+export const setSlices = (
+  slices: Record<number, { start: number; count: number }>,
+): SetSlicesAction => ({ type: SET_SLICES, payload: slices });
 
 export const reset = (): ResetAction => ({ type: RESET });

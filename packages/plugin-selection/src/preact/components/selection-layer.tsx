@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useSelectionCapability } from '../hooks';
 import { glyphAt } from '@embedpdf/plugin-selection';
-import { PdfPageGeometry, Rect } from '@embedpdf/models';
+import { ignore, PdfErrorCode, PdfPageGeometry, Rect } from '@embedpdf/models';
 import { useCursor, usePointerHandlers } from '@embedpdf/plugin-interaction-manager/preact';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 
@@ -32,7 +32,15 @@ export function SelectionLayer({ pageIndex, scale }: Props) {
   // Initialize geometry cache
   useEffect(() => {
     if (!sel) return;
-    sel.getGeometry(pageIndex).then((g) => (geoCache = g));
+    const task = sel.getGeometry(pageIndex);
+    task.wait((g) => (geoCache = g), ignore);
+
+    return () => {
+      task.abort({
+        code: PdfErrorCode.Cancelled,
+        message: 'Cancelled',
+      });
+    };
   }, [sel, pageIndex]);
 
   const handlers = useMemo(
@@ -42,10 +50,11 @@ export function SelectionLayer({ pageIndex, scale }: Props) {
 
         // clear the selection
         sel.clear();
-        sel.getGeometry(pageIndex).then((geo) => {
+        const task = sel.getGeometry(pageIndex);
+        task.wait((geo) => {
           const g = glyphAt(geo, point);
           if (g !== -1) sel.begin(pageIndex, g);
-        });
+        }, ignore);
       },
       onPointerMove: (point) => {
         if (!sel) return;
