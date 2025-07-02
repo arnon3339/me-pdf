@@ -155,16 +155,32 @@ export class SelectionPlugin extends BasePlugin<
 
       const sIdx = Math.max(from, runStart) - runStart;
       const eIdx = Math.min(to, runEnd) - runStart;
-      const left = run.glyphs[sIdx].x;
-      const right = run.glyphs[eIdx].x + run.glyphs[eIdx].width;
-      const top = run.glyphs[sIdx].y;
-      const bottom = run.glyphs[eIdx].y + run.glyphs[eIdx].height;
 
-      rects.push({
-        origin: { x: left, y: top },
-        size: { width: right - left, height: bottom - top },
-      });
+      // Calculate bounds across all selected glyphs in this run
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+
+      for (let i = sIdx; i <= eIdx; i++) {
+        const glyph = run.glyphs[i];
+        if (glyph.flags === 2) continue; // Skip empty glyphs
+
+        minX = Math.min(minX, glyph.x);
+        maxX = Math.max(maxX, glyph.x + glyph.width);
+        minY = Math.min(minY, glyph.y);
+        maxY = Math.max(maxY, glyph.y + glyph.height);
+      }
+
+      // Only add rect if we found valid bounds
+      if (minX !== Infinity && minY !== Infinity) {
+        rects.push({
+          origin: { x: minX, y: minY },
+          size: { width: maxX - minX, height: maxY - minY },
+        });
+      }
     }
+
     return rects;
   }
 }
