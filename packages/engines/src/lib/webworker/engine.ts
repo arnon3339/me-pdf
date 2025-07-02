@@ -33,6 +33,7 @@ import {
   PdfGlyphObject,
   PdfPageGeometry,
   ImageConversionTypes,
+  PageTextSlice,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -875,6 +876,29 @@ export class WebWorkerEngine implements PdfEngine {
       data: {
         name: 'extractText',
         args: [doc, pageIndexes],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.getTextSlices}
+   *
+   * @public
+   */
+  getTextSlices(doc: PdfDocumentObject, slices: PageTextSlice[]) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getTextSlices', doc, slices);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<string[]>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'getTextSlices',
+        args: [doc, slices],
       },
     };
     this.proxy(task, request);

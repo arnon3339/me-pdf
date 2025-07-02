@@ -30,6 +30,8 @@ import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export';
 import { Download } from '@embedpdf/plugin-export/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
+import { SelectionPluginPackage } from '@embedpdf/plugin-selection';
+import { SelectionLayer } from '@embedpdf/plugin-selection/react';
 
 import { CircularProgress, Box, Alert } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
@@ -77,6 +79,7 @@ const plugins = [
   createPluginRegistration(FullscreenPluginPackage),
   createPluginRegistration(ExportPluginPackage),
   createPluginRegistration(ThumbnailPluginPackage),
+  createPluginRegistration(SelectionPluginPackage),
 ];
 
 const drawerComponents: DrawerComponent[] = [
@@ -227,6 +230,7 @@ function App() {
                                     pageWidth={width}
                                     pageHeight={height}
                                   />
+                                  <SelectionLayer pageIndex={pageIndex} scale={scale} />
                                 </PagePointerProvider>
                               </Box>
                             </Rotate>

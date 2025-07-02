@@ -1,23 +1,35 @@
-import { BasePlugin, PluginRegistry, SET_DOCUMENT } from '@embedpdf/core';
+import { BasePlugin, PluginRegistry, SET_DOCUMENT, createBehaviorEmitter } from '@embedpdf/core';
 import {
-  SelectionCapability,
-  SelectionPluginConfig,
-  SelectionRangeX,
-  SelectionState,
-} from './types';
+  PdfEngine,
+  PdfDocumentObject,
+  PdfPageGeometry,
+  Rect,
+  PdfTask,
+  PdfTaskHelper,
+  PdfErrorCode,
+  ignore,
+  PageTextSlice,
+} from '@embedpdf/models';
+
 import {
   cachePageGeometry,
   setSelection,
   SelectionAction,
   endSelection,
   startSelection,
-  setRects,
   clearSelection,
   reset,
+  setRects,
+  setSlices,
 } from './actions';
-import { PdfEngine, PdfDocumentObject, PdfPageGeometry, TaskError, Rect } from '@embedpdf/models';
-import { createBehaviorEmitter } from '@embedpdf/core';
 import * as selector from './selectors';
+import {
+  SelectionCapability,
+  SelectionPluginConfig,
+  SelectionRangeX,
+  SelectionState,
+} from './types';
+import { sliceBounds, rectsWithinSlice } from './utils';
 
 export class SelectionPlugin extends BasePlugin<
   SelectionPluginConfig,
@@ -33,6 +45,7 @@ export class SelectionPlugin extends BasePlugin<
   private anchor?: { page: number; index: number };
 
   private readonly selChange$ = createBehaviorEmitter<SelectionState['selection']>();
+  private readonly textRetrieved$ = createBehaviorEmitter<string[]>();
 
   constructor(
     id: string,
@@ -57,8 +70,9 @@ export class SelectionPlugin extends BasePlugin<
   buildCapability(): SelectionCapability {
     return {
       getGeometry: (p) => this.getOrLoadGeometry(p),
-      getHighlightRects: (p) => selector.selectRectsForPage(this.state, p),
-      getBoundingRect: (p) => selector.selectBoundingRectForPage(this.state, p),
+      getHighlightRectsForPage: (p) => selector.selectRectsForPage(this.state, p),
+      getHighlightRects: () => this.state.rects,
+      getBoundingRectForPage: (p) => selector.selectBoundingRectForPage(this.state, p),
       getBoundingRects: () => selector.selectBoundingRectsForAllPages(this.state),
       begin: (p, i) => this.beginSelection(p, i),
       update: (p, i) => this.updateSelection(p, i),
@@ -66,26 +80,27 @@ export class SelectionPlugin extends BasePlugin<
       clear: () => this.clearSelection(),
 
       onSelectionChange: this.selChange$.on,
+      onTextRetrieved: this.textRetrieved$.on,
+      getSelectedText: () => this.getSelectedText(),
     };
   }
 
   /* ── geometry cache ───────────────────────────────────── */
-  private getOrLoadGeometry(pageIdx: number): Promise<PdfPageGeometry> {
+  private getOrLoadGeometry(pageIdx: number): PdfTask<PdfPageGeometry> {
     const cached = this.state.geometry[pageIdx];
-    if (cached) return Promise.resolve(cached);
+    if (cached) return PdfTaskHelper.resolve(cached);
 
-    if (!this.doc) return Promise.reject('doc closed');
+    if (!this.doc)
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Doc Not Found' });
     const page = this.doc.pages.find((p) => p.index === pageIdx)!;
 
-    return new Promise((res, rej) => {
-      this.engine.getPageGeometry(this.doc!, page).wait(
-        (geo) => {
-          this.dispatch(cachePageGeometry(pageIdx, geo));
-          res(geo);
-        },
-        (e: TaskError<any>) => rej(e),
-      );
-    });
+    const task = this.engine.getPageGeometry(this.doc!, page);
+
+    task.wait((geo) => {
+      this.dispatch(cachePageGeometry(pageIdx, geo));
+    }, ignore);
+
+    return task;
   }
 
   /* ── selection state updates ───────────────────────────── */
@@ -108,13 +123,6 @@ export class SelectionPlugin extends BasePlugin<
     this.selChange$.emit(null);
   }
 
-  private updateRectsForRange(range: SelectionRangeX) {
-    for (let p = range.start.page; p <= range.end.page; p++) {
-      const rects = this.buildRectsForPage(p); // existing pure fn
-      this.dispatch(setRects(p, rects));
-    }
-  }
-
   private updateSelection(page: number, index: number) {
     if (!this.selecting || !this.anchor) return;
 
@@ -126,45 +134,52 @@ export class SelectionPlugin extends BasePlugin<
 
     const range = { start, end };
     this.dispatch(setSelection(range));
-    this.updateRectsForRange(range);
+    this.updateRectsAndSlices(range);
     this.selChange$.emit(range);
   }
 
-  /* ── rect builder: 1 div per run slice ─────────────────── */
-  private buildRectsForPage(page: number): Rect[] {
-    const sel = this.state.selection;
-    if (!sel) return [];
+  private updateRectsAndSlices(range: SelectionRangeX) {
+    const allRects: Record<number, Rect[]> = {};
+    const allSlices: Record<number, { start: number; count: number }> = {};
 
-    /* page not covered by the current selection */
-    if (page < sel.start.page || page > sel.end.page) return [];
+    for (let p = range.start.page; p <= range.end.page; p++) {
+      const geo = this.state.geometry[p];
+      const sb = sliceBounds(range, geo, p);
+      if (!sb) continue;
 
-    const geo = this.state.geometry[page];
-    if (!geo) return [];
+      allRects[p] = rectsWithinSlice(geo!, sb.from, sb.to);
+      allSlices[p] = { start: sb.from, count: sb.to - sb.from + 1 };
+    }
 
-    const from = page === sel.start.page ? sel.start.index : 0;
-    const to =
-      page === sel.end.page
-        ? sel.end.index
-        : geo.runs[geo.runs.length - 1].charStart + geo.runs[geo.runs.length - 1].glyphs.length - 1;
+    this.dispatch(setRects(allRects));
+    this.dispatch(setSlices(allSlices));
+  }
 
-    const rects = [];
-    for (const run of geo.runs) {
-      const runStart = run.charStart;
-      const runEnd = runStart + run.glyphs.length - 1;
-      if (runEnd < from || runStart > to) continue;
-
-      const sIdx = Math.max(from, runStart) - runStart;
-      const eIdx = Math.min(to, runEnd) - runStart;
-      const left = run.glyphs[sIdx].x;
-      const right = run.glyphs[eIdx].x + run.glyphs[eIdx].width;
-      const top = run.glyphs[sIdx].y;
-      const bottom = run.glyphs[eIdx].y + run.glyphs[eIdx].height;
-
-      rects.push({
-        origin: { x: left, y: top },
-        size: { width: right - left, height: bottom - top },
+  private getSelectedText(): PdfTask<string[]> {
+    if (!this.doc || !this.state.selection) {
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.NotFound,
+        message: 'Doc Not Found or No Selection',
       });
     }
-    return rects;
+
+    const sel = this.state.selection;
+    const req: PageTextSlice[] = [];
+
+    for (let p = sel.start.page; p <= sel.end.page; p++) {
+      const s = this.state.slices[p];
+      if (s) req.push({ pageIndex: p, charIndex: s.start, charCount: s.count });
+    }
+
+    if (req.length === 0) return PdfTaskHelper.resolve([] as string[]);
+
+    const task = this.engine.getTextSlices(this.doc!, req);
+
+    // Emit the text when it's retrieved
+    task.wait((text) => {
+      this.textRetrieved$.emit(text);
+    }, ignore);
+
+    return task;
   }
 }

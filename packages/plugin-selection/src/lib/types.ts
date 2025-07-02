@@ -1,5 +1,5 @@
-import { BasePluginConfig } from '@embedpdf/core';
-import { PdfPageGeometry, Rect } from '@embedpdf/models';
+import { BasePluginConfig, EventHook } from '@embedpdf/core';
+import { PdfPageGeometry, PdfTask, Rect } from '@embedpdf/models';
 
 export interface SelectionPluginConfig extends BasePluginConfig {}
 
@@ -20,22 +20,29 @@ export interface SelectionState {
   /** current selection or null */
   rects: Record<number, Rect[]>;
   selection: SelectionRangeX | null;
+  slices: Record<number, { start: number; count: number }>;
   active: boolean;
   selecting: boolean;
 }
 
 export interface SelectionCapability {
   /* geometry (cached) */
-  getGeometry(page: number): Promise<PdfPageGeometry>;
-  /* highlight rectangles for one page at given scale */
-  getHighlightRects(page: number): Rect[];
-  getBoundingRect(page: number): Rect | null;
+  getGeometry(page: number): PdfTask<PdfPageGeometry>;
+  /* highlight rectangles for one page */
+  getHighlightRectsForPage(page: number): Rect[];
+  /* highlight rectangles for all pages */
+  getHighlightRects(): Record<number, Rect[]>;
+  /* bounding rectangles for all pages */
+  getBoundingRectForPage(page: number): Rect | null;
+  /* bounding rectangles for all pages */
   getBoundingRects(): { page: number; rect: Rect }[];
+  /* get selected text */
+  getSelectedText(): PdfTask<string[]>;
   /* imperative API used by framework layers */
   begin(page: number, glyphIdx: number): void;
   update(page: number, glyphIdx: number): void;
   end(): void;
   clear(): void;
-
-  onSelectionChange(cb: (r: SelectionRangeX | null) => void): () => void;
+  onSelectionChange: EventHook<SelectionRangeX | null>;
+  onTextRetrieved: EventHook<string[]>;
 }

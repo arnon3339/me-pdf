@@ -93,6 +93,82 @@ export interface PdfMetadataObject {
 }
 
 /**
+ * Unicode **soft-hyphen** marker (`U+00AD`).
+ * Often embedded by PDF generators as discretionary hyphens.
+ *
+ * @public
+ */
+export const PdfSoftHyphenMarker = '\u00AD';
+
+/**
+ * Unicode **zero-width space** (`U+200B`).
+ *
+ * @public
+ */
+export const PdfZeroWidthSpace = '\u200B';
+
+/**
+ * Unicode **word-joiner** (`U+2060`) – zero-width no-break.
+ *
+ * @public
+ */
+export const PdfWordJoiner = '\u2060';
+
+/**
+ * Unicode **byte-order mark / zero-width&nbsp;no-break space** (`U+FEFF`).
+ *
+ * @public
+ */
+export const PdfBomOrZwnbsp = '\uFEFF';
+
+/**
+ * Unicode non-character `U+FFFE`.
+ *
+ * @public
+ */
+export const PdfNonCharacterFFFE = '\uFFFE';
+
+/**
+ * Unicode non-character `U+FFFF`.
+ *
+ * @public
+ */
+export const PdfNonCharacterFFFF = '\uFFFF';
+
+/**
+ * **Frozen list** of all unwanted markers in canonical order.
+ *
+ * @public
+ */
+export const PdfUnwantedTextMarkers = Object.freeze([
+  PdfSoftHyphenMarker,
+  PdfZeroWidthSpace,
+  PdfWordJoiner,
+  PdfBomOrZwnbsp,
+  PdfNonCharacterFFFE,
+  PdfNonCharacterFFFF,
+] as const);
+
+/**
+ * Compiled regular expression that matches any unwanted marker.
+ *
+ * @public
+ */
+export const PdfUnwantedTextRegex = new RegExp(`[${PdfUnwantedTextMarkers.join('')}]`, 'g');
+
+/**
+ * Remove all {@link PdfUnwantedTextMarkers | unwanted markers} from *text*.
+ *
+ * @param text - raw text extracted from PDF
+ * @returns cleaned text
+ *
+ * @public
+ */
+export function stripPdfUnwantedMarkers(text: string): string {
+  return text.replace(PdfUnwantedTextRegex, '');
+}
+
+/**
  * zoom mode
  *
  * @public
@@ -1233,6 +1309,26 @@ export interface TextContext {
 }
 
 /**
+ * Text slice
+ *
+ * @public
+ */
+export interface PageTextSlice {
+  /**
+   * Index of the pdf page
+   */
+  pageIndex: number;
+  /**
+   * Index of the first character
+   */
+  charIndex: number;
+  /**
+   * Count of the characters
+   */
+  charCount: number;
+}
+
+/**
  * search result
  *
  * @public
@@ -1825,6 +1921,13 @@ export interface PdfEngine<T = Blob> {
    * @returns task contains the text
    */
   extractText: (doc: PdfDocumentObject, pageIndexes: number[]) => PdfTask<string>;
+  /**
+   * Extract text on specified pdf pages
+   * @param doc - pdf document
+   * @param pageIndexes - indexes of pdf pages
+   * @returns task contains the text
+   */
+  getTextSlices: (doc: PdfDocumentObject, slices: PageTextSlice[]) => PdfTask<string[]>;
   /**
    * Get all glyphs in the specified pdf page
    * @param doc - pdf document

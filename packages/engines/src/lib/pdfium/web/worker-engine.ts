@@ -1,3 +1,5 @@
+import { Logger } from '@embedpdf/models';
+
 import { WebWorkerEngine } from '../../webworker/engine';
 
 /* eslint-disable @typescript-eslint/ban-ts-comment */
@@ -8,7 +10,7 @@ declare const __WEBWORKER_BODY__: string;
  * Zero-config helper:
  *   const engine = createDefaultWorkerEngine('/wasm/pdfium.wasm');
  */
-export function createPdfiumEngine(wasmUrl: string) {
+export function createPdfiumEngine(wasmUrl: string, logger?: Logger) {
   const worker = new Worker(
     URL.createObjectURL(new Blob([__WEBWORKER_BODY__], { type: 'application/javascript' })),
     {
@@ -16,6 +18,8 @@ export function createPdfiumEngine(wasmUrl: string) {
     },
   );
 
+  // Send initialization message with WASM URL
   worker.postMessage({ type: 'wasmInit', wasmUrl });
-  return new WebWorkerEngine(worker);
+
+  return new WebWorkerEngine(worker, logger);
 }

@@ -84,6 +84,8 @@ import {
   quadToRect,
   PdfImage,
   ImageConversionTypes,
+  PageTextSlice,
+  stripPdfUnwantedMarkers,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1898,6 +1900,69 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.getTextSlices}
+   *
+   * @public
+   */
+  getTextSlices(doc: PdfDocumentObject, slices: PageTextSlice[]): PdfTask<string[]> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getTextSlices', doc, slices);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'Begin', doc.id);
+
+    /* ⚠︎ 1 — trivial case */
+    if (slices.length === 0) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'End', doc.id);
+      return PdfTaskHelper.resolve<string[]>([]);
+    }
+
+    /* ⚠︎ 2 — document must be open */
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    try {
+      /* keep caller order */
+      const out = new Array<string>(slices.length);
+
+      /* group → open each page once */
+      const byPage = new Map<number, { slice: PageTextSlice; pos: number }[]>();
+      slices.forEach((s, i) => {
+        (byPage.get(s.pageIndex) ?? byPage.set(s.pageIndex, []).get(s.pageIndex))!.push({
+          slice: s,
+          pos: i,
+        });
+      });
+
+      for (const [pageIdx, list] of byPage) {
+        const pageCtx = ctx.acquirePage(pageIdx);
+        const textPagePtr = pageCtx.getTextPage();
+
+        for (const { slice, pos } of list) {
+          const bufPtr = this.malloc(2 * (slice.charCount + 1)); // UTF-16 + NIL
+          this.pdfiumModule.FPDFText_GetText(textPagePtr, slice.charIndex, slice.charCount, bufPtr);
+          out[pos] = stripPdfUnwantedMarkers(this.pdfiumModule.pdfium.UTF16ToString(bufPtr));
+          this.free(bufPtr);
+        }
+        pageCtx.release();
+      }
+
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'End', doc.id);
+      return PdfTaskHelper.resolve(out);
+    } catch (e) {
+      this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'getTextSlices error', e);
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetTextSlices', 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: String(e),
+      });
+    }
+  }
+
+  /**
    * {@inheritDoc @embedpdf/models!PdfEngine.merge}
    *
    * @public
@@ -2627,6 +2692,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const runs: PdfRun[] = [];
     let current: PdfRun | null = null;
     let curObjPtr: number | null = null;
+    let bounds: { minX: number; minY: number; maxX: number; maxY: number } | null = null;
 
     /** ── main loop ──────────────────────────────────────────── */
     for (let i = 0; i < glyphs.length; i++) {
@@ -2634,10 +2700,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
       /* 1 — find the CPDF_TextObject this glyph belongs to */
       const objPtr = this.pdfiumModule.FPDFText_GetTextObject(textPagePtr, i) as number;
-
-      if (g.isEmpty) {
-        continue;
-      }
 
       /* 2 — start a new run when the text object changes */
       if (objPtr !== curObjPtr) {
@@ -2652,6 +2714,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           charStart: i,
           glyphs: [],
         };
+        bounds = {
+          minX: g.origin.x,
+          minY: g.origin.y,
+          maxX: g.origin.x + g.size.width,
+          maxY: g.origin.y + g.size.height,
+        };
         runs.push(current);
       }
 
@@ -2661,18 +2729,28 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         y: g.origin.y,
         width: g.size.width,
         height: g.size.height,
-        flags: g.isSpace ? 1 : 0,
+        flags: g.isEmpty ? 2 : g.isSpace ? 1 : 0,
       });
 
       /* 4 — expand the run's bounding rect */
+      if (g.isEmpty) {
+        continue;
+      }
+
       const right = g.origin.x + g.size.width;
       const bottom = g.origin.y + g.size.height;
 
-      current!.rect.width =
-        Math.max(current!.rect.x + current!.rect.width, right) - current!.rect.x;
-      current!.rect.y = Math.min(current!.rect.y, g.origin.y);
-      current!.rect.height =
-        Math.max(current!.rect.y + current!.rect.height, bottom) - current!.rect.y;
+      // Update bounds
+      bounds!.minX = Math.min(bounds!.minX, g.origin.x);
+      bounds!.minY = Math.min(bounds!.minY, g.origin.y);
+      bounds!.maxX = Math.max(bounds!.maxX, right);
+      bounds!.maxY = Math.max(bounds!.maxY, bottom);
+
+      // Calculate final rect from bounds
+      current!.rect.x = bounds!.minX;
+      current!.rect.y = bounds!.minY;
+      current!.rect.width = bounds!.maxX - bounds!.minX;
+      current!.rect.height = bounds!.maxY - bounds!.minY;
     }
 
     return runs;
