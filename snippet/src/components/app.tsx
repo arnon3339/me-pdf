@@ -94,7 +94,7 @@ import {
   SelectionPluginPackage,
   SelectionState,
 } from '@embedpdf/plugin-selection';
-import { SelectionLayer } from '@embedpdf/plugin-selection/preact';
+import { SelectionLayer, CopyToClipboard } from '@embedpdf/plugin-selection/preact';
 import { TilingPluginConfig, TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
 import { ThumbnailPluginConfig, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
@@ -1118,8 +1118,14 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Copy',
     icon: 'copy',
     type: 'action',
+    shortcut: 'Meta+C',
+    shortcutLabel: 'Cmd+C',
     action: (registry) => {
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (selection) {
+        selection.copyToClipboard();
+        selection.clear();
+      }
     },
   },
   underline: {
@@ -2164,6 +2170,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                   <FilePicker />
                   <Download />
                   <Capture />
+                  <CopyToClipboard />
                 </PrintProvider>
               </FullscreenProvider>
             )}
