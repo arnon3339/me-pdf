@@ -38,6 +38,8 @@ export interface SelectionCapability {
   getBoundingRects(): { page: number; rect: Rect }[];
   /* get selected text */
   getSelectedText(): PdfTask<string[]>;
+  /* copy selected text to clipboard */
+  copyToClipboard(): void;
   /* imperative API used by framework layers */
   begin(page: number, glyphIdx: number): void;
   update(page: number, glyphIdx: number): void;
@@ -45,4 +47,5 @@ export interface SelectionCapability {
   clear(): void;
   onSelectionChange: EventHook<SelectionRangeX | null>;
   onTextRetrieved: EventHook<string[]>;
+  onCopyToClipboard: EventHook<string>;
 }

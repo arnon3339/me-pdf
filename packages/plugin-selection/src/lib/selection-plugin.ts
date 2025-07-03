@@ -1,4 +1,10 @@
-import { BasePlugin, PluginRegistry, SET_DOCUMENT, createBehaviorEmitter } from '@embedpdf/core';
+import {
+  BasePlugin,
+  PluginRegistry,
+  SET_DOCUMENT,
+  createBehaviorEmitter,
+  createEmitter,
+} from '@embedpdf/core';
 import {
   PdfEngine,
   PdfDocumentObject,
@@ -46,6 +52,7 @@ export class SelectionPlugin extends BasePlugin<
 
   private readonly selChange$ = createBehaviorEmitter<SelectionState['selection']>();
   private readonly textRetrieved$ = createBehaviorEmitter<string[]>();
+  private readonly copyToClipboard$ = createEmitter<string>();
 
   constructor(
     id: string,
@@ -82,6 +89,9 @@ export class SelectionPlugin extends BasePlugin<
       onSelectionChange: this.selChange$.on,
       onTextRetrieved: this.textRetrieved$.on,
       getSelectedText: () => this.getSelectedText(),
+      onCopyToClipboard: this.copyToClipboard$.on,
+      getSelectedText: () => this.getSelectedText(),
+      copyToClipboard: () => this.copyToClipboard(),
     };
   }
 
@@ -181,5 +191,12 @@ export class SelectionPlugin extends BasePlugin<
     }, ignore);
 
     return task;
+  }
+
+  private copyToClipboard() {
+    const text = this.getSelectedText();
+    text.wait((text) => {
+      this.copyToClipboard$.emit(text.join('\n'));
+    }, ignore);
   }
 }

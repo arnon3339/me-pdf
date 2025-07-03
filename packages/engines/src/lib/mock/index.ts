@@ -40,9 +40,9 @@ import {
   PdfFileUrl,
   PdfGlyphObject,
   PdfPageGeometry,
+  PageTextSlice,
   PdfAnnotationObjectBase,
   PdfAlphaColor,
-  PageTextSlice,
 } from '@embedpdf/models';
 
 /**
