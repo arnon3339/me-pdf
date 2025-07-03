@@ -6,8 +6,8 @@ import {
   PdfEngine,
   PdfErrorReason,
   Task,
-  PdfAlphaColor,
   PdfAnnotationSubtype,
+  WebAlphaColor,
 } from '@embedpdf/models';
 import {
   AnnotationCapability,
@@ -69,8 +69,8 @@ export class AnnotationPlugin extends BasePlugin<
       deselectAnnotation: () => {
         this.dispatch(deselectAnnotation());
       },
-      updateAnnotationColor: async (color: PdfAlphaColor) => {
-        return this.updateSelectedAnnotationColor(color);
+      updateAnnotationColor: async (options: WebAlphaColor) => {
+        return this.updateSelectedAnnotationColor(options);
       },
       setAnnotationMode: (mode: PdfAnnotationSubtype | null) => {
         this.interactionManager?.activate('default');
@@ -135,7 +135,7 @@ export class AnnotationPlugin extends BasePlugin<
     }
   }
 
-  private async updateSelectedAnnotationColor(color: PdfAlphaColor): Promise<boolean> {
+  private async updateSelectedAnnotationColor(webAlphaColor: WebAlphaColor): Promise<boolean> {
     const selected = this.state.selectedAnnotation;
 
     if (!selected) {
@@ -158,10 +158,10 @@ export class AnnotationPlugin extends BasePlugin<
     }
 
     // Update the annotation in the local state first
-    this.dispatch(updateAnnotationColor(selected.pageIndex, selected.annotationId, color));
+    this.dispatch(updateAnnotationColor(selected.pageIndex, selected.annotationId, webAlphaColor));
 
     try {
-      const task = this.engine.setAnnotationColor(doc, page, selected.annotation, color);
+      const task = this.engine.updateAnnotationColor(doc, page, selected.annotation, webAlphaColor);
 
       return task.toPromise();
     } catch (error) {

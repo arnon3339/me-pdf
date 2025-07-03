@@ -186,6 +186,22 @@ export function quadToRect(q: Quad): Rect {
 }
 
 /**
+ * Convert rectangle to quadrilateral
+ * @param r - rectangle
+ * @returns quadrilateral
+ *
+ * @public
+ */
+export function rectToQuad(r: Rect): Quad {
+  return {
+    p1: { x: r.origin.x, y: r.origin.y },
+    p2: { x: r.origin.x + r.size.width, y: r.origin.y },
+    p3: { x: r.origin.x + r.size.width, y: r.origin.y + r.size.height },
+    p4: { x: r.origin.x, y: r.origin.y + r.size.height },
+  };
+}
+
+/**
  * Rotate the container and calculate the new position for a point
  * in specified position
  * @param containerSize - size of the container

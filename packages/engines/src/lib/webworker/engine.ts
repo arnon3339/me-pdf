@@ -36,6 +36,7 @@ import {
   PdfAnnotationObjectBase,
   PdfAlphaColor,
   PageTextSlice,
+  WebAlphaColor,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -310,11 +311,11 @@ export class WebWorkerEngine implements PdfEngine {
     return task;
   }
 
-  setAnnotationColor(
+  updateAnnotationColor(
     doc: PdfDocumentObject,
     page: PdfPageObject,
     annotation: PdfAnnotationObjectBase,
-    color: PdfAlphaColor,
+    color: WebAlphaColor,
     which: number = 0,
   ) {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', doc, page, annotation, color);
@@ -325,7 +326,7 @@ export class WebWorkerEngine implements PdfEngine {
       id: requestId,
       type: 'ExecuteRequest',
       data: {
-        name: 'setAnnotationColor',
+        name: 'updateAnnotationColor',
         args: [doc, page, annotation, color, which],
       },
     };

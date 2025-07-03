@@ -1,15 +1,13 @@
 import { BasePluginConfig, EventHook } from '@embedpdf/core';
 import {
-  PdfAlphaColor,
   PdfAnnotationObject,
   PdfErrorReason,
   Task,
   PdfAnnotationSubtype,
+  WebAlphaColor,
 } from '@embedpdf/models';
 
-interface BaseAnnotationDefaults {
-  color: PdfAlphaColor;
-}
+interface BaseAnnotationDefaults extends WebAlphaColor {}
 
 interface HighlightDefaults extends BaseAnnotationDefaults {
   name: 'Highlight';
@@ -41,18 +39,12 @@ export type ToolDefaults<S extends PdfAnnotationSubtype> = ToolDefaultsBySubtype
   keyof ToolDefaultsBySubtype
 >];
 
-export type Color = {
-  red: number;
-  green: number;
-  blue: number;
-};
-
 export interface AnnotationState {
   annotations: Record<number, PdfAnnotationObject[]>;
   selectedAnnotation: SelectedAnnotation | null;
   annotationMode: PdfAnnotationSubtype | null;
   toolDefaults: Partial<ToolDefaultsBySubtype>;
-  colorPresets: Color[];
+  colorPresets: string[];
 }
 
 export interface SelectedAnnotation {
@@ -63,7 +55,7 @@ export interface SelectedAnnotation {
 
 export interface AnnotationPluginConfig extends BasePluginConfig {
   toolDefaults?: Partial<ToolDefaultsBySubtype>;
-  colorPresets?: Color[];
+  colorPresets?: string[];
 }
 
 export interface AnnotationCapability {
@@ -72,7 +64,7 @@ export interface AnnotationCapability {
   ) => Task<PdfAnnotationObject[], PdfErrorReason>;
   selectAnnotation: (pageIndex: number, annotationId: number) => void;
   deselectAnnotation: () => void;
-  updateAnnotationColor: (color: PdfAlphaColor) => Promise<boolean>;
+  updateAnnotationColor: (options: WebAlphaColor) => Promise<boolean>;
   setAnnotationMode: (mode: PdfAnnotationSubtype | null) => void;
   onStateChange: EventHook<AnnotationState>;
   /** strongly typed – only sub-types we have defaults for */
@@ -83,17 +75,16 @@ export interface AnnotationCapability {
     patch: Partial<ToolDefaultsBySubtype[S]>,
   ) => void;
   /** current palette – UI just reads this */
-  getColorPresets: () => Color[];
+  getColorPresets: () => string[];
   /** append a swatch (deduped by RGBA) */
-  addColorPreset: (color: Color) => void;
+  addColorPreset: (color: string) => void;
 }
 
 export interface GetPageAnnotationsOptions {
   pageIndex: number;
 }
 
-export interface UpdateAnnotationColorOptions {
+export interface UpdateAnnotationColorOptions extends WebAlphaColor {
   pageIndex: number;
   annotationId: number;
-  color: PdfAlphaColor;
 }

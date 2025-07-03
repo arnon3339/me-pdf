@@ -10,17 +10,17 @@ import {
   UPDATE_TOOL_DEFAULTS,
   ADD_COLOR_PRESET,
 } from './actions';
-import { AnnotationPluginConfig, AnnotationState, Color } from './types';
+import { AnnotationPluginConfig, AnnotationState } from './types';
 
-const DEFAULT_COLOR_PRESETS: Color[] = [
-  { red: 228, green: 66, blue: 52 },
-  { red: 255, green: 141, blue: 0 },
-  { red: 255, green: 205, blue: 69 },
-  { red: 92, green: 201, blue: 110 },
-  { red: 37, green: 210, blue: 209 },
-  { red: 89, green: 124, blue: 226 },
-  { red: 197, green: 68, blue: 206 },
-  { red: 125, green: 46, blue: 37 },
+const DEFAULT_COLOR_PRESETS: string[] = [
+  '#E44234', // red: 228, green: 66, blue: 52
+  '#FF8D00', // red: 255, green: 141, blue: 0
+  '#FFCD45', // red: 255, green: 205, blue: 69
+  '#5CC96E', // red: 92, green: 201, blue: 110
+  '#25D2D1', // red: 37, green: 210, blue: 209
+  '#597CE2', // red: 89, green: 124, blue: 226
+  '#C544CE', // red: 197, green: 68, blue: 206
+  '#7D2E25', // red: 125, green: 46, blue: 37
 ];
 
 export const initialState = (config: AnnotationPluginConfig): AnnotationState => {
@@ -31,19 +31,23 @@ export const initialState = (config: AnnotationPluginConfig): AnnotationState =>
     toolDefaults: {
       [PdfAnnotationSubtype.HIGHLIGHT]: {
         name: 'Highlight',
-        color: { red: 255, green: 205, blue: 69, alpha: 255 },
+        color: '#FFCD45',
+        opacity: 1,
       },
       [PdfAnnotationSubtype.UNDERLINE]: {
         name: 'Underline',
-        color: { red: 228, green: 66, blue: 52, alpha: 255 },
+        color: '#E44234',
+        opacity: 1,
       },
       [PdfAnnotationSubtype.STRIKEOUT]: {
         name: 'Strikeout',
-        color: { red: 228, green: 66, blue: 52, alpha: 255 },
+        color: '#E44234',
+        opacity: 1,
       },
       [PdfAnnotationSubtype.SQUIGGLY]: {
         name: 'Squiggly',
-        color: { red: 228, green: 66, blue: 52, alpha: 255 },
+        color: '#E44234',
+        opacity: 1,
       },
       ...config.toolDefaults,
     },
@@ -93,7 +97,7 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
           if (annotation.type === PdfAnnotationSubtype.HIGHLIGHT) {
             return {
               ...annotation,
-              color,
+              ...color,
             };
           }
         }
@@ -140,14 +144,7 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
     }
 
     case ADD_COLOR_PRESET: {
-      const exists = state.colorPresets?.some(
-        (c) =>
-          c.red === action.payload.red &&
-          c.green === action.payload.green &&
-          c.blue === action.payload.blue,
-      );
-
-      if (exists) {
+      if (state.colorPresets.includes(action.payload)) {
         return state;
       }
 

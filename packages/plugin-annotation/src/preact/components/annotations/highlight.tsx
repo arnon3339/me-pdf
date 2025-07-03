@@ -20,10 +20,8 @@ export function HighlightAnnotation({
   const { provides: annotationProvides } = useAnnotationCapability();
 
   // Default highlight color if none is specified
-  const highlightColor = annotation.color || { red: 255, green: 255, blue: 0, alpha: 76 };
-
-  // Convert color to CSS rgba format
-  const rgbaColor = `rgba(${highlightColor.red}, ${highlightColor.green}, ${highlightColor.blue}, ${highlightColor.alpha / 255})`;
+  const highlightColor = annotation.color || '#FFFF00';
+  const highlightOpacity = annotation.opacity || 0.5;
 
   const handleClick = useCallback(
     (e: MouseEvent) => {
@@ -60,7 +58,8 @@ export function HighlightAnnotation({
               top: `${(rect.origin.y - annotation.rect.origin.y) * scale}px`,
               width: `${rect.size.width * scale}px`,
               height: `${rect.size.height * scale}px`,
-              backgroundColor: rgbaColor,
+              backgroundColor: highlightColor,
+              opacity: highlightOpacity,
             }}
           />
         ))}

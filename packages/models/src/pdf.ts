@@ -1,3 +1,4 @@
+import { WebAlphaColor } from './color';
 import { Size, Rect, Position, Rotation, Quad } from './geometry';
 import { Task, TaskError } from './task';
 
@@ -593,7 +594,7 @@ export interface PdfAnnotationObjectBase {
   /**
    * Modified date of the annotation
    */
-  modified?: string;
+  modified?: Date;
 
   /**
    * Sub type of annotation
@@ -619,20 +620,6 @@ export interface PdfAnnotationObjectBase {
    * Rectangle of the annotation
    */
   rect: Rect;
-
-  /**
-   * Related popup annotation
-   */
-  popup?: PdfPopupAnnoObject | undefined;
-
-  /**
-   * Appearences of annotation
-   */
-  appearances: {
-    normal: string;
-    rollover: string;
-    down: string;
-  };
 }
 
 /**
@@ -652,6 +639,11 @@ export interface PdfPopupAnnoObject extends PdfAnnotationObjectBase {
    * Whether the popup is opened or not
    */
   open: boolean;
+
+  /**
+   * In reply to id
+   */
+  inReplyToId?: number;
 }
 
 /**
@@ -686,9 +678,14 @@ export interface PdfTextAnnoObject extends PdfAnnotationObjectBase {
   contents: string;
 
   /**
-   * Color of the text
+   * color of text annotation
    */
-  color: PdfAlphaColor;
+  color?: string;
+
+  /**
+   * opacity of text annotation
+   */
+  opacity?: number;
 
   /**
    * In reply to id
@@ -955,9 +952,19 @@ export interface PdfHighlightAnnoObject extends PdfAnnotationObjectBase {
   type: PdfAnnotationSubtype.HIGHLIGHT;
 
   /**
-   * color of highlight area
+   * Text contents of the highlight annotation
    */
-  color?: PdfAlphaColor;
+  contents: string;
+
+  /**
+   * color of highlight annotation
+   */
+  color?: string;
+
+  /**
+   * opacity of highlight annotation
+   */
+  opacity?: number;
 
   /**
    * quads of highlight area
@@ -1118,9 +1125,22 @@ export interface PdfSquigglyAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.SQUIGGLY;
   /**
-   * color of squiggly annotation
+   * Text contents of the highlight annotation
    */
-  color?: PdfAlphaColor;
+  contents: string;
+  /**
+   * color of strike out annotation
+   */
+  color?: string;
+
+  /**
+   * opacity of strike out annotation
+   */
+  opacity?: number;
+  /**
+   * quads of highlight area
+   */
+  segmentRects: Rect[];
 }
 
 /**
@@ -1132,9 +1152,22 @@ export interface PdfUnderlineAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.UNDERLINE;
   /**
-   * color of underline annotation
+   * Text contents of the highlight annotation
    */
-  color?: PdfAlphaColor;
+  contents: string;
+  /**
+   * color of strike out annotation
+   */
+  color?: string;
+
+  /**
+   * opacity of strike out annotation
+   */
+  opacity?: number;
+  /**
+   * quads of highlight area
+   */
+  segmentRects: Rect[];
 }
 
 /**
@@ -1146,9 +1179,24 @@ export interface PdfStrikeOutAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.STRIKEOUT;
   /**
+   * Text contents of the strike out annotation
+   */
+  contents: string;
+
+  /**
    * color of strike out annotation
    */
-  color?: PdfAlphaColor;
+  color?: string;
+
+  /**
+   * opacity of strike out annotation
+   */
+  opacity?: number;
+
+  /**
+   * quads of highlight area
+   */
+  segmentRects: Rect[];
 }
 
 /**
@@ -1802,11 +1850,11 @@ export interface PdfEngine<T = Blob> {
    * @param which - 0 = stroke/fill colour (PDFium's "colourType" param)
    * @returns task that indicates whether the operation succeeded
    */
-  setAnnotationColor: (
+  updateAnnotationColor: (
     doc: PdfDocumentObject,
     page: PdfPageObject,
     annotation: PdfAnnotationObjectBase,
-    colour: PdfAlphaColor,
+    color: WebAlphaColor,
     which?: number,
   ) => PdfTask<boolean>;
 

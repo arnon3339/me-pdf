@@ -39,6 +39,7 @@ import {
   Rotation,
   SearchAllPagesResult,
   SearchResult,
+  WebAlphaColor,
 } from '@embedpdf/models';
 import { MatchFlag } from '@embedpdf/models';
 import { Checkbox } from './ui/checkbox';
@@ -50,7 +51,7 @@ import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
 import { useStoreState } from '@embedpdf/core/preact';
-import { Color, SelectedAnnotation, StylableSubtype } from '@embedpdf/plugin-annotation';
+import { SelectedAnnotation, StylableSubtype } from '@embedpdf/plugin-annotation';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
@@ -220,7 +221,7 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
 export interface LeftPanelAnnotationStyleProps {
   selectedAnnotation: SelectedAnnotation | null;
   annotationMode: PdfAnnotationSubtype | null;
-  colorPresets: Color[];
+  colorPresets: string[];
 }
 
 export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
@@ -238,22 +239,31 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
     ? annotation?.getToolDefaults(activeType as StylableSubtype)
     : null;
 
-  const getActiveColor = (): PdfAlphaColor | undefined => {
-    if (!selectedAnnotation) return defaultSettings?.color;
+  const getAlphaColor = (color?: string, opacity?: number): WebAlphaColor => {
+    return {
+      color: color ?? '#FFFF00',
+      opacity: opacity ?? 1,
+    };
+  };
+
+  const getActiveColor = (): WebAlphaColor => {
+    if (!selectedAnnotation) return getAlphaColor(defaultSettings?.color, defaultSettings?.opacity);
 
     switch (selectedAnnotation.annotation.type) {
       case PdfAnnotationSubtype.HIGHLIGHT:
       case PdfAnnotationSubtype.UNDERLINE:
       case PdfAnnotationSubtype.STRIKEOUT:
       case PdfAnnotationSubtype.SQUIGGLY:
-        return selectedAnnotation.annotation.color;
+        return getAlphaColor(
+          selectedAnnotation.annotation.color,
+          selectedAnnotation.annotation.opacity,
+        );
       default:
-        return defaultSettings?.color;
+        return getAlphaColor(defaultSettings?.color, defaultSettings?.opacity);
     }
   };
 
   const activeColor = getActiveColor();
-  const currentOpacity = localOpacity ?? activeColor?.alpha ?? 255;
 
   // Apply debounced opacity changes
   useEffect(() => {
@@ -263,29 +273,29 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
     }
   }, [debouncedOpacity]);
 
-  const applyColor = (c: Color) => {
+  const applyColor = (c: string) => {
     if (!annotation) return;
 
     // Get the current alpha value from the active color (what's shown in the slider)
-    const currentAlpha = currentOpacity;
+    const currentAlpha = activeColor.opacity;
 
     if (selectedAnnotation) {
       /* paint existing annotation */
-      const patch: PdfAlphaColor = {
-        ...c,
-        alpha: currentAlpha,
+      const patch: WebAlphaColor = {
+        color: c,
+        opacity: currentAlpha,
       };
       annotation
         .updateAnnotationColor(patch)
         .then((value) => console.log('value', value))
         .catch((error) => console.error('error', error));
     } else if (annotationMode != null) {
-      console.log('annotationMode', annotationMode);
       /* tweak defaults for the active tool */
       const subtype = annotationMode as StylableSubtype;
 
       annotation.setToolDefaults(subtype, {
-        color: { ...c, alpha: currentAlpha },
+        color: c,
+        opacity: currentAlpha,
       });
     }
   };
@@ -297,10 +307,11 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
       /* update existing annotation opacity */
       const currentColor = activeColor;
       if (currentColor) {
-        const patch: PdfAlphaColor = {
-          ...currentColor,
-          alpha: opacity,
+        const patch: WebAlphaColor = {
+          color: currentColor.color,
+          opacity: opacity,
         };
+
         annotation
           .updateAnnotationColor(patch)
           .then((value) => console.log('opacity updated', value))
@@ -312,7 +323,8 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
       const currentDefaults = annotation.getToolDefaults(subtype);
       if (currentDefaults?.color) {
         annotation.setToolDefaults(subtype, {
-          color: { ...currentDefaults.color, alpha: opacity },
+          color: currentDefaults.color,
+          opacity: opacity,
         });
       }
     }
@@ -322,17 +334,14 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
     setLocalOpacity(newOpacity); // Update UI immediately
   };
 
-  const Swatch = ({ color, activeColor }: { color: Color; activeColor?: PdfAlphaColor }) => {
-    const isActive =
-      activeColor?.red === color.red &&
-      activeColor?.green === color.green &&
-      activeColor?.blue === color.blue;
+  const Swatch = ({ color, activeColor }: { color: string; activeColor?: WebAlphaColor }) => {
+    const isActive = color === activeColor?.color;
     return (
       <button
-        key={`${color.red}-${color.green}-${color.blue}`}
+        key={color}
         className={`h-5 w-5 cursor-pointer rounded-full border border-gray-400 ${isActive ? 'outline-offset-3 outline outline-2 outline-blue-500' : ''}`}
-        style={{ backgroundColor: `rgb(${color.red},${color.green},${color.blue})` }}
-        title={`rgb(${color.red},${color.green},${color.blue})`}
+        style={{ backgroundColor: color }}
+        title={color}
         onClick={() => applyColor(color)}
       />
     );
@@ -356,6 +365,8 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
     );
   }
 
+  const currentOpacity = localOpacity ?? activeColor?.opacity ?? 1;
+
   return (
     <div className="p-4">
       <h2 className="text-md font-medium">{title}</h2>
@@ -375,12 +386,12 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
         </label>
         <input
           id="small-range"
-          onChange={(e) => handleOpacityChange(parseInt(e.currentTarget.value))}
+          onChange={(e) => handleOpacityChange(parseFloat(e.currentTarget.value))}
           type="range"
           value={currentOpacity}
-          step="1"
-          min="0"
-          max="255"
+          step={0.1}
+          min={0.1}
+          max={1}
           class="range-sm mb-2 h-1 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
         />
       </div>

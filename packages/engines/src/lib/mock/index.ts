@@ -43,6 +43,7 @@ import {
   PageTextSlice,
   PdfAnnotationObjectBase,
   PdfAlphaColor,
+  WebAlphaColor,
 } from '@embedpdf/models';
 
 /**
@@ -85,11 +86,11 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       const signatures: PdfSignatureObject[] = [];
       return PdfTaskHelper.resolve(signatures);
     },
-    setAnnotationColor: (
+    updateAnnotationColor: (
       doc: PdfDocumentObject,
       page: PdfPageObject,
       annotation: PdfAnnotationObjectBase,
-      color: PdfAlphaColor,
+      color: WebAlphaColor,
       which: number = 0,
     ) => {
       return PdfTaskHelper.resolve(true);
@@ -255,11 +256,6 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
             width: 100,
             height: 100,
           },
-        },
-        appearances: {
-          normal: '',
-          rollover: '',
-          down: '',
         },
       };
       const annotations: PdfAnnotationObject[] = [];

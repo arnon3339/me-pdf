@@ -1,6 +1,6 @@
 import { Action } from '@embedpdf/core';
-import { PdfAnnotationObject, PdfAlphaColor, PdfAnnotationSubtype } from '@embedpdf/models';
-import { Color, SelectedAnnotation, StylableSubtype, ToolDefaultsBySubtype } from './types';
+import { PdfAnnotationObject, PdfAnnotationSubtype, WebAlphaColor } from '@embedpdf/models';
+import { SelectedAnnotation, StylableSubtype, ToolDefaultsBySubtype } from './types';
 
 export const SET_ANNOTATIONS = 'SET_ANNOTATIONS';
 export const SELECT_ANNOTATION = 'SELECT_ANNOTATION';
@@ -34,7 +34,7 @@ export interface UpdateAnnotationColorAction extends Action {
   payload: {
     pageIndex: number;
     annotationId: number;
-    color: PdfAlphaColor;
+    color: WebAlphaColor;
   };
 }
 
@@ -48,7 +48,7 @@ export interface UpdateToolDefaultsAction {
 
 export interface AddColorPresetAction extends Action {
   type: typeof ADD_COLOR_PRESET;
-  payload: Color;
+  payload: string;
 }
 
 export type AnnotationAction =
@@ -91,7 +91,7 @@ export function setAnnotationMode(mode: PdfAnnotationSubtype | null): SetAnnotat
 export function updateAnnotationColor(
   pageIndex: number,
   annotationId: number,
-  color: PdfAlphaColor,
+  color: WebAlphaColor,
 ): UpdateAnnotationColorAction {
   return {
     type: UPDATE_ANNOTATION_COLOR,
@@ -106,7 +106,7 @@ export function updateToolDefaults(
   return { type: UPDATE_TOOL_DEFAULTS, payload: { subtype, patch } };
 }
 
-export const addColorPreset = (color: Color): AddColorPresetAction => ({
+export const addColorPreset = (color: string): AddColorPresetAction => ({
   type: ADD_COLOR_PRESET,
   payload: color,
 });

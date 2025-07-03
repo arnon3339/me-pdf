@@ -85,11 +85,9 @@ export class SelectionPlugin extends BasePlugin<
       update: (p, i) => this.updateSelection(p, i),
       end: () => this.endSelection(),
       clear: () => this.clearSelection(),
-
+      onCopyToClipboard: this.copyToClipboard$.on,
       onSelectionChange: this.selChange$.on,
       onTextRetrieved: this.textRetrieved$.on,
-      getSelectedText: () => this.getSelectedText(),
-      onCopyToClipboard: this.copyToClipboard$.on,
       getSelectedText: () => this.getSelectedText(),
       copyToClipboard: () => this.copyToClipboard(),
     };

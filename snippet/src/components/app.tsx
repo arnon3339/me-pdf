@@ -1341,9 +1341,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.underline, storeState),
-      color: pdfAlphaColorToHexOpacity(
-        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.UNDERLINE]!.color,
-      ).hex,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.UNDERLINE]!.color,
     }),
   },
   squigglyButton: {
@@ -1358,9 +1356,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.squiggly, storeState),
-      color: pdfAlphaColorToHexOpacity(
-        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.SQUIGGLY]!.color,
-      ).hex,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.SQUIGGLY]!.color,
     }),
   },
   strikethroughButton: {
@@ -1375,9 +1371,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.strikethrough, storeState),
-      color: pdfAlphaColorToHexOpacity(
-        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.STRIKEOUT]!.color,
-      ).hex,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.STRIKEOUT]!.color,
     }),
   },
   highlightButton: {
@@ -1392,9 +1386,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.highlight, storeState),
-      color: pdfAlphaColorToHexOpacity(
-        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
-      ).hex,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
     }),
   },
   highlightSelectionButton: {
@@ -1406,9 +1398,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: pdfAlphaColorToHexOpacity(
-        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
-      ).hex,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
     }),
   },
   underlineSelectionButton: {
@@ -1420,9 +1410,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: pdfAlphaColorToHexOpacity(
-        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.UNDERLINE]!.color,
-      ).hex,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.UNDERLINE]!.color,
     }),
   },
   strikethroughSelectionButton: {
@@ -1434,9 +1422,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: pdfAlphaColorToHexOpacity(
-        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.STRIKEOUT]!.color,
-      ).hex,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.STRIKEOUT]!.color,
     }),
   },
   squigglySelectionButton: {
@@ -1448,9 +1434,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: pdfAlphaColorToHexOpacity(
-        storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.SQUIGGLY]!.color,
-      ).hex,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.SQUIGGLY]!.color,
     }),
   },
   viewCtrButton: {

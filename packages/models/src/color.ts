@@ -1,5 +1,10 @@
 import { PdfAlphaColor } from './pdf';
 
+export interface WebAlphaColor {
+  color: string;
+  opacity: number;
+}
+
 /**
  * Convert a {@link PdfAlphaColor} to a CSS-style colour definition.
  *
@@ -8,17 +13,14 @@ import { PdfAlphaColor } from './pdf';
  *   hex   – #RRGGBB (no alpha channel)
  *   opacity – 0-1 float suitable for CSS `opacity`/`rgba()`
  */
-export function pdfAlphaColorToHexOpacity(c: PdfAlphaColor): {
-  hex: `#${string}`;
-  opacity: number;
-} {
+export function pdfAlphaColorToWebAlphaColor(c: PdfAlphaColor): WebAlphaColor {
   const clamp = (n: number) => Math.max(0, Math.min(255, n));
   const toHex = (n: number) => clamp(n).toString(16).padStart(2, '0');
 
-  const hex = `#${toHex(c.red)}${toHex(c.green)}${toHex(c.blue)}` as const;
+  const color = `#${toHex(c.red)}${toHex(c.green)}${toHex(c.blue)}` as const;
   const opacity = clamp(c.alpha) / 255;
 
-  return { hex, opacity };
+  return { color, opacity };
 }
 
 /**
@@ -27,16 +29,16 @@ export function pdfAlphaColorToHexOpacity(c: PdfAlphaColor): {
  * @param hex      - #RGB, #RRGGBB, or #rrggbb
  * @param opacity  - 0-1 float (values outside clamp automatically)
  */
-export function hexOpacityToPdfAlphaColor(hex: string, opacity: number): PdfAlphaColor {
+export function webAlphaColorToPdfAlphaColor({ color, opacity }: WebAlphaColor): PdfAlphaColor {
   // Normalise: #abc → #aabbcc
-  if (/^#?[0-9a-f]{3}$/i.test(hex)) {
-    hex = hex.replace(/^#?([0-9a-f])([0-9a-f])([0-9a-f])$/i, '#$1$1$2$2$3$3').toLowerCase();
+  if (/^#?[0-9a-f]{3}$/i.test(color)) {
+    color = color.replace(/^#?([0-9a-f])([0-9a-f])([0-9a-f])$/i, '#$1$1$2$2$3$3').toLowerCase();
   }
 
   const [, r, g, b] =
-    /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex) ??
+    /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color) ??
     (() => {
-      throw new Error(`Invalid hex colour: “${hex}”`);
+      throw new Error(`Invalid hex colour: “${color}”`);
     })();
 
   const clamp = (n: number, hi = 255) => Math.max(0, Math.min(hi, n));
