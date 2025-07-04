@@ -68,7 +68,7 @@ export interface RegisterHandlersOptions {
 
 export interface RegisterAlwaysOptions {
   scope: InteractionScope;
-  handlers: PointerEventHandlers;
+  handlers: PointerEventHandlersWithLifecycle;
 }
 
 export interface InteractionManagerCapability {

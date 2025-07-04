@@ -2,13 +2,13 @@ import { Action } from '@embedpdf/core';
 import { PdfAnnotationObject, PdfAnnotationSubtype, WebAlphaColor } from '@embedpdf/models';
 import { SelectedAnnotation, StylableSubtype, ToolDefaultsBySubtype } from './types';
 
-export const SET_ANNOTATIONS = 'SET_ANNOTATIONS';
-export const SELECT_ANNOTATION = 'SELECT_ANNOTATION';
-export const DESELECT_ANNOTATION = 'DESELECT_ANNOTATION';
-export const SET_ANNOTATION_MODE = 'SET_ANNOTATION_MODE';
-export const UPDATE_ANNOTATION_COLOR = 'UPDATE_ANNOTATION_COLOR';
-export const UPDATE_TOOL_DEFAULTS = 'UPDATE_TOOL_DEFAULTS';
-export const ADD_COLOR_PRESET = 'ADD_COLOR_PRESET';
+export const SET_ANNOTATIONS = 'ANNOTATION/SET_ANNOTATIONS';
+export const SELECT_ANNOTATION = 'ANNOTATION/SELECT_ANNOTATION';
+export const DESELECT_ANNOTATION = 'ANNOTATION/DESELECT_ANNOTATION';
+export const SET_ANNOTATION_MODE = 'ANNOTATION/SET_ANNOTATION_MODE';
+export const UPDATE_ANNOTATION_COLOR = 'ANNOTATION/UPDATE_ANNOTATION_COLOR';
+export const UPDATE_TOOL_DEFAULTS = 'ANNOTATION/UPDATE_TOOL_DEFAULTS';
+export const ADD_COLOR_PRESET = 'ANNOTATION/ADD_COLOR_PRESET';
 
 export interface SetAnnotationsAction extends Action {
   type: typeof SET_ANNOTATIONS;
@@ -26,7 +26,7 @@ export interface DeselectAnnotationAction extends Action {
 
 export interface SetAnnotationModeAction extends Action {
   type: typeof SET_ANNOTATION_MODE;
-  payload: PdfAnnotationSubtype | null;
+  payload: StylableSubtype | null;
 }
 
 export interface UpdateAnnotationColorAction extends Action {
@@ -81,7 +81,7 @@ export function deselectAnnotation(): DeselectAnnotationAction {
   return { type: DESELECT_ANNOTATION };
 }
 
-export function setAnnotationMode(mode: PdfAnnotationSubtype | null): SetAnnotationModeAction {
+export function setAnnotationMode(mode: StylableSubtype | null): SetAnnotationModeAction {
   return {
     type: SET_ANNOTATION_MODE,
     payload: mode,

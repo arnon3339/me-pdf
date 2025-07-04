@@ -7,23 +7,36 @@ import {
   WebAlphaColor,
 } from '@embedpdf/models';
 
-interface BaseAnnotationDefaults extends WebAlphaColor {}
+export interface BaseAnnotationDefaults extends WebAlphaColor {
+  interaction: {
+    mode: string;
+    exclusive: boolean;
+    cursor?: string;
+  };
+  textSelection: boolean;
+}
 
-interface HighlightDefaults extends BaseAnnotationDefaults {
+export interface HighlightDefaults extends BaseAnnotationDefaults {
   name: 'Highlight';
 }
 
-interface UnderlineDefaults extends BaseAnnotationDefaults {
+export interface UnderlineDefaults extends BaseAnnotationDefaults {
   name: 'Underline';
 }
 
-interface StrikeoutDefaults extends BaseAnnotationDefaults {
+export interface StrikeoutDefaults extends BaseAnnotationDefaults {
   name: 'Strikeout';
 }
 
-interface SquigglyDefaults extends BaseAnnotationDefaults {
+export interface SquigglyDefaults extends BaseAnnotationDefaults {
   name: 'Squiggly';
 }
+
+export type AnnotationDefaults =
+  | HighlightDefaults
+  | UnderlineDefaults
+  | StrikeoutDefaults
+  | SquigglyDefaults;
 
 export type ToolDefaultsBySubtype = {
   [PdfAnnotationSubtype.HIGHLIGHT]: HighlightDefaults;
@@ -42,8 +55,8 @@ export type ToolDefaults<S extends PdfAnnotationSubtype> = ToolDefaultsBySubtype
 export interface AnnotationState {
   annotations: Record<number, PdfAnnotationObject[]>;
   selectedAnnotation: SelectedAnnotation | null;
-  annotationMode: PdfAnnotationSubtype | null;
-  toolDefaults: Partial<ToolDefaultsBySubtype>;
+  annotationMode: StylableSubtype | null;
+  toolDefaults: ToolDefaultsBySubtype;
   colorPresets: string[];
 }
 
@@ -65,8 +78,8 @@ export interface AnnotationCapability {
   selectAnnotation: (pageIndex: number, annotationId: number) => void;
   deselectAnnotation: () => void;
   updateAnnotationColor: (options: WebAlphaColor) => Promise<boolean>;
-  setAnnotationMode: (mode: PdfAnnotationSubtype | null) => void;
-  onStateChange: EventHook<AnnotationState>;
+  getAnnotationMode: () => StylableSubtype | null;
+  setAnnotationMode: (mode: StylableSubtype | null) => void;
   /** strongly typed – only sub-types we have defaults for */
   getToolDefaults: <S extends StylableSubtype>(subtype: S) => ToolDefaultsBySubtype[S];
   /** Partially patch a single tool’s defaults */
@@ -78,6 +91,8 @@ export interface AnnotationCapability {
   getColorPresets: () => string[];
   /** append a swatch (deduped by RGBA) */
   addColorPreset: (color: string) => void;
+  onStateChange: EventHook<AnnotationState>;
+  onModeChange: EventHook<StylableSubtype | null>;
 }
 
 export interface GetPageAnnotationsOptions {

@@ -20,3 +20,4 @@ export const AnnotationPluginPackage: PluginPackage<
 export * from './annotation-plugin';
 export * from './types';
 export * from './manifest';
+export * from './selectors';

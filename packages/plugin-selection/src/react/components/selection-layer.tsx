@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ignore, PdfErrorCode, PdfPageGeometry, Rect } from '@embedpdf/models';
-import { useCursor, usePointerHandlers } from '@embedpdf/plugin-interaction-manager/react';
-import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
+import {
+  useCursor,
+  useInteractionManagerCapability,
+  usePointerHandlers,
+} from '@embedpdf/plugin-interaction-manager/react';
+import { PointerEventHandlersWithLifecycle } from '@embedpdf/plugin-interaction-manager';
 import { glyphAt } from '@embedpdf/plugin-selection';
 
 import { useSelectionCapability } from '../hooks';
@@ -14,7 +18,8 @@ type Props = {
 
 export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243)' }: Props) {
   const { provides: sel } = useSelectionCapability();
-  const { register } = usePointerHandlers({ modeId: 'default', pageIndex });
+  const { provides: im } = useInteractionManagerCapability();
+  const { register } = usePointerHandlers({ pageIndex });
   const [rects, setRects] = useState<Array<Rect>>([]);
   const { setCursor, removeCursor } = useCursor();
 
@@ -22,7 +27,12 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
   useEffect(() => {
     if (!sel) return;
     return sel.onSelectionChange(() => {
-      setRects(sel.getHighlightRectsForPage(pageIndex));
+      const mode = im?.getActiveMode();
+      if (mode === 'default') {
+        setRects(sel.getHighlightRectsForPage(pageIndex));
+      } else {
+        setRects([]);
+      }
     });
   }, [sel, pageIndex]);
 
@@ -48,10 +58,10 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
   }, [sel, pageIndex]);
 
   const handlers = useMemo(
-    (): PointerEventHandlers => ({
-      onPointerDown: (point) => {
+    (): PointerEventHandlersWithLifecycle<PointerEvent> => ({
+      onPointerDown: (point, _evt, modeId) => {
         if (!sel) return;
-
+        if (!sel.isEnabledForMode(modeId)) return;
         // clear the selection
         sel.clear();
         const task = sel.getGeometry(pageIndex);
@@ -60,8 +70,9 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
           if (g !== -1) sel.begin(pageIndex, g);
         }, ignore);
       },
-      onPointerMove: (point) => {
+      onPointerMove: (point, _evt, modeId) => {
         if (!sel) return;
+        if (!sel.isEnabledForMode(modeId)) return;
         const g = cachedGlyphAt(point);
         if (g !== -1) {
           setCursor('selection-text', 'text', 10);
@@ -70,9 +81,16 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
         }
         if (g !== -1) sel.update(pageIndex, g);
       },
-      onPointerUp: () => {
+      onPointerUp: (_point, _evt, modeId) => {
         if (!sel) return;
+        if (!sel.isEnabledForMode(modeId)) return;
         sel.end();
+      },
+      onHandlerActiveEnd(modeId) {
+        if (!sel) return;
+        if (!sel.isEnabledForMode(modeId)) return;
+
+        sel.clear();
       },
     }),
     [sel, pageIndex, cachedGlyphAt],

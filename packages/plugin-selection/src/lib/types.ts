@@ -48,4 +48,9 @@ export interface SelectionCapability {
   onSelectionChange: EventHook<SelectionRangeX | null>;
   onTextRetrieved: EventHook<string[]>;
   onCopyToClipboard: EventHook<string>;
+  /** Tell the selection plugin that text selection should stay
+      enabled while <modeId> is active.                    */
+  enableForMode(modeId: string): void;
+  /** Quick check used by SelectionLayer during pointer events. */
+  isEnabledForMode(modeId: string): boolean;
 }

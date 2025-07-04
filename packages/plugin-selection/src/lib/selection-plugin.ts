@@ -46,6 +46,9 @@ export class SelectionPlugin extends BasePlugin<
   static readonly id = 'selection' as const;
   private doc?: PdfDocumentObject;
 
+  /** Modes that should trigger text-selection logic */
+  private enabledModes = new Set<string>(['default']);
+
   /* interactive state */
   private selecting = false;
   private anchor?: { page: number; index: number };
@@ -90,6 +93,8 @@ export class SelectionPlugin extends BasePlugin<
       onTextRetrieved: this.textRetrieved$.on,
       getSelectedText: () => this.getSelectedText(),
       copyToClipboard: () => this.copyToClipboard(),
+      enableForMode: (id: string) => this.enabledModes.add(id),
+      isEnabledForMode: (id: string) => this.enabledModes.has(id),
     };
   }
 

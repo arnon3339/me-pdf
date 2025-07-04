@@ -8,7 +8,7 @@ export const manifest: PluginManifest<AnnotationPluginConfig> = {
   name: 'Annotation Plugin',
   version: '1.0.0',
   provides: ['annotation'],
-  requires: ['interaction-manager'],
+  requires: ['interaction-manager', 'selection'],
   optional: [],
   defaultConfig: {
     enabled: true,

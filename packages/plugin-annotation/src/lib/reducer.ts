@@ -33,21 +33,41 @@ export const initialState = (config: AnnotationPluginConfig): AnnotationState =>
         name: 'Highlight',
         color: '#FFCD45',
         opacity: 1,
+        interaction: {
+          mode: 'highlight',
+          exclusive: false,
+        },
+        textSelection: true,
       },
       [PdfAnnotationSubtype.UNDERLINE]: {
         name: 'Underline',
         color: '#E44234',
         opacity: 1,
+        interaction: {
+          mode: 'underline',
+          exclusive: false,
+        },
+        textSelection: true,
       },
       [PdfAnnotationSubtype.STRIKEOUT]: {
         name: 'Strikeout',
         color: '#E44234',
         opacity: 1,
+        interaction: {
+          mode: 'strikeout',
+          exclusive: false,
+        },
+        textSelection: true,
       },
       [PdfAnnotationSubtype.SQUIGGLY]: {
         name: 'Squiggly',
         color: '#E44234',
         opacity: 1,
+        interaction: {
+          mode: 'squiggly',
+          exclusive: false,
+        },
+        textSelection: true,
       },
       ...config.toolDefaults,
     },
