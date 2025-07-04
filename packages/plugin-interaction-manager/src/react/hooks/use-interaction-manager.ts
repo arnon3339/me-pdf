@@ -4,6 +4,7 @@ import {
   InteractionManagerPlugin,
   InteractionManagerState,
   PointerEventHandlers,
+  PointerEventHandlersWithLifecycle,
 } from '@embedpdf/plugin-interaction-manager';
 import { useState, useEffect } from 'react';
 
@@ -42,21 +43,35 @@ export function useCursor() {
 }
 
 interface UsePointerHandlersOptions {
-  modeId?: string;
+  modeId?: string | string[];
   pageIndex?: number;
 }
 
 export function usePointerHandlers({ modeId, pageIndex }: UsePointerHandlersOptions) {
   const { provides } = useInteractionManagerCapability();
   return {
-    register: modeId
-      ? (handlers: PointerEventHandlers) =>
-          provides?.registerHandlers({ modeId, handlers, pageIndex })
-      : (handlers: PointerEventHandlers) =>
-          provides?.registerAlways({
-            scope: pageIndex !== undefined ? { type: 'page', pageIndex } : { type: 'global' },
+    register: (
+      handlers: PointerEventHandlersWithLifecycle,
+      options?: { modeId?: string | string[]; pageIndex?: number },
+    ) => {
+      // Use provided options or fall back to hook-level options
+      const finalModeId = options?.modeId ?? modeId;
+      const finalPageIndex = options?.pageIndex ?? pageIndex;
+
+      return finalModeId
+        ? provides?.registerHandlers({
+            modeId: finalModeId,
             handlers,
-          }),
+            pageIndex: finalPageIndex,
+          })
+        : provides?.registerAlways({
+            scope:
+              finalPageIndex !== undefined
+                ? { type: 'page', pageIndex: finalPageIndex }
+                : { type: 'global' },
+            handlers,
+          });
+    },
   };
 }
 
