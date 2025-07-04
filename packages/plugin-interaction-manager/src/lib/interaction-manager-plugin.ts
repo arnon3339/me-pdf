@@ -7,6 +7,7 @@ import {
   InteractionMode,
   InteractionScope,
   PointerEventHandlers,
+  PointerEventHandlersWithLifecycle,
   RegisterAlwaysOptions,
   RegisterHandlersOptions,
 } from './types';
@@ -18,7 +19,7 @@ interface CursorClaim {
   priority: number;
 }
 
-type HandlerSet = Set<PointerEventHandlers>;
+type HandlerSet = Set<PointerEventHandlersWithLifecycle>;
 type PageHandlerMap = Map<number /*pageIdx*/, HandlerSet>;
 
 interface ModeBuckets {
@@ -39,8 +40,8 @@ export class InteractionManagerPlugin extends BasePlugin<
   private cursorClaims = new Map<string, CursorClaim>();
   private buckets = new Map<string, ModeBuckets>();
 
-  private alwaysGlobal = new Set<PointerEventHandlers>();
-  private alwaysPage = new Map<number, Set<PointerEventHandlers>>();
+  private alwaysGlobal = new Set<PointerEventHandlersWithLifecycle>();
+  private alwaysPage = new Map<number, Set<PointerEventHandlersWithLifecycle>>();
 
   private readonly onModeChange$ = createEmitter<InteractionManagerState>();
   private readonly onHandlerChange$ = createEmitter<InteractionManagerState>();
@@ -88,11 +89,66 @@ export class InteractionManagerPlugin extends BasePlugin<
     }
     if (mode === this.state.activeMode) return;
 
+    const previousMode = this.state.activeMode;
     this.cursorClaims.clear(); // prevent cursor leaks
+
+    this.notifyHandlersInactive(previousMode);
 
     this.dispatch(activateMode(mode));
     this.emitCursor();
+
+    // Call lifecycle hooks for handlers going active
+    this.notifyHandlersActive(mode);
+
     this.onModeChange$.emit({ ...this.state, activeMode: mode });
+  }
+
+  private notifyHandlersActive(modeId: string) {
+    const mode = this.modes.get(modeId);
+    if (!mode) return;
+
+    const bucket = this.buckets.get(modeId);
+    if (!bucket) return;
+
+    // Notify global handlers if mode is global
+    if (mode.scope === 'global') {
+      bucket.global.forEach((handler) => {
+        handler.onHandlerActiveStart?.(modeId);
+      });
+    }
+
+    // Notify page handlers if mode is page
+    if (mode.scope === 'page') {
+      bucket.page.forEach((handlerSet, pageIndex) => {
+        handlerSet.forEach((handler) => {
+          handler.onHandlerActiveStart?.(modeId);
+        });
+      });
+    }
+  }
+
+  private notifyHandlersInactive(modeId: string) {
+    const mode = this.modes.get(modeId);
+    if (!mode) return;
+
+    const bucket = this.buckets.get(modeId);
+    if (!bucket) return;
+
+    // Notify global handlers if mode is global
+    if (mode.scope === 'global') {
+      bucket.global.forEach((handler) => {
+        handler.onHandlerActiveEnd?.(modeId);
+      });
+    }
+
+    // Notify page handlers if mode is page
+    if (mode.scope === 'page') {
+      bucket.page.forEach((handlerSet, pageIndex) => {
+        handlerSet.forEach((handler) => {
+          handler.onHandlerActiveEnd?.(modeId);
+        });
+      });
+    }
   }
 
   private registerMode(mode: InteractionMode) {
@@ -103,28 +159,43 @@ export class InteractionManagerPlugin extends BasePlugin<
   }
 
   /** ---------- pointer-handler handling ------------ */
-  private registerHandlers({
-    modeId,
-    handlers,
-    pageIndex,
-  }: {
-    modeId: string;
-    handlers: PointerEventHandlers;
-    pageIndex?: number;
-  }): () => void {
-    const bucket = this.buckets.get(modeId);
-    if (!bucket) throw new Error(`unknown mode '${modeId}'`);
-    if (pageIndex == null) {
-      bucket.global.add(handlers);
-      this.onHandlerChange$.emit({ ...this.state });
-      return () => bucket.global.delete(handlers);
+  private registerHandlers({ modeId, handlers, pageIndex }: RegisterHandlersOptions): () => void {
+    const modeIds = Array.isArray(modeId) ? modeId : [modeId];
+    const cleanupFunctions: (() => void)[] = [];
+
+    for (const id of modeIds) {
+      const bucket = this.buckets.get(id);
+      if (!bucket) throw new Error(`unknown mode '${id}'`);
+
+      if (pageIndex == null) {
+        bucket.global.add(handlers);
+      } else {
+        const set = bucket.page.get(pageIndex) ?? new Set();
+        set.add(handlers);
+        bucket.page.set(pageIndex, set);
+      }
+
+      // Create cleanup function for this specific mode
+      cleanupFunctions.push(() => {
+        if (pageIndex == null) {
+          bucket.global.delete(handlers);
+        } else {
+          const set = bucket.page.get(pageIndex);
+          if (set) {
+            set.delete(handlers);
+            if (set.size === 0) {
+              bucket.page.delete(pageIndex);
+            }
+          }
+        }
+      });
     }
-    const set = bucket.page.get(pageIndex) ?? new Set();
-    set.add(handlers);
-    bucket.page.set(pageIndex, set);
+
     this.onHandlerChange$.emit({ ...this.state });
+
+    // Return a cleanup function that removes handlers from all registered modes
     return () => {
-      set.delete(handlers);
+      cleanupFunctions.forEach((cleanup) => cleanup());
       this.onHandlerChange$.emit({ ...this.state });
     };
   }
