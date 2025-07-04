@@ -32,12 +32,18 @@ export interface EmbedPdfPointerEvent {
 }
 
 export interface PointerEventHandlers<T = EmbedPdfPointerEvent> {
-  onPointerDown?(pos: Position, evt: T): void;
-  onPointerUp?(pos: Position, evt: T): void;
-  onPointerMove?(pos: Position, evt: T): void;
-  onPointerEnter?(pos: Position, evt: T): void;
-  onPointerLeave?(pos: Position, evt: T): void;
-  onPointerCancel?(pos: Position, evt: T): void;
+  onPointerDown?(pos: Position, evt: T, modeId: string): void;
+  onPointerUp?(pos: Position, evt: T, modeId: string): void;
+  onPointerMove?(pos: Position, evt: T, modeId: string): void;
+  onPointerEnter?(pos: Position, evt: T, modeId: string): void;
+  onPointerLeave?(pos: Position, evt: T, modeId: string): void;
+  onPointerCancel?(pos: Position, evt: T, modeId: string): void;
+}
+
+export interface PointerEventHandlersWithLifecycle<T = EmbedPdfPointerEvent>
+  extends PointerEventHandlers<T> {
+  onHandlerActiveStart?(modeId: string): void;
+  onHandlerActiveEnd?(modeId: string): void;
 }
 
 interface GlobalInteractionScope {
@@ -53,9 +59,9 @@ export type InteractionScope = GlobalInteractionScope | PageInteractionScope;
 
 export interface RegisterHandlersOptions {
   /** the mode the handlers belong to                     */
-  modeId: string;
+  modeId: string | string[];
   /** callbacks                                            */
-  handlers: PointerEventHandlers;
+  handlers: PointerEventHandlersWithLifecycle;
   /** if omitted ⇒ handlers listen on the *global* layer   */
   pageIndex?: number;
 }

@@ -11,8 +11,8 @@ export function mergeHandlers(list: PointerEventHandlers[]): PointerEventHandler
   ];
   const out: Partial<PointerEventHandlers> = {};
   for (const k of keys) {
-    out[k] = (evt: any, nativeEvt: any) => {
-      for (const h of list) h[k]?.(evt, nativeEvt);
+    out[k] = (evt: any, nativeEvt: any, modeId: string) => {
+      for (const h of list) h[k]?.(evt, nativeEvt, modeId);
     };
   }
   return out as PointerEventHandlers;
