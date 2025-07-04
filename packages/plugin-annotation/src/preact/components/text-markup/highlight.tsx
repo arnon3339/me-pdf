@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+import { JSX } from 'preact';
 import { Rect } from '@embedpdf/models';
 import { HighlightDefaults } from '@embedpdf/plugin-annotation';
 

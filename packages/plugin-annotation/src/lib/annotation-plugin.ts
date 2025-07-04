@@ -16,6 +16,7 @@ import {
   WebAlphaColor,
 } from '@embedpdf/models';
 import {
+  ActiveTool,
   AnnotationCapability,
   AnnotationPluginConfig,
   AnnotationState,
@@ -58,6 +59,10 @@ export class AnnotationPlugin extends BasePlugin<
   /** The inverse map for quick lookup in onModeChange().          */
   private readonly subtypeByMode = new Map<string, StylableSubtype>();
   private readonly modeChange$ = createBehaviorEmitter<StylableSubtype | null>();
+  private readonly activeTool$ = createBehaviorEmitter<ActiveTool>({
+    mode: null,
+    defaults: null,
+  });
 
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
@@ -150,11 +155,28 @@ export class AnnotationPlugin extends BasePlugin<
       addColorPreset: (color) => this.dispatch(addColorPreset(color)),
       onStateChange: this.state$.on,
       onModeChange: this.modeChange$.on,
+      onActiveToolChange: this.activeTool$.on,
     };
   }
 
-  override onStoreUpdated(_prevState: AnnotationState, newState: AnnotationState): void {
-    this.state$.emit(newState);
+  private emitActiveTool(state: AnnotationState) {
+    const mode = state.annotationMode;
+    this.activeTool$.emit({
+      mode,
+      defaults: mode ? state.toolDefaults[mode] : null,
+    });
+  }
+
+  override onStoreUpdated(prev: AnnotationState, next: AnnotationState): void {
+    this.state$.emit(next);
+
+    if (
+      prev.annotationMode !== next.annotationMode ||
+      prev.toolDefaults[prev.annotationMode ?? PdfAnnotationSubtype.HIGHLIGHT] !==
+        next.toolDefaults[next.annotationMode ?? PdfAnnotationSubtype.HIGHLIGHT]
+    ) {
+      this.emitActiveTool(next);
+    }
   }
 
   private getAllAnnotations(doc: PdfDocumentObject) {

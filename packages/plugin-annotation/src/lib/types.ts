@@ -52,6 +52,11 @@ export type ToolDefaults<S extends PdfAnnotationSubtype> = ToolDefaultsBySubtype
   keyof ToolDefaultsBySubtype
 >];
 
+export interface ActiveTool {
+  mode: StylableSubtype | null;
+  defaults: AnnotationDefaults | null; // ⇐ null when no mode active
+}
+
 export interface AnnotationState {
   annotations: Record<number, PdfAnnotationObject[]>;
   selectedAnnotation: SelectedAnnotation | null;
@@ -93,6 +98,7 @@ export interface AnnotationCapability {
   addColorPreset: (color: string) => void;
   onStateChange: EventHook<AnnotationState>;
   onModeChange: EventHook<StylableSubtype | null>;
+  onActiveToolChange: EventHook<ActiveTool>;
 }
 
 export interface GetPageAnnotationsOptions {

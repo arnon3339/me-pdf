@@ -1,74 +1,85 @@
+/** @jsxImportSource preact */
+import { JSX } from 'preact';
 import { PdfAnnotationSubtype, Rect } from '@embedpdf/models';
 import {
-  AnnotationDefaults,
+  ActiveTool,
   HighlightDefaults,
-  StylableSubtype,
+  SquigglyDefaults,
+  StrikeoutDefaults,
+  UnderlineDefaults,
 } from '@embedpdf/plugin-annotation';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
+
 import { useEffect, useState } from 'preact/hooks';
 import { useAnnotationCapability } from '../hooks';
 import { Highlight } from './text-markup/highlight';
+import { Squiggly } from './text-markup/squiggly';
+import { Underline } from './text-markup/underline';
+import { Strikeout } from './text-markup/strikeout';
 
 interface TextMarkupProps {
   pageIndex: number;
   scale: number;
 }
 
-interface ActiveToolState {
-  mode: StylableSubtype;
-  defaults: AnnotationDefaults;
-}
-
 export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
   const { provides: selectionProvides } = useSelectionCapability();
   const { provides: annotationProvides } = useAnnotationCapability();
   const [rects, setRects] = useState<Array<Rect>>([]);
-  const [activeTool, setActiveTool] = useState<ActiveToolState | null>(null);
+  const [activeTool, setActiveTool] = useState<ActiveTool>({ mode: null, defaults: null });
 
   useEffect(() => {
     if (!selectionProvides) return;
-    if (!annotationProvides) return;
 
-    const selectionChange = selectionProvides.onSelectionChange(() => {
+    const off = selectionProvides.onSelectionChange(() => {
       setRects(selectionProvides.getHighlightRectsForPage(pageIndex));
     });
+    return off;
+  }, [selectionProvides, pageIndex]);
 
-    const modeChange = annotationProvides.onModeChange((mode) => {
-      setActiveTool(
-        mode
-          ? {
-              mode,
-              defaults: annotationProvides.getToolDefaults(mode),
-            }
-          : null,
-      );
-    });
+  useEffect(() => {
+    if (!annotationProvides) return;
 
-    return () => {
-      selectionChange();
-      modeChange();
-    };
-  }, [selectionProvides, annotationProvides, pageIndex]);
+    const off = annotationProvides.onActiveToolChange(setActiveTool);
+    return off;
+  }, [annotationProvides]);
 
   if (!activeTool) return null;
 
-  const renderTextMarkup = () => {
-    switch (activeTool.mode) {
-      case PdfAnnotationSubtype.HIGHLIGHT:
-        return (
-          <Highlight
-            activeTool={activeTool.defaults as HighlightDefaults}
-            rects={rects}
-            scale={scale}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  console.log(activeTool);
-  console.log(rects);
-
-  return <>{renderTextMarkup()}</>;
+  switch (activeTool.mode) {
+    case PdfAnnotationSubtype.UNDERLINE:
+      return (
+        <Underline
+          activeTool={activeTool.defaults as UnderlineDefaults}
+          rects={rects}
+          scale={scale}
+        />
+      );
+    case PdfAnnotationSubtype.HIGHLIGHT:
+      return (
+        <Highlight
+          activeTool={activeTool.defaults as HighlightDefaults}
+          rects={rects}
+          scale={scale}
+        />
+      );
+    case PdfAnnotationSubtype.STRIKEOUT:
+      return (
+        <Strikeout
+          activeTool={activeTool.defaults as StrikeoutDefaults}
+          rects={rects}
+          scale={scale}
+        />
+      );
+    case PdfAnnotationSubtype.SQUIGGLY:
+      return (
+        <Squiggly
+          activeTool={activeTool.defaults as SquigglyDefaults}
+          rects={rects}
+          scale={scale}
+        />
+      );
+    default:
+      return null;
+  }
 }
