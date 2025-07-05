@@ -285,10 +285,7 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
         color: c,
         opacity: currentAlpha,
       };
-      annotation
-        .updateAnnotationColor(patch)
-        .then((value) => console.log('value', value))
-        .catch((error) => console.error('error', error));
+      annotation.updateAnnotationColor(patch);
     } else if (annotationMode != null) {
       /* tweak defaults for the active tool */
       const subtype = annotationMode as StylableSubtype;
@@ -311,11 +308,7 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
           color: currentColor.color,
           opacity: opacity,
         };
-
-        annotation
-          .updateAnnotationColor(patch)
-          .then((value) => console.log('opacity updated', value))
-          .catch((error) => console.error('opacity error', error));
+        annotation.updateAnnotationColor(patch);
       }
     } else if (annotationMode != null) {
       /* update tool defaults opacity */

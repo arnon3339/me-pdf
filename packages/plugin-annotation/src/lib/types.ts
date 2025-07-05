@@ -5,6 +5,7 @@ import {
   Task,
   PdfAnnotationSubtype,
   WebAlphaColor,
+  PdfTask,
 } from '@embedpdf/models';
 
 export interface BaseAnnotationDefaults extends WebAlphaColor {
@@ -82,7 +83,7 @@ export interface AnnotationCapability {
   ) => Task<PdfAnnotationObject[], PdfErrorReason>;
   selectAnnotation: (pageIndex: number, annotationId: number) => void;
   deselectAnnotation: () => void;
-  updateAnnotationColor: (options: WebAlphaColor) => Promise<boolean>;
+  updateAnnotationColor: (options: WebAlphaColor) => PdfTask<boolean>;
   getAnnotationMode: () => StylableSubtype | null;
   setAnnotationMode: (mode: StylableSubtype | null) => void;
   /** strongly typed – only sub-types we have defaults for */

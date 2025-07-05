@@ -56,6 +56,8 @@ export class SelectionPlugin extends BasePlugin<
   private readonly selChange$ = createBehaviorEmitter<SelectionState['selection']>();
   private readonly textRetrieved$ = createBehaviorEmitter<string[]>();
   private readonly copyToClipboard$ = createEmitter<string>();
+  private readonly beginSelection$ = createEmitter<{ page: number; index: number }>();
+  private readonly endSelection$ = createEmitter<void>();
 
   constructor(
     id: string,
@@ -91,6 +93,8 @@ export class SelectionPlugin extends BasePlugin<
       onCopyToClipboard: this.copyToClipboard$.on,
       onSelectionChange: this.selChange$.on,
       onTextRetrieved: this.textRetrieved$.on,
+      onBeginSelection: this.beginSelection$.on,
+      onEndSelection: this.endSelection$.on,
       getSelectedText: () => this.getSelectedText(),
       copyToClipboard: () => this.copyToClipboard(),
       enableForMode: (id: string) => this.enabledModes.add(id),
@@ -121,12 +125,14 @@ export class SelectionPlugin extends BasePlugin<
     this.selecting = true;
     this.anchor = { page, index };
     this.dispatch(startSelection());
+    this.beginSelection$.emit({ page, index });
   }
 
   private endSelection() {
     this.selecting = false;
     this.anchor = undefined;
     this.dispatch(endSelection());
+    this.endSelection$.emit();
   }
 
   private clearSelection() {

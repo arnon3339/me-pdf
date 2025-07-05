@@ -14,6 +14,9 @@ import {
   Task,
   PdfAnnotationSubtype,
   WebAlphaColor,
+  PdfTask,
+  PdfTaskHelper,
+  PdfErrorCode,
 } from '@embedpdf/models';
 import {
   ActiveTool,
@@ -125,7 +128,7 @@ export class AnnotationPlugin extends BasePlugin<
       deselectAnnotation: () => {
         this.dispatch(deselectAnnotation());
       },
-      updateAnnotationColor: async (options: WebAlphaColor) => {
+      updateAnnotationColor: (options: WebAlphaColor) => {
         return this.updateSelectedAnnotationColor(options);
       },
       getAnnotationMode: () => {
@@ -192,13 +195,13 @@ export class AnnotationPlugin extends BasePlugin<
     const doc = this.coreState.core.document;
 
     if (!doc) {
-      throw new Error('document does not open');
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Document not found' });
     }
 
     const page = doc.pages.find((p) => p.index === pageIndex);
 
     if (!page) {
-      throw new Error('page does not open');
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Page not found' });
     }
 
     return this.engine.getPageAnnotations(doc, page);
@@ -218,38 +221,37 @@ export class AnnotationPlugin extends BasePlugin<
     }
   }
 
-  private async updateSelectedAnnotationColor(webAlphaColor: WebAlphaColor): Promise<boolean> {
+  private updateSelectedAnnotationColor(webAlphaColor: WebAlphaColor): PdfTask<boolean> {
     const selected = this.state.selectedAnnotation;
 
     if (!selected) {
-      return false;
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.NotFound,
+        message: 'No annotation selected',
+      });
     }
 
     // Only allow color updates for highlight annotations
     if (selected.annotation.type !== PdfAnnotationSubtype.HIGHLIGHT) {
-      return false;
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.NotSupport,
+        message: 'Only highlight annotations can be updated',
+      });
     }
 
     const doc = this.coreState.core.document;
     if (!doc) {
-      return false;
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Document not found' });
     }
 
     const page = doc.pages.find((p) => p.index === selected.pageIndex);
     if (!page) {
-      return false;
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Page not found' });
     }
 
     // Update the annotation in the local state first
     this.dispatch(updateAnnotationColor(selected.pageIndex, selected.annotationId, webAlphaColor));
 
-    try {
-      const task = this.engine.updateAnnotationColor(doc, page, selected.annotation, webAlphaColor);
-
-      return task.toPromise();
-    } catch (error) {
-      console.error('Failed to update annotation color:', error);
-      return false;
-    }
+    return this.engine.updateAnnotationColor(doc, page, selected.annotation, webAlphaColor);
   }
 }

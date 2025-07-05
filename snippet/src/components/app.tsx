@@ -4,7 +4,7 @@ import styles from '../styles/index.css';
 import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration } from '@embedpdf/core';
 import { usePdfiumEngine } from '@embedpdf/engines/preact';
-import { pdfAlphaColorToHexOpacity, PdfAnnotationSubtype, Rotation } from '@embedpdf/models';
+import { PdfAnnotationSubtype, Rotation } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
   ViewportPluginConfig,
