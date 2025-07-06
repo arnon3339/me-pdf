@@ -13,8 +13,6 @@ import {
   PdfErrorReason,
   Task,
   PdfAnnotationSubtype,
-  WebAlphaColor,
-  PdfTask,
   PdfTaskHelper,
   PdfErrorCode,
 } from '@embedpdf/models';
@@ -25,6 +23,7 @@ import {
   AnnotationState,
   BaseAnnotationDefaults,
   GetPageAnnotationsOptions,
+  HistoryInfo,
   StylableSubtype,
 } from './types';
 import {
@@ -32,10 +31,14 @@ import {
   selectAnnotation,
   deselectAnnotation,
   setAnnotationMode,
-  updateAnnotationColor,
   AnnotationAction,
   updateToolDefaults,
   addColorPreset,
+  createAnnotation,
+  patchAnnotation,
+  deleteAnnotation,
+  redo,
+  undo,
 } from './actions';
 import {
   InteractionManagerCapability,
@@ -52,6 +55,8 @@ export class AnnotationPlugin extends BasePlugin<
 > {
   static readonly id = 'annotation' as const;
 
+  private readonly config: AnnotationPluginConfig;
+
   private engine: PdfEngine;
   private readonly state$ = createBehaviorEmitter<AnnotationState>();
   private readonly interactionManager: InteractionManagerCapability | null;
@@ -66,10 +71,21 @@ export class AnnotationPlugin extends BasePlugin<
     mode: null,
     defaults: null,
   });
+  private readonly history$ = createBehaviorEmitter<HistoryInfo>({
+    canUndo: false,
+    canRedo: false,
+    hasPendingChanges: false,
+  });
 
-  constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
+  constructor(
+    id: string,
+    registry: PluginRegistry,
+    engine: PdfEngine,
+    config: AnnotationPluginConfig,
+  ) {
     super(id, registry);
     this.engine = engine;
+    this.config = config;
 
     const selection = registry.getPlugin<SelectionPlugin>('selection');
     this.selection = selection?.provides() ?? null;
@@ -96,6 +112,33 @@ export class AnnotationPlugin extends BasePlugin<
         this.dispatch(setAnnotationMode(newSubtype));
         this.modeChange$.emit(newSubtype);
       }
+    });
+
+    this.selection?.onEndSelection(() => {
+      if (!this.state.annotationMode) return;
+
+      const formattedSelection = this.selection?.getFormattedSelection();
+      if (!formattedSelection) return;
+
+      for (const selection of formattedSelection) {
+        const rect = selection.rect;
+        const segmentRects = selection.segmentRects;
+        const type = this.state.annotationMode;
+        const color = this.state.toolDefaults[type].color;
+        const opacity = this.state.toolDefaults[type].opacity;
+
+        this.createAnnotation(selection.pageIndex, {
+          type,
+          rect,
+          segmentRects,
+          color,
+          opacity,
+          pageIndex: selection.pageIndex,
+          id: Date.now(),
+        });
+      }
+
+      this.selection?.clear();
     });
   }
 
@@ -128,9 +171,6 @@ export class AnnotationPlugin extends BasePlugin<
       deselectAnnotation: () => {
         this.dispatch(deselectAnnotation());
       },
-      updateAnnotationColor: (options: WebAlphaColor) => {
-        return this.updateSelectedAnnotationColor(options);
-      },
       getAnnotationMode: () => {
         return this.state.annotationMode;
       },
@@ -156,9 +196,23 @@ export class AnnotationPlugin extends BasePlugin<
       },
       getColorPresets: () => [...this.state.colorPresets],
       addColorPreset: (color) => this.dispatch(addColorPreset(color)),
+      createAnnotation: (pageIndex: number, annotation: PdfAnnotationObject) =>
+        this.createAnnotation(pageIndex, annotation),
+      updateAnnotation: (
+        pageIndex: number,
+        annotationId: number,
+        patch: Partial<PdfAnnotationObject>,
+      ) => this.updateAnnotation(pageIndex, annotationId, patch),
+      deleteAnnotation: (pageIndex: number, annotationId: number) =>
+        this.deleteAnnotation(pageIndex, annotationId),
+      undo: () => this.dispatch(undo()),
+      redo: () => this.dispatch(redo()),
+      canUndo: () => this.state.past.length > 0,
+      canRedo: () => this.state.future.length > 0,
       onStateChange: this.state$.on,
       onModeChange: this.modeChange$.on,
       onActiveToolChange: this.activeTool$.on,
+      onHistoryChange: this.history$.on,
     };
   }
 
@@ -172,7 +226,6 @@ export class AnnotationPlugin extends BasePlugin<
 
   override onStoreUpdated(prev: AnnotationState, next: AnnotationState): void {
     this.state$.emit(next);
-
     if (
       prev.annotationMode !== next.annotationMode ||
       prev.toolDefaults[prev.annotationMode ?? PdfAnnotationSubtype.HIGHLIGHT] !==
@@ -180,6 +233,11 @@ export class AnnotationPlugin extends BasePlugin<
     ) {
       this.emitActiveTool(next);
     }
+    this.history$.emit({
+      canUndo: next.past.length > 0,
+      canRedo: next.future.length > 0,
+      hasPendingChanges: next.hasPendingChanges,
+    });
   }
 
   private getAllAnnotations(doc: PdfDocumentObject) {
@@ -208,50 +266,28 @@ export class AnnotationPlugin extends BasePlugin<
   }
 
   private selectAnnotation(pageIndex: number, annotationId: number) {
-    const pageAnnotations = this.state.annotations[pageIndex];
-
-    if (!pageAnnotations) {
-      return;
-    }
-
-    const annotation = pageAnnotations.find((a) => a.id === annotationId);
-
-    if (annotation) {
-      this.dispatch(selectAnnotation(pageIndex, annotationId, annotation));
-    }
+    this.dispatch(selectAnnotation(pageIndex, annotationId));
   }
 
-  private updateSelectedAnnotationColor(webAlphaColor: WebAlphaColor): PdfTask<boolean> {
-    const selected = this.state.selectedAnnotation;
-
-    if (!selected) {
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.NotFound,
-        message: 'No annotation selected',
-      });
-    }
-
-    // Only allow color updates for highlight annotations
-    if (selected.annotation.type !== PdfAnnotationSubtype.HIGHLIGHT) {
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.NotSupport,
-        message: 'Only highlight annotations can be updated',
-      });
-    }
-
-    const doc = this.coreState.core.document;
-    if (!doc) {
-      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Document not found' });
-    }
-
-    const page = doc.pages.find((p) => p.index === selected.pageIndex);
-    if (!page) {
-      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Page not found' });
-    }
-
-    // Update the annotation in the local state first
-    this.dispatch(updateAnnotationColor(selected.pageIndex, selected.annotationId, webAlphaColor));
-
-    return this.engine.updateAnnotationColor(doc, page, selected.annotation, webAlphaColor);
+  private async createAnnotation(pageIndex: number, anno: PdfAnnotationObject) {
+    /* local optimistic insert */
+    this.dispatch(createAnnotation(pageIndex, anno));
+    if (this.config.autoCommit !== false) await this.commit();
   }
+
+  private async updateAnnotation(
+    pageIndex: number,
+    annotationId: number,
+    patch: Partial<PdfAnnotationObject>,
+  ) {
+    this.dispatch(patchAnnotation(pageIndex, annotationId, patch));
+    if (this.config.autoCommit !== false) await this.commit();
+  }
+
+  private async deleteAnnotation(pageIndex: number, annotationId: number) {
+    this.dispatch(deleteAnnotation(pageIndex, annotationId));
+    if (this.config.autoCommit !== false) await this.commit();
+  }
+
+  private async commit() {}
 }

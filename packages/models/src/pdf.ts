@@ -602,11 +602,6 @@ export interface PdfAnnotationObjectBase {
   type: PdfAnnotationSubtype;
 
   /**
-   * Status of pdf annotation
-   */
-  status: PdfAnnotationObjectStatus;
-
-  /**
    * The index of page that this annotation belong to
    */
   pageIndex: number;
@@ -954,7 +949,7 @@ export interface PdfHighlightAnnoObject extends PdfAnnotationObjectBase {
   /**
    * Text contents of the highlight annotation
    */
-  contents: string;
+  contents?: string;
 
   /**
    * color of highlight annotation
@@ -1127,7 +1122,7 @@ export interface PdfSquigglyAnnoObject extends PdfAnnotationObjectBase {
   /**
    * Text contents of the highlight annotation
    */
-  contents: string;
+  contents?: string;
   /**
    * color of strike out annotation
    */
@@ -1154,7 +1149,7 @@ export interface PdfUnderlineAnnoObject extends PdfAnnotationObjectBase {
   /**
    * Text contents of the highlight annotation
    */
-  contents: string;
+  contents?: string;
   /**
    * color of strike out annotation
    */
@@ -1181,7 +1176,7 @@ export interface PdfStrikeOutAnnoObject extends PdfAnnotationObjectBase {
   /**
    * Text contents of the strike out annotation
    */
-  contents: string;
+  contents?: string;
 
   /**
    * color of strike out annotation

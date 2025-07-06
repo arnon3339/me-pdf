@@ -2289,7 +2289,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (!this.setQuadPointsAnno(page, annotationPtr, annotation.segmentRects)) {
       return false;
     }
-    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents)) {
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
@@ -3535,7 +3535,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const inReplyToId = this.getInReplyToId(pagePtr, annotationPtr);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.TEXT,
@@ -3574,7 +3573,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.FREETEXT,
@@ -3651,7 +3649,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     );
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.LINK,
@@ -3690,7 +3687,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const field = this.readPdfWidgetAnnoField(formHandle, annotationPtr);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.WIDGET,
@@ -3724,7 +3720,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.FILEATTACHMENT,
@@ -3784,7 +3779,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.INK,
@@ -3819,7 +3813,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.POLYGON,
@@ -3854,7 +3847,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.POLYLINE,
@@ -3909,7 +3901,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.free(endPointPtr);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.LINE,
@@ -3948,7 +3939,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.HIGHLIGHT,
@@ -3987,7 +3977,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.UNDERLINE,
@@ -4026,7 +4015,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.STRIKEOUT,
@@ -4065,7 +4053,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.SQUIGGLY,
@@ -4101,7 +4088,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.CARET,
@@ -4147,7 +4133,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.STAMP,
@@ -4362,7 +4347,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.CIRCLE,
@@ -4395,7 +4379,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.SQUARE,
@@ -4430,7 +4413,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
 
     return {
-      status: PdfAnnotationObjectStatus.Committed,
       pageIndex: page.index,
       id: index,
       type,

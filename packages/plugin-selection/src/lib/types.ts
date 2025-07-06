@@ -25,9 +25,19 @@ export interface SelectionState {
   selecting: boolean;
 }
 
+export interface FormattedSelection {
+  pageIndex: number;
+  rect: Rect;
+  segmentRects: Rect[];
+}
+
 export interface SelectionCapability {
   /* geometry (cached) */
   getGeometry(page: number): PdfTask<PdfPageGeometry>;
+  /* formatted selection for all pages */
+  getFormattedSelection(): FormattedSelection[];
+  /* formatted selection for one page */
+  getFormattedSelectionForPage(page: number): FormattedSelection | null;
   /* highlight rectangles for one page */
   getHighlightRectsForPage(page: number): Rect[];
   /* highlight rectangles for all pages */

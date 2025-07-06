@@ -8,13 +8,33 @@ import {
   PdfTask,
 } from '@embedpdf/models';
 
+/* Metadata tracked per anno */
+export type CommitState =
+  | 'new' // created locally, not yet written to the PDF
+  | 'dirty' // exists remotely, but local fields diverge
+  | 'synced' // identical to the PDF
+  | 'ignored'; // managed by a different plugin – never auto-committed
+
+export interface TrackedAnnotation {
+  /**
+   * If the engine has already created the annotation in the PDF
+   * this is the definitive id coming from the engine.
+   * It is **never** cleared once set.
+   */
+  pdfId?: number;
+  /** local commit bookkeeping */
+  commitState: CommitState;
+  /** the actual annotation object */
+  object: PdfAnnotationObject;
+}
+
 export interface BaseAnnotationDefaults extends WebAlphaColor {
   interaction: {
     mode: string;
     exclusive: boolean;
     cursor?: string;
   };
-  textSelection: boolean;
+  textSelection?: boolean;
 }
 
 export interface HighlightDefaults extends BaseAnnotationDefaults {
@@ -59,22 +79,41 @@ export interface ActiveTool {
 }
 
 export interface AnnotationState {
-  annotations: Record<number, PdfAnnotationObject[]>;
-  selectedAnnotation: SelectedAnnotation | null;
+  pages: Record<number, string[]>; // pageIndex → list of UIDs
+  byUid: Record<string, TrackedAnnotation>; // UID → latest object
+
+  selectedUid: string | null;
   annotationMode: StylableSubtype | null;
+
   toolDefaults: ToolDefaultsBySubtype;
   colorPresets: string[];
+
+  past: HistorySnapshot[];
+  future: HistorySnapshot[];
+  hasPendingChanges: boolean;
 }
 
-export interface SelectedAnnotation {
-  pageIndex: number;
-  annotationId: number;
-  annotation: PdfAnnotationObject;
+/* Only the _mutable_ part of TrackedAnnotation is stored in snapshots.
+   `pdfId` lives outside time travel and is merged back in. */
+export type HistorySnapshot = {
+  pages: Record<number, string[]>;
+  byUidPatch: Record<string, Pick<TrackedAnnotation, 'commitState' | 'object'>>;
+};
+
+export interface HistoryInfo {
+  canUndo: boolean;
+  canRedo: boolean;
+  hasPendingChanges: boolean;
 }
 
 export interface AnnotationPluginConfig extends BasePluginConfig {
   toolDefaults?: Partial<ToolDefaultsBySubtype>;
   colorPresets?: string[];
+  /**
+   * When `false` mutations are kept in memory and must be
+   * flushed with `commitPendingChanges()`.
+   */
+  autoCommit?: boolean;
 }
 
 export interface AnnotationCapability {
@@ -83,7 +122,6 @@ export interface AnnotationCapability {
   ) => Task<PdfAnnotationObject[], PdfErrorReason>;
   selectAnnotation: (pageIndex: number, annotationId: number) => void;
   deselectAnnotation: () => void;
-  updateAnnotationColor: (options: WebAlphaColor) => PdfTask<boolean>;
   getAnnotationMode: () => StylableSubtype | null;
   setAnnotationMode: (mode: StylableSubtype | null) => void;
   /** strongly typed – only sub-types we have defaults for */
@@ -97,9 +135,28 @@ export interface AnnotationCapability {
   getColorPresets: () => string[];
   /** append a swatch (deduped by RGBA) */
   addColorPreset: (color: string) => void;
+  createAnnotation: (pageIndex: number, annotation: PdfAnnotationObject) => void;
+  updateAnnotation: (
+    pageIndex: number,
+    annotationId: number,
+    patch: Partial<PdfAnnotationObject>,
+  ) => void;
+  deleteAnnotation: (pageIndex: number, annotationId: number) => void;
+  /** undo / redo */
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
   onStateChange: EventHook<AnnotationState>;
   onModeChange: EventHook<StylableSubtype | null>;
   onActiveToolChange: EventHook<ActiveTool>;
+  onHistoryChange: EventHook<HistoryInfo>;
+}
+
+export interface SelectedAnnotation {
+  pageIndex: number;
+  annotationId: number;
+  annotation: PdfAnnotationObject;
 }
 
 export interface GetPageAnnotationsOptions {

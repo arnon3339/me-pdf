@@ -1,13 +1,7 @@
 /** @jsxImportSource preact */
 import { JSX } from 'preact';
 import { PdfAnnotationSubtype, Rect } from '@embedpdf/models';
-import {
-  ActiveTool,
-  HighlightDefaults,
-  SquigglyDefaults,
-  StrikeoutDefaults,
-  UnderlineDefaults,
-} from '@embedpdf/plugin-annotation';
+import { ActiveTool } from '@embedpdf/plugin-annotation';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
 
 import { useEffect, useState } from 'preact/hooks';
@@ -44,13 +38,12 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
     return off;
   }, [annotationProvides]);
 
-  if (!activeTool) return null;
-
   switch (activeTool.mode) {
     case PdfAnnotationSubtype.UNDERLINE:
       return (
         <Underline
-          activeTool={activeTool.defaults as UnderlineDefaults}
+          color={activeTool.defaults?.color}
+          opacity={activeTool.defaults?.opacity}
           rects={rects}
           scale={scale}
         />
@@ -58,7 +51,8 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
     case PdfAnnotationSubtype.HIGHLIGHT:
       return (
         <Highlight
-          activeTool={activeTool.defaults as HighlightDefaults}
+          color={activeTool.defaults?.color}
+          opacity={activeTool.defaults?.opacity}
           rects={rects}
           scale={scale}
         />
@@ -66,7 +60,8 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
     case PdfAnnotationSubtype.STRIKEOUT:
       return (
         <Strikeout
-          activeTool={activeTool.defaults as StrikeoutDefaults}
+          color={activeTool.defaults?.color}
+          opacity={activeTool.defaults?.opacity}
           rects={rects}
           scale={scale}
         />
@@ -74,7 +69,8 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
     case PdfAnnotationSubtype.SQUIGGLY:
       return (
         <Squiggly
-          activeTool={activeTool.defaults as SquigglyDefaults}
+          color={activeTool.defaults?.color}
+          opacity={activeTool.defaults?.opacity}
           rects={rects}
           scale={scale}
         />

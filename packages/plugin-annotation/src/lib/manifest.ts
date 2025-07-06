@@ -12,5 +12,6 @@ export const manifest: PluginManifest<AnnotationPluginConfig> = {
   optional: [],
   defaultConfig: {
     enabled: true,
+    autoCommit: true,
   },
 };

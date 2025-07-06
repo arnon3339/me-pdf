@@ -1,15 +1,15 @@
 /** @jsxImportSource preact */
 import { JSX } from 'preact';
 import { Rect } from '@embedpdf/models';
-import { UnderlineDefaults } from '@embedpdf/plugin-annotation';
 
 interface UnderlineProps {
-  activeTool: UnderlineDefaults;
+  color?: string;
+  opacity?: number;
   rects: Rect[];
   scale: number;
 }
 
-export function Underline({ activeTool, rects, scale }: UnderlineProps) {
+export function Underline({ color = '#FFFF00', opacity = 0.5, rects, scale }: UnderlineProps) {
   const thickness = 2 * scale; // 2 CSS px at 100 % zoom
 
   return (
@@ -23,8 +23,8 @@ export function Underline({ activeTool, rects, scale }: UnderlineProps) {
             top: (r.origin.y + r.size.height) * scale - thickness,
             width: r.size.width * scale,
             height: thickness,
-            background: activeTool.color,
-            opacity: activeTool.opacity,
+            background: color,
+            opacity: opacity,
             pointerEvents: 'none',
           }}
         />

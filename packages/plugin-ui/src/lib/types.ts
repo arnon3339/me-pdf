@@ -172,6 +172,7 @@ export interface DividerComponent<TStore = any>
 
 export interface IconButtonProps {
   active?: boolean;
+  disabled?: boolean;
   commandId?: string;
   onClick?: () => void;
   label?: string;

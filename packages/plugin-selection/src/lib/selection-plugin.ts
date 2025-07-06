@@ -82,6 +82,8 @@ export class SelectionPlugin extends BasePlugin<
   buildCapability(): SelectionCapability {
     return {
       getGeometry: (p) => this.getOrLoadGeometry(p),
+      getFormattedSelection: () => selector.getFormattedSelection(this.state),
+      getFormattedSelectionForPage: (p) => selector.getFormattedSelectionForPage(this.state, p),
       getHighlightRectsForPage: (p) => selector.selectRectsForPage(this.state, p),
       getHighlightRects: () => this.state.rects,
       getBoundingRectForPage: (p) => selector.selectBoundingRectForPage(this.state, p),

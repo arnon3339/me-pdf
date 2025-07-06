@@ -42,6 +42,7 @@ import {
   UIPluginPackage,
   isActive,
   UI_PLUGIN_ID,
+  isDisabled,
 } from '@embedpdf/plugin-ui';
 import {
   attachmentsRenderer,
@@ -103,6 +104,8 @@ import {
   AnnotationPlugin,
   AnnotationPluginPackage,
   AnnotationState,
+  getSelectedAnnotation,
+  getSelectedAnnotationWithPageIndex,
 } from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 import { PinchWrapper, MarqueeZoom } from '@embedpdf/plugin-zoom/preact';
@@ -386,6 +389,14 @@ export const icons: IconRegistry = {
   screenshot: {
     id: 'screenshot',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-screenshot"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 19a2 2 0 0 1 -2 -2" /><path d="M5 13v-2" /><path d="M5 7a2 2 0 0 1 2 -2" /><path d="M11 5h2" /><path d="M17 5a2 2 0 0 1 2 2" /><path d="M19 11v2" /><path d="M19 17v4" /><path d="M21 19h-4" /><path d="M13 19h-2" /></svg>',
+  },
+  arrowBackUp: {
+    id: 'arrowBackUp',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-back-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4" /><path d="M5 10h11a4 4 0 1 1 0 8h-1" /></svg>',
+  },
+  arrowForwardUp: {
+    id: 'arrowForwardUp',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-forward-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 14l4 -4l-4 -4" /><path d="M19 10h-11a4 4 0 1 0 0 8h1" /></svg>',
   },
 };
 
@@ -1004,9 +1015,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcutLabel: 'V',
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
-
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (ui) {
         ui.setHeaderVisible({ id: 'toolsHeader', visible: false });
+        annotation?.setAnnotationMode(null);
       }
     },
     active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === false,
@@ -1206,28 +1218,108 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Squiggly Selection',
     type: 'action',
     icon: 'squiggly',
-    action: (registry, state) => {},
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (!selection || !annotation) return;
+
+      const defaultSettings = annotation.getToolDefaults(PdfAnnotationSubtype.SQUIGGLY);
+      const formattedSelection = selection.getFormattedSelection();
+      for (const selection of formattedSelection) {
+        annotation.createAnnotation(selection.pageIndex, {
+          id: Date.now(),
+          type: PdfAnnotationSubtype.SQUIGGLY,
+          color: defaultSettings.color,
+          opacity: defaultSettings.opacity,
+          pageIndex: selection.pageIndex,
+          rect: selection.rect,
+          segmentRects: selection.segmentRects,
+        });
+      }
+
+      selection.clear();
+    },
   },
   underlineSelection: {
     id: 'underlineSelection',
     label: 'Underline Selection',
     type: 'action',
     icon: 'underline',
-    action: (registry, state) => {},
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (!selection || !annotation) return;
+
+      const defaultSettings = annotation.getToolDefaults(PdfAnnotationSubtype.UNDERLINE);
+      const formattedSelection = selection.getFormattedSelection();
+      for (const selection of formattedSelection) {
+        annotation.createAnnotation(selection.pageIndex, {
+          id: Date.now(),
+          type: PdfAnnotationSubtype.UNDERLINE,
+          color: defaultSettings.color,
+          opacity: defaultSettings.opacity,
+          pageIndex: selection.pageIndex,
+          rect: selection.rect,
+          segmentRects: selection.segmentRects,
+        });
+      }
+
+      selection.clear();
+    },
   },
   strikethroughSelection: {
     id: 'strikethroughSelection',
     label: 'Strikethrough Selection',
     type: 'action',
     icon: 'strikethrough',
-    action: (registry, state) => {},
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (!selection || !annotation) return;
+
+      const defaultSettings = annotation.getToolDefaults(PdfAnnotationSubtype.STRIKEOUT);
+      const formattedSelection = selection.getFormattedSelection();
+      for (const selection of formattedSelection) {
+        annotation.createAnnotation(selection.pageIndex, {
+          id: Date.now(),
+          type: PdfAnnotationSubtype.STRIKEOUT,
+          color: defaultSettings.color,
+          opacity: defaultSettings.opacity,
+          pageIndex: selection.pageIndex,
+          rect: selection.rect,
+          segmentRects: selection.segmentRects,
+        });
+      }
+
+      selection.clear();
+    },
   },
   highlightSelection: {
     id: 'highlightSelection',
     label: 'Highlight Selection',
     type: 'action',
     icon: 'highlight',
-    action: (registry, state) => {},
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (!selection || !annotation) return;
+
+      const defaultSettings = annotation.getToolDefaults(PdfAnnotationSubtype.HIGHLIGHT);
+      const formattedSelection = selection.getFormattedSelection();
+      for (const selection of formattedSelection) {
+        annotation.createAnnotation(selection.pageIndex, {
+          id: Date.now(),
+          type: PdfAnnotationSubtype.HIGHLIGHT,
+          color: defaultSettings.color,
+          opacity: defaultSettings.opacity,
+          pageIndex: selection.pageIndex,
+          rect: selection.rect,
+          segmentRects: selection.segmentRects,
+        });
+      }
+
+      selection.clear();
+    },
   },
   styleAnnotation: {
     id: 'styleAnnotation',
@@ -1273,6 +1365,38 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) =>
       storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'panMode',
   },
+  undo: {
+    id: 'undo',
+    label: 'Undo',
+    type: 'action',
+    icon: 'arrowBackUp',
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        annotation.undo();
+      }
+    },
+    disabled: (storeState) => {
+      const annotation = storeState.plugins[ANNOTATION_PLUGIN_ID];
+      return annotation.past.length === 0;
+    },
+  },
+  redo: {
+    id: 'redo',
+    label: 'Redo',
+    type: 'action',
+    icon: 'arrowForwardUp',
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        annotation.redo();
+      }
+    },
+    disabled: (storeState) => {
+      const annotation = storeState.plugins[ANNOTATION_PLUGIN_ID];
+      return annotation.future.length === 0;
+    },
+  },
 };
 
 // Define components
@@ -1301,6 +1425,34 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.styleAnnotation, storeState),
+    }),
+  },
+  undoButton: {
+    type: 'iconButton',
+    id: 'undoButton',
+    props: {
+      commandId: 'undo',
+      active: false,
+      label: 'Undo',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.undo, storeState),
+      disabled: isDisabled(menuItems.undo, storeState),
+    }),
+  },
+  redoButton: {
+    type: 'iconButton',
+    id: 'redoButton',
+    props: {
+      commandId: 'redo',
+      active: false,
+      label: 'Redo',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.redo, storeState),
+      disabled: isDisabled(menuItems.redo, storeState),
     }),
   },
   copyButton: {
@@ -1792,6 +1944,9 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'squigglyButton', priority: 4 },
       { componentId: 'divider1', priority: 5 },
       { componentId: 'styleButton', priority: 6 },
+      { componentId: 'divider1', priority: 7 },
+      { componentId: 'undoButton', priority: 8 },
+      { componentId: 'redoButton', priority: 9 },
     ],
     props: {
       gap: 10,
@@ -1830,7 +1985,9 @@ export const components: Record<string, UIComponentType<State>> = {
     render: 'leftPanelAnnotationStyle',
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      selectedAnnotation: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedAnnotation,
+      selectedAnnotation: getSelectedAnnotationWithPageIndex(
+        storeState.plugins[ANNOTATION_PLUGIN_ID],
+      ),
       annotationMode: storeState.plugins[ANNOTATION_PLUGIN_ID].annotationMode,
       colorPresets: storeState.plugins[ANNOTATION_PLUGIN_ID].colorPresets,
       toolDefaults: storeState.plugins[ANNOTATION_PLUGIN_ID].toolDefaults,

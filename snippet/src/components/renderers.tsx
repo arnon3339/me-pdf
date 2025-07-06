@@ -51,11 +51,15 @@ import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
 import { useStoreState } from '@embedpdf/core/preact';
-import { SelectedAnnotation, StylableSubtype } from '@embedpdf/plugin-annotation';
+import {
+  SelectedAnnotation,
+  StylableSubtype,
+  TrackedAnnotation,
+} from '@embedpdf/plugin-annotation';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
-  { commandId, onClick, active, color, ...props },
+  { commandId, onClick, active, color, disabled = false, ...props },
   children,
   context,
 ) => {
@@ -96,6 +100,7 @@ export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
       <Button
         active={active}
         onClick={handleClick}
+        disabled={disabled}
         className={` ${context?.variant === 'flyout' ? 'w-full rounded-none px-2' : ''} `}
       >
         {!command?.icon && props.img && (
@@ -285,7 +290,11 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
         color: c,
         opacity: currentAlpha,
       };
-      annotation.updateAnnotationColor(patch);
+      annotation.updateAnnotation(
+        selectedAnnotation.pageIndex,
+        selectedAnnotation.annotationId,
+        patch,
+      );
     } else if (annotationMode != null) {
       /* tweak defaults for the active tool */
       const subtype = annotationMode as StylableSubtype;
@@ -308,7 +317,11 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
           color: currentColor.color,
           opacity: opacity,
         };
-        annotation.updateAnnotationColor(patch);
+        annotation.updateAnnotation(
+          selectedAnnotation.pageIndex,
+          selectedAnnotation.annotationId,
+          patch,
+        );
       }
     } else if (annotationMode != null) {
       /* update tool defaults opacity */
