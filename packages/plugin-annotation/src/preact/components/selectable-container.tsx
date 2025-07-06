@@ -8,6 +8,7 @@ import {
 } from '@embedpdf/models';
 import { useCallback } from 'preact/hooks';
 import { useAnnotationCapability } from '../hooks';
+import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
 
 interface SelectableAnnotationContainerProps {
   annotation:
@@ -29,15 +30,16 @@ export function SelectableAnnotationContainer({
   children,
 }: SelectableAnnotationContainerProps) {
   const { provides: annotationProvides } = useAnnotationCapability();
-
+  const { provides: selectionProvides } = useSelectionCapability();
   const handleClick = useCallback(
     (e: MouseEvent) => {
       e.stopPropagation();
-      if (annotationProvides) {
+      if (annotationProvides && selectionProvides) {
         annotationProvides.selectAnnotation(pageIndex, annotation.id);
+        selectionProvides.clear();
       }
     },
-    [annotationProvides, isSelected, pageIndex, annotation.id],
+    [annotationProvides, selectionProvides, isSelected, pageIndex, annotation.id],
   );
 
   return (

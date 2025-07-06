@@ -68,6 +68,7 @@ import {
   ZoomRendererProps,
   leftPanelAnnotationStyleRenderer,
   printModalRenderer,
+  annotationSelectionMenuRenderer,
 } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import {
@@ -397,6 +398,10 @@ export const icons: IconRegistry = {
   arrowForwardUp: {
     id: 'arrowForwardUp',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-forward-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 14l4 -4l-4 -4" /><path d="M19 10h-11a4 4 0 1 0 0 8h1" /></svg>',
+  },
+  trash: {
+    id: 'trash',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>',
   },
 };
 
@@ -1345,6 +1350,24 @@ export const menuItems: Record<string, MenuItem<State>> = {
       storeState.plugins.ui.panel.leftPanel.open === true &&
       storeState.plugins.ui.panel.leftPanel.visibleChild === 'leftPanelAnnotationStyle',
   },
+  deleteAnnotation: {
+    id: 'deleteAnnotation',
+    label: 'Delete',
+    type: 'action',
+    icon: 'trash',
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (!annotation) return;
+
+      const selectedAnnotation = annotation.getSelectedAnnotation();
+      if (!selectedAnnotation) return;
+
+      annotation.deleteAnnotation(
+        selectedAnnotation.object.pageIndex,
+        selectedAnnotation.object.id,
+      );
+    },
+  },
   panMode: {
     id: 'panMode',
     label: 'Pan',
@@ -1414,6 +1437,15 @@ export const components: Record<string, UIComponentType<State>> = {
       active: isActive(menuItems.menuCtr, storeState),
     }),
   },
+  deleteAnnotationButton: {
+    type: 'iconButton',
+    id: 'deleteAnnotationButton',
+    props: {
+      commandId: 'deleteAnnotation',
+      active: false,
+      label: 'Delete',
+    },
+  },
   styleButton: {
     type: 'iconButton',
     id: 'styleButton',
@@ -1432,12 +1464,11 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'undoButton',
     props: {
       commandId: 'undo',
-      active: false,
+      disabled: false,
       label: 'Undo',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.undo, storeState),
       disabled: isDisabled(menuItems.undo, storeState),
     }),
   },
@@ -1446,12 +1477,11 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'redoButton',
     props: {
       commandId: 'redo',
-      active: false,
+      disabled: false,
       label: 'Redo',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      active: isActive(menuItems.redo, storeState),
       disabled: isDisabled(menuItems.redo, storeState),
     }),
   },
@@ -1914,6 +1944,38 @@ export const components: Record<string, UIComponentType<State>> = {
       direction: 'horizontal',
     },
   },
+  annotationSelectionMenuButtons: {
+    id: 'annotationSelectionMenuButtons',
+    type: 'groupedItems',
+    slots: [
+      { componentId: 'deleteAnnotationButton', priority: 0 },
+      { componentId: 'styleButton', priority: 1 },
+    ],
+    props: {
+      gap: 10,
+    },
+  },
+  annotationSelectionMenu: {
+    id: 'annotationSelectionMenu',
+    type: 'floating',
+    render: 'annotationSelectionMenu',
+    props: {
+      open: false,
+      scrollerPosition: 'inside',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      isScolling: storeState.plugins.viewport.isScrolling,
+      scale: storeState.core.scale,
+      rotation: storeState.core.rotation,
+      selectedUid: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedUid,
+      open: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedUid !== null,
+    }),
+    slots: [{ componentId: 'annotationSelectionMenuButtons', priority: 0 }],
+    getChildContext: {
+      direction: 'horizontal',
+    },
+  },
   topHeader: {
     type: 'header',
     id: 'topHeader',
@@ -2209,6 +2271,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
             uiCapability.registerComponentRenderer('attachments', attachmentsRenderer);
             uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
             uiCapability.registerComponentRenderer('textSelectionMenu', textSelectionMenuRenderer);
+            uiCapability.registerComponentRenderer(
+              'annotationSelectionMenu',
+              annotationSelectionMenuRenderer,
+            );
             uiCapability.registerComponentRenderer('leftPanelMain', leftPanelMainRenderer);
             uiCapability.registerComponentRenderer('printModal', printModalRenderer);
             uiCapability.registerComponentRenderer(

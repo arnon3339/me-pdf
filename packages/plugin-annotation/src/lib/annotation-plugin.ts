@@ -46,6 +46,7 @@ import {
   InteractionMode,
 } from '@embedpdf/plugin-interaction-manager';
 import { SelectionPlugin, SelectionCapability } from '@embedpdf/plugin-selection';
+import { getSelectedAnnotation } from './selectors';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -165,6 +166,9 @@ export class AnnotationPlugin extends BasePlugin<
       getPageAnnotations: (options: GetPageAnnotationsOptions) => {
         return this.getPageAnnotations(options);
       },
+      getSelectedAnnotation: () => {
+        return getSelectedAnnotation(this.state);
+      },
       selectAnnotation: (pageIndex: number, annotationId: number) => {
         this.selectAnnotation(pageIndex, annotationId);
       },
@@ -269,25 +273,26 @@ export class AnnotationPlugin extends BasePlugin<
     this.dispatch(selectAnnotation(pageIndex, annotationId));
   }
 
-  private async createAnnotation(pageIndex: number, anno: PdfAnnotationObject) {
+  private createAnnotation(pageIndex: number, anno: PdfAnnotationObject) {
     /* local optimistic insert */
     this.dispatch(createAnnotation(pageIndex, anno));
-    if (this.config.autoCommit !== false) await this.commit();
+    if (this.config.autoCommit !== false) this.commit();
   }
 
-  private async updateAnnotation(
+  private updateAnnotation(
     pageIndex: number,
     annotationId: number,
     patch: Partial<PdfAnnotationObject>,
   ) {
     this.dispatch(patchAnnotation(pageIndex, annotationId, patch));
-    if (this.config.autoCommit !== false) await this.commit();
+    if (this.config.autoCommit !== false) this.commit();
   }
 
-  private async deleteAnnotation(pageIndex: number, annotationId: number) {
+  private deleteAnnotation(pageIndex: number, annotationId: number) {
+    this.dispatch(deselectAnnotation());
     this.dispatch(deleteAnnotation(pageIndex, annotationId));
-    if (this.config.autoCommit !== false) await this.commit();
+    if (this.config.autoCommit !== false) this.commit();
   }
 
-  private async commit() {}
+  private commit() {}
 }

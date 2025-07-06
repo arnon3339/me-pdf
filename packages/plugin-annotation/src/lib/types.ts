@@ -120,6 +120,7 @@ export interface AnnotationCapability {
   getPageAnnotations: (
     options: GetPageAnnotationsOptions,
   ) => Task<PdfAnnotationObject[], PdfErrorReason>;
+  getSelectedAnnotation: () => TrackedAnnotation | null;
   selectAnnotation: (pageIndex: number, annotationId: number) => void;
   deselectAnnotation: () => void;
   getAnnotationMode: () => StylableSubtype | null;
