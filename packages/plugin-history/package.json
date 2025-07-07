@@ -34,6 +34,7 @@
     "@embedpdf/models": "workspace:*"
   },
   "devDependencies": {
+    "@embedpdf/core": "workspace:*",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
