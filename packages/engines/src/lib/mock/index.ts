@@ -262,6 +262,9 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       return PdfTaskHelper.resolve(annotations);
     }),
     createPageAnnotation: jest.fn(() => {
+      return PdfTaskHelper.resolve(1);
+    }),
+    updatePageAnnotation: jest.fn(() => {
       return PdfTaskHelper.resolve(true);
     }),
     transformPageAnnotation: () => {

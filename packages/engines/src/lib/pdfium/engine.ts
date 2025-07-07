@@ -1065,7 +1065,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     doc: PdfDocumentObject,
     page: PdfPageObject,
     annotation: PdfAnnotationObject,
-  ) {
+  ): PdfTask<number> {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'createPageAnnotation', doc, page, annotation);
     this.logger.perf(
       LOG_SOURCE,
@@ -1167,6 +1167,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
 
+    const annotId = this.pdfiumModule.FPDFPage_GetAnnotIndex(pageCtx.pagePtr, annotationPtr);
+
     this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
     pageCtx.release();
     this.logger.perf(
@@ -1177,7 +1179,148 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       `${doc.id}-${page.index}`,
     );
 
-    return PdfTaskHelper.resolve(true);
+    return annotId >= 0
+      ? PdfTaskHelper.resolve<number>(annotId)
+      : PdfTaskHelper.reject<number>({
+          code: PdfErrorCode.CantCreateAnnot,
+          message: 'annotation created but index could not be determined',
+        });
+  }
+
+  /**
+   * Update an existing page annotation in-place
+   *
+   *  • Locates the annot by page-local index (`annotation.id`)
+   *  • Re-writes its /Rect and type-specific payload
+   *  • Calls FPDFPage_GenerateContent so the new appearance is rendered
+   *
+   * @returns PdfTask<boolean>  –  true on success
+   */
+  updatePageAnnotation(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObject,
+  ): PdfTask<boolean> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'updatePageAnnotation', doc, page, annotation);
+    this.logger.perf(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'UpdatePageAnnotation',
+      'Begin',
+      `${doc.id}-${page.index}`,
+    );
+
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        'UpdatePageAnnotation',
+        'End',
+        `${doc.id}-${page.index}`,
+      );
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    const pageCtx = ctx.acquirePage(page.index);
+    const annotPtr = this.pdfiumModule.FPDFPage_GetAnnot(pageCtx.pagePtr, annotation.id);
+    if (!annotPtr) {
+      pageCtx.release();
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        'UpdatePageAnnotation',
+        'End',
+        `${doc.id}-${page.index}`,
+      );
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'annotation not found' });
+    }
+
+    /* 1 ── (re)set bounding-box ────────────────────────────────────────────── */
+    if (!this.setPageAnnoRect(page, pageCtx.pagePtr, annotPtr, annotation.rect)) {
+      this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
+      pageCtx.release();
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        'UpdatePageAnnotation',
+        'End',
+        `${doc.id}-${page.index}`,
+      );
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.CantSetAnnotRect,
+        message: 'failed to move annotation',
+      });
+    }
+
+    /* 2 ── wipe previous payload and rebuild fresh one ─────────────────────── */
+    let ok = false;
+    switch (annotation.type) {
+      /* ── Ink ─────────────────────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.INK: {
+        /* clear every existing stroke first */
+        if (!this.pdfiumModule.FPDFAnnot_RemoveInkList(annotPtr)) break;
+        ok = this.addInkStroke(page, pageCtx.pagePtr, annotPtr, annotation.inkList);
+        break;
+      }
+
+      /* ── Stamp ───────────────────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.STAMP: {
+        /* drop every page-object inside the annot */
+        for (let i = this.pdfiumModule.FPDFAnnot_GetObjectCount(annotPtr) - 1; i >= 0; i--) {
+          this.pdfiumModule.FPDFAnnot_RemoveObject(annotPtr, i);
+        }
+        ok = this.addStampContent(
+          ctx.docPtr,
+          page,
+          pageCtx.pagePtr,
+          annotPtr,
+          annotation.rect,
+          annotation.contents,
+        );
+        break;
+      }
+
+      /* ── Text-markup family ──────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.HIGHLIGHT:
+      case PdfAnnotationSubtype.UNDERLINE:
+      case PdfAnnotationSubtype.STRIKEOUT:
+      case PdfAnnotationSubtype.SQUIGGLY: {
+        /* replace quad-points / colour / strings in one go */
+        ok = this.addTextMarkupContent(page, annotPtr, annotation, true);
+        break;
+      }
+
+      /* ── Unsupported edits – fall through to error ───────────────────────── */
+      default:
+        ok = false;
+    }
+
+    /* 3 ── regenerate appearance if payload was changed ───────────────────── */
+    if (ok) {
+      this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
+    }
+
+    /* 4 ── tidy-up native handles ──────────────────────────────────────────── */
+    this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
+    pageCtx.release();
+    this.logger.perf(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'UpdatePageAnnotation',
+      'End',
+      `${doc.id}-${page.index}`,
+    );
+
+    return ok
+      ? PdfTaskHelper.resolve<boolean>(true)
+      : PdfTaskHelper.reject<boolean>({
+          code: PdfErrorCode.CantSetAnnotContent,
+          message: 'failed to update annotation',
+        });
   }
 
   /**
@@ -2285,8 +2428,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       | PdfUnderlineAnnoObject
       | PdfStrikeOutAnnoObject
       | PdfSquigglyAnnoObject,
+    shouldClearAP: boolean = false,
   ) {
-    if (!this.setQuadPointsAnno(page, annotationPtr, annotation.segmentRects)) {
+    if (!this.syncQuadPointsAnno(page, annotationPtr, annotation.segmentRects)) {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
@@ -2305,7 +2449,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           color: annotation.color ?? '#FFFF00',
           opacity: annotation.opacity ?? 1,
         },
-        false,
+        shouldClearAP,
         0,
       )
     ) {
@@ -3193,8 +3337,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation = this.readPdfCaretAnno(page, pageCtx.pagePtr, annotationPtr, index);
         }
         break;
-      case PdfAnnotationSubtype.POPUP:
-        break;
       default:
         {
           annotation = this.readPdfAnno(page, pageCtx.pagePtr, subType, annotationPtr, index);
@@ -3476,32 +3618,54 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @private
    */
-  private setQuadPointsAnno(page: PdfPageObject, annotationPtr: number, rects: Rect[]): boolean {
-    const FS_QUADPOINTSF_SIZE = 8 * 4;
+  private syncQuadPointsAnno(page: PdfPageObject, annotPtr: number, rects: Rect[]): boolean {
+    const FS_QUADPOINTSF_SIZE = 8 * 4; // eight floats, 32 bytes
+    const pdf = this.pdfiumModule.pdfium;
+    const count = this.pdfiumModule.FPDFAnnot_CountAttachmentPoints(annotPtr);
     const buf = this.malloc(FS_QUADPOINTSF_SIZE);
 
-    for (let qi = 0; qi < rects.length; qi++) {
-      const r = rectToQuad(rects[qi]);
-      const p1 = this.convertDevicePointToPagePoint(page, r.p1);
-      const p2 = this.convertDevicePointToPagePoint(page, r.p2);
-      const p3 = this.convertDevicePointToPagePoint(page, r.p3);
-      const p4 = this.convertDevicePointToPagePoint(page, r.p4);
+    /** write one quad into `buf` in annotation space */
+    const writeQuad = (r: Rect) => {
+      const q = rectToQuad(r); // TL, TR, BR, BL
+      const p1 = this.convertDevicePointToPagePoint(page, q.p1);
+      const p2 = this.convertDevicePointToPagePoint(page, q.p2);
+      const p3 = this.convertDevicePointToPagePoint(page, q.p3); // BR
+      const p4 = this.convertDevicePointToPagePoint(page, q.p4); // BL
 
-      const pdf = this.pdfiumModule.pdfium;
-      pdf.setValue(buf + 0, p1.x, 'float');
+      // PDF QuadPoints order: BL, BR, TL, TR (bottom-left, bottom-right, top-left, top-right)
+      pdf.setValue(buf + 0, p1.x, 'float'); // BL (bottom-left)
       pdf.setValue(buf + 4, p1.y, 'float');
-      pdf.setValue(buf + 8, p2.x, 'float');
-      pdf.setValue(buf + 12, p2.y, 'float');
-      pdf.setValue(buf + 16, p3.x, 'float');
-      pdf.setValue(buf + 20, p3.y, 'float');
-      pdf.setValue(buf + 24, p4.x, 'float');
-      pdf.setValue(buf + 28, p4.y, 'float');
 
-      if (!this.pdfiumModule.FPDFAnnot_SetAttachmentPoints(annotationPtr, qi, buf)) {
+      pdf.setValue(buf + 8, p2.x, 'float'); // BR (bottom-right)
+      pdf.setValue(buf + 12, p2.y, 'float');
+
+      pdf.setValue(buf + 16, p4.x, 'float'); // TL (top-left)
+      pdf.setValue(buf + 20, p4.y, 'float');
+
+      pdf.setValue(buf + 24, p3.x, 'float'); // TR (top-right)
+      pdf.setValue(buf + 28, p3.y, 'float');
+    };
+
+    /* ----------------------------------------------------------------------- */
+    /* 1. overwrite the quads that already exist                               */
+    const min = Math.min(count, rects.length);
+    for (let i = 0; i < min; i++) {
+      writeQuad(rects[i]);
+      if (!this.pdfiumModule.FPDFAnnot_SetAttachmentPoints(annotPtr, i, buf)) {
         this.free(buf);
         return false;
       }
     }
+
+    /* 2. append new quads if rects.length > count                             */
+    for (let i = count; i < rects.length; i++) {
+      writeQuad(rects[i]);
+      if (!this.pdfiumModule.FPDFAnnot_AppendAttachmentPoints(annotPtr, buf)) {
+        this.free(buf);
+        return false;
+      }
+    }
+
     this.free(buf);
     return true;
   }

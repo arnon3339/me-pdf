@@ -15,6 +15,7 @@ import {
   PdfAnnotationSubtype,
   PdfTaskHelper,
   PdfErrorCode,
+  PdfTask,
 } from '@embedpdf/models';
 import {
   ActiveTool,
@@ -23,8 +24,8 @@ import {
   AnnotationState,
   BaseAnnotationDefaults,
   GetPageAnnotationsOptions,
-  HistoryInfo,
   StylableSubtype,
+  TrackedAnnotation,
 } from './types';
 import {
   setAnnotations,
@@ -37,8 +38,10 @@ import {
   createAnnotation,
   patchAnnotation,
   deleteAnnotation,
-  redo,
-  undo,
+  commitPendingChanges,
+  storePdfId,
+  purgeAnnotation,
+  reindexPageAnnotations,
 } from './actions';
 import {
   InteractionManagerCapability,
@@ -46,7 +49,9 @@ import {
   InteractionMode,
 } from '@embedpdf/plugin-interaction-manager';
 import { SelectionPlugin, SelectionCapability } from '@embedpdf/plugin-selection';
+import { HistoryPlugin, HistoryCapability, Command } from '@embedpdf/plugin-history';
 import { getSelectedAnnotation } from './selectors';
+import { makeUid, parseUid } from './utils';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -56,12 +61,15 @@ export class AnnotationPlugin extends BasePlugin<
 > {
   static readonly id = 'annotation' as const;
 
+  private readonly ANNOTATION_HISTORY_TOPIC = 'annotations';
+
   private readonly config: AnnotationPluginConfig;
 
   private engine: PdfEngine;
   private readonly state$ = createBehaviorEmitter<AnnotationState>();
   private readonly interactionManager: InteractionManagerCapability | null;
   private readonly selection: SelectionCapability | null;
+  private readonly history: HistoryCapability | null;
 
   /** Map <subtype> → <modeId>.  Filled once in `initialize()`. */
   private readonly modeBySubtype = new Map<StylableSubtype, string>();
@@ -71,11 +79,6 @@ export class AnnotationPlugin extends BasePlugin<
   private readonly activeTool$ = createBehaviorEmitter<ActiveTool>({
     mode: null,
     defaults: null,
-  });
-  private readonly history$ = createBehaviorEmitter<HistoryInfo>({
-    canUndo: false,
-    canRedo: false,
-    hasPendingChanges: false,
   });
 
   constructor(
@@ -90,6 +93,9 @@ export class AnnotationPlugin extends BasePlugin<
 
     const selection = registry.getPlugin<SelectionPlugin>('selection');
     this.selection = selection?.provides() ?? null;
+
+    const history = registry.getPlugin<HistoryPlugin>('history');
+    this.history = history?.provides() ?? null;
 
     const interactionManager = registry.getPlugin<InteractionManagerPlugin>('interaction-manager');
     this.interactionManager = interactionManager?.provides() ?? null;
@@ -106,6 +112,12 @@ export class AnnotationPlugin extends BasePlugin<
     for (const [subtype, defaults] of enumEntries(this.state.toolDefaults)) {
       this.registerTool(subtype, defaults);
     }
+
+    this.history?.onHistoryChange((topic) => {
+      if (topic === this.ANNOTATION_HISTORY_TOPIC && this.config.autoCommit !== false) {
+        this.commit();
+      }
+    });
 
     this.interactionManager?.onModeChange((s) => {
       const newSubtype = this.subtypeByMode.get(s.activeMode) ?? null;
@@ -135,7 +147,7 @@ export class AnnotationPlugin extends BasePlugin<
           color,
           opacity,
           pageIndex: selection.pageIndex,
-          id: Date.now(),
+          id: Date.now() + Math.random(),
         });
       }
 
@@ -202,21 +214,14 @@ export class AnnotationPlugin extends BasePlugin<
       addColorPreset: (color) => this.dispatch(addColorPreset(color)),
       createAnnotation: (pageIndex: number, annotation: PdfAnnotationObject) =>
         this.createAnnotation(pageIndex, annotation),
-      updateAnnotation: (
-        pageIndex: number,
-        annotationId: number,
-        patch: Partial<PdfAnnotationObject>,
-      ) => this.updateAnnotation(pageIndex, annotationId, patch),
-      deleteAnnotation: (pageIndex: number, annotationId: number) =>
-        this.deleteAnnotation(pageIndex, annotationId),
-      undo: () => this.dispatch(undo()),
-      redo: () => this.dispatch(redo()),
-      canUndo: () => this.state.past.length > 0,
-      canRedo: () => this.state.future.length > 0,
+      updateAnnotation: (pageIndex: number, localId: number, patch: Partial<PdfAnnotationObject>) =>
+        this.updateAnnotation(pageIndex, localId, patch),
+      deleteAnnotation: (pageIndex: number, localId: number) =>
+        this.deleteAnnotation(pageIndex, localId),
       onStateChange: this.state$.on,
       onModeChange: this.modeChange$.on,
       onActiveToolChange: this.activeTool$.on,
-      onHistoryChange: this.history$.on,
+      commit: () => this.commit(),
     };
   }
 
@@ -237,11 +242,6 @@ export class AnnotationPlugin extends BasePlugin<
     ) {
       this.emitActiveTool(next);
     }
-    this.history$.emit({
-      canUndo: next.past.length > 0,
-      canRedo: next.future.length > 0,
-      hasPendingChanges: next.hasPendingChanges,
-    });
   }
 
   private getAllAnnotations(doc: PdfDocumentObject) {
@@ -273,26 +273,149 @@ export class AnnotationPlugin extends BasePlugin<
     this.dispatch(selectAnnotation(pageIndex, annotationId));
   }
 
-  private createAnnotation(pageIndex: number, anno: PdfAnnotationObject) {
-    /* local optimistic insert */
-    this.dispatch(createAnnotation(pageIndex, anno));
-    if (this.config.autoCommit !== false) this.commit();
+  private createAnnotation(pageIndex: number, annotation: PdfAnnotationObject) {
+    const localId = annotation.id;
+    const execute = () => this.dispatch(createAnnotation(pageIndex, localId, annotation));
+
+    if (!this.history) {
+      execute();
+      if (this.config.autoCommit) this.commit();
+      return;
+    }
+    const command: Command = {
+      execute,
+      undo: () => this.dispatch(deleteAnnotation(pageIndex, localId)),
+    };
+    this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
   }
 
   private updateAnnotation(
     pageIndex: number,
-    annotationId: number,
+    localId: number,
     patch: Partial<PdfAnnotationObject>,
   ) {
-    this.dispatch(patchAnnotation(pageIndex, annotationId, patch));
-    if (this.config.autoCommit !== false) this.commit();
+    if (!this.history) {
+      this.dispatch(patchAnnotation(pageIndex, localId, patch));
+      if (this.config.autoCommit !== false) {
+        this.commit();
+      }
+      return;
+    }
+    const originalObject = this.state.byUid[makeUid(pageIndex, localId)].object;
+    const originalPatch = Object.fromEntries(
+      Object.keys(patch).map((key) => [key, originalObject[key as keyof PdfAnnotationObject]]),
+    );
+    const command: Command = {
+      execute: () => this.dispatch(patchAnnotation(pageIndex, localId, patch)),
+      undo: () => this.dispatch(patchAnnotation(pageIndex, localId, originalPatch)),
+    };
+    this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
   }
 
-  private deleteAnnotation(pageIndex: number, annotationId: number) {
-    this.dispatch(deselectAnnotation());
-    this.dispatch(deleteAnnotation(pageIndex, annotationId));
-    if (this.config.autoCommit !== false) this.commit();
+  private deleteAnnotation(pageIndex: number, localId: number) {
+    if (!this.history) {
+      this.dispatch(deselectAnnotation());
+      this.dispatch(deleteAnnotation(pageIndex, localId));
+      if (this.config.autoCommit !== false) {
+        this.commit();
+      }
+      return;
+    }
+    const originalAnnotation = this.state.byUid[makeUid(pageIndex, localId)].object;
+    const command: Command = {
+      execute: () => {
+        this.dispatch(deselectAnnotation());
+        this.dispatch(deleteAnnotation(pageIndex, localId));
+      },
+      undo: () => this.dispatch(createAnnotation(pageIndex, localId, originalAnnotation)),
+    };
+    this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
   }
 
-  private commit() {}
+  private commit(): Task<boolean, PdfErrorReason> {
+    const task = new Task<boolean, PdfErrorReason>();
+
+    if (!this.state.hasPendingChanges) return PdfTaskHelper.resolve(true);
+
+    const doc = this.coreState.core.document;
+    if (!doc)
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Document not found' });
+
+    const creations: Task<any, PdfErrorReason>[] = [];
+    const updates: Task<any, PdfErrorReason>[] = [];
+    const deletionsByPage = new Map<number, { ta: TrackedAnnotation; uid: string }[]>();
+    const affectedPages = new Set<number>();
+
+    // 1. Group all pending changes by operation type
+    for (const [uid, ta] of Object.entries(this.state.byUid)) {
+      if (ta.commitState === 'synced') continue;
+
+      const { pageIndex } = parseUid(uid);
+      const page = doc.pages.find((p) => p.index === pageIndex);
+      if (!page) continue;
+
+      affectedPages.add(pageIndex);
+
+      switch (ta.commitState) {
+        case 'new':
+          const task = this.engine.createPageAnnotation!(doc, page, ta.object);
+          task.wait((annoId) => this.dispatch(storePdfId(uid, annoId)), ignore);
+          creations.push(task);
+          break;
+        case 'dirty':
+          updates.push(
+            this.engine.updatePageAnnotation!(doc, page, { ...ta.object, id: ta.pdfId! }),
+          );
+          break;
+        case 'deleted':
+          if (!deletionsByPage.has(pageIndex)) {
+            deletionsByPage.set(pageIndex, []);
+          }
+          deletionsByPage.get(pageIndex)!.push({ ta, uid });
+          break;
+      }
+    }
+
+    // 2. Create deletion tasks, sorted by ID descending
+    const deletionTasks: Task<any, PdfErrorReason>[] = [];
+    for (const [pageIndex, deletions] of deletionsByPage.entries()) {
+      const page = doc.pages.find((p) => p.index === pageIndex)!;
+
+      deletions.sort((a, b) => (b.ta.pdfId ?? -1) - (a.ta.pdfId ?? -1));
+
+      for (const { ta, uid } of deletions) {
+        if (ta.pdfId !== undefined) {
+          const task = new Task<any, PdfErrorReason>();
+          const removeTask = this.engine.removePageAnnotation!(doc, page, {
+            ...ta.object,
+            id: ta.pdfId!,
+          });
+          removeTask.wait(() => {
+            this.dispatch(purgeAnnotation(uid));
+            task.resolve(true);
+          }, task.fail);
+          deletionTasks.push(task);
+        } else {
+          this.dispatch(purgeAnnotation(uid));
+        }
+      }
+    }
+
+    // 3. Chain the operations: creations/updates -> deletions -> re-sync
+    const allWriteTasks = [...creations, ...updates, ...deletionTasks];
+
+    Task.allSettled(allWriteTasks).wait(() => {
+      // 4. Client-Side Re-indexing
+      // After all engine operations are done, tell the reducer to re-index each affected page.
+      for (const pageIndex of affectedPages) {
+        this.dispatch(reindexPageAnnotations(pageIndex));
+      }
+
+      // 5. Finalize the commit by updating the commitState of all items.
+      this.dispatch(commitPendingChanges());
+      task.resolve(true);
+    }, task.fail);
+
+    return task;
+  }
 }

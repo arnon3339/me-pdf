@@ -8,7 +8,7 @@ const makeUid = (page: number, id: number) => `p${page}#${id}`;
 
 /** All annotations _objects_ on a single page (order preserved). */
 export const getAnnotationsByPageIndex = (s: AnnotationState, page: number) =>
-  (s.pages[page] ?? []).map((uid) => s.byUid[uid].object);
+  (s.pages[page] ?? []).map((uid) => s.byUid[uid]);
 
 /** Shortcut: every page → list of annotation objects. */
 export const getAnnotations = (s: AnnotationState) => {
@@ -25,8 +25,8 @@ export const getSelectedAnnotationWithPageIndex = (
   s: AnnotationState,
 ): SelectedAnnotation | null => {
   if (!s.selectedUid) return null;
-  const { pageIndex, annotationId } = parseUid(s.selectedUid);
-  return { pageIndex, annotationId, annotation: s.byUid[s.selectedUid].object };
+  const { pageIndex, localId } = parseUid(s.selectedUid);
+  return { pageIndex, localId, annotation: s.byUid[s.selectedUid].object };
 };
 
 export const getSelectedAnnotationByPageIndex = (s: AnnotationState, pageIndex: number) => {
@@ -48,10 +48,3 @@ export const getSelectedAnnotationMode = (s: AnnotationState) => s.annotationMod
 /** Check if a given anno on a page is the current selection. */
 export const isAnnotationSelected = (s: AnnotationState, page: number, id: number) =>
   s.selectedUid === makeUid(page, id);
-
-/** Undo/redo availability & dirty-flag. */
-export const getHistoryInfo = (s: AnnotationState) => ({
-  canUndo: s.past.length > 0,
-  canRedo: s.future.length > 0,
-  hasPendingChanges: s.hasPendingChanges,
-});

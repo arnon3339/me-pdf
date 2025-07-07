@@ -12,10 +12,13 @@ import {
 export type CommitState =
   | 'new' // created locally, not yet written to the PDF
   | 'dirty' // exists remotely, but local fields diverge
+  | 'deleted' // deleted locally, not yet written to the PDF
   | 'synced' // identical to the PDF
   | 'ignored'; // managed by a different plugin – never auto-committed
 
 export interface TrackedAnnotation {
+  /** A stable, client-side unique identifier for history and state management. */
+  localId: number;
   /**
    * If the engine has already created the annotation in the PDF
    * this is the definitive id coming from the engine.
@@ -88,21 +91,6 @@ export interface AnnotationState {
   toolDefaults: ToolDefaultsBySubtype;
   colorPresets: string[];
 
-  past: HistorySnapshot[];
-  future: HistorySnapshot[];
-  hasPendingChanges: boolean;
-}
-
-/* Only the _mutable_ part of TrackedAnnotation is stored in snapshots.
-   `pdfId` lives outside time travel and is merged back in. */
-export type HistorySnapshot = {
-  pages: Record<number, string[]>;
-  byUidPatch: Record<string, Pick<TrackedAnnotation, 'commitState' | 'object'>>;
-};
-
-export interface HistoryInfo {
-  canUndo: boolean;
-  canRedo: boolean;
   hasPendingChanges: boolean;
 }
 
@@ -144,19 +132,15 @@ export interface AnnotationCapability {
   ) => void;
   deleteAnnotation: (pageIndex: number, annotationId: number) => void;
   /** undo / redo */
-  undo: () => void;
-  redo: () => void;
-  canUndo: () => boolean;
-  canRedo: () => boolean;
   onStateChange: EventHook<AnnotationState>;
   onModeChange: EventHook<StylableSubtype | null>;
   onActiveToolChange: EventHook<ActiveTool>;
-  onHistoryChange: EventHook<HistoryInfo>;
+  commit: () => void;
 }
 
 export interface SelectedAnnotation {
   pageIndex: number;
-  annotationId: number;
+  localId: number;
   annotation: PdfAnnotationObject;
 }
 

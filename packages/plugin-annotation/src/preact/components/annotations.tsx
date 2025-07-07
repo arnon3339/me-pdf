@@ -23,7 +23,7 @@ interface AnnotationsProps {
 
 export function Annotations({ pageIndex, scale }: AnnotationsProps) {
   const { provides: annotationProvides } = useAnnotationCapability();
-  const [annotations, setAnnotations] = useState<PdfAnnotationObject[]>([]);
+  const [annotations, setAnnotations] = useState<TrackedAnnotation[]>([]);
   const { register } = usePointerHandlers({ pageIndex });
   const [selectionState, setSelectionState] = useState<TrackedAnnotation | null>(null);
 
@@ -55,22 +55,22 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
   return (
     <>
       {annotations.map((annotation) => {
-        const isSelected = selectionState?.object.id === annotation.id;
+        const isSelected = selectionState?.localId === annotation.localId;
 
-        switch (annotation.type) {
+        switch (annotation.object.type) {
           case PdfAnnotationSubtype.UNDERLINE:
             return (
               <SelectableAnnotationContainer
-                key={annotation.id}
-                annotation={annotation}
+                key={annotation.localId}
+                trackedAnnotation={annotation}
                 scale={scale}
                 isSelected={isSelected}
                 pageIndex={pageIndex}
               >
                 <Underline
-                  color={annotation.color}
-                  opacity={annotation.opacity}
-                  rects={annotation.segmentRects}
+                  color={annotation.object.color}
+                  opacity={annotation.object.opacity}
+                  rects={annotation.object.segmentRects}
                   scale={scale}
                 />
               </SelectableAnnotationContainer>
@@ -78,16 +78,16 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
           case PdfAnnotationSubtype.STRIKEOUT:
             return (
               <SelectableAnnotationContainer
-                key={annotation.id}
-                annotation={annotation}
+                key={annotation.localId}
+                trackedAnnotation={annotation}
                 scale={scale}
                 isSelected={isSelected}
                 pageIndex={pageIndex}
               >
                 <Strikeout
-                  color={annotation.color}
-                  opacity={annotation.opacity}
-                  rects={annotation.segmentRects}
+                  color={annotation.object.color}
+                  opacity={annotation.object.opacity}
+                  rects={annotation.object.segmentRects}
                   scale={scale}
                 />
               </SelectableAnnotationContainer>
@@ -95,16 +95,16 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
           case PdfAnnotationSubtype.SQUIGGLY:
             return (
               <SelectableAnnotationContainer
-                key={annotation.id}
-                annotation={annotation}
+                key={annotation.localId}
+                trackedAnnotation={annotation}
                 scale={scale}
                 isSelected={isSelected}
                 pageIndex={pageIndex}
               >
                 <Squiggly
-                  color={annotation.color}
-                  opacity={annotation.opacity}
-                  rects={annotation.segmentRects}
+                  color={annotation.object.color}
+                  opacity={annotation.object.opacity}
+                  rects={annotation.object.segmentRects}
                   scale={scale}
                 />
               </SelectableAnnotationContainer>
@@ -112,16 +112,16 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
           case PdfAnnotationSubtype.HIGHLIGHT:
             return (
               <SelectableAnnotationContainer
-                key={annotation.id}
-                annotation={annotation}
+                key={annotation.localId}
+                trackedAnnotation={annotation}
                 scale={scale}
                 isSelected={isSelected}
                 pageIndex={pageIndex}
               >
                 <Highlight
-                  color={annotation.color}
-                  opacity={annotation.opacity}
-                  rects={annotation.segmentRects}
+                  color={annotation.object.color}
+                  opacity={annotation.object.opacity}
+                  rects={annotation.object.segmentRects}
                   scale={scale}
                 />
               </SelectableAnnotationContainer>

@@ -122,7 +122,7 @@ import {
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
 import { EXPORT_PLUGIN_ID, ExportPlugin, ExportPluginPackage } from '@embedpdf/plugin-export';
-import { Download } from '@embedpdf/plugin-export/react';
+import { Download } from '@embedpdf/plugin-export/preact';
 import {
   INTERACTION_MANAGER_PLUGIN_ID,
   InteractionManagerPlugin,
@@ -137,6 +137,12 @@ import { PanMode } from '@embedpdf/plugin-pan/preact';
 import { PanPluginPackage } from '@embedpdf/plugin-pan';
 import { CAPTURE_PLUGIN_ID, CapturePlugin, CapturePluginPackage } from '@embedpdf/plugin-capture';
 import { MarqueeCapture } from '@embedpdf/plugin-capture/preact';
+import {
+  HISTORY_PLUGIN_ID,
+  HistoryPlugin,
+  HistoryPluginPackage,
+  HistoryState,
+} from '@embedpdf/plugin-history';
 import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
 
@@ -224,6 +230,7 @@ type State = GlobalStoreState<{
   [ANNOTATION_PLUGIN_ID]: AnnotationState;
   [FULLSCREEN_PLUGIN_ID]: FullscreenState;
   [INTERACTION_MANAGER_PLUGIN_ID]: InteractionManagerState;
+  [HISTORY_PLUGIN_ID]: HistoryState;
 }>;
 
 export const icons: IconRegistry = {
@@ -402,6 +409,10 @@ export const icons: IconRegistry = {
   trash: {
     id: 'trash',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>',
+  },
+  deviceFloppy: {
+    id: 'deviceFloppy',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>',
   },
 };
 
@@ -1232,7 +1243,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const formattedSelection = selection.getFormattedSelection();
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now(),
+          id: Date.now() + Math.random(),
           type: PdfAnnotationSubtype.SQUIGGLY,
           color: defaultSettings.color,
           opacity: defaultSettings.opacity,
@@ -1259,7 +1270,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const formattedSelection = selection.getFormattedSelection();
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now(),
+          id: Date.now() + Math.random(),
           type: PdfAnnotationSubtype.UNDERLINE,
           color: defaultSettings.color,
           opacity: defaultSettings.opacity,
@@ -1286,7 +1297,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const formattedSelection = selection.getFormattedSelection();
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now(),
+          id: Date.now() + Math.random(),
           type: PdfAnnotationSubtype.STRIKEOUT,
           color: defaultSettings.color,
           opacity: defaultSettings.opacity,
@@ -1313,7 +1324,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const formattedSelection = selection.getFormattedSelection();
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now(),
+          id: Date.now() + Math.random(),
           type: PdfAnnotationSubtype.HIGHLIGHT,
           color: defaultSettings.color,
           opacity: defaultSettings.opacity,
@@ -1362,10 +1373,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const selectedAnnotation = annotation.getSelectedAnnotation();
       if (!selectedAnnotation) return;
 
-      annotation.deleteAnnotation(
-        selectedAnnotation.object.pageIndex,
-        selectedAnnotation.object.id,
-      );
+      annotation.deleteAnnotation(selectedAnnotation.object.pageIndex, selectedAnnotation.localId);
     },
   },
   panMode: {
@@ -1394,14 +1402,14 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     icon: 'arrowBackUp',
     action: (registry) => {
-      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
-      if (annotation) {
-        annotation.undo();
+      const history = registry.getPlugin<HistoryPlugin>(HISTORY_PLUGIN_ID)?.provides();
+      if (history) {
+        history.undo();
       }
     },
     disabled: (storeState) => {
-      const annotation = storeState.plugins[ANNOTATION_PLUGIN_ID];
-      return annotation.past.length === 0;
+      const history = storeState.plugins[HISTORY_PLUGIN_ID];
+      return !history.global.canUndo;
     },
   },
   redo: {
@@ -1410,14 +1418,26 @@ export const menuItems: Record<string, MenuItem<State>> = {
     type: 'action',
     icon: 'arrowForwardUp',
     action: (registry) => {
-      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
-      if (annotation) {
-        annotation.redo();
+      const history = registry.getPlugin<HistoryPlugin>(HISTORY_PLUGIN_ID)?.provides();
+      if (history) {
+        history.redo();
       }
     },
     disabled: (storeState) => {
-      const annotation = storeState.plugins[ANNOTATION_PLUGIN_ID];
-      return annotation.future.length === 0;
+      const history = storeState.plugins[HISTORY_PLUGIN_ID];
+      return !history.global.canRedo;
+    },
+  },
+  commitAnnotations: {
+    id: 'commitAnnotations',
+    label: 'Commit',
+    type: 'action',
+    icon: 'deviceFloppy',
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        annotation.commit();
+      }
     },
   },
 };
@@ -1484,6 +1504,15 @@ export const components: Record<string, UIComponentType<State>> = {
       ...ownProps,
       disabled: isDisabled(menuItems.redo, storeState),
     }),
+  },
+  commitAnnotationsButton: {
+    type: 'iconButton',
+    id: 'commitAnnotationsButton',
+    props: {
+      commandId: 'commitAnnotations',
+      active: false,
+      label: 'Commit',
+    },
   },
   copyButton: {
     type: 'iconButton',
@@ -2318,6 +2347,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             scale: 2,
             imageType: 'image/png',
           }),
+          createPluginRegistration(HistoryPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (

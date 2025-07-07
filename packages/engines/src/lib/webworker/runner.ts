@@ -266,13 +266,16 @@ export class EngineRunner {
       case 'createPageAnnotation':
         task = this.engine[name]!(...args);
         break;
+      case 'updatePageAnnotation':
+        task = this.engine[name]!(...args);
+        break;
       case 'transformPageAnnotation':
         task = this.engine[name]!(...args);
         break;
       case 'removePageAnnotation':
         task = this.engine[name]!(...args);
         break;
-      case 'setAnnotationColor':
+      case 'updateAnnotationColor':
         task = this.engine[name]!(...args);
         break;
       case 'getPageTextRects':

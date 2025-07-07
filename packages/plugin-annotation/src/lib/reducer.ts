@@ -7,20 +7,16 @@ import {
   DESELECT_ANNOTATION,
   PATCH_ANNOTATION,
   DELETE_ANNOTATION,
-  REDO,
   SELECT_ANNOTATION,
   SET_ANNOTATION_MODE,
   SET_ANNOTATIONS,
-  UNDO,
   UPDATE_TOOL_DEFAULTS,
   AnnotationAction,
+  PURGE_ANNOTATION,
+  STORE_PDF_ID,
+  REINDEX_PAGE_ANNOTATIONS,
 } from './actions';
-import {
-  AnnotationPluginConfig,
-  AnnotationState,
-  HistorySnapshot,
-  TrackedAnnotation,
-} from './types';
+import { AnnotationPluginConfig, AnnotationState, TrackedAnnotation } from './types';
 import { makeUid } from './utils';
 
 /* ─────────── util helpers ─────────── */
@@ -34,52 +30,6 @@ const DEFAULT_COLORS = [
   '#C544CE',
   '#7D2E25',
 ];
-const clonePages = (p: Record<number, string[]>) =>
-  Object.fromEntries(Object.entries(p).map(([k, v]) => [k, [...v]]));
-
-/* push snapshot (copy-on-write for pages, strip pdfId) */
-const push = (s: AnnotationState): AnnotationState => {
-  const byUidPatch: HistorySnapshot['byUidPatch'] = {};
-  for (const uid in s.byUid) {
-    const { commitState, object } = s.byUid[uid];
-    byUidPatch[uid] = { commitState, object }; // no pdfId
-  }
-  return { ...s, past: [...s.past, { pages: clonePages(s.pages), byUidPatch }], future: [] };
-};
-
-const snapshotOf = (s: AnnotationState): HistorySnapshot => {
-  const byUidPatch: HistorySnapshot['byUidPatch'] = {};
-  for (const uid in s.byUid) {
-    const { commitState, object } = s.byUid[uid];
-    byUidPatch[uid] = { commitState, object };
-  }
-  return { pages: clonePages(s.pages), byUidPatch };
-};
-
-/* pop snapshot and merge back pdfId */
-const pop = (s: AnnotationState, src: 'past' | 'future'): AnnotationState => {
-  const stack = src === 'past' ? s.past : s.future;
-  if (!stack.length) return s;
-
-  const snap = stack[stack.length - 1];
-  const cur = snapshotOf(s);
-
-  /* rebuild current annotation map, preserving pdfId */
-  const rebuild: Record<string, TrackedAnnotation> = {};
-  for (const uid of Object.keys(s.byUid)) rebuild[uid] = { ...s.byUid[uid] };
-  for (const [uid, patch] of Object.entries(snap.byUidPatch)) {
-    rebuild[uid] = {
-      pdfId: rebuild[uid]?.pdfId,
-      commitState: patch.commitState,
-      object: patch.object,
-    };
-  }
-
-  const newPast = src === 'past' ? stack.slice(0, -1) : [...s.past, cur];
-  const newFuture = src === 'past' ? [...s.future, cur] : stack.slice(0, -1);
-
-  return { ...s, pages: snap.pages, byUid: rebuild, past: newPast, future: newFuture };
-};
 
 /* helper to immutably replace one annotation (preserving pdfId) */
 const patchAnno = (
@@ -142,9 +92,6 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
     ...cfg.toolDefaults,
   },
   colorPresets: cfg.colorPresets ?? DEFAULT_COLORS,
-
-  past: [],
-  future: [],
   hasPendingChanges: false,
 });
 
@@ -153,17 +100,23 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
   switch (action.type) {
     /* ───── bulk load from engine ───── */
     case SET_ANNOTATIONS: {
-      const pages: AnnotationState['pages'] = {};
-      const byUid: AnnotationState['byUid'] = {};
+      const newPages = { ...state.pages };
+      const newByUid = { ...state.byUid };
       for (const [pgStr, list] of Object.entries(action.payload)) {
-        const page = Number(pgStr);
-        pages[page] = list.map((a) => {
-          const uid = makeUid(page, a.id);
-          byUid[uid] = { pdfId: a.id, commitState: 'synced', object: a };
+        const pageIndex = Number(pgStr);
+        const oldUidsOnPage = state.pages[pageIndex] || [];
+        for (const uid of oldUidsOnPage) {
+          delete newByUid[uid];
+        }
+        const newUidsOnPage = list.map((a, index) => {
+          const localId = Date.now() + Math.random() + index;
+          const uid = makeUid(pageIndex, localId);
+          newByUid[uid] = { localId, pdfId: a.id, commitState: 'synced', object: a };
           return uid;
         });
+        newPages[pageIndex] = newUidsOnPage;
       }
-      return { ...state, pages, byUid, selectedUid: null, past: [], future: [] };
+      return { ...state, pages: newPages, byUid: newByUid };
     }
 
     /* ───── GUI bits ───── */
@@ -172,7 +125,7 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
     case SELECT_ANNOTATION:
       return {
         ...state,
-        selectedUid: makeUid(action.payload.pageIndex, action.payload.annotationId),
+        selectedUid: makeUid(action.payload.pageIndex, action.payload.localId),
       };
     case DESELECT_ANNOTATION:
       return { ...state, selectedUid: null };
@@ -195,15 +148,15 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
 
     /* ───── create ───── */
     case CREATE_ANNOTATION: {
-      const { pageIndex, annotation } = action.payload;
-      const uid = makeUid(pageIndex, annotation.id);
-      const after = push(state);
+      const { pageIndex, localId, annotation } = action.payload;
+      const uid = makeUid(pageIndex, localId);
+
       return {
-        ...after,
-        pages: { ...after.pages, [pageIndex]: [...(after.pages[pageIndex] ?? []), uid] },
+        ...state,
+        pages: { ...state.pages, [pageIndex]: [...(state.pages[pageIndex] ?? []), uid] },
         byUid: {
-          ...after.byUid,
-          [uid]: { pdfId: undefined, commitState: 'new', object: annotation },
+          ...state.byUid,
+          [uid]: { localId, pdfId: undefined, commitState: 'new', object: annotation },
         },
         hasPendingChanges: true,
       };
@@ -211,34 +164,30 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
 
     /* ───── delete ───── */
     case DELETE_ANNOTATION: {
-      const { pageIndex, annotationId } = action.payload;
-      const uid = makeUid(pageIndex, annotationId);
+      const { pageIndex, localId } = action.payload;
+      const uid = makeUid(pageIndex, localId);
       if (!state.byUid[uid]) return state;
 
-      const after = push(state);
-      const { [uid]: _gone, ...rest } = after.byUid;
+      /* keep the object but mark it as deleted */
       return {
-        ...after,
+        ...state,
         pages: {
-          ...after.pages,
-          [pageIndex]: (after.pages[pageIndex] ?? []).filter((u) => u !== uid),
+          ...state.pages,
+          [pageIndex]: (state.pages[pageIndex] ?? []).filter((u) => u !== uid),
         },
-        byUid: rest,
+        byUid: {
+          ...state.byUid,
+          [uid]: { ...state.byUid[uid], commitState: 'deleted' },
+        },
         hasPendingChanges: true,
       };
     }
 
     /* ───── field edits ───── */
     case PATCH_ANNOTATION: {
-      const uid = makeUid(action.payload.pageIndex, action.payload.annotationId);
-      return patchAnno(push(state), uid, action.payload.patch);
+      const uid = makeUid(action.payload.pageIndex, action.payload.localId);
+      return patchAnno(state, uid, action.payload.patch);
     }
-
-    /* ───── undo / redo ───── */
-    case UNDO:
-      return pop(state, 'past');
-    case REDO:
-      return pop(state, 'future');
 
     /* ───── commit bookkeeping ───── */
     case COMMIT_PENDING_CHANGES: {
@@ -251,6 +200,47 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
         };
       }
       return { ...state, byUid: cleaned, hasPendingChanges: false };
+    }
+
+    case REINDEX_PAGE_ANNOTATIONS: {
+      const { pageIndex } = action.payload;
+      const newByUid = { ...state.byUid };
+
+      const uidsOnPage = state.pages[pageIndex] || [];
+      const annosOnPage = uidsOnPage
+        .map((uid) => state.byUid[uid])
+        .filter((ta) => ta && ta.commitState !== 'deleted'); // Filter out annotations pending deletion
+
+      // CORRECTED: Sort by the existing pdfId to maintain relative order.
+      annosOnPage.sort((a, b) => (a.pdfId ?? Infinity) - (b.pdfId ?? Infinity));
+
+      // Update the pdfId for each annotation based on its new sorted index
+      annosOnPage.forEach((ta, newPdfId) => {
+        const uid = makeUid(pageIndex, ta.localId);
+        newByUid[uid] = { ...newByUid[uid], pdfId: newPdfId };
+      });
+
+      return { ...state, byUid: newByUid };
+    }
+
+    case STORE_PDF_ID: {
+      const { uid, pdfId } = action.payload;
+
+      const ta = state.byUid[uid];
+      if (!ta) return state;
+      return {
+        ...state,
+        byUid: {
+          ...state.byUid,
+          [uid]: { ...ta, pdfId, commitState: 'synced' },
+        },
+      };
+    }
+
+    case PURGE_ANNOTATION: {
+      const { uid } = action.payload;
+      const { [uid]: _gone, ...rest } = state.byUid;
+      return { ...state, byUid: rest };
     }
 
     default:

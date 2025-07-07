@@ -1864,6 +1864,18 @@ export interface PdfEngine<T = Blob> {
     doc: PdfDocumentObject,
     page: PdfPageObject,
     annotation: PdfAnnotationObject,
+  ) => PdfTask<number>;
+  /**
+   * Update a annotation on specified page
+   * @param doc - pdf document
+   * @param page - pdf page
+   * @param annotation - new annotations
+   * @returns task that indicates whether the operation succeeded
+   */
+  updatePageAnnotation: (
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObject,
   ) => PdfTask<boolean>;
   /**
    * Transform the annotation

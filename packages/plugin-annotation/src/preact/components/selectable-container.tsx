@@ -1,21 +1,12 @@
 /** @jsxImportSource preact */
 import { ComponentChildren } from 'preact';
-import {
-  PdfHighlightAnnoObject,
-  PdfSquigglyAnnoObject,
-  PdfUnderlineAnnoObject,
-  PdfStrikeOutAnnoObject,
-} from '@embedpdf/models';
 import { useCallback } from 'preact/hooks';
 import { useAnnotationCapability } from '../hooks';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
+import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 
 interface SelectableAnnotationContainerProps {
-  annotation:
-    | PdfHighlightAnnoObject
-    | PdfUnderlineAnnoObject
-    | PdfStrikeOutAnnoObject
-    | PdfSquigglyAnnoObject;
+  trackedAnnotation: TrackedAnnotation;
   scale: number;
   isSelected?: boolean;
   pageIndex: number;
@@ -23,7 +14,7 @@ interface SelectableAnnotationContainerProps {
 }
 
 export function SelectableAnnotationContainer({
-  annotation,
+  trackedAnnotation,
   scale,
   isSelected = false,
   pageIndex,
@@ -35,11 +26,11 @@ export function SelectableAnnotationContainer({
     (e: MouseEvent) => {
       e.stopPropagation();
       if (annotationProvides && selectionProvides) {
-        annotationProvides.selectAnnotation(pageIndex, annotation.id);
+        annotationProvides.selectAnnotation(pageIndex, trackedAnnotation.localId);
         selectionProvides.clear();
       }
     },
-    [annotationProvides, selectionProvides, isSelected, pageIndex, annotation.id],
+    [annotationProvides, selectionProvides, isSelected, pageIndex, trackedAnnotation.localId],
   );
 
   return (
@@ -53,10 +44,10 @@ export function SelectableAnnotationContainer({
           cursor: 'pointer',
           outline: isSelected ? '2px solid #007ACC' : 'none',
           outlineOffset: isSelected ? '1px' : '0px',
-          left: `${annotation.rect.origin.x * scale}px`,
-          top: `${annotation.rect.origin.y * scale}px`,
-          width: `${annotation.rect.size.width * scale}px`,
-          height: `${annotation.rect.size.height * scale}px`,
+          left: `${trackedAnnotation.object.rect.origin.x * scale}px`,
+          top: `${trackedAnnotation.object.rect.origin.y * scale}px`,
+          width: `${trackedAnnotation.object.rect.size.width * scale}px`,
+          height: `${trackedAnnotation.object.rect.size.height * scale}px`,
           zIndex: 1,
         }}
         onMouseDown={handleClick}

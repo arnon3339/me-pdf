@@ -290,11 +290,7 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
         color: c,
         opacity: currentAlpha,
       };
-      annotation.updateAnnotation(
-        selectedAnnotation.pageIndex,
-        selectedAnnotation.annotationId,
-        patch,
-      );
+      annotation.updateAnnotation(selectedAnnotation.pageIndex, selectedAnnotation.localId, patch);
     } else if (annotationMode != null) {
       /* tweak defaults for the active tool */
       const subtype = annotationMode as StylableSubtype;
@@ -319,7 +315,7 @@ export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
         };
         annotation.updateAnnotation(
           selectedAnnotation.pageIndex,
-          selectedAnnotation.annotationId,
+          selectedAnnotation.localId,
           patch,
         );
       }

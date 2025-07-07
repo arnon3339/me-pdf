@@ -569,13 +569,35 @@ export class WebWorkerEngine implements PdfEngine {
   ) {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'createPageAnnotations', doc, page, annotation);
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<boolean>(this.worker, requestId);
+    const task = new WorkerTask<number>(this.worker, requestId);
 
     const request: ExecuteRequest = {
       id: requestId,
       type: 'ExecuteRequest',
       data: {
         name: 'createPageAnnotation',
+        args: [doc, page, annotation],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  updatePageAnnotation(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObject,
+  ) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'updatePageAnnotation', doc, page, annotation);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'updatePageAnnotation',
         args: [doc, page, annotation],
       },
     };
