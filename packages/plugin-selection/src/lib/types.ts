@@ -25,9 +25,19 @@ export interface SelectionState {
   selecting: boolean;
 }
 
+export interface FormattedSelection {
+  pageIndex: number;
+  rect: Rect;
+  segmentRects: Rect[];
+}
+
 export interface SelectionCapability {
   /* geometry (cached) */
   getGeometry(page: number): PdfTask<PdfPageGeometry>;
+  /* formatted selection for all pages */
+  getFormattedSelection(): FormattedSelection[];
+  /* formatted selection for one page */
+  getFormattedSelectionForPage(page: number): FormattedSelection | null;
   /* highlight rectangles for one page */
   getHighlightRectsForPage(page: number): Rect[];
   /* highlight rectangles for all pages */
@@ -48,4 +58,11 @@ export interface SelectionCapability {
   onSelectionChange: EventHook<SelectionRangeX | null>;
   onTextRetrieved: EventHook<string[]>;
   onCopyToClipboard: EventHook<string>;
+  onBeginSelection: EventHook<{ page: number; index: number }>;
+  onEndSelection: EventHook<void>;
+  /** Tell the selection plugin that text selection should stay
+      enabled while <modeId> is active.                    */
+  enableForMode(modeId: string): void;
+  /** Quick check used by SelectionLayer during pointer events. */
+  isEnabledForMode(modeId: string): boolean;
 }

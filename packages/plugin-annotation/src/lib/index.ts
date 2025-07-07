@@ -12,11 +12,13 @@ export const AnnotationPluginPackage: PluginPackage<
   AnnotationAction
 > = {
   manifest,
-  create: (registry, engine) => new AnnotationPlugin(ANNOTATION_PLUGIN_ID, registry, engine),
+  create: (registry, engine, config) =>
+    new AnnotationPlugin(ANNOTATION_PLUGIN_ID, registry, engine, config),
   reducer,
-  initialState,
+  initialState: (_, config) => initialState(config),
 };
 
 export * from './annotation-plugin';
 export * from './types';
 export * from './manifest';
+export * from './selectors';

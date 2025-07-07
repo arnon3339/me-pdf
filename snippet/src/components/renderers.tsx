@@ -30,6 +30,8 @@ import { ThumbImg, ThumbnailsPane } from '@embedpdf/plugin-thumbnail/preact';
 import { useDebounce } from '@/hooks/use-debounce';
 import {
   ignore,
+  PdfAlphaColor,
+  PdfAnnotationSubtype,
   PdfBookmarkObject,
   PdfDocumentObject,
   PdfErrorCode,
@@ -37,6 +39,7 @@ import {
   Rotation,
   SearchAllPagesResult,
   SearchResult,
+  WebAlphaColor,
 } from '@embedpdf/models';
 import { MatchFlag } from '@embedpdf/models';
 import { Checkbox } from './ui/checkbox';
@@ -48,9 +51,15 @@ import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
 import { useStoreState } from '@embedpdf/core/preact';
+import {
+  SelectedAnnotation,
+  StylableSubtype,
+  TrackedAnnotation,
+} from '@embedpdf/plugin-annotation';
+import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
-  { commandId, onClick, active, ...props },
+  { commandId, onClick, active, color, disabled = false, ...props },
   children,
   context,
 ) => {
@@ -91,12 +100,13 @@ export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
       <Button
         active={active}
         onClick={handleClick}
+        disabled={disabled}
         className={` ${context?.variant === 'flyout' ? 'w-full rounded-none px-2' : ''} `}
       >
         {!command?.icon && props.img && (
           <img src={props.img} alt={props.label} className="h-5 w-5" />
         )}
-        {command?.icon && <Icon icon={command.icon} className="h-5 w-5" />}
+        {command?.icon && <Icon icon={command.icon} className="h-5 w-5" style={{ color }} />}
       </Button>
     </Tooltip>
   );
@@ -213,12 +223,182 @@ export const headerRenderer: ComponentRenderFunction<HeaderProps> = (props, chil
   );
 };
 
-export interface LeftPanelAnnotationStyleProps {}
+export interface LeftPanelAnnotationStyleProps {
+  selectedAnnotation: SelectedAnnotation | null;
+  annotationMode: PdfAnnotationSubtype | null;
+  colorPresets: string[];
+}
 
 export const leftPanelAnnotationStyleRenderer: ComponentRenderFunction<
   LeftPanelAnnotationStyleProps
 > = (props, children) => {
-  return <div>Left Panel Annotation Style</div>;
+  const { selectedAnnotation, annotationMode, colorPresets } = props;
+  const { provides: annotation } = useAnnotationCapability();
+  const [localOpacity, setLocalOpacity] = useState<number | null>(null);
+  const debouncedOpacity = useDebounce(localOpacity, 300);
+
+  // Get the current opacity value (either local state or from active color)
+  const activeType =
+    selectedAnnotation !== null ? selectedAnnotation.annotation.type : annotationMode;
+  const defaultSettings = activeType
+    ? annotation?.getToolDefaults(activeType as StylableSubtype)
+    : null;
+
+  const getAlphaColor = (color?: string, opacity?: number): WebAlphaColor => {
+    return {
+      color: color ?? '#FFFF00',
+      opacity: opacity ?? 1,
+    };
+  };
+
+  const getActiveColor = (): WebAlphaColor => {
+    if (!selectedAnnotation) return getAlphaColor(defaultSettings?.color, defaultSettings?.opacity);
+
+    switch (selectedAnnotation.annotation.type) {
+      case PdfAnnotationSubtype.HIGHLIGHT:
+      case PdfAnnotationSubtype.UNDERLINE:
+      case PdfAnnotationSubtype.STRIKEOUT:
+      case PdfAnnotationSubtype.SQUIGGLY:
+        return getAlphaColor(
+          selectedAnnotation.annotation.color,
+          selectedAnnotation.annotation.opacity,
+        );
+      default:
+        return getAlphaColor(defaultSettings?.color, defaultSettings?.opacity);
+    }
+  };
+
+  const activeColor = getActiveColor();
+
+  // Apply debounced opacity changes
+  useEffect(() => {
+    if (debouncedOpacity !== null) {
+      applyOpacity(debouncedOpacity);
+      setLocalOpacity(null); // Reset local state after applying
+    }
+  }, [debouncedOpacity]);
+
+  const applyColor = (c: string) => {
+    if (!annotation) return;
+
+    // Get the current alpha value from the active color (what's shown in the slider)
+    const currentAlpha = activeColor.opacity;
+
+    if (selectedAnnotation) {
+      /* paint existing annotation */
+      const patch: WebAlphaColor = {
+        color: c,
+        opacity: currentAlpha,
+      };
+      annotation.updateAnnotation(selectedAnnotation.pageIndex, selectedAnnotation.localId, patch);
+    } else if (annotationMode != null) {
+      /* tweak defaults for the active tool */
+      const subtype = annotationMode as StylableSubtype;
+
+      annotation.setToolDefaults(subtype, {
+        color: c,
+        opacity: currentAlpha,
+      });
+    }
+  };
+
+  const applyOpacity = (opacity: number) => {
+    if (!annotation) return;
+
+    if (selectedAnnotation) {
+      /* update existing annotation opacity */
+      const currentColor = activeColor;
+      if (currentColor) {
+        const patch: WebAlphaColor = {
+          color: currentColor.color,
+          opacity: opacity,
+        };
+        annotation.updateAnnotation(
+          selectedAnnotation.pageIndex,
+          selectedAnnotation.localId,
+          patch,
+        );
+      }
+    } else if (annotationMode != null) {
+      /* update tool defaults opacity */
+      const subtype = annotationMode as StylableSubtype;
+      const currentDefaults = annotation.getToolDefaults(subtype);
+      if (currentDefaults?.color) {
+        annotation.setToolDefaults(subtype, {
+          color: currentDefaults.color,
+          opacity: opacity,
+        });
+      }
+    }
+  };
+
+  const handleOpacityChange = (newOpacity: number) => {
+    setLocalOpacity(newOpacity); // Update UI immediately
+  };
+
+  const Swatch = ({ color, activeColor }: { color: string; activeColor?: WebAlphaColor }) => {
+    const isActive = color === activeColor?.color;
+    return (
+      <button
+        key={color}
+        className={`h-5 w-5 cursor-pointer rounded-full border border-gray-400 ${isActive ? 'outline-offset-3 outline outline-2 outline-blue-500' : ''}`}
+        style={{ backgroundColor: color }}
+        title={color}
+        onClick={() => applyColor(color)}
+      />
+    );
+  };
+
+  const title = defaultSettings
+    ? `${defaultSettings.name} ${selectedAnnotation ? 'Annotation' : 'Tool'}`
+    : 'Styles';
+
+  if (!activeType) {
+    return (
+      <div className="p-4">
+        <h2 className="text-md font-medium">{title}</h2>
+        <div className="mt-18 flex flex-col items-center gap-2">
+          <Icon icon="palette" className="h-18 w-18 text-gray-500" />
+          <div className="max-w-[150px] text-center text-sm text-gray-500">
+            Select an annotation to see styles
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentOpacity = localOpacity ?? activeColor?.opacity ?? 1;
+
+  return (
+    <div className="p-4">
+      <h2 className="text-md font-medium">{title}</h2>
+      {colorPresets.length ? (
+        <div className="mt-6">
+          <label class="block text-sm font-medium text-gray-900 dark:text-white">Color</label>
+          <div className="mt-3 flex justify-between">
+            {colorPresets.map((c) => (
+              <Swatch color={c} activeColor={activeColor} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      <div className="mt-6">
+        <label for="small-range" class="block text-sm font-medium text-gray-900 dark:text-white">
+          Opacity
+        </label>
+        <input
+          id="small-range"
+          onChange={(e) => handleOpacityChange(parseFloat(e.currentTarget.value))}
+          type="range"
+          value={currentOpacity}
+          step={0.1}
+          min={0.1}
+          max={1}
+          class="range-sm mb-2 h-1 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
+        />
+      </div>
+    </div>
+  );
 };
 
 export interface LeftPanelMainProps {
@@ -684,6 +864,43 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (
           {commandZoomIn?.icon && <Icon icon={commandZoomIn.icon} className="h-5 w-5" />}
         </Button>
       </Tooltip>
+    </div>
+  );
+};
+
+interface AnnotationSelectionMenuProps extends FloatingComponentProps {
+  open: boolean;
+}
+
+export const annotationSelectionMenuRenderer: ComponentRenderFunction<
+  AnnotationSelectionMenuProps
+> = (props, children) => {
+  const { provides: annotation } = useAnnotationCapability();
+  const { provides: scroll } = useScrollCapability();
+  const { provides: viewport } = useViewportCapability();
+
+  if (!props.open || !annotation || !scroll || !viewport) return null;
+
+  const selectedAnnotation = annotation.getSelectedAnnotation();
+  if (!selectedAnnotation) return null;
+
+  const bounding = [
+    { page: selectedAnnotation.object.pageIndex, rect: selectedAnnotation.object.rect },
+  ];
+  const coords = menuPositionForSelection(bounding, scroll, viewport, 10, 42);
+  if (!coords) return null; // nothing visible yet
+
+  return (
+    <div
+      style={{
+        left: `${coords.left}px`,
+        top: `${coords.top}px`,
+        transform: 'translate(-50%, 0%)',
+        zIndex: 2000,
+      }}
+      className="absolute rounded-md border border-[#cfd4da] bg-[#f8f9fa] p-1"
+    >
+      {children()}
     </div>
   );
 };

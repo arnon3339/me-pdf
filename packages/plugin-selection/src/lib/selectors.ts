@@ -1,5 +1,5 @@
 import { Rect, boundingRect } from '@embedpdf/models';
-import { SelectionState } from './types';
+import { FormattedSelection, SelectionState } from './types';
 
 export function selectRectsForPage(state: SelectionState, page: number) {
   return state.rects[page] ?? [];
@@ -19,4 +19,41 @@ export function selectBoundingRectsForAllPages(state: SelectionState) {
     if (bRect) out.push({ page, rect: bRect });
   }
   return out;
+}
+
+export function getFormattedSelectionForPage(
+  state: SelectionState,
+  page: number,
+): FormattedSelection | null {
+  const segmentRects = state.rects[page] || [];
+  if (segmentRects.length === 0) return null;
+  const boundingRect = selectBoundingRectForPage(state, page);
+  if (!boundingRect) return null;
+  return { pageIndex: page, rect: boundingRect, segmentRects };
+}
+
+export function getFormattedSelection(state: SelectionState) {
+  const result: FormattedSelection[] = [];
+
+  // Get all pages that have rects
+  const pages = Object.keys(state.rects).map(Number);
+
+  for (const pageIndex of pages) {
+    const segmentRects = state.rects[pageIndex] || [];
+
+    if (segmentRects.length === 0) continue;
+
+    // Calculate bounding rect for this page
+    const boundingRect = selectBoundingRectForPage(state, pageIndex);
+
+    if (boundingRect) {
+      result.push({
+        pageIndex,
+        rect: boundingRect,
+        segmentRects,
+      });
+    }
+  }
+
+  return result;
 }

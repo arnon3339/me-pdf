@@ -104,6 +104,16 @@ export class InteractionManagerPlugin extends BasePlugin<
   }
 
   private notifyHandlersActive(modeId: string) {
+    this.alwaysGlobal.forEach((handler) => {
+      handler.onHandlerActiveStart?.(modeId);
+    });
+
+    this.alwaysPage.forEach((handlerSet) => {
+      handlerSet.forEach((handler) => {
+        handler.onHandlerActiveStart?.(modeId);
+      });
+    });
+
     const mode = this.modes.get(modeId);
     if (!mode) return;
 
@@ -128,6 +138,16 @@ export class InteractionManagerPlugin extends BasePlugin<
   }
 
   private notifyHandlersInactive(modeId: string) {
+    this.alwaysGlobal.forEach((handler) => {
+      handler.onHandlerActiveEnd?.(modeId);
+    });
+
+    this.alwaysPage.forEach((handlerSet) => {
+      handlerSet.forEach((handler) => {
+        handler.onHandlerActiveEnd?.(modeId);
+      });
+    });
+
     const mode = this.modes.get(modeId);
     if (!mode) return;
 

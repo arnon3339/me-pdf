@@ -42,6 +42,7 @@ import {
   UIPluginPackage,
   isActive,
   UI_PLUGIN_ID,
+  isDisabled,
 } from '@embedpdf/plugin-ui';
 import {
   attachmentsRenderer,
@@ -67,6 +68,7 @@ import {
   ZoomRendererProps,
   leftPanelAnnotationStyleRenderer,
   printModalRenderer,
+  annotationSelectionMenuRenderer,
 } from './renderers';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import {
@@ -103,6 +105,8 @@ import {
   AnnotationPlugin,
   AnnotationPluginPackage,
   AnnotationState,
+  getSelectedAnnotation,
+  getSelectedAnnotationWithPageIndex,
 } from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
 import { PinchWrapper, MarqueeZoom } from '@embedpdf/plugin-zoom/preact';
@@ -118,7 +122,7 @@ import {
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
 import { EXPORT_PLUGIN_ID, ExportPlugin, ExportPluginPackage } from '@embedpdf/plugin-export';
-import { Download } from '@embedpdf/plugin-export/react';
+import { Download } from '@embedpdf/plugin-export/preact';
 import {
   INTERACTION_MANAGER_PLUGIN_ID,
   InteractionManagerPlugin,
@@ -133,6 +137,12 @@ import { PanMode } from '@embedpdf/plugin-pan/preact';
 import { PanPluginPackage } from '@embedpdf/plugin-pan';
 import { CAPTURE_PLUGIN_ID, CapturePlugin, CapturePluginPackage } from '@embedpdf/plugin-capture';
 import { MarqueeCapture } from '@embedpdf/plugin-capture/preact';
+import {
+  HISTORY_PLUGIN_ID,
+  HistoryPlugin,
+  HistoryPluginPackage,
+  HistoryState,
+} from '@embedpdf/plugin-history';
 import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
 
@@ -155,6 +165,7 @@ export interface PDFViewerConfig {
   worker?: boolean;
   wasmUrl?: string;
   plugins?: PluginConfigs;
+  log?: boolean;
 }
 
 // **Default Plugin Configurations**
@@ -219,6 +230,7 @@ type State = GlobalStoreState<{
   [ANNOTATION_PLUGIN_ID]: AnnotationState;
   [FULLSCREEN_PLUGIN_ID]: FullscreenState;
   [INTERACTION_MANAGER_PLUGIN_ID]: InteractionManagerState;
+  [HISTORY_PLUGIN_ID]: HistoryState;
 }>;
 
 export const icons: IconRegistry = {
@@ -348,19 +360,19 @@ export const icons: IconRegistry = {
   },
   underline: {
     id: 'underline',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h16" stroke="#e44234" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /></svg>',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h16" stroke="currentColor" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M8 10h8" stroke="#000000" /></svg>',
   },
   squiggly: {
     id: 'squiggly',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-wavy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M8 10h8" stroke="currentColor" /><path d="M4 20c1.5 -1.5 3.5 -1.5 5 0s3.5 1.5 5 0 3.5 -1.5 5 0" stroke="#e44234" /></svg>',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-wavy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M8 10h8" stroke="#000000" /><path d="M4 20c1.5 -1.5 3.5 -1.5 5 0s3.5 1.5 5 0 3.5 -1.5 5 0" stroke="currentColor" /></svg>',
   },
   strikethrough: {
     id: 'strikethrough',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor" /><path d="M4 10h16" stroke="#e44234" /></svg>',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M4 10h16" stroke="currentColor" /></svg>',
   },
   highlight: {
     id: 'highlight',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="#ffcd45" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="currentColor"/><path d="M8 10h8" stroke="currentColor"/></svg>',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="currentColor" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000"/><path d="M8 10h8" stroke="#000000"/></svg>',
   },
   palette: {
     id: 'palette',
@@ -385,6 +397,22 @@ export const icons: IconRegistry = {
   screenshot: {
     id: 'screenshot',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-screenshot"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 19a2 2 0 0 1 -2 -2" /><path d="M5 13v-2" /><path d="M5 7a2 2 0 0 1 2 -2" /><path d="M11 5h2" /><path d="M17 5a2 2 0 0 1 2 2" /><path d="M19 11v2" /><path d="M19 17v4" /><path d="M21 19h-4" /><path d="M13 19h-2" /></svg>',
+  },
+  arrowBackUp: {
+    id: 'arrowBackUp',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-back-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4" /><path d="M5 10h11a4 4 0 1 1 0 8h-1" /></svg>',
+  },
+  arrowForwardUp: {
+    id: 'arrowForwardUp',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-forward-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 14l4 -4l-4 -4" /><path d="M19 10h-11a4 4 0 1 0 0 8h1" /></svg>',
+  },
+  trash: {
+    id: 'trash',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>',
+  },
+  deviceFloppy: {
+    id: 'deviceFloppy',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>',
   },
 };
 
@@ -1003,9 +1031,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
     //shortcutLabel: 'V',
     action: (registry) => {
       const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
-
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (ui) {
         ui.setHeaderVisible({ id: 'toolsHeader', visible: false });
+        annotation?.setAnnotationMode(null);
       }
     },
     active: (storeState) => storeState.plugins.ui.header.toolsHeader.visible === false,
@@ -1205,28 +1234,108 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Squiggly Selection',
     type: 'action',
     icon: 'squiggly',
-    action: (registry, state) => {},
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (!selection || !annotation) return;
+
+      const defaultSettings = annotation.getToolDefaults(PdfAnnotationSubtype.SQUIGGLY);
+      const formattedSelection = selection.getFormattedSelection();
+      for (const selection of formattedSelection) {
+        annotation.createAnnotation(selection.pageIndex, {
+          id: Date.now() + Math.random(),
+          type: PdfAnnotationSubtype.SQUIGGLY,
+          color: defaultSettings.color,
+          opacity: defaultSettings.opacity,
+          pageIndex: selection.pageIndex,
+          rect: selection.rect,
+          segmentRects: selection.segmentRects,
+        });
+      }
+
+      selection.clear();
+    },
   },
   underlineSelection: {
     id: 'underlineSelection',
     label: 'Underline Selection',
     type: 'action',
     icon: 'underline',
-    action: (registry, state) => {},
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (!selection || !annotation) return;
+
+      const defaultSettings = annotation.getToolDefaults(PdfAnnotationSubtype.UNDERLINE);
+      const formattedSelection = selection.getFormattedSelection();
+      for (const selection of formattedSelection) {
+        annotation.createAnnotation(selection.pageIndex, {
+          id: Date.now() + Math.random(),
+          type: PdfAnnotationSubtype.UNDERLINE,
+          color: defaultSettings.color,
+          opacity: defaultSettings.opacity,
+          pageIndex: selection.pageIndex,
+          rect: selection.rect,
+          segmentRects: selection.segmentRects,
+        });
+      }
+
+      selection.clear();
+    },
   },
   strikethroughSelection: {
     id: 'strikethroughSelection',
     label: 'Strikethrough Selection',
     type: 'action',
     icon: 'strikethrough',
-    action: (registry, state) => {},
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (!selection || !annotation) return;
+
+      const defaultSettings = annotation.getToolDefaults(PdfAnnotationSubtype.STRIKEOUT);
+      const formattedSelection = selection.getFormattedSelection();
+      for (const selection of formattedSelection) {
+        annotation.createAnnotation(selection.pageIndex, {
+          id: Date.now() + Math.random(),
+          type: PdfAnnotationSubtype.STRIKEOUT,
+          color: defaultSettings.color,
+          opacity: defaultSettings.opacity,
+          pageIndex: selection.pageIndex,
+          rect: selection.rect,
+          segmentRects: selection.segmentRects,
+        });
+      }
+
+      selection.clear();
+    },
   },
   highlightSelection: {
     id: 'highlightSelection',
     label: 'Highlight Selection',
     type: 'action',
     icon: 'highlight',
-    action: (registry, state) => {},
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
+      if (!selection || !annotation) return;
+
+      const defaultSettings = annotation.getToolDefaults(PdfAnnotationSubtype.HIGHLIGHT);
+      const formattedSelection = selection.getFormattedSelection();
+      for (const selection of formattedSelection) {
+        annotation.createAnnotation(selection.pageIndex, {
+          id: Date.now() + Math.random(),
+          type: PdfAnnotationSubtype.HIGHLIGHT,
+          color: defaultSettings.color,
+          opacity: defaultSettings.opacity,
+          pageIndex: selection.pageIndex,
+          rect: selection.rect,
+          segmentRects: selection.segmentRects,
+        });
+      }
+
+      selection.clear();
+    },
   },
   styleAnnotation: {
     id: 'styleAnnotation',
@@ -1252,6 +1361,21 @@ export const menuItems: Record<string, MenuItem<State>> = {
       storeState.plugins.ui.panel.leftPanel.open === true &&
       storeState.plugins.ui.panel.leftPanel.visibleChild === 'leftPanelAnnotationStyle',
   },
+  deleteAnnotation: {
+    id: 'deleteAnnotation',
+    label: 'Delete',
+    type: 'action',
+    icon: 'trash',
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (!annotation) return;
+
+      const selectedAnnotation = annotation.getSelectedAnnotation();
+      if (!selectedAnnotation) return;
+
+      annotation.deleteAnnotation(selectedAnnotation.object.pageIndex, selectedAnnotation.localId);
+    },
+  },
   panMode: {
     id: 'panMode',
     label: 'Pan',
@@ -1272,6 +1396,50 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) =>
       storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'panMode',
   },
+  undo: {
+    id: 'undo',
+    label: 'Undo',
+    type: 'action',
+    icon: 'arrowBackUp',
+    action: (registry) => {
+      const history = registry.getPlugin<HistoryPlugin>(HISTORY_PLUGIN_ID)?.provides();
+      if (history) {
+        history.undo();
+      }
+    },
+    disabled: (storeState) => {
+      const history = storeState.plugins[HISTORY_PLUGIN_ID];
+      return !history.global.canUndo;
+    },
+  },
+  redo: {
+    id: 'redo',
+    label: 'Redo',
+    type: 'action',
+    icon: 'arrowForwardUp',
+    action: (registry) => {
+      const history = registry.getPlugin<HistoryPlugin>(HISTORY_PLUGIN_ID)?.provides();
+      if (history) {
+        history.redo();
+      }
+    },
+    disabled: (storeState) => {
+      const history = storeState.plugins[HISTORY_PLUGIN_ID];
+      return !history.global.canRedo;
+    },
+  },
+  commitAnnotations: {
+    id: 'commitAnnotations',
+    label: 'Commit',
+    type: 'action',
+    icon: 'deviceFloppy',
+    action: (registry) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        annotation.commit();
+      }
+    },
+  },
 };
 
 // Define components
@@ -1289,6 +1457,15 @@ export const components: Record<string, UIComponentType<State>> = {
       active: isActive(menuItems.menuCtr, storeState),
     }),
   },
+  deleteAnnotationButton: {
+    type: 'iconButton',
+    id: 'deleteAnnotationButton',
+    props: {
+      commandId: 'deleteAnnotation',
+      active: false,
+      label: 'Delete',
+    },
+  },
   styleButton: {
     type: 'iconButton',
     id: 'styleButton',
@@ -1301,6 +1478,41 @@ export const components: Record<string, UIComponentType<State>> = {
       ...ownProps,
       active: isActive(menuItems.styleAnnotation, storeState),
     }),
+  },
+  undoButton: {
+    type: 'iconButton',
+    id: 'undoButton',
+    props: {
+      commandId: 'undo',
+      disabled: false,
+      label: 'Undo',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      disabled: isDisabled(menuItems.undo, storeState),
+    }),
+  },
+  redoButton: {
+    type: 'iconButton',
+    id: 'redoButton',
+    props: {
+      commandId: 'redo',
+      disabled: false,
+      label: 'Redo',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      disabled: isDisabled(menuItems.redo, storeState),
+    }),
+  },
+  commitAnnotationsButton: {
+    type: 'iconButton',
+    id: 'commitAnnotationsButton',
+    props: {
+      commandId: 'commitAnnotations',
+      active: false,
+      label: 'Commit',
+    },
   },
   copyButton: {
     type: 'iconButton',
@@ -1335,10 +1547,12 @@ export const components: Record<string, UIComponentType<State>> = {
       commandId: 'underline',
       active: false,
       label: 'Underline',
+      color: '#e44234',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.underline, storeState),
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.UNDERLINE]!.color,
     }),
   },
   squigglyButton: {
@@ -1348,10 +1562,12 @@ export const components: Record<string, UIComponentType<State>> = {
       commandId: 'squiggly',
       active: false,
       label: 'Squiggly',
+      color: '#e44234',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.squiggly, storeState),
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.SQUIGGLY]!.color,
     }),
   },
   strikethroughButton: {
@@ -1361,10 +1577,12 @@ export const components: Record<string, UIComponentType<State>> = {
       commandId: 'strikethrough',
       active: false,
       label: 'Strikethrough',
+      color: '#e44234',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.strikethrough, storeState),
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.STRIKEOUT]!.color,
     }),
   },
   highlightButton: {
@@ -1374,10 +1592,12 @@ export const components: Record<string, UIComponentType<State>> = {
       commandId: 'highlight',
       active: false,
       label: 'Highlight',
+      color: '#ffcd45',
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.highlight, storeState),
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
     }),
   },
   highlightSelectionButton: {
@@ -1385,28 +1605,48 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'highlightSelectionButton',
     props: {
       commandId: 'highlightSelection',
+      color: '#ffcd45',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
+    }),
   },
   underlineSelectionButton: {
     type: 'iconButton',
     id: 'underlineSelectionButton',
     props: {
       commandId: 'underlineSelection',
+      color: '#e44234',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.UNDERLINE]!.color,
+    }),
   },
   strikethroughSelectionButton: {
     type: 'iconButton',
     id: 'strikethroughSelectionButton',
     props: {
       commandId: 'strikethroughSelection',
+      color: '#e44234',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.STRIKEOUT]!.color,
+    }),
   },
   squigglySelectionButton: {
     type: 'iconButton',
     id: 'squigglySelectionButton',
     props: {
       commandId: 'squigglySelection',
+      color: '#e44234',
     },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.SQUIGGLY]!.color,
+    }),
   },
   viewCtrButton: {
     type: 'iconButton',
@@ -1628,9 +1868,9 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'headerCenter',
     type: 'groupedItems',
     slots: [
-      //{ componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
-      //{ componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
-      //{ componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
+      { componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
+      { componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
+      { componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
     ],
     props: {
       gap: 10,
@@ -1733,6 +1973,38 @@ export const components: Record<string, UIComponentType<State>> = {
       direction: 'horizontal',
     },
   },
+  annotationSelectionMenuButtons: {
+    id: 'annotationSelectionMenuButtons',
+    type: 'groupedItems',
+    slots: [
+      { componentId: 'deleteAnnotationButton', priority: 0 },
+      { componentId: 'styleButton', priority: 1 },
+    ],
+    props: {
+      gap: 10,
+    },
+  },
+  annotationSelectionMenu: {
+    id: 'annotationSelectionMenu',
+    type: 'floating',
+    render: 'annotationSelectionMenu',
+    props: {
+      open: false,
+      scrollerPosition: 'inside',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      isScolling: storeState.plugins.viewport.isScrolling,
+      scale: storeState.core.scale,
+      rotation: storeState.core.rotation,
+      selectedUid: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedUid,
+      open: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedUid !== null,
+    }),
+    slots: [{ componentId: 'annotationSelectionMenuButtons', priority: 0 }],
+    getChildContext: {
+      direction: 'horizontal',
+    },
+  },
   topHeader: {
     type: 'header',
     id: 'topHeader',
@@ -1763,6 +2035,9 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'squigglyButton', priority: 4 },
       { componentId: 'divider1', priority: 5 },
       { componentId: 'styleButton', priority: 6 },
+      { componentId: 'divider1', priority: 7 },
+      { componentId: 'undoButton', priority: 8 },
+      { componentId: 'redoButton', priority: 9 },
     ],
     props: {
       gap: 10,
@@ -1799,6 +2074,15 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'leftPanelAnnotationStyle',
     type: 'custom',
     render: 'leftPanelAnnotationStyle',
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      selectedAnnotation: getSelectedAnnotationWithPageIndex(
+        storeState.plugins[ANNOTATION_PLUGIN_ID],
+      ),
+      annotationMode: storeState.plugins[ANNOTATION_PLUGIN_ID].annotationMode,
+      colorPresets: storeState.plugins[ANNOTATION_PLUGIN_ID].colorPresets,
+      toolDefaults: storeState.plugins[ANNOTATION_PLUGIN_ID].toolDefaults,
+    }),
   },
   leftPanelMain: defineComponent<{ visibleChild: string }, LeftPanelMainProps, State>()({
     id: 'leftPanelMain',
@@ -2016,6 +2300,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
             uiCapability.registerComponentRenderer('attachments', attachmentsRenderer);
             uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
             uiCapability.registerComponentRenderer('textSelectionMenu', textSelectionMenuRenderer);
+            uiCapability.registerComponentRenderer(
+              'annotationSelectionMenu',
+              annotationSelectionMenuRenderer,
+            );
             uiCapability.registerComponentRenderer('leftPanelMain', leftPanelMainRenderer);
             uiCapability.registerComponentRenderer('printModal', printModalRenderer);
             uiCapability.registerComponentRenderer(
@@ -2059,6 +2347,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             scale: 2,
             imageType: 'image/png',
           }),
+          createPluginRegistration(HistoryPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (

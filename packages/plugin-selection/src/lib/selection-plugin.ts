@@ -46,6 +46,9 @@ export class SelectionPlugin extends BasePlugin<
   static readonly id = 'selection' as const;
   private doc?: PdfDocumentObject;
 
+  /** Modes that should trigger text-selection logic */
+  private enabledModes = new Set<string>(['default']);
+
   /* interactive state */
   private selecting = false;
   private anchor?: { page: number; index: number };
@@ -53,6 +56,8 @@ export class SelectionPlugin extends BasePlugin<
   private readonly selChange$ = createBehaviorEmitter<SelectionState['selection']>();
   private readonly textRetrieved$ = createBehaviorEmitter<string[]>();
   private readonly copyToClipboard$ = createEmitter<string>();
+  private readonly beginSelection$ = createEmitter<{ page: number; index: number }>();
+  private readonly endSelection$ = createEmitter<void>();
 
   constructor(
     id: string,
@@ -77,6 +82,8 @@ export class SelectionPlugin extends BasePlugin<
   buildCapability(): SelectionCapability {
     return {
       getGeometry: (p) => this.getOrLoadGeometry(p),
+      getFormattedSelection: () => selector.getFormattedSelection(this.state),
+      getFormattedSelectionForPage: (p) => selector.getFormattedSelectionForPage(this.state, p),
       getHighlightRectsForPage: (p) => selector.selectRectsForPage(this.state, p),
       getHighlightRects: () => this.state.rects,
       getBoundingRectForPage: (p) => selector.selectBoundingRectForPage(this.state, p),
@@ -85,12 +92,15 @@ export class SelectionPlugin extends BasePlugin<
       update: (p, i) => this.updateSelection(p, i),
       end: () => this.endSelection(),
       clear: () => this.clearSelection(),
-
+      onCopyToClipboard: this.copyToClipboard$.on,
       onSelectionChange: this.selChange$.on,
       onTextRetrieved: this.textRetrieved$.on,
-      onCopyToClipboard: this.copyToClipboard$.on,
+      onBeginSelection: this.beginSelection$.on,
+      onEndSelection: this.endSelection$.on,
       getSelectedText: () => this.getSelectedText(),
       copyToClipboard: () => this.copyToClipboard(),
+      enableForMode: (id: string) => this.enabledModes.add(id),
+      isEnabledForMode: (id: string) => this.enabledModes.has(id),
     };
   }
 
@@ -117,12 +127,14 @@ export class SelectionPlugin extends BasePlugin<
     this.selecting = true;
     this.anchor = { page, index };
     this.dispatch(startSelection());
+    this.beginSelection$.emit({ page, index });
   }
 
   private endSelection() {
     this.selecting = false;
     this.anchor = undefined;
     this.dispatch(endSelection());
+    this.endSelection$.emit();
   }
 
   private clearSelection() {

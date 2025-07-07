@@ -33,7 +33,10 @@ import {
   PdfGlyphObject,
   PdfPageGeometry,
   ImageConversionTypes,
+  PdfAnnotationObjectBase,
+  PdfAlphaColor,
   PageTextSlice,
+  WebAlphaColor,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response } from './runner';
 
@@ -308,6 +311,30 @@ export class WebWorkerEngine implements PdfEngine {
     return task;
   }
 
+  updateAnnotationColor(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObjectBase,
+    color: WebAlphaColor,
+    which: number = 0,
+  ) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', doc, page, annotation, color);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'updateAnnotationColor',
+        args: [doc, page, annotation, color, which],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
   /**
    * {@inheritDoc @embedpdf/models!PdfEngine.getDocPermissions}
    *
@@ -542,13 +569,35 @@ export class WebWorkerEngine implements PdfEngine {
   ) {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'createPageAnnotations', doc, page, annotation);
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<boolean>(this.worker, requestId);
+    const task = new WorkerTask<number>(this.worker, requestId);
 
     const request: ExecuteRequest = {
       id: requestId,
       type: 'ExecuteRequest',
       data: {
         name: 'createPageAnnotation',
+        args: [doc, page, annotation],
+      },
+    };
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  updatePageAnnotation(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObject,
+  ) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'updatePageAnnotation', doc, page, annotation);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+
+    const request: ExecuteRequest = {
+      id: requestId,
+      type: 'ExecuteRequest',
+      data: {
+        name: 'updatePageAnnotation',
         args: [doc, page, annotation],
       },
     };

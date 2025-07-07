@@ -40,6 +40,7 @@
     "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@embedpdf/plugin-pan": "workspace:*",
     "@embedpdf/plugin-capture": "workspace:*",
+    "@embedpdf/plugin-history": "workspace:*",
     "preact": "^10.17.0"
   },
   "devDependencies": {

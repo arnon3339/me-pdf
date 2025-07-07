@@ -69,6 +69,16 @@ export type TaskState<R, D> =
       reason: D;
     };
 
+/**
+ * Result type for allSettled
+ *
+ * @public
+ */
+export type TaskSettledResult<R, D> =
+  | { status: 'resolved'; value: R }
+  | { status: 'rejected'; reason: D }
+  | { status: 'aborted'; reason: D };
+
 export class TaskAbortedError<D> extends Error {
   constructor(reason: D) {
     super(`Task aborted: ${JSON.stringify(reason)}`);
@@ -241,6 +251,195 @@ export class Task<R, D> {
     } else {
       this.reject(error.reason);
     }
+  }
+
+  /**
+   * Static method to wait for all tasks to resolve
+   * Returns a new task that resolves with an array of all results
+   * Rejects immediately if any task fails
+   *
+   * @param tasks - array of tasks to wait for
+   * @returns new task that resolves when all input tasks resolve
+   * @public
+   */
+  static all<R extends readonly Task<any, any>[]>(
+    tasks: R,
+  ): Task<{ [K in keyof R]: R[K] extends Task<infer U, any> ? U : never }, any> {
+    type ResultType = { [K in keyof R]: R[K] extends Task<infer U, any> ? U : never };
+
+    const combinedTask = new Task<ResultType, any>();
+
+    if (tasks.length === 0) {
+      combinedTask.resolve([] as any);
+      return combinedTask;
+    }
+
+    const results: any[] = new Array(tasks.length);
+    let resolvedCount = 0;
+    let isSettled = false;
+
+    tasks.forEach((task, index) => {
+      task.wait(
+        (result) => {
+          if (isSettled) return;
+
+          results[index] = result;
+          resolvedCount++;
+
+          if (resolvedCount === tasks.length) {
+            isSettled = true;
+            combinedTask.resolve(results as ResultType);
+          }
+        },
+        (error) => {
+          if (isSettled) return;
+
+          isSettled = true;
+          if (error.type === 'abort') {
+            combinedTask.abort(error.reason);
+          } else {
+            combinedTask.reject(error.reason);
+          }
+        },
+      );
+    });
+
+    return combinedTask;
+  }
+
+  /**
+   * Static method to wait for all tasks to settle (resolve, reject, or abort)
+   * Always resolves with an array of settlement results
+   *
+   * @param tasks - array of tasks to wait for
+   * @returns new task that resolves when all input tasks settle
+   * @public
+   */
+  static allSettled<R extends readonly Task<any, any>[]>(
+    tasks: R,
+  ): Task<
+    { [K in keyof R]: R[K] extends Task<infer U, infer E> ? TaskSettledResult<U, E> : never },
+    never
+  > {
+    type ResultType = {
+      [K in keyof R]: R[K] extends Task<infer U, infer E> ? TaskSettledResult<U, E> : never;
+    };
+
+    const combinedTask = new Task<ResultType, never>();
+
+    if (tasks.length === 0) {
+      combinedTask.resolve([] as any);
+      return combinedTask;
+    }
+
+    const results: any[] = new Array(tasks.length);
+    let settledCount = 0;
+
+    tasks.forEach((task, index) => {
+      task.wait(
+        (result) => {
+          results[index] = { status: 'resolved', value: result };
+          settledCount++;
+
+          if (settledCount === tasks.length) {
+            combinedTask.resolve(results as ResultType);
+          }
+        },
+        (error) => {
+          results[index] = {
+            status: error.type === 'abort' ? 'aborted' : 'rejected',
+            reason: error.reason,
+          };
+          settledCount++;
+
+          if (settledCount === tasks.length) {
+            combinedTask.resolve(results as ResultType);
+          }
+        },
+      );
+    });
+
+    return combinedTask;
+  }
+
+  /**
+   * Static method that resolves/rejects with the first task that settles
+   *
+   * @param tasks - array of tasks to race
+   * @returns new task that settles with the first input task that settles
+   * @public
+   */
+  static race<R extends readonly Task<any, any>[]>(
+    tasks: R,
+  ): Task<
+    R[number] extends Task<infer U, any> ? U : never,
+    R[number] extends Task<any, infer E> ? E : never
+  > {
+    type ResultType = R[number] extends Task<infer U, any> ? U : never;
+    type ErrorType = R[number] extends Task<any, infer E> ? E : never;
+
+    const combinedTask = new Task<ResultType, ErrorType>();
+
+    if (tasks.length === 0) {
+      combinedTask.reject('No tasks provided' as ErrorType);
+      return combinedTask;
+    }
+
+    let isSettled = false;
+
+    tasks.forEach((task) => {
+      task.wait(
+        (result) => {
+          if (isSettled) return;
+          isSettled = true;
+          combinedTask.resolve(result);
+        },
+        (error) => {
+          if (isSettled) return;
+          isSettled = true;
+          if (error.type === 'abort') {
+            combinedTask.abort(error.reason);
+          } else {
+            combinedTask.reject(error.reason);
+          }
+        },
+      );
+    });
+
+    return combinedTask;
+  }
+
+  /**
+   * Utility to track progress of multiple tasks
+   *
+   * @param tasks - array of tasks to track
+   * @param onProgress - callback called when any task completes
+   * @returns new task that resolves when all input tasks resolve
+   * @public
+   */
+  static withProgress<R extends readonly Task<any, any>[]>(
+    tasks: R,
+    onProgress?: (completed: number, total: number) => void,
+  ): Task<{ [K in keyof R]: R[K] extends Task<infer U, any> ? U : never }, any> {
+    const combinedTask = Task.all(tasks);
+
+    if (onProgress) {
+      let completedCount = 0;
+      tasks.forEach((task) => {
+        task.wait(
+          () => {
+            completedCount++;
+            onProgress(completedCount, tasks.length);
+          },
+          () => {
+            completedCount++;
+            onProgress(completedCount, tasks.length);
+          },
+        );
+      });
+    }
+
+    return combinedTask;
   }
 }
 

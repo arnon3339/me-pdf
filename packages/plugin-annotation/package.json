@@ -25,10 +25,13 @@
     "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
     "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@embedpdf/models": "workspace:*"
+  },
   "devDependencies": {
-    "@embedpdf/models": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
+    "@embedpdf/plugin-selection": "workspace:*",
+    "@embedpdf/plugin-history": "workspace:*",
     "@types/react": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
@@ -36,6 +39,7 @@
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
+    "@embedpdf/plugin-selection": "workspace:*",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0",
     "preact": "^10.26.4"

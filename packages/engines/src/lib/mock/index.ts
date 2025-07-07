@@ -41,6 +41,9 @@ import {
   PdfGlyphObject,
   PdfPageGeometry,
   PageTextSlice,
+  PdfAnnotationObjectBase,
+  PdfAlphaColor,
+  WebAlphaColor,
 } from '@embedpdf/models';
 
 /**
@@ -82,6 +85,15 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     getSignatures: (doc: PdfDocumentObject) => {
       const signatures: PdfSignatureObject[] = [];
       return PdfTaskHelper.resolve(signatures);
+    },
+    updateAnnotationColor: (
+      doc: PdfDocumentObject,
+      page: PdfPageObject,
+      annotation: PdfAnnotationObjectBase,
+      color: WebAlphaColor,
+      which: number = 0,
+    ) => {
+      return PdfTaskHelper.resolve(true);
     },
     getBookmarks: (doc: PdfDocumentObject) => {
       const bookmarks: PdfBookmarkObject[] = [];
@@ -223,7 +235,6 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     }),
     getPageAnnotations: jest.fn((doc: PdfDocumentObject, page: PdfPageObject) => {
       const link: PdfLinkAnnoObject = {
-        status: PdfAnnotationObjectStatus.Committed,
         pageIndex: page.index,
         id: page.index + 1,
         type: PdfAnnotationSubtype.LINK,
@@ -245,17 +256,15 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
             height: 100,
           },
         },
-        appearances: {
-          normal: '',
-          rollover: '',
-          down: '',
-        },
       };
       const annotations: PdfAnnotationObject[] = [];
       annotations.push(link);
       return PdfTaskHelper.resolve(annotations);
     }),
     createPageAnnotation: jest.fn(() => {
+      return PdfTaskHelper.resolve(1);
+    }),
+    updatePageAnnotation: jest.fn(() => {
       return PdfTaskHelper.resolve(true);
     }),
     transformPageAnnotation: () => {

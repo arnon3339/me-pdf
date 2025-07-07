@@ -102,6 +102,13 @@ export abstract class BasePlugin<
    * Core Dispatch
    */
   protected dispatchCoreAction(action: CoreAction): StoreState<CoreState> {
+    return this.coreStore.dispatchToCore(action);
+  }
+
+  /**
+   * Dispatch an action to all plugins
+   */
+  protected dispatchToAllPlugins(action: TAction): StoreState<CoreState> {
     return this.coreStore.dispatch(action);
   }
 
