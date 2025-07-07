@@ -284,7 +284,10 @@ export class AnnotationPlugin extends BasePlugin<
     }
     const command: Command = {
       execute,
-      undo: () => this.dispatch(deleteAnnotation(pageIndex, localId)),
+      undo: () => {
+        this.dispatch(deselectAnnotation());
+        this.dispatch(deleteAnnotation(pageIndex, localId));
+      },
     };
     this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
   }
