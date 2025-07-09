@@ -226,6 +226,7 @@ var createPdfium = (() => {
       '_FPDFAnnot_SetColor',
       '_FPDFAnnot_SetFlags',
       '_FPDFAnnot_SetFocusableSubtypes',
+      '_FPDFAnnot_SetFontColor',
       '_FPDFAnnot_SetFormFieldFlags',
       '_FPDFAnnot_SetRect',
       '_FPDFAnnot_SetStringValue',
@@ -295,6 +296,7 @@ var createPdfium = (() => {
       '_FPDFFont_GetWeight',
       '_FPDFFormObj_CountObjects',
       '_FPDFFormObj_GetObject',
+      '_FPDFFormObj_RemoveObject',
       '_FPDFGlyphPath_CountGlyphSegments',
       '_FPDFGlyphPath_GetGlyphPathSegment',
       '_FPDFImageObj_GetBitmap',
@@ -352,6 +354,7 @@ var createPdfium = (() => {
       '_FPDFPage_HasTransparency',
       '_FPDFPage_InsertClipPath',
       '_FPDFPage_InsertObject',
+      '_FPDFPage_InsertObjectAtIndex',
       '_FPDFPage_New',
       '_FPDFPage_RemoveAnnot',
       '_FPDFPage_RemoveObject',
@@ -5884,6 +5887,10 @@ var createPdfium = (() => {
       'FPDFAnnot_GetFontSize',
       3,
     ));
+    var _FPDFAnnot_SetFontColor = (Module['_FPDFAnnot_SetFontColor'] = createExportWrapper(
+      'FPDFAnnot_SetFontColor',
+      5,
+    ));
     var _FPDFAnnot_GetFontColor = (Module['_FPDFAnnot_GetFontColor'] = createExportWrapper(
       'FPDFAnnot_GetFontColor',
       5,
@@ -6155,6 +6162,8 @@ var createPdfium = (() => {
       'FPDFPage_InsertObject',
       2,
     ));
+    var _FPDFPage_InsertObjectAtIndex = (Module['_FPDFPage_InsertObjectAtIndex'] =
+      createExportWrapper('FPDFPage_InsertObjectAtIndex', 3));
     var _FPDFPage_RemoveObject = (Module['_FPDFPage_RemoveObject'] = createExportWrapper(
       'FPDFPage_RemoveObject',
       2,
@@ -6335,6 +6344,10 @@ var createPdfium = (() => {
     ));
     var _FPDFFormObj_GetObject = (Module['_FPDFFormObj_GetObject'] = createExportWrapper(
       'FPDFFormObj_GetObject',
+      2,
+    ));
+    var _FPDFFormObj_RemoveObject = (Module['_FPDFFormObj_RemoveObject'] = createExportWrapper(
+      'FPDFFormObj_RemoveObject',
       2,
     ));
     var _FPDFPageObj_CreateNewPath = (Module['_FPDFPageObj_CreateNewPath'] = createExportWrapper(

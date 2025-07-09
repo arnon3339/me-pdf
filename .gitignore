@@ -8,3 +8,6 @@ config/tsup.frameworks.config.bundled*
 .next
 .cursor
 .DS_Store
+.gcs_entries
+.gclient*
+.cipd
