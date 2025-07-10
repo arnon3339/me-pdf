@@ -27,6 +27,14 @@ var createPdfium = (() => {
       readyPromiseReject = reject;
     });
     [
+      '_EPDFAnnot_GenerateAppearance',
+      '_EPDFAnnot_GetBorderDashPattern',
+      '_EPDFAnnot_GetBorderDashPatternCount',
+      '_EPDFAnnot_GetBorderEffect',
+      '_EPDFAnnot_GetBorderStyle',
+      '_EPDFAnnot_GetColor',
+      '_EPDFAnnot_GetRectangleDifferences',
+      '_EPDFAnnot_SetColor',
       '_FORM_CanRedo',
       '_FORM_CanUndo',
       '_FORM_DoDocumentAAction',
@@ -5923,6 +5931,30 @@ var createPdfium = (() => {
       createExportWrapper('FPDFAnnot_GetFileAttachment', 1));
     var _FPDFAnnot_AddFileAttachment = (Module['_FPDFAnnot_AddFileAttachment'] =
       createExportWrapper('FPDFAnnot_AddFileAttachment', 2));
+    var _EPDFAnnot_SetColor = (Module['_EPDFAnnot_SetColor'] = createExportWrapper(
+      'EPDFAnnot_SetColor',
+      6,
+    ));
+    var _EPDFAnnot_GetColor = (Module['_EPDFAnnot_GetColor'] = createExportWrapper(
+      'EPDFAnnot_GetColor',
+      6,
+    ));
+    var _EPDFAnnot_GetBorderEffect = (Module['_EPDFAnnot_GetBorderEffect'] = createExportWrapper(
+      'EPDFAnnot_GetBorderEffect',
+      2,
+    ));
+    var _EPDFAnnot_GetRectangleDifferences = (Module['_EPDFAnnot_GetRectangleDifferences'] =
+      createExportWrapper('EPDFAnnot_GetRectangleDifferences', 5));
+    var _EPDFAnnot_GetBorderDashPatternCount = (Module['_EPDFAnnot_GetBorderDashPatternCount'] =
+      createExportWrapper('EPDFAnnot_GetBorderDashPatternCount', 1));
+    var _EPDFAnnot_GetBorderDashPattern = (Module['_EPDFAnnot_GetBorderDashPattern'] =
+      createExportWrapper('EPDFAnnot_GetBorderDashPattern', 3));
+    var _EPDFAnnot_GetBorderStyle = (Module['_EPDFAnnot_GetBorderStyle'] = createExportWrapper(
+      'EPDFAnnot_GetBorderStyle',
+      2,
+    ));
+    var _EPDFAnnot_GenerateAppearance = (Module['_EPDFAnnot_GenerateAppearance'] =
+      createExportWrapper('EPDFAnnot_GenerateAppearance', 1));
     var _FPDFDoc_GetAttachmentCount = (Module['_FPDFDoc_GetAttachmentCount'] = createExportWrapper(
       'FPDFDoc_GetAttachmentCount',
       1,

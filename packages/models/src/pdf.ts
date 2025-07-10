@@ -770,6 +770,44 @@ export enum PDF_FORM_FIELD_TYPE {
   XFA_TEXTFIELD = 15,
 }
 
+export enum PdfAnnotationColorType {
+  Color = 0,
+  InteriorColor = 1,
+}
+
+/**
+ * Border style of pdf annotation
+ *
+ * @public
+ */
+export enum PdfAnnotationBorderStyle {
+  UNKNOWN = 0,
+  SOLID = 1,
+  DASHED = 2,
+  BEVELED = 3,
+  INSET = 4,
+  UNDERLINE = 5,
+  CLOUDY = 6,
+}
+
+/**
+ * Flag of pdf annotation
+ *
+ * @public
+ */
+export enum PdfAnnotationFlags {
+  NONE = 0,
+  INVISIBLE = 1 << 0,
+  HIDDEN = 1 << 1,
+  PRINT = 1 << 2,
+  NO_ZOOM = 1 << 3,
+  NO_ROTATE = 1 << 4,
+  NO_VIEW = 1 << 5,
+  READ_ONLY = 1 << 6,
+  LOCKED = 1 << 7,
+  TOGGLE_NOVIEW = 1 << 8,
+}
+
 /**
  * Flag of form field
  *
@@ -809,6 +847,70 @@ export enum PdfPageObjectType {
 export interface PdfWidgetAnnoOption {
   label: string;
   isSelected: boolean;
+}
+
+export type PdfAnnotationFlagName =
+  | 'invisible'
+  | 'hidden'
+  | 'print'
+  | 'noZoom'
+  | 'noRotate'
+  | 'noView'
+  | 'readOnly'
+  | 'locked'
+  | 'toggleNoView';
+
+type FlagMap = Partial<
+  Record<Exclude<PdfAnnotationFlags, PdfAnnotationFlags.NONE>, PdfAnnotationFlagName>
+>;
+
+export const PdfAnnotationFlagName: Readonly<FlagMap> = Object.freeze({
+  [PdfAnnotationFlags.INVISIBLE]: 'invisible',
+  [PdfAnnotationFlags.HIDDEN]: 'hidden',
+  [PdfAnnotationFlags.PRINT]: 'print',
+  [PdfAnnotationFlags.NO_ZOOM]: 'noZoom',
+  [PdfAnnotationFlags.NO_ROTATE]: 'noRotate',
+  [PdfAnnotationFlags.NO_VIEW]: 'noView',
+  [PdfAnnotationFlags.READ_ONLY]: 'readOnly',
+  [PdfAnnotationFlags.LOCKED]: 'locked',
+  [PdfAnnotationFlags.TOGGLE_NOVIEW]: 'toggleNoView',
+} as const);
+
+/** Build a reverse map once so look-ups are O(1)                      */
+const PdfAnnotationFlagValue: Record<PdfAnnotationFlagName, PdfAnnotationFlags> = Object.entries(
+  PdfAnnotationFlagName,
+).reduce(
+  (acc, [bit, name]) => {
+    acc[name as PdfAnnotationFlagName] = Number(bit) as PdfAnnotationFlags;
+    return acc;
+  },
+  {} as Record<PdfAnnotationFlagName, PdfAnnotationFlags>,
+);
+
+/**
+ * Convert the raw bit-mask coming from `FPDFAnnot_GetFlags()` into
+ * an array of human-readable flag names (“invisible”, “print”…).
+ */
+export function flagsToNames(raw: number): PdfAnnotationFlagName[] {
+  return (
+    Object.keys(PdfAnnotationFlagName) as unknown as Exclude<
+      PdfAnnotationFlags,
+      PdfAnnotationFlags.NONE
+    >[]
+  )
+    .filter((flag) => (raw & flag) !== 0)
+    .map((flag) => PdfAnnotationFlagName[flag]!);
+}
+
+/**
+ * Convert an array of flag-names back into the numeric mask that
+ * PDFium expects for `FPDFAnnot_SetFlags()`.
+ */
+export function namesToFlags(names: readonly PdfAnnotationFlagName[]): PdfAnnotationFlags {
+  return names.reduce<PdfAnnotationFlags>(
+    (mask, name) => mask | PdfAnnotationFlagValue[name],
+    PdfAnnotationFlags.NONE,
+  );
 }
 
 /**
@@ -1099,6 +1201,42 @@ export interface PdfStampAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfCircleAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.CIRCLE;
+  /**
+   * flags of circle annotation
+   */
+  flags: PdfAnnotationFlagName[];
+  /**
+   * color of circle annotation
+   */
+  color: string;
+  /**
+   * opacity of circle annotation
+   */
+  opacity: number;
+  /**
+   * stroke-width of circle annotation
+   */
+  strokeWidth: number;
+  /**
+   * stroke color of circle annotation
+   */
+  strokeColor: string;
+  /**
+   * stroke style of circle annotation
+   */
+  strokeStyle: PdfAnnotationBorderStyle;
+  /**
+   * stroke dash array of circle annotation
+   */
+  strokeDashArray?: number[];
+  /**
+   * cloudy border intensity of circle annotation
+   */
+  cloudyBorderIntensity?: number;
+  /**
+   * cloudy border inset of circle annotation
+   */
+  cloudyBorderInset?: number[];
 }
 
 /**
@@ -1109,6 +1247,42 @@ export interface PdfCircleAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfSquareAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.SQUARE;
+  /**
+   * flags of square annotation
+   */
+  flags: PdfAnnotationFlagName[];
+  /**
+   * color of square annotation
+   */
+  color: string;
+  /**
+   * opacity of square annotation
+   */
+  opacity: number;
+  /**
+   * stroke-width of square annotation
+   */
+  strokeWidth: number;
+  /**
+   * stroke color of square annotation
+   */
+  strokeColor: string;
+  /**
+   * stroke style of square annotation
+   */
+  strokeStyle: PdfAnnotationBorderStyle;
+  /**
+   * stroke dash array of square annotation
+   */
+  strokeDashArray?: number[];
+  /**
+   * cloudy border intensity of circle annotation
+   */
+  cloudyBorderIntensity?: number;
+  /**
+   * cloudy border inset of circle annotation
+   */
+  cloudyBorderInset?: number[];
 }
 
 /**

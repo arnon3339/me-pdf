@@ -1,5 +1,22 @@
 /* AUTO-GENERATED — DO NOT EDIT BY HAND */
 export const functions = {
+  EPDFAnnot_GenerateAppearance: [['number'] as const, 'boolean'] as const,
+  EPDFAnnot_GetBorderDashPattern: [['number', 'number', 'number'] as const, 'boolean'] as const,
+  EPDFAnnot_GetBorderDashPatternCount: [['number'] as const, 'number'] as const,
+  EPDFAnnot_GetBorderEffect: [['number', 'number'] as const, 'boolean'] as const,
+  EPDFAnnot_GetBorderStyle: [['number', 'number'] as const, 'number'] as const,
+  EPDFAnnot_GetColor: [
+    ['number', 'number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
+  EPDFAnnot_GetRectangleDifferences: [
+    ['number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
+  EPDFAnnot_SetColor: [
+    ['number', 'number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
   FORM_CanRedo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_CanUndo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_DoDocumentAAction: [['number', 'number'] as const, null] as const,
