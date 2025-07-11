@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Logger, PdfEngine } from '@embedpdf/models';
 
+const defaultWasmUrl = `https://cdn.jsdelivr.net/npm/@embedpdf/pdfium@__PDFIUM_VERSION__/dist/pdfium.wasm`;
+
 interface UsePdfiumEngineProps {
-  wasmUrl: string;
+  wasmUrl?: string;
   worker?: boolean;
   logger?: Logger;
 }
 
-export function usePdfiumEngine({ wasmUrl, worker = true, logger }: UsePdfiumEngineProps) {
+export function usePdfiumEngine({
+  wasmUrl = defaultWasmUrl,
+  worker = true,
+  logger,
+}: UsePdfiumEngineProps) {
   const [engine, setEngine] = useState<PdfEngine | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
