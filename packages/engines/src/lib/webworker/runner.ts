@@ -254,6 +254,9 @@ export class EngineRunner {
       case 'renderPageRect':
         task = this.engine[name]!(...args);
         break;
+      case 'renderAnnotation':
+        task = this.engine[name]!(...args);
+        break;
       case 'renderThumbnail':
         task = this.engine[name]!(...args);
         break;

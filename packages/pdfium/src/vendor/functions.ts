@@ -1,5 +1,9 @@
 /* AUTO-GENERATED — DO NOT EDIT BY HAND */
 export const functions = {
+  EPDF_RenderAnnotBitmap: [
+    ['number', 'number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
   EPDFAnnot_GenerateAppearance: [['number'] as const, 'boolean'] as const,
   EPDFAnnot_GetBorderDashPattern: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_GetBorderDashPatternCount: [['number'] as const, 'number'] as const,

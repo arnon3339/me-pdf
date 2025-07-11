@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { PdfEngine } from '@embedpdf/models';
+import { Logger, PdfEngine } from '@embedpdf/models';
 
 interface UsePdfiumEngineProps {
   wasmUrl: string;
   worker?: boolean;
+  logger?: Logger;
 }
 
-export function usePdfiumEngine({ wasmUrl, worker = true }: UsePdfiumEngineProps) {
+export function usePdfiumEngine({ wasmUrl, worker = true, logger }: UsePdfiumEngineProps) {
   const [engine, setEngine] = useState<PdfEngine | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -21,7 +22,7 @@ export function usePdfiumEngine({ wasmUrl, worker = true }: UsePdfiumEngineProps
           ? await import('@embedpdf/engines/pdfium-worker-engine')
           : await import('@embedpdf/engines/pdfium-direct-engine');
 
-        const pdfEngine = await createPdfiumEngine(wasmUrl);
+        const pdfEngine = await createPdfiumEngine(wasmUrl, logger);
         engineRef.current = pdfEngine;
         setEngine(pdfEngine);
         setLoading(false);
@@ -38,7 +39,7 @@ export function usePdfiumEngine({ wasmUrl, worker = true }: UsePdfiumEngineProps
       engineRef.current?.destroy();
       engineRef.current = null;
     };
-  }, [wasmUrl, worker]);
+  }, [wasmUrl, worker, logger]);
 
   return { engine, isLoading: loading, error };
 }

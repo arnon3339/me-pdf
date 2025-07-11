@@ -493,3 +493,67 @@ export function boundingRect(rects: Rect[]): Rect | null {
     },
   };
 }
+
+export interface Matrix {
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
+}
+
+/**
+ * Build a CTM that maps *PDF-space* inside the annotation
+ * → *device-space* inside the bitmap, honouring
+ * zoom (scaleFactor × dpr) **and** page-rotation.
+ */
+/** build the CTM for any page-rotation */
+export const makeMatrix = (rectangle: Rect, rotation: Rotation, scaleFactor: number): Matrix => {
+  const { width, height } = rectangle.size;
+
+  switch (rotation) {
+    case Rotation.Degree0: // normal
+      return {
+        a: scaleFactor,
+        b: 0,
+        c: 0,
+        d: -scaleFactor,
+        e: 0,
+        f: height * scaleFactor,
+      };
+
+    case Rotation.Degree90: // +90° CW
+      //  matrix =   [ 0  s ]   after flip-Y → no extra translation needed
+      //              [ s  0 ]
+      return {
+        a: 0,
+        b: scaleFactor,
+        c: scaleFactor,
+        d: 0,
+        e: 0,
+        f: 0,
+      };
+
+    case Rotation.Degree180: // +180°
+      return {
+        a: -scaleFactor,
+        b: 0,
+        c: 0,
+        d: scaleFactor,
+        e: width * scaleFactor,
+        f: 0,
+      };
+
+    case Rotation.Degree270: // +270° CW  (= 90° CCW)
+      //  flips the other way, so we nudge it back inside the bitmap
+      return {
+        a: 0,
+        b: -scaleFactor,
+        c: -scaleFactor,
+        d: 0,
+        e: height * scaleFactor,
+        f: width * scaleFactor,
+      };
+  }
+};

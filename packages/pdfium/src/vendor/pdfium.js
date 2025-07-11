@@ -27,6 +27,7 @@ var createPdfium = (() => {
       readyPromiseReject = reject;
     });
     [
+      '_EPDF_RenderAnnotBitmap',
       '_EPDFAnnot_GenerateAppearance',
       '_EPDFAnnot_GetBorderDashPattern',
       '_EPDFAnnot_GetBorderDashPatternCount',
@@ -7120,6 +7121,10 @@ var createPdfium = (() => {
     ));
     var _FPDF_RenderPageBitmapWithMatrix = (Module['_FPDF_RenderPageBitmapWithMatrix'] =
       createExportWrapper('FPDF_RenderPageBitmapWithMatrix', 5));
+    var _EPDF_RenderAnnotBitmap = (Module['_EPDF_RenderAnnotBitmap'] = createExportWrapper(
+      'EPDF_RenderAnnotBitmap',
+      6,
+    ));
     var _FPDF_ClosePage = (Module['_FPDF_ClosePage'] = createExportWrapper('FPDF_ClosePage', 1));
     var _FPDF_CloseDocument = (Module['_FPDF_CloseDocument'] = createExportWrapper(
       'FPDF_CloseDocument',

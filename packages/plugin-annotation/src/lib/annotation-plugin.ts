@@ -16,6 +16,8 @@ import {
   PdfTaskHelper,
   PdfErrorCode,
   PdfTask,
+  Rotation,
+  AppearanceMode,
 } from '@embedpdf/models';
 import {
   ActiveTool,
@@ -24,6 +26,7 @@ import {
   AnnotationState,
   BaseAnnotationDefaults,
   GetPageAnnotationsOptions,
+  RenderAnnotationOptions,
   StylableSubtype,
   TrackedAnnotation,
 } from './types';
@@ -218,6 +221,7 @@ export class AnnotationPlugin extends BasePlugin<
         this.updateAnnotation(pageIndex, localId, patch),
       deleteAnnotation: (pageIndex: number, localId: number) =>
         this.deleteAnnotation(pageIndex, localId),
+      renderAnnotation: (options: RenderAnnotationOptions) => this.renderAnnotation(options),
       onStateChange: this.state$.on,
       onModeChange: this.modeChange$.on,
       onActiveToolChange: this.activeTool$.on,
@@ -267,6 +271,38 @@ export class AnnotationPlugin extends BasePlugin<
     }
 
     return this.engine.getPageAnnotations(doc, page);
+  }
+
+  private renderAnnotation({
+    pageIndex,
+    annotation,
+    scaleFactor = 1,
+    rotation = Rotation.Degree0,
+    dpr = 1,
+    mode = AppearanceMode.Normal,
+    imageType = 'image/webp',
+  }: RenderAnnotationOptions) {
+    const coreState = this.coreState.core;
+
+    if (!coreState.document) {
+      throw new Error('document does not open');
+    }
+
+    const page = coreState.document.pages.find((page) => page.index === pageIndex);
+    if (!page) {
+      throw new Error('page does not exist');
+    }
+
+    return this.engine.renderAnnotation(
+      coreState.document,
+      page,
+      annotation,
+      scaleFactor,
+      rotation,
+      dpr,
+      mode,
+      imageType,
+    );
   }
 
   private selectAnnotation(pageIndex: number, annotationId: number) {

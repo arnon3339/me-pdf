@@ -4,7 +4,14 @@ import styles from '../styles/index.css';
 import { EmbedPDF } from '@embedpdf/core/preact';
 import { createPluginRegistration } from '@embedpdf/core';
 import { usePdfiumEngine } from '@embedpdf/engines/preact';
-import { PdfAnnotationSubtype, Rotation } from '@embedpdf/models';
+import {
+  AllLogger,
+  ConsoleLogger,
+  NoopLogger,
+  PdfAnnotationSubtype,
+  PerfLogger,
+  Rotation,
+} from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
   ViewportPluginConfig,
@@ -1108,7 +1115,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'More',
     icon: 'dots',
     type: 'menu',
-    children: ['view', 'annotate', 'shapes', 'fillAndSign', 'form'],
+    children: ['view', 'annotate' /*,'shapes', 'fillAndSign', 'form'*/],
     active: (storeState) =>
       storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'tabOverflow',
   },
@@ -2252,10 +2259,13 @@ export const uiConfig: UIPluginConfig = {
   icons,
 };
 
+const logger = new AllLogger([new ConsoleLogger(), new PerfLogger()]);
+
 export function PDFViewer({ config }: PDFViewerProps) {
   const { engine, isLoading } = usePdfiumEngine({
     wasmUrl: config.wasmUrl ?? 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm',
     worker: config.worker,
+    logger: config.log ? logger : undefined,
   });
 
   // **Merge user configurations with defaults**

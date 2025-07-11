@@ -95,6 +95,7 @@ import {
   PdfAnnotationBorderStyle,
   flagsToNames,
   PdfAnnotationFlagName,
+  makeMatrix,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -4983,6 +4984,170 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       isChecked,
       options,
     };
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.renderAnnotation}
+   *
+   * @public
+   */
+  renderAnnotation(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObject,
+    scaleFactor: number,
+    rotation: Rotation,
+    dpr: number = 1, // device-pixel-ratio (canvas)
+    mode: AppearanceMode = AppearanceMode.Normal,
+    imageType: ImageConversionTypes = 'image/webp',
+  ): PdfTask<T> {
+    this.logger.debug(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'renderAnnotation',
+      doc,
+      page,
+      annotation,
+      scaleFactor,
+      rotation,
+      dpr,
+      mode,
+      imageType,
+    );
+    this.logger.perf(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      `RenderAnnotation`,
+      'Begin',
+      `${doc.id}-${page.index}-${annotation.id}`,
+    );
+    const task = new Task<T, PdfErrorReason>();
+    const ctx = this.cache.getContext(doc.id);
+
+    if (!ctx) {
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `RenderAnnotation`,
+        'End',
+        `${doc.id}-${page.index}-${annotation.id}`,
+      );
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    /* ── 1. grab native handles ───────────────────────────────────────── */
+    const pageCtx = ctx.acquirePage(page.index);
+    const annotPtr = this.pdfiumModule.FPDFPage_GetAnnot(pageCtx.pagePtr, annotation.id);
+    if (!annotPtr) {
+      pageCtx.release();
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `RenderAnnotation`,
+        'End',
+        `${doc.id}-${page.index}-${annotation.id}`,
+      );
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.NotFound,
+        message: 'annotation not found',
+      });
+    }
+
+    const finalScale = scaleFactor * dpr;
+    /* ── 2. decide bitmap size (integer pixels) ──────────────────────── */
+    const annotRect = annotation.rect;
+    const bitmapRect = toIntRect(transformRect(page.size, annotRect, rotation, finalScale));
+
+    const format = BitmapFormat.Bitmap_BGRA;
+    const bytesPerPixel = 4;
+    const bitmapHeapLength = bitmapRect.size.width * bitmapRect.size.height * bytesPerPixel;
+    const bitmapHeapPtr = this.malloc(bitmapHeapLength);
+    const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
+      bitmapRect.size.width,
+      bitmapRect.size.height,
+      format,
+      bitmapHeapPtr,
+      bitmapRect.size.width * bytesPerPixel,
+    );
+    this.pdfiumModule.FPDFBitmap_FillRect(
+      bitmapPtr,
+      0,
+      0,
+      bitmapRect.size.width,
+      bitmapRect.size.height,
+      0x00000000,
+    );
+
+    const matrix = makeMatrix(annotation.rect, rotation, finalScale);
+
+    // Allocate memory for the matrix on the wasm heap and write to it
+    const matrixSize = 6 * 4;
+    const matrixPtr = this.malloc(matrixSize);
+    const matrixView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, matrixPtr, 6);
+    matrixView.set([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f]);
+
+    /* ── 5. call the native helper with the new matrix ───────────────── */
+    const FLAGS = RenderFlag.REVERSE_BYTE_ORDER;
+    const ok = !!this.pdfiumModule.EPDF_RenderAnnotBitmap(
+      bitmapPtr,
+      pageCtx.pagePtr,
+      annotPtr,
+      mode,
+      matrixPtr,
+      FLAGS,
+    );
+
+    /* ── 6. tear down native resources ───────────────────────────────── */
+    this.free(matrixPtr); // Free the matrix memory
+    this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
+    this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
+    pageCtx.release();
+
+    if (!ok) {
+      this.free(bitmapHeapPtr);
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `RenderAnnotation`,
+        'End',
+        `${doc.id}-${page.index}-${annotation.id}`,
+      );
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: 'EPDF_RenderAnnotBitmap failed',
+      });
+    }
+
+    /* ── 6. copy out + convert to Blob (reuse existing converter) ─────── */
+    const data = this.pdfiumModule.pdfium.HEAPU8.subarray(
+      bitmapHeapPtr,
+      bitmapHeapPtr + bitmapHeapLength,
+    );
+
+    const imageData: PdfImage = {
+      data: new Uint8ClampedArray(data),
+      width: bitmapRect.size.width,
+      height: bitmapRect.size.height,
+    };
+
+    this.free(bitmapHeapPtr);
+
+    this.logger.perf(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      `RenderAnnotation`,
+      'End',
+      `${doc.id}-${page.index}-${annotation.id}`,
+    );
+
+    this.imageDataConverter(imageData, imageType)
+      .then((blob) => task.resolve(blob))
+      .catch((err) => task.reject({ code: PdfErrorCode.Unknown, message: String(err) }));
+
+    return task;
   }
 
   /**

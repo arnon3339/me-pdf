@@ -44,6 +44,8 @@ import {
   PdfAnnotationObjectBase,
   PdfAlphaColor,
   WebAlphaColor,
+  AppearanceMode,
+  ImageConversionTypes,
 } from '@embedpdf/models';
 
 /**
@@ -230,6 +232,20 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
 
       return PdfTaskHelper.resolve(blob);
     }),
+    renderAnnotation: jest.fn(
+      (
+        doc: PdfDocumentObject,
+        page: PdfPageObject,
+        annotation: PdfAnnotationObject,
+        scaleFactor: number,
+        rotation: Rotation,
+        dpr: number,
+        mode: AppearanceMode,
+        imageType: ImageConversionTypes,
+      ) => {
+        return PdfTaskHelper.resolve(new Blob([], { type: 'image/png' }));
+      },
+    ),
     getAllAnnotations: jest.fn((doc: PdfDocumentObject) => {
       return PdfTaskHelper.resolve({});
     }),

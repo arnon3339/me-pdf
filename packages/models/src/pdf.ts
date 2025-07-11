@@ -1998,6 +1998,29 @@ export interface PdfEngine<T = Blob> {
     imageType?: ImageConversionTypes,
   ) => PdfTask<T>;
   /**
+   * Render a single annotation into an ImageData blob.
+   *
+   * Note:  • honours Display-Matrix, page rotation & DPR
+   *        • you decide whether to include the page background
+   * @param doc - pdf document
+   * @param page - pdf page
+   * @param annotation - the annotation to render
+   * @param scaleFactor - factor of scaling
+   * @param rotation - rotated angle
+   * @param dpr - devicePixelRatio
+   * @param mode - appearance mode
+   */
+  renderAnnotation(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObject,
+    scaleFactor: number,
+    rotation: Rotation,
+    dpr: number,
+    mode: AppearanceMode,
+    imageType: ImageConversionTypes,
+  ): PdfTask<T>;
+  /**
    * Get annotations of pdf page
    * @param doc - pdf document
    * @param page - pdf page
