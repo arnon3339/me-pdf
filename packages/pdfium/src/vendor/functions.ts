@@ -17,6 +17,7 @@ export const functions = {
     ['number', 'number', 'number', 'number', 'number'] as const,
     'boolean',
   ] as const,
+  EPDFAnnot_SetBorderStyle: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetColor: [
     ['number', 'number', 'number', 'number', 'number', 'number'] as const,
     'boolean',

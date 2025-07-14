@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
-import { ComponentChildren, Fragment, JSX } from 'preact';
+import { Fragment, JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { ignore, PdfAnnotationObject, PdfErrorCode, Rotation } from '@embedpdf/models';
+import { ignore, PdfAnnotationObject, PdfErrorCode } from '@embedpdf/models';
 
 import { useAnnotationCapability } from '../hooks/use-annotation';
 

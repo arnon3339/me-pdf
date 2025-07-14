@@ -8,6 +8,8 @@ export interface InteractionManagerState {
   activeMode: string;
   /** Cursor that is currently active (e.g. `"auto"` or `"pointer"`). */
   cursor: string;
+  /** Whether the interaction is paused */
+  paused: boolean;
 }
 
 export interface InteractionMode {
@@ -106,4 +108,10 @@ export interface InteractionManagerCapability {
   getHandlersForScope(scope: InteractionScope): PointerEventHandlers | null;
   /** Returns whether the current active mode demands an overlay */
   activeModeIsExclusive(): boolean;
+  /** Pause the interaction */
+  pause(): void;
+  /** Resume the interaction */
+  resume(): void;
+  /** Returns whether the interaction is paused */
+  isPaused(): boolean;
 }

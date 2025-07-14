@@ -86,6 +86,8 @@ export function createPointerProvider(
 
   (Object.keys(domEvent) as K[]).forEach((k) => {
     listeners[k] = (evt: Event) => {
+      if (cap.isPaused()) return;
+
       const pe = evt as PointerEvent; // safe – we only attach to pointer*
       const currentModeId = cap.getActiveMode();
       active?.[k]?.(toPos(pe, element), pe, currentModeId);

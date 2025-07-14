@@ -990,7 +990,24 @@ export interface PdfInkListObject {
 export interface PdfInkAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.INK;
+  /**
+   * ink list of annotation
+   */
   inkList: PdfInkListObject[];
+  /**
+   * color of ink annotation
+   */
+  color: string;
+
+  /**
+   * opacity of ink annotation
+   */
+  opacity: number;
+
+  /**
+   * stroke-width of ink annotation
+   */
+  strokeWidth: number;
 }
 
 /**
@@ -1056,12 +1073,12 @@ export interface PdfHighlightAnnoObject extends PdfAnnotationObjectBase {
   /**
    * color of highlight annotation
    */
-  color?: string;
+  color: string;
 
   /**
    * opacity of highlight annotation
    */
-  opacity?: number;
+  opacity: number;
 
   /**
    * quads of highlight area
@@ -1300,12 +1317,12 @@ export interface PdfSquigglyAnnoObject extends PdfAnnotationObjectBase {
   /**
    * color of strike out annotation
    */
-  color?: string;
+  color: string;
 
   /**
    * opacity of strike out annotation
    */
-  opacity?: number;
+  opacity: number;
   /**
    * quads of highlight area
    */
@@ -1327,12 +1344,12 @@ export interface PdfUnderlineAnnoObject extends PdfAnnotationObjectBase {
   /**
    * color of strike out annotation
    */
-  color?: string;
+  color: string;
 
   /**
    * opacity of strike out annotation
    */
-  opacity?: number;
+  opacity: number;
   /**
    * quads of highlight area
    */
@@ -1355,12 +1372,12 @@ export interface PdfStrikeOutAnnoObject extends PdfAnnotationObjectBase {
   /**
    * color of strike out annotation
    */
-  color?: string;
+  color: string;
 
   /**
    * opacity of strike out annotation
    */
-  opacity?: number;
+  opacity: number;
 
   /**
    * quads of highlight area
@@ -2073,20 +2090,6 @@ export interface PdfEngine<T = Blob> {
     doc: PdfDocumentObject,
     page: PdfPageObject,
     annotation: PdfAnnotationObject,
-  ) => PdfTask<boolean>;
-  /**
-   * Transform the annotation
-   * @param doc - pdf document
-   * @param page - pdf page
-   * @param annotation - new annotations
-   * @param transformation - transformation applied on the annotation
-   * @returns task whether the annotations is transformed successfully
-   */
-  transformPageAnnotation: (
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    annotation: PdfAnnotationObject,
-    transformation: PdfAnnotationTransformation,
   ) => PdfTask<boolean>;
   /**
    * Remove a annotation on specified page

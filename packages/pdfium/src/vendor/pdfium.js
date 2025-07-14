@@ -35,6 +35,7 @@ var createPdfium = (() => {
       '_EPDFAnnot_GetBorderStyle',
       '_EPDFAnnot_GetColor',
       '_EPDFAnnot_GetRectangleDifferences',
+      '_EPDFAnnot_SetBorderStyle',
       '_EPDFAnnot_SetColor',
       '_FORM_CanRedo',
       '_FORM_CanUndo',
@@ -5953,6 +5954,10 @@ var createPdfium = (() => {
     var _EPDFAnnot_GetBorderStyle = (Module['_EPDFAnnot_GetBorderStyle'] = createExportWrapper(
       'EPDFAnnot_GetBorderStyle',
       2,
+    ));
+    var _EPDFAnnot_SetBorderStyle = (Module['_EPDFAnnot_SetBorderStyle'] = createExportWrapper(
+      'EPDFAnnot_SetBorderStyle',
+      3,
     ));
     var _EPDFAnnot_GenerateAppearance = (Module['_EPDFAnnot_GenerateAppearance'] =
       createExportWrapper('EPDFAnnot_GenerateAppearance', 1));

@@ -73,10 +73,10 @@ import {
   thumbnailsRender,
   zoomRenderer,
   ZoomRendererProps,
-  leftPanelAnnotationStyleRenderer,
   printModalRenderer,
   annotationSelectionMenuRenderer,
 } from './renderers';
+import { leftPanelAnnotationStyleRenderer } from './annotation-sidebar';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import {
   ZOOM_PLUGIN_ID,
@@ -420,6 +420,10 @@ export const icons: IconRegistry = {
   deviceFloppy: {
     id: 'deviceFloppy',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>',
+  },
+  pencilMarker: {
+    id: 'pencilMarker',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24" class="icon icon-tabler icons-tabler-outline icon-tabler-writing-draw" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none"><g transform="rotate(47.565 12.1875 10.75)"><path stroke="#000000" d="m14.18752,16.75l0,-12c0,-1.1 -0.9,-2 -2,-2s-2,0.9 -2,2l0,12l2,2l2,-2z"/><path stroke="#000000" d="m10.18752,6.75l4,0"/></g><path stroke="currentColor" d="m19.37499,20.125c0.56874,0.0625 -4.04999,-0.5625 -6.41249,-0.4375c-2.3625,0.125 -4.75833,1.22916 -6.85624,1.625c-1.76458,0.6875 -3.40416,-0.9375 -1.98125,-2.49999"/></svg>',
   },
 };
 
@@ -1236,6 +1240,25 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) =>
       storeState.plugins.annotation.annotationMode === PdfAnnotationSubtype.HIGHLIGHT,
   },
+  freehand: {
+    id: 'freehand',
+    label: 'Freehand',
+    type: 'action',
+    icon: 'pencilMarker',
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (state.plugins.annotation.annotationMode === PdfAnnotationSubtype.INK) {
+          annotation.setAnnotationMode(null);
+        } else {
+          annotation.deselectAnnotation();
+          annotation.setAnnotationMode(PdfAnnotationSubtype.INK);
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.annotationMode === PdfAnnotationSubtype.INK,
+  },
   squigglySelection: {
     id: 'squigglySelection',
     label: 'Squiggly Selection',
@@ -1605,6 +1628,21 @@ export const components: Record<string, UIComponentType<State>> = {
       ...ownProps,
       active: isActive(menuItems.highlight, storeState),
       color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.HIGHLIGHT]!.color,
+    }),
+  },
+  freehandButton: {
+    type: 'iconButton',
+    id: 'freehandButton',
+    props: {
+      commandId: 'freehand',
+      active: false,
+      label: 'Freehand',
+      color: '#e44234',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.freehand, storeState),
+      color: storeState.plugins.annotation.toolDefaults[PdfAnnotationSubtype.INK]!.color,
     }),
   },
   highlightSelectionButton: {
@@ -2040,11 +2078,12 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'underlineButton', priority: 2 },
       { componentId: 'strikethroughButton', priority: 3 },
       { componentId: 'squigglyButton', priority: 4 },
-      { componentId: 'divider1', priority: 5 },
-      { componentId: 'styleButton', priority: 6 },
-      { componentId: 'divider1', priority: 7 },
-      { componentId: 'undoButton', priority: 8 },
-      { componentId: 'redoButton', priority: 9 },
+      { componentId: 'freehandButton', priority: 5 },
+      { componentId: 'divider1', priority: 6 },
+      { componentId: 'styleButton', priority: 7 },
+      { componentId: 'divider1', priority: 8 },
+      { componentId: 'undoButton', priority: 9 },
+      { componentId: 'redoButton', priority: 10 },
     ],
     props: {
       gap: 10,
@@ -2401,54 +2440,53 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                       rotatedWidth,
                                       document,
                                     }) => (
-                                      <Rotate pageSize={{ width, height }}>
-                                        <div
-                                          key={document?.id}
-                                          className="bg-white"
-                                          style={{ width, height }}
+                                      <Rotate key={document?.id} pageSize={{ width, height }}>
+                                        <PagePointerProvider
+                                          rotation={rotation}
+                                          scale={scale}
+                                          pageWidth={rotatedWidth}
+                                          pageHeight={rotatedHeight}
+                                          pageIndex={pageIndex}
+                                          style={{
+                                            width,
+                                            height,
+                                          }}
                                         >
                                           <RenderLayer
                                             pageIndex={pageIndex}
-                                            className="absolute left-0 top-0 h-full w-full"
+                                            className="pointer-events-none"
                                           />
                                           <TilingLayer
                                             pageIndex={pageIndex}
                                             scale={scale}
-                                            className="absolute left-0 top-0 h-full w-full"
+                                            className="pointer-events-none"
                                           />
                                           <SearchLayer
                                             pageIndex={pageIndex}
                                             scale={scale}
-                                            className="absolute left-0 top-0 h-full w-full"
+                                            className="pointer-events-none"
                                           />
                                           <HintLayer />
-                                          <PagePointerProvider
-                                            rotation={rotation}
-                                            scale={scale}
-                                            pageWidth={rotatedWidth}
-                                            pageHeight={rotatedHeight}
+                                          <AnnotationLayer
                                             pageIndex={pageIndex}
-                                          >
-                                            <MarqueeZoom
-                                              pageIndex={pageIndex}
-                                              scale={scale}
-                                              pageWidth={width}
-                                              pageHeight={height}
-                                            />
-                                            <MarqueeCapture
-                                              pageIndex={pageIndex}
-                                              scale={scale}
-                                              pageWidth={width}
-                                              pageHeight={height}
-                                            />
-                                            <SelectionLayer pageIndex={pageIndex} scale={scale} />
-                                            <AnnotationLayer
-                                              pageIndex={pageIndex}
-                                              scale={scale}
-                                              className="absolute"
-                                            />
-                                          </PagePointerProvider>
-                                        </div>
+                                            scale={scale}
+                                            pageWidth={width}
+                                            pageHeight={height}
+                                          />
+                                          <MarqueeZoom
+                                            pageIndex={pageIndex}
+                                            scale={scale}
+                                            pageWidth={width}
+                                            pageHeight={height}
+                                          />
+                                          <MarqueeCapture
+                                            pageIndex={pageIndex}
+                                            scale={scale}
+                                            pageWidth={width}
+                                            pageHeight={height}
+                                          />
+                                          <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                                        </PagePointerProvider>
                                       </Rotate>
                                     )}
                                     overlayElements={floating.insideScroller}

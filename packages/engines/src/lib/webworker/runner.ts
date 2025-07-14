@@ -272,9 +272,6 @@ export class EngineRunner {
       case 'updatePageAnnotation':
         task = this.engine[name]!(...args);
         break;
-      case 'transformPageAnnotation':
-        task = this.engine[name]!(...args);
-        break;
       case 'removePageAnnotation':
         task = this.engine[name]!(...args);
         break;

@@ -652,42 +652,6 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.transformPageAnnotation}
-   *
-   * @public
-   */
-  transformPageAnnotation(
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    annotation: PdfAnnotationObject,
-    transformation: PdfAnnotationTransformation,
-  ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'transformPageAnnotation',
-      doc,
-      page,
-      annotation,
-      transformation,
-    );
-    const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<boolean>(this.worker, requestId);
-
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'transformPageAnnotation',
-        args: [doc, page, annotation, transformation],
-      },
-    };
-    this.proxy(task, request);
-
-    return task;
-  }
-
-  /**
    * {@inheritDoc @embedpdf/models!PdfEngine.removePageAnnotation}
    *
    * @public
