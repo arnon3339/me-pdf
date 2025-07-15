@@ -9,11 +9,9 @@ interface UsePdfiumEngineProps {
   logger?: Logger;
 }
 
-export function usePdfiumEngine({
-  wasmUrl = defaultWasmUrl,
-  worker = true,
-  logger,
-}: UsePdfiumEngineProps) {
+export function usePdfiumEngine(config?: UsePdfiumEngineProps) {
+  const { wasmUrl = defaultWasmUrl, worker = true, logger } = config ?? {};
+
   const [engine, setEngine] = useState<PdfEngine | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

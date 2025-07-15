@@ -100,9 +100,7 @@ const drawerComponents: DrawerComponent[] = [
 ];
 
 function App() {
-  const { engine, isLoading, error } = usePdfiumEngine({
-    wasmUrl: 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm',
-  });
+  const { engine, isLoading, error } = usePdfiumEngine();
 
   if (error) {
     return (
