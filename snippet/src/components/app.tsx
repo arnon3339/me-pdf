@@ -2302,7 +2302,7 @@ const logger = new AllLogger([new ConsoleLogger(), new PerfLogger()]);
 
 export function PDFViewer({ config }: PDFViewerProps) {
   const { engine, isLoading } = usePdfiumEngine({
-    wasmUrl: config.wasmUrl ?? 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm',
+    ...(config.wasmUrl && { wasmUrl: config.wasmUrl }),
     worker: config.worker,
     logger: config.log ? logger : undefined,
   });
