@@ -1,5 +1,11 @@
 # @embedpdf/plugin-interaction-manager
 
+## 1.0.8
+
+### Patch Changes
+
+- [#38](https://github.com/embedpdf/embed-pdf-viewer/pull/38) by [@bobsingor](https://github.com/bobsingor) – Option to pause and resume interaction manager
+
 ## 1.0.7
 
 ### Patch Changes
