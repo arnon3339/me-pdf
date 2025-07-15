@@ -204,35 +204,40 @@ function App() {
                             rotatedWidth,
                             rotation,
                           }) => (
-                            <Rotate pageSize={{ width, height }}>
-                              <Box
-                                key={document?.id}
-                                sx={{
+                            <Rotate key={document?.id} pageSize={{ width, height }}>
+                              <PagePointerProvider
+                                pageIndex={pageIndex}
+                                pageWidth={rotatedWidth}
+                                pageHeight={rotatedHeight}
+                                rotation={rotation}
+                                scale={scale}
+                                style={{
                                   width,
                                   height,
-                                  position: 'relative',
-                                  backgroundColor: 'white',
                                 }}
                               >
-                                <RenderLayer pageIndex={pageIndex} />
-                                <TilingLayer pageIndex={pageIndex} scale={scale} />
-                                <SearchLayer pageIndex={pageIndex} scale={scale} />
-                                <PagePointerProvider
+                                <RenderLayer
                                   pageIndex={pageIndex}
-                                  pageWidth={rotatedWidth}
-                                  pageHeight={rotatedHeight}
-                                  rotation={rotation}
+                                  style={{ pointerEvents: 'none' }}
+                                />
+                                <TilingLayer
+                                  pageIndex={pageIndex}
                                   scale={scale}
-                                >
-                                  <MarqueeZoom
-                                    pageIndex={pageIndex}
-                                    scale={scale}
-                                    pageWidth={width}
-                                    pageHeight={height}
-                                  />
-                                  <SelectionLayer pageIndex={pageIndex} scale={scale} />
-                                </PagePointerProvider>
-                              </Box>
+                                  style={{ pointerEvents: 'none' }}
+                                />
+                                <SearchLayer
+                                  pageIndex={pageIndex}
+                                  scale={scale}
+                                  style={{ pointerEvents: 'none' }}
+                                />
+                                <MarqueeZoom
+                                  pageIndex={pageIndex}
+                                  scale={scale}
+                                  pageWidth={width}
+                                  pageHeight={height}
+                                />
+                                <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                              </PagePointerProvider>
                             </Rotate>
                           )}
                         />
