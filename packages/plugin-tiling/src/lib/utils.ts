@@ -1,3 +1,4 @@
+import { Rect, restoreRect, transformSize } from '@embedpdf/models';
 import { CalculateTilesForPageOptions, Tile } from './types';
 
 /**
@@ -11,6 +12,7 @@ export function calculateTilesForPage({
   overlapPx = 2.5,
   extraRings = 0,
   scale,
+  rotation,
   page,
   metric,
 }: CalculateTilesForPageOptions): Tile[] {
@@ -20,10 +22,17 @@ export function calculateTilesForPage({
 
   const step = tileSize - overlapPx; // shift between tiles
 
-  const visLeft = metric.scaled.pageX;
-  const visTop = metric.scaled.pageY;
-  const visRight = visLeft + metric.scaled.visibleWidth;
-  const visBottom = visTop + metric.scaled.visibleHeight;
+  const containerSize = transformSize(page.size, rotation, scale);
+  const rotatedVisRect: Rect = {
+    origin: { x: metric.scaled.pageX, y: metric.scaled.pageY },
+    size: { width: metric.scaled.visibleWidth, height: metric.scaled.visibleHeight },
+  };
+  const unrotatedVisRect = restoreRect(containerSize, rotatedVisRect, rotation, 1);
+
+  const visLeft = unrotatedVisRect.origin.x;
+  const visTop = unrotatedVisRect.origin.y;
+  const visRight = visLeft + unrotatedVisRect.size.width;
+  const visBottom = visTop + unrotatedVisRect.size.height;
 
   const maxCol = Math.floor((pageW - 1) / step);
   const maxRow = Math.floor((pageH - 1) / step);

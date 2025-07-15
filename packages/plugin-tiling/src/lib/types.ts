@@ -1,5 +1,5 @@
 import { BasePluginConfig, EventHook } from '@embedpdf/core';
-import { PdfErrorReason, PdfPageObject, Rect, Task } from '@embedpdf/models';
+import { PdfErrorReason, PdfPageObject, Rect, Rotation, Task } from '@embedpdf/models';
 import { PageVisibilityMetrics } from '@embedpdf/plugin-scroll';
 
 export interface TilingPluginConfig extends BasePluginConfig {
@@ -42,6 +42,7 @@ export interface CalculateTilesForPageOptions {
   overlapPx: number;
   extraRings: number;
   scale: number;
+  rotation: Rotation;
   page: PdfPageObject;
   metric: PageVisibilityMetrics;
 }
