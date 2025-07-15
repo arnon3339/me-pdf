@@ -1,5 +1,11 @@
 # @embedpdf/plugin-tiling
 
+## 1.0.8
+
+### Patch Changes
+
+- [#38](https://github.com/embedpdf/embed-pdf-viewer/pull/38) by [@bobsingor](https://github.com/bobsingor) – Make tiling work properly when page is rotated
+
 ## 1.0.7
 
 ## 1.0.6

@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.0.8
+
+### Patch Changes
+
+- [#38](https://github.com/embedpdf/embed-pdf-viewer/pull/38) by [@bobsingor](https://github.com/bobsingor) – Improvements on text markup annotations (proper AP stream generation) and support for ink annotation
+
 ## 1.0.7
 
 ### Patch Changes
