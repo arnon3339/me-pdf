@@ -182,21 +182,6 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 )}
               </AnnotationContainer>
             );
-          /*
-          case PdfAnnotationSubtype.SQUARE:
-            return (
-              <Square
-                color={annotation.object.color}
-                opacity={annotation.object.opacity}
-                rect={annotation.object.rect}
-                scale={scale}
-                strokeColor={annotation.object.strokeColor}
-                strokeWidth={1}
-                intensity={annotation.object.cloudyBorderIntensity || 0}
-                inset={annotation.object.cloudyBorderInset || [0, 0, 0, 0]}
-              />
-            );
-            */
           default:
             return null;
         }
