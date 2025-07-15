@@ -27,7 +27,6 @@ import {
   PdfAttachmentObject,
   PdfUnsupportedAnnoObject,
   PdfTextAnnoObject,
-  PdfPopupAnnoObject,
   PdfSignatureObject,
   PdfRenderOptions,
   PdfInkAnnoObject,
@@ -43,7 +42,6 @@ import {
   PdfUnderlineAnnoObject,
   transformSize,
   PdfFile,
-  PdfAnnotationObjectStatus,
   PdfAnnotationTransformation,
   PdfSegmentObject,
   AppearanceMode,
@@ -93,6 +91,11 @@ import {
   WebAlphaColor,
   dateToPdfDate,
   pdfDateToDate,
+  PdfAnnotationColorType,
+  PdfAnnotationBorderStyle,
+  flagsToNames,
+  PdfAnnotationFlagName,
+  makeMatrix,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1128,7 +1131,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     let isSucceed = false;
     switch (annotation.type) {
       case PdfAnnotationSubtype.INK:
-        isSucceed = this.addInkStroke(page, pageCtx.pagePtr, annotationPtr, annotation.inkList);
+        isSucceed = this.addInkStroke(page, pageCtx.pagePtr, annotationPtr, annotation);
         break;
       case PdfAnnotationSubtype.STAMP:
         isSucceed = this.addStampContent(
@@ -1144,7 +1147,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       case PdfAnnotationSubtype.STRIKEOUT:
       case PdfAnnotationSubtype.SQUIGGLY:
       case PdfAnnotationSubtype.HIGHLIGHT:
-        isSucceed = this.addTextMarkupContent(page, annotationPtr, annotation);
+        isSucceed = this.addTextMarkupContent(page, pageCtx.pagePtr, annotationPtr, annotation);
         break;
     }
 
@@ -1165,6 +1168,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
+    this.pdfiumModule.EPDFAnnot_GenerateAppearance(annotationPtr);
     this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
 
     const annotId = this.pdfiumModule.FPDFPage_GetAnnotIndex(pageCtx.pagePtr, annotationPtr);
@@ -1263,7 +1267,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       case PdfAnnotationSubtype.INK: {
         /* clear every existing stroke first */
         if (!this.pdfiumModule.FPDFAnnot_RemoveInkList(annotPtr)) break;
-        ok = this.addInkStroke(page, pageCtx.pagePtr, annotPtr, annotation.inkList);
+        ok = this.addInkStroke(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -1290,7 +1294,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       case PdfAnnotationSubtype.STRIKEOUT:
       case PdfAnnotationSubtype.SQUIGGLY: {
         /* replace quad-points / colour / strings in one go */
-        ok = this.addTextMarkupContent(page, annotPtr, annotation, true);
+        ok = this.addTextMarkupContent(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -1301,6 +1305,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     /* 3 ── regenerate appearance if payload was changed ───────────────────── */
     if (ok) {
+      this.pdfiumModule.EPDFAnnot_GenerateAppearance(annotPtr);
       this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
     }
 
@@ -1321,144 +1326,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           code: PdfErrorCode.CantSetAnnotContent,
           message: 'failed to update annotation',
         });
-  }
-
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.transformPageAnnotation}
-   *
-   * @public
-   */
-  transformPageAnnotation(
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    annotation: PdfAnnotationObject,
-    transformation: PdfAnnotationTransformation,
-  ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'transformPageAnnotation',
-      doc,
-      page,
-      annotation,
-      transformation,
-    );
-    this.logger.perf(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      `TransformPageAnnotation`,
-      'Begin',
-      `${doc.id}-${page.index}`,
-    );
-
-    const ctx = this.cache.getContext(doc.id);
-
-    if (!ctx) {
-      this.logger.perf(
-        LOG_SOURCE,
-        LOG_CATEGORY,
-        `TransformPageAnnotation`,
-        'End',
-        `${doc.id}-${page.index}`,
-      );
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    const pageCtx = ctx.acquirePage(page.index);
-    const annotationPtr = this.pdfiumModule.FPDFPage_GetAnnot(pageCtx.pagePtr, annotation.id);
-    const rect = {
-      origin: {
-        x: annotation.rect.origin.x + transformation.offset.x,
-        y: annotation.rect.origin.y + transformation.offset.y,
-      },
-      size: {
-        width: annotation.rect.size.width * transformation.scale.width,
-        height: annotation.rect.size.height * transformation.scale.height,
-      },
-    };
-    if (!this.setPageAnnoRect(page, pageCtx.pagePtr, annotationPtr, rect)) {
-      this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-      pageCtx.release();
-      this.logger.perf(
-        LOG_SOURCE,
-        LOG_CATEGORY,
-        `TransformPageAnnotation`,
-        'End',
-        `${doc.id}-${page.index}`,
-      );
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.CantSetAnnotRect,
-        message: 'can not set the rect of the annotation',
-      });
-    }
-
-    switch (annotation.type) {
-      case PdfAnnotationSubtype.INK:
-        {
-          if (!this.pdfiumModule.FPDFAnnot_RemoveInkList(annotationPtr)) {
-            this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-            pageCtx.release();
-            this.logger.perf(
-              LOG_SOURCE,
-              LOG_CATEGORY,
-              `TransformPageAnnotation`,
-              'End',
-              `${doc.id}-${page.index}`,
-            );
-            return PdfTaskHelper.reject({
-              code: PdfErrorCode.CantRemoveInkList,
-              message: 'can not set the rect of the annotation',
-            });
-          }
-          const inkList = annotation.inkList.map((inkStroke) => {
-            return {
-              points: inkStroke.points.map((point) => {
-                return {
-                  x:
-                    rect.origin.x +
-                    (point.x - annotation.rect.origin.x) * transformation.scale.width,
-                  y:
-                    rect.origin.y +
-                    (point.y - annotation.rect.origin.y) * transformation.scale.height,
-                };
-              }),
-            };
-          });
-          if (!this.addInkStroke(page, pageCtx.pagePtr, annotationPtr, inkList)) {
-            this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-            pageCtx.release();
-            this.logger.perf(
-              LOG_SOURCE,
-              LOG_CATEGORY,
-              `TransformPageAnnotation`,
-              'End',
-              `${doc.id}-${page.index}`,
-            );
-            return PdfTaskHelper.reject({
-              code: PdfErrorCode.CantAddInkStoke,
-              message: 'can not add stroke to the ink list of annotation',
-            });
-          }
-        }
-        break;
-    }
-
-    this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
-
-    this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
-    pageCtx.release();
-
-    this.logger.perf(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      `TransformPageAnnotation`,
-      'End',
-      `${doc.id}-${page.index}`,
-    );
-    return PdfTaskHelper.resolve(true);
   }
 
   /**
@@ -2385,27 +2252,36 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     page: PdfPageObject,
     pagePtr: number,
     annotationPtr: number,
-    inkList: PdfInkListObject[],
+    annotation: PdfInkAnnoObject,
   ) {
-    for (const inkStroke of inkList) {
-      const inkPointsCount = inkStroke.points.length;
-      const inkPointsPtr = this.malloc(inkPointsCount * 8);
-      for (let i = 0; i < inkPointsCount; i++) {
-        const point = inkStroke.points[i];
-        const { x, y } = this.convertDevicePointToPagePoint(page, point);
-
-        this.pdfiumModule.pdfium.setValue(inkPointsPtr + i * 8, x, 'float');
-        this.pdfiumModule.pdfium.setValue(inkPointsPtr + i * 8 + 4, y, 'float');
-      }
-
-      if (
-        this.pdfiumModule.FPDFAnnot_AddInkStroke(annotationPtr, inkPointsPtr, inkPointsCount) === -1
-      ) {
-        this.free(inkPointsPtr);
-        return false;
-      }
-
-      this.free(inkPointsPtr);
+    if (
+      !this.setBorderStyle(annotationPtr, PdfAnnotationBorderStyle.SOLID, annotation.strokeWidth)
+    ) {
+      return false;
+    }
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (!this.setInkList(page, annotationPtr, annotation.inkList)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
+      return false;
+    }
+    if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.Color,
+      )
+    ) {
+      return false;
     }
 
     return true;
@@ -2422,14 +2298,17 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   addTextMarkupContent(
     page: PdfPageObject,
+    pagePtr: number,
     annotationPtr: number,
     annotation:
       | PdfHighlightAnnoObject
       | PdfUnderlineAnnoObject
       | PdfStrikeOutAnnoObject
       | PdfSquigglyAnnoObject,
-    shouldClearAP: boolean = false,
   ) {
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
     if (!this.syncQuadPointsAnno(page, annotationPtr, annotation.segmentRects)) {
       return false;
     }
@@ -2449,8 +2328,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           color: annotation.color ?? '#FFFF00',
           opacity: annotation.opacity ?? 1,
         },
-        shouldClearAP,
-        0,
+        PdfAnnotationColorType.Color,
       )
     ) {
       return false;
@@ -3359,16 +3237,19 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @private
    */
-  private readAnnotationColor(annotationPtr: number): PdfAlphaColor | undefined {
+  private readAnnotationColor(
+    annotationPtr: number,
+    colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
+  ): PdfAlphaColor | undefined {
     const rPtr = this.malloc(4);
     const gPtr = this.malloc(4);
     const bPtr = this.malloc(4);
     const aPtr = this.malloc(4);
 
     // colourType 0 = "colour" (stroke/fill); other types are interior/border
-    const ok = this.pdfiumModule.FPDFAnnot_GetColor(
+    const ok = this.pdfiumModule.EPDFAnnot_GetColor(
       annotationPtr,
-      /* colorType = */ 0,
+      colorType,
       rPtr,
       gPtr,
       bPtr,
@@ -3396,102 +3277,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
   /* --------------------------------------------------------------------------- */
   /**
-   * Extract the fill (or, if absent, the stroke) colour from a **path object**
-   * inside an appearance stream.
-   *
-   * Works for simple highlights produced by Chrome, Preview, etc. that paint a
-   * single filled rectangle with the desired tint.
-   *
-   * @param pathPtr - pointer to a `FPDF_PAGEOBJECT` of type **PATH**
-   * @returns RGBA tuple or `undefined` when no colour is set on the path
-   *
-   * @private
-   */
-  private getColorFromPath(pathPtr: number): PdfAlphaColor | undefined {
-    const r = this.malloc(4),
-      g = this.malloc(4),
-      b = this.malloc(4),
-      a = this.malloc(4);
-
-    const fillOk = this.pdfiumModule.FPDFPageObj_GetFillColor(pathPtr, r, g, b, a);
-    const strokeOk =
-      !fillOk && // try stroke only if fill failed
-      this.pdfiumModule.FPDFPageObj_GetStrokeColor(pathPtr, r, g, b, a);
-
-    const ok = fillOk || strokeOk;
-    let c: PdfAlphaColor | undefined;
-    if (ok) {
-      c = {
-        red: this.pdfiumModule.pdfium.getValue(r, 'i32') & 0xff,
-        green: this.pdfiumModule.pdfium.getValue(g, 'i32') & 0xff,
-        blue: this.pdfiumModule.pdfium.getValue(b, 'i32') & 0xff,
-        alpha: this.pdfiumModule.pdfium.getValue(a, 'i32') & 0xff,
-      };
-    }
-    this.free(r);
-    this.free(g);
-    this.free(b);
-    this.free(a);
-    return c;
-  }
-
-  /* --------------------------------------------------------------------------- */
-  /**
-   * Recursively walk a page-object tree (PATHs and nested FORM XObjects) until
-   * a colour can be extracted.
-   *
-   * Acrobat often wraps its highlight rectangle in a Form XObject referenced by
-   * the "Do" operator, so this function drills down unlimited depth.
-   *
-   * @param objPtr - pointer to a `FPDF_PAGEOBJECT`
-   * @returns First RGBA tint found, or `undefined` if none of the descendants
-   *          carry an explicit fill/stroke colour
-   *
-   * @private
-   */
-  private walkPageObjTree(objPtr: number): PdfAlphaColor | undefined {
-    const type = this.pdfiumModule.FPDFPageObj_GetType(objPtr);
-
-    if (type === PdfPageObjectType.PATH) return this.getColorFromPath(objPtr);
-    if (type !== PdfPageObjectType.FORM) return undefined;
-
-    const cnt = this.pdfiumModule.FPDFFormObj_CountObjects(objPtr);
-    for (let i = 0; i < cnt; i++) {
-      const child = this.pdfiumModule.FPDFFormObj_GetObject(objPtr, i);
-      if (!child) continue;
-      const c = this.walkPageObjTree(child);
-      if (c) return c;
-    }
-    return undefined;
-  }
-
-  /* --------------------------------------------------------------------------- */
-  /**
-   * Iterate over every top-level object in the annotation's **appearance stream**
-   * and invoke {@link walkPageObjTree} to locate a usable tint.
-   *
-   * Catches:
-   *   • Simple filled path (Preview, Chrome)
-   *   • Form XObject containing the path (Acrobat)
-   *
-   * @param annotPtr - pointer to an `FPDF_ANNOTATION`
-   * @returns RGBA tuple or `undefined` when no colour can be resolved from AP
-   *
-   * @private
-   */
-  private colorFromAppearance(annotPtr: number): PdfAlphaColor | undefined {
-    const n = this.pdfiumModule.FPDFAnnot_GetObjectCount(annotPtr);
-    for (let i = 0; i < n; i++) {
-      const obj = this.pdfiumModule.FPDFAnnot_GetObject(annotPtr, i);
-      if (!obj) continue;
-      const c = this.walkPageObjTree(obj);
-      if (c) return c;
-    }
-    return undefined;
-  }
-
-  /* --------------------------------------------------------------------------- */
-  /**
    * Resolve the visible fill colour for **Highlight / Underline / StrikeOut /
    * Squiggly** markup annotations.
    *
@@ -3508,12 +3293,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private resolveAnnotationColor(
     annotationPtr: number,
+    colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
     fallback: PdfAlphaColor = { red: 255, green: 245, blue: 155, alpha: 255 },
   ): WebAlphaColor {
-    const pdfColor =
-      this.readAnnotationColor(annotationPtr) ?? // 1 – /C entry
-      this.colorFromAppearance(annotationPtr) ?? // 2 – AP stream walk
-      fallback; // 3 – default
+    const pdfColor = this.readAnnotationColor(annotationPtr, colorType) ?? fallback;
 
     return pdfAlphaColorToWebAlphaColor(pdfColor);
   }
@@ -3532,28 +3315,164 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private setAnnotationColor(
     annotationPtr: number,
     webAlphaColor: WebAlphaColor,
-    shouldClearAP: boolean = false,
-    which: number = 0,
+    colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
   ): boolean {
     const pdfAlphaColor = webAlphaColorToPdfAlphaColor(webAlphaColor);
 
-    if (shouldClearAP) {
-      // NULL wide-string → remove the /AP entry
-      this.pdfiumModule.FPDFAnnot_SetAP(
-        annotationPtr,
-        AppearanceMode.Normal,
-        /* FPDF_WIDESTRING = */ 0,
-      );
-    }
-
-    return this.pdfiumModule.FPDFAnnot_SetColor(
+    return this.pdfiumModule.EPDFAnnot_SetColor(
       annotationPtr,
-      which,
+      colorType,
       pdfAlphaColor.red & 0xff,
       pdfAlphaColor.green & 0xff,
       pdfAlphaColor.blue & 0xff,
       (pdfAlphaColor.alpha ?? 255) & 0xff,
     );
+  }
+
+  /**
+   * Border‐style + width helper
+   *
+   * Tries the new PDFium helper `EPDFAnnot_GetBorderStyle()` (patch series
+   * 9 July 2025).
+   *
+   * @param  annotationPtr  pointer to an `FPDF_ANNOTATION`
+   * @returns `{ ok, style, width }`
+   *          • `ok`     – `true` when the call succeeded
+   *          • `style`  – `PdfAnnotationBorderStyle` enum
+   *          • `width`  – stroke-width in points (defaults to 0 pt)
+   */
+  private getBorderStyle(annotationPtr: number): {
+    ok: boolean;
+    style: PdfAnnotationBorderStyle;
+    width: number;
+  } {
+    /* 1 ── allocate tmp storage for the returned width ─────────────── */
+    const widthPtr = this.malloc(4);
+    let width = 0;
+    let style: PdfAnnotationBorderStyle = PdfAnnotationBorderStyle.UNKNOWN;
+    let ok = false;
+
+    style = this.pdfiumModule.EPDFAnnot_GetBorderStyle(annotationPtr, widthPtr);
+    width = this.pdfiumModule.pdfium.getValue(widthPtr, 'float');
+    ok = style !== PdfAnnotationBorderStyle.UNKNOWN;
+    this.free(widthPtr);
+    return { ok, style, width };
+  }
+
+  private setBorderStyle(
+    annotationPtr: number,
+    style: PdfAnnotationBorderStyle,
+    width: number,
+  ): boolean {
+    return this.pdfiumModule.EPDFAnnot_SetBorderStyle(annotationPtr, style, width);
+  }
+
+  /**
+   * Border-effect (“cloudy”) helper
+   *
+   * Calls the new PDFium function `EPDFAnnot_GetBorderEffect()` (July 2025).
+   *
+   * @param  annotationPtr  pointer to an `FPDF_ANNOTATION`
+   * @returns `{ ok, intensity }`
+   *          • `ok`        – `true` when the annotation *does* have a
+   *                          valid cloudy-border effect
+   *          • `intensity` – radius/intensity value (0 when `ok` is false)
+   */
+  private getBorderEffect(annotationPtr: number): { ok: boolean; intensity: number } {
+    const intensityPtr = this.malloc(4);
+
+    const ok = !!this.pdfiumModule.EPDFAnnot_GetBorderEffect(annotationPtr, intensityPtr);
+
+    const intensity = ok ? this.pdfiumModule.pdfium.getValue(intensityPtr, 'float') : 0;
+
+    this.free(intensityPtr);
+    return { ok, intensity };
+  }
+
+  /**
+   * Rectangle-differences helper ( /RD array on Square / Circle annots )
+   *
+   * Calls `EPDFAnnot_GetRectangleDifferences()` introduced in July 2025.
+   *
+   * @param  annotationPtr  pointer to an `FPDF_ANNOTATION`
+   * @returns `{ ok, left, top, right, bottom }`
+   *          • `ok`     – `true` when the annotation *has* an /RD entry
+   *          • the four floats are 0 when `ok` is false
+   */
+  private getRectangleDifferences(annotationPtr: number): {
+    ok: boolean;
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+  } {
+    /* tmp storage ─────────────────────────────────────────── */
+    const lPtr = this.malloc(4);
+    const tPtr = this.malloc(4);
+    const rPtr = this.malloc(4);
+    const bPtr = this.malloc(4);
+
+    const ok = !!this.pdfiumModule.EPDFAnnot_GetRectangleDifferences(
+      annotationPtr,
+      lPtr,
+      tPtr,
+      rPtr,
+      bPtr,
+    );
+
+    const pdf = this.pdfiumModule.pdfium;
+    const left = pdf.getValue(lPtr, 'float');
+    const top = pdf.getValue(tPtr, 'float');
+    const right = pdf.getValue(rPtr, 'float');
+    const bottom = pdf.getValue(bPtr, 'float');
+
+    /* cleanup ─────────────────────────────────────────────── */
+    this.free(lPtr);
+    this.free(tPtr);
+    this.free(rPtr);
+    this.free(bPtr);
+
+    return { ok, left, top, right, bottom };
+  }
+
+  /**
+   * Dash-pattern helper ( /BS → /D array, dashed borders only )
+   *
+   * Uses the two new PDFium helpers:
+   *   • `EPDFAnnot_GetBorderDashPatternCount`
+   *   • `EPDFAnnot_GetBorderDashPattern`
+   *
+   * @param  annotationPtr  pointer to an `FPDF_ANNOTATION`
+   * @returns `{ ok, pattern }`
+   *          • `ok`       – `true` when the annot is dashed *and* the array
+   *                          was retrieved successfully
+   *          • `pattern`  – numeric array of dash/space lengths (empty when `ok` is false)
+   */
+  private getBorderDashPattern(annotationPtr: number): { ok: boolean; pattern: number[] } {
+    const count = this.pdfiumModule.EPDFAnnot_GetBorderDashPatternCount(annotationPtr);
+    if (count === 0) {
+      return { ok: false, pattern: [] };
+    }
+
+    /* allocate `count` floats on the WASM heap */
+    const arrPtr = this.malloc(4 * count);
+    const okNative = !!this.pdfiumModule.EPDFAnnot_GetBorderDashPattern(
+      annotationPtr,
+      arrPtr,
+      count,
+    );
+
+    /* copy out */
+    const pattern: number[] = [];
+    if (okNative) {
+      const pdf = this.pdfiumModule.pdfium;
+      for (let i = 0; i < count; i++) {
+        pattern.push(pdf.getValue(arrPtr + 4 * i, 'float'));
+      }
+    }
+
+    this.free(arrPtr);
+    return { ok: okNative, pattern };
   }
 
   /**
@@ -3667,6 +3586,79 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     this.free(buf);
+    return true;
+  }
+
+  /**
+   * Read ink list from annotation
+   * @param page  - logical page info object (`PdfPageObject`)
+   * @param annotationPtr - pointer to the annotation whose ink list is needed
+   * @returns ink list
+   */
+  private getInkList(page: PdfPageObject, annotationPtr: number): PdfInkListObject[] {
+    const inkList: PdfInkListObject[] = [];
+
+    const count = this.pdfiumModule.FPDFAnnot_GetInkListCount(annotationPtr);
+    for (let i = 0; i < count; i++) {
+      const points: Position[] = [];
+      const pointsCount = this.pdfiumModule.FPDFAnnot_GetInkListPath(annotationPtr, i, 0, 0);
+      if (pointsCount > 0) {
+        const pointMemorySize = 8;
+        const pointsPtr = this.malloc(pointsCount * pointMemorySize);
+        this.pdfiumModule.FPDFAnnot_GetInkListPath(annotationPtr, i, pointsPtr, pointsCount);
+
+        for (let j = 0; j < pointsCount; j++) {
+          const pointX = this.pdfiumModule.pdfium.getValue(pointsPtr + j * 8, 'float');
+          const pointY = this.pdfiumModule.pdfium.getValue(pointsPtr + j * 8 + 4, 'float');
+          const { x, y } = this.convertPagePointToDevicePoint(page, {
+            x: pointX,
+            y: pointY,
+          });
+          points.push({ x, y });
+        }
+
+        this.free(pointsPtr);
+      }
+
+      inkList.push({ points });
+    }
+
+    return inkList;
+  }
+
+  /**
+   * Add ink list to annotation
+   * @param page  - logical page info object (`PdfPageObject`)
+   * @param annotationPtr - pointer to the annotation whose ink list is needed
+   * @param annotation - annotation object (`PdfInkAnnoObject`)
+   * @returns `true` if the operation was successful
+   */
+  private setInkList(
+    page: PdfPageObject,
+    annotationPtr: number,
+    inkList: PdfInkListObject[],
+  ): boolean {
+    for (const inkStroke of inkList) {
+      const inkPointsCount = inkStroke.points.length;
+      const inkPointsPtr = this.malloc(inkPointsCount * 8);
+      for (let i = 0; i < inkPointsCount; i++) {
+        const point = inkStroke.points[i];
+        const { x, y } = this.convertDevicePointToPagePoint(page, point);
+
+        this.pdfiumModule.pdfium.setValue(inkPointsPtr + i * 8, x, 'float');
+        this.pdfiumModule.pdfium.setValue(inkPointsPtr + i * 8 + 4, y, 'float');
+      }
+
+      if (
+        this.pdfiumModule.FPDFAnnot_AddInkStroke(annotationPtr, inkPointsPtr, inkPointsCount) === -1
+      ) {
+        this.free(inkPointsPtr);
+        return false;
+      }
+
+      this.free(inkPointsPtr);
+    }
+
     return true;
   }
 
@@ -3914,38 +3906,16 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-
-    const inkList: PdfInkListObject[] = [];
-
-    const count = this.pdfiumModule.FPDFAnnot_GetInkListCount(annotationPtr);
-    for (let i = 0; i < count; i++) {
-      const points: Position[] = [];
-      const pointsCount = this.pdfiumModule.FPDFAnnot_GetInkListPath(annotationPtr, i, 0, 0);
-      if (pointsCount > 0) {
-        const pointMemorySize = 8;
-        const pointsPtr = this.malloc(pointsCount * pointMemorySize);
-        this.pdfiumModule.FPDFAnnot_GetInkListPath(annotationPtr, i, pointsPtr, pointsCount);
-
-        for (let j = 0; j < pointsCount; j++) {
-          const pointX = this.pdfiumModule.pdfium.getValue(pointsPtr + j * 8, 'float');
-          const pointY = this.pdfiumModule.pdfium.getValue(pointsPtr + j * 8 + 4, 'float');
-          const { x, y } = this.convertPagePointToDevicePoint(page, {
-            x: pointX,
-            y: pointY,
-          });
-          points.push({ x, y });
-        }
-
-        this.free(pointsPtr);
-      }
-
-      inkList.push({ points });
-    }
+    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
+    const inkList = this.getInkList(page, annotationPtr);
 
     return {
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.INK,
+      ...webAlphaColor,
+      strokeWidth,
       rect,
       inkList,
       author,
@@ -4489,6 +4459,45 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * Return the stroke-width declared in the annotation’s /Border or /BS entry.
+   * Falls back to 1 pt when nothing is defined.
+   *
+   * @param annotationPtr - pointer to pdf annotation
+   * @returns stroke-width
+   *
+   * @private
+   */
+  private getStrokeWidth(annotationPtr: number): number {
+    // FPDFAnnot_GetBorder(annot, &hRadius, &vRadius, &borderWidth)
+    const hPtr = this.malloc(4);
+    const vPtr = this.malloc(4);
+    const wPtr = this.malloc(4);
+
+    const ok = this.pdfiumModule.FPDFAnnot_GetBorder(annotationPtr, hPtr, vPtr, wPtr);
+    const width = ok ? this.pdfiumModule.pdfium.getValue(wPtr, 'float') : 1; // default 1 pt
+
+    this.free(hPtr);
+    this.free(vPtr);
+    this.free(wPtr);
+
+    return width;
+  }
+
+  /**
+   * Fetches the `/F` flag bit-field from an annotation.
+   *
+   * @param annotationPtr pointer to an `FPDF_ANNOTATION`
+   * @returns `{ raw, flags }`
+   *          • `raw`   – the 32-bit integer returned by PDFium
+   *          • `flags` – object with individual booleans
+   */
+  private getAnnotationFlags(annotationPtr: number): PdfAnnotationFlagName[] {
+    const rawFlags = this.pdfiumModule.FPDFAnnot_GetFlags(annotationPtr); // number
+
+    return flagsToNames(rawFlags);
+  }
+
+  /**
    * Read circle annotation
    * @param page  - pdf page infor
    * @param pagePtr - pointer to pdf page object
@@ -4504,19 +4513,65 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotationPtr: number,
     index: number,
   ): PdfCircleAnnoObject {
+    const flags = this.getAnnotationFlags(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
+    const { color, opacity } = this.resolveAnnotationColor(
+      annotationPtr,
+      PdfAnnotationColorType.InteriorColor,
+    );
+    const { color: strokeColor } = this.resolveAnnotationColor(annotationPtr);
+    let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
+
+    let cloudyBorderIntensity: number | undefined;
+    let cloudyBorderInset: number[] | undefined;
+    if (
+      strokeStyle === PdfAnnotationBorderStyle.CLOUDY ||
+      strokeStyle === PdfAnnotationBorderStyle.UNKNOWN
+    ) {
+      const { ok: hasEffect, intensity } = this.getBorderEffect(annotationPtr);
+
+      if (hasEffect) {
+        cloudyBorderIntensity = intensity;
+        strokeStyle = PdfAnnotationBorderStyle.CLOUDY;
+        const {
+          ok: hasInset,
+          left,
+          top,
+          right,
+          bottom,
+        } = this.getRectangleDifferences(annotationPtr);
+        if (hasInset) cloudyBorderInset = [left, top, right, bottom];
+      }
+    }
+
+    let strokeDashArray: number[] | undefined;
+    if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
+      const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
+      if (ok) {
+        strokeDashArray = pattern;
+      }
+    }
 
     return {
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.CIRCLE,
+      flags,
+      color,
+      opacity,
+      strokeWidth,
+      strokeColor,
+      strokeStyle,
       rect,
       author,
       modified,
+      ...(cloudyBorderIntensity !== undefined && { cloudyBorderIntensity }),
+      ...(cloudyBorderInset !== undefined && { cloudyBorderInset }),
+      ...(strokeDashArray !== undefined && { strokeDashArray }),
     };
   }
 
@@ -4536,19 +4591,65 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotationPtr: number,
     index: number,
   ): PdfSquareAnnoObject {
+    const flags = this.getAnnotationFlags(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
+    const { color, opacity } = this.resolveAnnotationColor(
+      annotationPtr,
+      PdfAnnotationColorType.InteriorColor,
+    );
+    const { color: strokeColor } = this.resolveAnnotationColor(annotationPtr);
+    let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
+
+    let cloudyBorderIntensity: number | undefined;
+    let cloudyBorderInset: number[] | undefined;
+    if (
+      strokeStyle === PdfAnnotationBorderStyle.CLOUDY ||
+      strokeStyle === PdfAnnotationBorderStyle.UNKNOWN
+    ) {
+      const { ok: hasEffect, intensity } = this.getBorderEffect(annotationPtr);
+
+      if (hasEffect) {
+        cloudyBorderIntensity = intensity;
+        strokeStyle = PdfAnnotationBorderStyle.CLOUDY;
+        const {
+          ok: hasInset,
+          left,
+          top,
+          right,
+          bottom,
+        } = this.getRectangleDifferences(annotationPtr);
+        if (hasInset) cloudyBorderInset = [left, top, right, bottom];
+      }
+    }
+
+    let strokeDashArray: number[] | undefined;
+    if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
+      const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
+      if (ok) {
+        strokeDashArray = pattern;
+      }
+    }
 
     return {
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.SQUARE,
+      flags,
+      color,
+      opacity,
+      strokeColor,
+      strokeWidth,
+      strokeStyle,
       rect,
       author,
       modified,
+      ...(cloudyBorderIntensity !== undefined && { cloudyBorderIntensity }),
+      ...(cloudyBorderInset !== undefined && { cloudyBorderInset }),
+      ...(strokeDashArray !== undefined && { strokeDashArray }),
     };
   }
 
@@ -4817,6 +4918,170 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       isChecked,
       options,
     };
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.renderAnnotation}
+   *
+   * @public
+   */
+  renderAnnotation(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObject,
+    scaleFactor: number,
+    rotation: Rotation,
+    dpr: number = 1, // device-pixel-ratio (canvas)
+    mode: AppearanceMode = AppearanceMode.Normal,
+    imageType: ImageConversionTypes = 'image/webp',
+  ): PdfTask<T> {
+    this.logger.debug(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'renderAnnotation',
+      doc,
+      page,
+      annotation,
+      scaleFactor,
+      rotation,
+      dpr,
+      mode,
+      imageType,
+    );
+    this.logger.perf(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      `RenderAnnotation`,
+      'Begin',
+      `${doc.id}-${page.index}-${annotation.id}`,
+    );
+    const task = new Task<T, PdfErrorReason>();
+    const ctx = this.cache.getContext(doc.id);
+
+    if (!ctx) {
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `RenderAnnotation`,
+        'End',
+        `${doc.id}-${page.index}-${annotation.id}`,
+      );
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    /* ── 1. grab native handles ───────────────────────────────────────── */
+    const pageCtx = ctx.acquirePage(page.index);
+    const annotPtr = this.pdfiumModule.FPDFPage_GetAnnot(pageCtx.pagePtr, annotation.id);
+    if (!annotPtr) {
+      pageCtx.release();
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `RenderAnnotation`,
+        'End',
+        `${doc.id}-${page.index}-${annotation.id}`,
+      );
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.NotFound,
+        message: 'annotation not found',
+      });
+    }
+
+    const finalScale = scaleFactor * dpr;
+    /* ── 2. decide bitmap size (integer pixels) ──────────────────────── */
+    const annotRect = annotation.rect;
+    const bitmapRect = toIntRect(transformRect(page.size, annotRect, rotation, finalScale));
+
+    const format = BitmapFormat.Bitmap_BGRA;
+    const bytesPerPixel = 4;
+    const bitmapHeapLength = bitmapRect.size.width * bitmapRect.size.height * bytesPerPixel;
+    const bitmapHeapPtr = this.malloc(bitmapHeapLength);
+    const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
+      bitmapRect.size.width,
+      bitmapRect.size.height,
+      format,
+      bitmapHeapPtr,
+      bitmapRect.size.width * bytesPerPixel,
+    );
+    this.pdfiumModule.FPDFBitmap_FillRect(
+      bitmapPtr,
+      0,
+      0,
+      bitmapRect.size.width,
+      bitmapRect.size.height,
+      0x00000000,
+    );
+
+    const matrix = makeMatrix(annotation.rect, rotation, finalScale);
+
+    // Allocate memory for the matrix on the wasm heap and write to it
+    const matrixSize = 6 * 4;
+    const matrixPtr = this.malloc(matrixSize);
+    const matrixView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, matrixPtr, 6);
+    matrixView.set([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f]);
+
+    /* ── 5. call the native helper with the new matrix ───────────────── */
+    const FLAGS = RenderFlag.REVERSE_BYTE_ORDER;
+    const ok = !!this.pdfiumModule.EPDF_RenderAnnotBitmap(
+      bitmapPtr,
+      pageCtx.pagePtr,
+      annotPtr,
+      mode,
+      matrixPtr,
+      FLAGS,
+    );
+
+    /* ── 6. tear down native resources ───────────────────────────────── */
+    this.free(matrixPtr); // Free the matrix memory
+    this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
+    this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
+    pageCtx.release();
+
+    if (!ok) {
+      this.free(bitmapHeapPtr);
+      this.logger.perf(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `RenderAnnotation`,
+        'End',
+        `${doc.id}-${page.index}-${annotation.id}`,
+      );
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: 'EPDF_RenderAnnotBitmap failed',
+      });
+    }
+
+    /* ── 6. copy out + convert to Blob (reuse existing converter) ─────── */
+    const data = this.pdfiumModule.pdfium.HEAPU8.subarray(
+      bitmapHeapPtr,
+      bitmapHeapPtr + bitmapHeapLength,
+    );
+
+    const imageData: PdfImage = {
+      data: new Uint8ClampedArray(data),
+      width: bitmapRect.size.width,
+      height: bitmapRect.size.height,
+    };
+
+    this.free(bitmapHeapPtr);
+
+    this.logger.perf(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      `RenderAnnotation`,
+      'End',
+      `${doc.id}-${page.index}-${annotation.id}`,
+    );
+
+    this.imageDataConverter(imageData, imageType)
+      .then((blob) => task.resolve(blob))
+      .catch((err) => task.reject({ code: PdfErrorCode.Unknown, message: String(err) }));
+
+    return task;
   }
 
   /**
@@ -5337,14 +5602,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         return task;
       }
 
-      /* 2 ── wipe AP if it's a simple markup annotation ─────────────────────── */
-      const shouldClearAP =
-        annotation.type === PdfAnnotationSubtype.HIGHLIGHT ||
-        annotation.type === PdfAnnotationSubtype.UNDERLINE ||
-        annotation.type === PdfAnnotationSubtype.STRIKEOUT ||
-        annotation.type === PdfAnnotationSubtype.SQUIGGLY;
-
-      const ok = this.setAnnotationColor(annotPtr, color, shouldClearAP, which);
+      const ok = this.setAnnotationColor(annotPtr, color, which);
 
       /* 4 ── regenerate appearance & clean-up ───────────────────────────────── */
       if (ok) {

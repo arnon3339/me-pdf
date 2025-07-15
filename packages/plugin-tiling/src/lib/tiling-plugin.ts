@@ -67,7 +67,8 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
       return;
     }
 
-    const scale = this.coreState.core.scale; // Current zoom level
+    const scale = this.coreState.core.scale;
+    const rotation = this.coreState.core.rotation;
     const visibleTiles: { [pageIndex: number]: Tile[] } = {};
 
     for (const scrollMetric of scrollMetrics.pageVisibilityMetrics) {
@@ -80,6 +81,7 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
         page,
         metric: scrollMetric,
         scale,
+        rotation,
         tileSize: this.config.tileSize,
         overlapPx: this.config.overlapPx,
         extraRings: this.config.extraRings,

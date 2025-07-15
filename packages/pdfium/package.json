@@ -44,6 +44,8 @@
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -c -w",
+    "wasm:dev": "docker compose up --build pdfium-dev",
+    "wasm:build": "docker compose run --rm pdfium-build",
     "clean": "PROJECT_CWD=$(pwd) pnpm -w p:clean",
     "lint": "PROJECT_CWD=$(pwd) pnpm -w p:lint",
     "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",

@@ -27,6 +27,16 @@ var createPdfium = (() => {
       readyPromiseReject = reject;
     });
     [
+      '_EPDF_RenderAnnotBitmap',
+      '_EPDFAnnot_GenerateAppearance',
+      '_EPDFAnnot_GetBorderDashPattern',
+      '_EPDFAnnot_GetBorderDashPatternCount',
+      '_EPDFAnnot_GetBorderEffect',
+      '_EPDFAnnot_GetBorderStyle',
+      '_EPDFAnnot_GetColor',
+      '_EPDFAnnot_GetRectangleDifferences',
+      '_EPDFAnnot_SetBorderStyle',
+      '_EPDFAnnot_SetColor',
       '_FORM_CanRedo',
       '_FORM_CanUndo',
       '_FORM_DoDocumentAAction',
@@ -226,6 +236,7 @@ var createPdfium = (() => {
       '_FPDFAnnot_SetColor',
       '_FPDFAnnot_SetFlags',
       '_FPDFAnnot_SetFocusableSubtypes',
+      '_FPDFAnnot_SetFontColor',
       '_FPDFAnnot_SetFormFieldFlags',
       '_FPDFAnnot_SetRect',
       '_FPDFAnnot_SetStringValue',
@@ -295,6 +306,7 @@ var createPdfium = (() => {
       '_FPDFFont_GetWeight',
       '_FPDFFormObj_CountObjects',
       '_FPDFFormObj_GetObject',
+      '_FPDFFormObj_RemoveObject',
       '_FPDFGlyphPath_CountGlyphSegments',
       '_FPDFGlyphPath_GetGlyphPathSegment',
       '_FPDFImageObj_GetBitmap',
@@ -352,6 +364,7 @@ var createPdfium = (() => {
       '_FPDFPage_HasTransparency',
       '_FPDFPage_InsertClipPath',
       '_FPDFPage_InsertObject',
+      '_FPDFPage_InsertObjectAtIndex',
       '_FPDFPage_New',
       '_FPDFPage_RemoveAnnot',
       '_FPDFPage_RemoveObject',
@@ -5884,6 +5897,10 @@ var createPdfium = (() => {
       'FPDFAnnot_GetFontSize',
       3,
     ));
+    var _FPDFAnnot_SetFontColor = (Module['_FPDFAnnot_SetFontColor'] = createExportWrapper(
+      'FPDFAnnot_SetFontColor',
+      5,
+    ));
     var _FPDFAnnot_GetFontColor = (Module['_FPDFAnnot_GetFontColor'] = createExportWrapper(
       'FPDFAnnot_GetFontColor',
       5,
@@ -5916,6 +5933,34 @@ var createPdfium = (() => {
       createExportWrapper('FPDFAnnot_GetFileAttachment', 1));
     var _FPDFAnnot_AddFileAttachment = (Module['_FPDFAnnot_AddFileAttachment'] =
       createExportWrapper('FPDFAnnot_AddFileAttachment', 2));
+    var _EPDFAnnot_SetColor = (Module['_EPDFAnnot_SetColor'] = createExportWrapper(
+      'EPDFAnnot_SetColor',
+      6,
+    ));
+    var _EPDFAnnot_GetColor = (Module['_EPDFAnnot_GetColor'] = createExportWrapper(
+      'EPDFAnnot_GetColor',
+      6,
+    ));
+    var _EPDFAnnot_GetBorderEffect = (Module['_EPDFAnnot_GetBorderEffect'] = createExportWrapper(
+      'EPDFAnnot_GetBorderEffect',
+      2,
+    ));
+    var _EPDFAnnot_GetRectangleDifferences = (Module['_EPDFAnnot_GetRectangleDifferences'] =
+      createExportWrapper('EPDFAnnot_GetRectangleDifferences', 5));
+    var _EPDFAnnot_GetBorderDashPatternCount = (Module['_EPDFAnnot_GetBorderDashPatternCount'] =
+      createExportWrapper('EPDFAnnot_GetBorderDashPatternCount', 1));
+    var _EPDFAnnot_GetBorderDashPattern = (Module['_EPDFAnnot_GetBorderDashPattern'] =
+      createExportWrapper('EPDFAnnot_GetBorderDashPattern', 3));
+    var _EPDFAnnot_GetBorderStyle = (Module['_EPDFAnnot_GetBorderStyle'] = createExportWrapper(
+      'EPDFAnnot_GetBorderStyle',
+      2,
+    ));
+    var _EPDFAnnot_SetBorderStyle = (Module['_EPDFAnnot_SetBorderStyle'] = createExportWrapper(
+      'EPDFAnnot_SetBorderStyle',
+      3,
+    ));
+    var _EPDFAnnot_GenerateAppearance = (Module['_EPDFAnnot_GenerateAppearance'] =
+      createExportWrapper('EPDFAnnot_GenerateAppearance', 1));
     var _FPDFDoc_GetAttachmentCount = (Module['_FPDFDoc_GetAttachmentCount'] = createExportWrapper(
       'FPDFDoc_GetAttachmentCount',
       1,
@@ -6155,6 +6200,8 @@ var createPdfium = (() => {
       'FPDFPage_InsertObject',
       2,
     ));
+    var _FPDFPage_InsertObjectAtIndex = (Module['_FPDFPage_InsertObjectAtIndex'] =
+      createExportWrapper('FPDFPage_InsertObjectAtIndex', 3));
     var _FPDFPage_RemoveObject = (Module['_FPDFPage_RemoveObject'] = createExportWrapper(
       'FPDFPage_RemoveObject',
       2,
@@ -6335,6 +6382,10 @@ var createPdfium = (() => {
     ));
     var _FPDFFormObj_GetObject = (Module['_FPDFFormObj_GetObject'] = createExportWrapper(
       'FPDFFormObj_GetObject',
+      2,
+    ));
+    var _FPDFFormObj_RemoveObject = (Module['_FPDFFormObj_RemoveObject'] = createExportWrapper(
+      'FPDFFormObj_RemoveObject',
       2,
     ));
     var _FPDFPageObj_CreateNewPath = (Module['_FPDFPageObj_CreateNewPath'] = createExportWrapper(
@@ -7075,6 +7126,10 @@ var createPdfium = (() => {
     ));
     var _FPDF_RenderPageBitmapWithMatrix = (Module['_FPDF_RenderPageBitmapWithMatrix'] =
       createExportWrapper('FPDF_RenderPageBitmapWithMatrix', 5));
+    var _EPDF_RenderAnnotBitmap = (Module['_EPDF_RenderAnnotBitmap'] = createExportWrapper(
+      'EPDF_RenderAnnotBitmap',
+      6,
+    ));
     var _FPDF_ClosePage = (Module['_FPDF_ClosePage'] = createExportWrapper('FPDF_ClosePage', 1));
     var _FPDF_CloseDocument = (Module['_FPDF_CloseDocument'] = createExportWrapper(
       'FPDF_CloseDocument',

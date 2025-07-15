@@ -2,14 +2,26 @@
 import { JSX } from 'preact';
 import { Rect } from '@embedpdf/models';
 
-interface SquigglyProps {
+type SquigglyProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
   color?: string;
   opacity?: number;
   rects: Rect[];
+  rect?: Rect;
   scale: number;
-}
+  onClick?: (e: MouseEvent) => void;
+  style?: JSX.CSSProperties;
+};
 
-export function Squiggly({ color = '#FFFF00', opacity = 0.5, rects, scale }: SquigglyProps) {
+export function Squiggly({
+  color = '#FFFF00',
+  opacity = 0.5,
+  rects,
+  rect,
+  scale,
+  onClick,
+  style,
+  ...props
+}: SquigglyProps) {
   const amplitude = 2 * scale; // wave height
   const period = 6 * scale; // wave length
 
@@ -26,19 +38,37 @@ export function Squiggly({ color = '#FFFF00', opacity = 0.5, rects, scale }: Squ
       {rects.map((r, i) => (
         <div
           key={i}
+          onMouseDown={onClick}
           style={{
             position: 'absolute',
-            left: r.origin.x * scale,
-            top: (r.origin.y + r.size.height) * scale - amplitude,
+            left: (rect ? r.origin.x - rect.origin.x : r.origin.x) * scale,
+            top: (rect ? r.origin.y - rect.origin.y : r.origin.y) * scale,
             width: r.size.width * scale,
-            height: amplitude * 2,
-            backgroundImage: svgDataUri,
-            backgroundRepeat: 'repeat-x',
-            backgroundSize: `${period}px ${amplitude * 2}px`,
-            opacity: opacity,
-            pointerEvents: 'none',
+            height: r.size.height * scale,
+            background: 'transparent',
+            pointerEvents: onClick ? 'auto' : 'none',
+            cursor: onClick ? 'pointer' : 'default',
+            zIndex: onClick ? 1 : 0,
+            ...style,
           }}
-        />
+          {...props}
+        >
+          {/* Visual squiggly line */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              bottom: 0,
+              width: '100%',
+              height: amplitude * 2,
+              backgroundImage: svgDataUri,
+              backgroundRepeat: 'repeat-x',
+              backgroundSize: `${period}px ${amplitude * 2}px`,
+              opacity: opacity,
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
       ))}
     </>
   );

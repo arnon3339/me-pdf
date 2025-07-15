@@ -11,7 +11,7 @@ import {
   RegisterAlwaysOptions,
   RegisterHandlersOptions,
 } from './types';
-import { activateMode, setCursor } from './actions';
+import { activateMode, pauseInteraction, resumeInteraction, setCursor } from './actions';
 import { mergeHandlers } from './helper';
 
 interface CursorClaim {
@@ -80,6 +80,9 @@ export class InteractionManagerPlugin extends BasePlugin<
       getCurrentCursor: () => this.state.cursor,
       getHandlersForScope: (scope: InteractionScope) => this.getHandlersForScope(scope),
       activeModeIsExclusive: () => this.activeModeIsExclusive(),
+      pause: () => this.dispatch(pauseInteraction()),
+      resume: () => this.dispatch(resumeInteraction()),
+      isPaused: () => this.state.paused,
     };
   }
 

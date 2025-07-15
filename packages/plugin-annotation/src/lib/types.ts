@@ -6,6 +6,11 @@ import {
   PdfAnnotationSubtype,
   WebAlphaColor,
   PdfTask,
+  Rotation,
+  ImageConversionTypes,
+  AppearanceMode,
+  PdfPageObject,
+  PdfDocumentObject,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -29,6 +34,16 @@ export interface TrackedAnnotation {
   commitState: CommitState;
   /** the actual annotation object */
   object: PdfAnnotationObject;
+}
+
+export interface RenderAnnotationOptions {
+  pageIndex: number;
+  annotation: PdfAnnotationObject;
+  scaleFactor?: number;
+  rotation?: Rotation;
+  dpr?: number; // device-pixel-ratio (canvas)
+  mode?: AppearanceMode;
+  imageType?: ImageConversionTypes;
 }
 
 export interface BaseAnnotationDefaults extends WebAlphaColor {
@@ -56,17 +71,24 @@ export interface SquigglyDefaults extends BaseAnnotationDefaults {
   name: 'Squiggly';
 }
 
+export interface InkDefaults extends BaseAnnotationDefaults {
+  name: 'Ink';
+  strokeWidth: number;
+}
+
 export type AnnotationDefaults =
   | HighlightDefaults
   | UnderlineDefaults
   | StrikeoutDefaults
-  | SquigglyDefaults;
+  | SquigglyDefaults
+  | InkDefaults;
 
 export type ToolDefaultsBySubtype = {
   [PdfAnnotationSubtype.HIGHLIGHT]: HighlightDefaults;
   [PdfAnnotationSubtype.UNDERLINE]: UnderlineDefaults;
   [PdfAnnotationSubtype.STRIKEOUT]: StrikeoutDefaults;
   [PdfAnnotationSubtype.SQUIGGLY]: SquigglyDefaults;
+  [PdfAnnotationSubtype.INK]: InkDefaults;
 };
 
 export type StylableSubtype = keyof ToolDefaultsBySubtype;
@@ -76,10 +98,14 @@ export type ToolDefaults<S extends PdfAnnotationSubtype> = ToolDefaultsBySubtype
   keyof ToolDefaultsBySubtype
 >];
 
-export interface ActiveTool {
-  mode: StylableSubtype | null;
-  defaults: AnnotationDefaults | null; // ⇐ null when no mode active
-}
+export type ActiveTool =
+  | { mode: null; defaults: null }
+  | {
+      [K in StylableSubtype]: {
+        mode: K;
+        defaults: ToolDefaultsBySubtype[K];
+      };
+    }[StylableSubtype];
 
 export interface AnnotationState {
   pages: Record<number, string[]>; // pageIndex → list of UIDs
@@ -131,6 +157,7 @@ export interface AnnotationCapability {
     patch: Partial<PdfAnnotationObject>,
   ) => void;
   deleteAnnotation: (pageIndex: number, annotationId: number) => void;
+  renderAnnotation: (options: RenderAnnotationOptions) => Task<Blob, PdfErrorReason>;
   /** undo / redo */
   onStateChange: EventHook<AnnotationState>;
   onModeChange: EventHook<StylableSubtype | null>;

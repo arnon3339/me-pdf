@@ -16,6 +16,8 @@ import {
   PdfTaskHelper,
   PdfErrorCode,
   PdfTask,
+  Rotation,
+  AppearanceMode,
 } from '@embedpdf/models';
 import {
   ActiveTool,
@@ -24,7 +26,9 @@ import {
   AnnotationState,
   BaseAnnotationDefaults,
   GetPageAnnotationsOptions,
+  RenderAnnotationOptions,
   StylableSubtype,
+  ToolDefaultsBySubtype,
   TrackedAnnotation,
 } from './types';
 import {
@@ -130,6 +134,17 @@ export class AnnotationPlugin extends BasePlugin<
     this.selection?.onEndSelection(() => {
       if (!this.state.annotationMode) return;
 
+      if (
+        !(
+          this.state.annotationMode === PdfAnnotationSubtype.HIGHLIGHT ||
+          this.state.annotationMode === PdfAnnotationSubtype.UNDERLINE ||
+          this.state.annotationMode === PdfAnnotationSubtype.STRIKEOUT ||
+          this.state.annotationMode === PdfAnnotationSubtype.SQUIGGLY
+        )
+      ) {
+        return;
+      }
+
       const formattedSelection = this.selection?.getFormattedSelection();
       if (!formattedSelection) return;
 
@@ -218,6 +233,7 @@ export class AnnotationPlugin extends BasePlugin<
         this.updateAnnotation(pageIndex, localId, patch),
       deleteAnnotation: (pageIndex: number, localId: number) =>
         this.deleteAnnotation(pageIndex, localId),
+      renderAnnotation: (options: RenderAnnotationOptions) => this.renderAnnotation(options),
       onStateChange: this.state$.on,
       onModeChange: this.modeChange$.on,
       onActiveToolChange: this.activeTool$.on,
@@ -225,12 +241,19 @@ export class AnnotationPlugin extends BasePlugin<
     };
   }
 
+  private createActiveTool(
+    mode: StylableSubtype | null,
+    toolDefaults: ToolDefaultsBySubtype,
+  ): ActiveTool {
+    if (mode === null) {
+      return { mode: null, defaults: null };
+    }
+    return { mode, defaults: toolDefaults[mode] } as ActiveTool;
+  }
+
   private emitActiveTool(state: AnnotationState) {
-    const mode = state.annotationMode;
-    this.activeTool$.emit({
-      mode,
-      defaults: mode ? state.toolDefaults[mode] : null,
-    });
+    const activeTool = this.createActiveTool(state.annotationMode, state.toolDefaults);
+    this.activeTool$.emit(activeTool);
   }
 
   override onStoreUpdated(prev: AnnotationState, next: AnnotationState): void {
@@ -267,6 +290,38 @@ export class AnnotationPlugin extends BasePlugin<
     }
 
     return this.engine.getPageAnnotations(doc, page);
+  }
+
+  private renderAnnotation({
+    pageIndex,
+    annotation,
+    scaleFactor = 1,
+    rotation = Rotation.Degree0,
+    dpr = 1,
+    mode = AppearanceMode.Normal,
+    imageType = 'image/webp',
+  }: RenderAnnotationOptions) {
+    const coreState = this.coreState.core;
+
+    if (!coreState.document) {
+      throw new Error('document does not open');
+    }
+
+    const page = coreState.document.pages.find((page) => page.index === pageIndex);
+    if (!page) {
+      throw new Error('page does not exist');
+    }
+
+    return this.engine.renderAnnotation(
+      coreState.document,
+      page,
+      annotation,
+      scaleFactor,
+      rotation,
+      dpr,
+      mode,
+      imageType,
+    );
   }
 
   private selectAnnotation(pageIndex: number, annotationId: number) {

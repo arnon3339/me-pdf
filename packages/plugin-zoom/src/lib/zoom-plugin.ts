@@ -30,7 +30,7 @@ import {
   InteractionManagerCapability,
   InteractionManagerPlugin,
 } from '@embedpdf/plugin-interaction-manager';
-import { Rect } from '@embedpdf/models';
+import { Rect, rotateRect } from '@embedpdf/models';
 
 export class ZoomPlugin extends BasePlugin<
   ZoomPluginConfig,
@@ -338,6 +338,14 @@ export class ZoomPlugin extends BasePlugin<
   }
 
   private handleZoomToArea(pageIndex: number, rect: Rect) {
+    /* -------------------------------------------------- */
+    /* 0 – rotation that applies to this page             */
+    /* -------------------------------------------------- */
+    const rotation = this.coreState.core.rotation;
+
+    /* -------------------------------------------------- */
+    /* viewport + layout basics                           */
+    /* -------------------------------------------------- */
     const vp = this.viewport.getMetrics();
     const vpGap = this.viewport.getViewportGap();
     const oldZ = this.state.currentZoomLevel;
@@ -345,32 +353,48 @@ export class ZoomPlugin extends BasePlugin<
     const availableW = vp.clientWidth - 2 * vpGap;
     const availableH = vp.clientHeight - 2 * vpGap;
 
-    /* 1 – numeric zoom so the rect fits -------------------------------- */
-    const targetZoom = this.toZoom(
-      Math.min(availableW / rect.size.width, availableH / rect.size.height),
-    );
-
-    /* 2 — absolute page position in content coordinates --------------- */
     const layout = this.scroll.getLayout();
 
-    // the VirtualItem that actually contains the requested page
+    /* which virtual item holds the page? */
     const vItem = layout.virtualItems.find((it) =>
       it.pageLayouts.some((p) => p.pageIndex === pageIndex),
     );
     if (!vItem) return;
 
-    // the page-layout _inside_ that virtual item
+    /* the page layout inside that virtual item */
     const pageRel = vItem.pageLayouts.find((p) => p.pageIndex === pageIndex)!;
 
-    /* add the virtual-item's own offset to get absolute coords */
+    /* -------------------------------------------------- */
+    /* 1 – rect → rotated‑page space                      */
+    /* -------------------------------------------------- */
+    const rotatedRect = rotateRect(
+      {
+        width: pageRel.width,
+        height: pageRel.height,
+      },
+      rect,
+      rotation,
+    );
+
+    /* -------------------------------------------------- */
+    /* 2 – numeric zoom so the rect fits                  */
+    /* -------------------------------------------------- */
+    const targetZoom = this.toZoom(
+      Math.min(availableW / rotatedRect.size.width, availableH / rotatedRect.size.height),
+    );
+
+    /* -------------------------------------------------- */
+    /* 3 – centre of that rect in *content* coordinates   */
+    /* -------------------------------------------------- */
     const pageAbsX = vItem.x + pageRel.x;
     const pageAbsY = vItem.y + pageRel.y;
 
-    /* 3 — centre of the marquee in content space ---------------------- */
-    const cxContent = pageAbsX + rect.origin.x + rect.size.width / 2;
-    const cyContent = pageAbsY + rect.origin.y + rect.size.height / 2;
+    const cxContent = pageAbsX + rotatedRect.origin.x + rotatedRect.size.width / 2;
+    const cyContent = pageAbsY + rotatedRect.origin.y + rotatedRect.size.height / 2;
 
-    /* 4 – viewport coords of that centre *before* zoom ----------------- */
+    /* -------------------------------------------------- */
+    /* 4 – centre in *viewport* coords before zoom        */
+    /* -------------------------------------------------- */
     const off = (avail: number, cw: number, z: number) =>
       cw * z < avail ? (avail - cw * z) / 2 : 0;
 
@@ -380,7 +404,9 @@ export class ZoomPlugin extends BasePlugin<
     const centerVX = vpGap + offXold + cxContent * oldZ - vp.scrollLeft;
     const centerVY = vpGap + offYold + cyContent * oldZ - vp.scrollTop;
 
-    /* 4 – reuse the generic handler ------------------------------------ */
+    /* -------------------------------------------------- */
+    /* 5 – hand off to the generic zoom handler           */
+    /* -------------------------------------------------- */
     this.handleRequest({
       level: targetZoom,
       center: { vx: centerVX, vy: centerVY },

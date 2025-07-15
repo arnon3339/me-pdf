@@ -1,5 +1,27 @@
 /* AUTO-GENERATED — DO NOT EDIT BY HAND */
 export const functions = {
+  EPDF_RenderAnnotBitmap: [
+    ['number', 'number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
+  EPDFAnnot_GenerateAppearance: [['number'] as const, 'boolean'] as const,
+  EPDFAnnot_GetBorderDashPattern: [['number', 'number', 'number'] as const, 'boolean'] as const,
+  EPDFAnnot_GetBorderDashPatternCount: [['number'] as const, 'number'] as const,
+  EPDFAnnot_GetBorderEffect: [['number', 'number'] as const, 'boolean'] as const,
+  EPDFAnnot_GetBorderStyle: [['number', 'number'] as const, 'number'] as const,
+  EPDFAnnot_GetColor: [
+    ['number', 'number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
+  EPDFAnnot_GetRectangleDifferences: [
+    ['number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
+  EPDFAnnot_SetBorderStyle: [['number', 'number', 'number'] as const, 'boolean'] as const,
+  EPDFAnnot_SetColor: [
+    ['number', 'number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
   FORM_CanRedo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_CanUndo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_DoDocumentAAction: [['number', 'number'] as const, null] as const,
@@ -342,6 +364,10 @@ export const functions = {
   ] as const,
   FPDFAnnot_SetFlags: [['number', 'number'] as const, 'boolean'] as const,
   FPDFAnnot_SetFocusableSubtypes: [['number', 'number', 'number'] as const, 'boolean'] as const,
+  FPDFAnnot_SetFontColor: [
+    ['number', 'number', 'number', 'number', 'number'] as const,
+    'boolean',
+  ] as const,
   FPDFAnnot_SetFormFieldFlags: [['number', 'number', 'number'] as const, 'boolean'] as const,
   FPDFAnnot_SetRect: [['number', 'number'] as const, 'boolean'] as const,
   FPDFAnnot_SetStringValue: [['number', 'string', 'number'] as const, 'boolean'] as const,
@@ -423,6 +449,7 @@ export const functions = {
   FPDFFont_GetWeight: [['number'] as const, 'number'] as const,
   FPDFFormObj_CountObjects: [['number'] as const, 'number'] as const,
   FPDFFormObj_GetObject: [['number', 'number'] as const, 'number'] as const,
+  FPDFFormObj_RemoveObject: [['number', 'number'] as const, 'boolean'] as const,
   FPDFGlyphPath_CountGlyphSegments: [['number'] as const, 'number'] as const,
   FPDFGlyphPath_GetGlyphPathSegment: [['number', 'number'] as const, 'number'] as const,
   FPDFImageObj_GetBitmap: [['number'] as const, 'number'] as const,
@@ -519,6 +546,7 @@ export const functions = {
   FPDFPage_HasTransparency: [['number'] as const, 'boolean'] as const,
   FPDFPage_InsertClipPath: [['number', 'number'] as const, null] as const,
   FPDFPage_InsertObject: [['number', 'number'] as const, null] as const,
+  FPDFPage_InsertObjectAtIndex: [['number', 'number', 'number'] as const, 'boolean'] as const,
   FPDFPage_New: [['number', 'number', 'number', 'number'] as const, 'number'] as const,
   FPDFPage_RemoveAnnot: [['number', 'number'] as const, 'boolean'] as const,
   FPDFPage_RemoveObject: [['number', 'number'] as const, 'boolean'] as const,

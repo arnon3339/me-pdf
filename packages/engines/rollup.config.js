@@ -4,6 +4,9 @@ import commonjs from '@rollup/plugin-commonjs';
 import dts from 'rollup-plugin-dts';
 import { deleteSync } from 'del';
 import { bundleWorker } from './tools/build-worker.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
 // Clean dist folder
 deleteSync(['dist/**']);
@@ -43,6 +46,32 @@ const workerReplacer = () => {
   };
 };
 
+/**
+ * Injects the current package.json version into the bundle.
+ * Replace every occurrence of __PDFIUM_VERSION__ with the literal version string.
+ *
+ *   const url = `https://…/@embedpdf/pdfium@__PDFIUM_VERSION__/dist/pdfium.wasm`;
+ *   // ⇢ after build: “…@1.0.7/…”
+ */
+export function versionReplacer() {
+  const rootDir = dirname(fileURLToPath(import.meta.url));
+  const pkg = JSON.parse(readFileSync(resolve(rootDir, 'package.json'), 'utf8'));
+  const { version } = pkg;
+
+  const placeholder = /__PDFIUM_VERSION__/g;
+
+  return {
+    name: 'version-replacer',
+    transform(code) {
+      if (!placeholder.test(code)) return null;
+      return {
+        code: code.replace(placeholder, version),
+        map: null,
+      };
+    },
+  };
+}
+
 const entries = {
   index: 'src/lib/index.ts',
   pdfium: 'src/lib/pdfium/index.ts',
@@ -64,6 +93,7 @@ const createConfig = (format) =>
     },
     plugins: [
       workerReplacer(),
+      versionReplacer(),
       nodeResolve(),
       commonjs(),
       typescript({

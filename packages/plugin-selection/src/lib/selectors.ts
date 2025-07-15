@@ -9,6 +9,13 @@ export function selectBoundingRectForPage(state: SelectionState, page: number) {
   return boundingRect(selectRectsForPage(state, page));
 }
 
+export function selectRectsAndBoundingRectForPage(state: SelectionState, page: number) {
+  return {
+    rects: selectRectsForPage(state, page),
+    boundingRect: selectBoundingRectForPage(state, page),
+  };
+}
+
 export function selectBoundingRectsForAllPages(state: SelectionState) {
   const out: { page: number; rect: Rect }[] = [];
   const rectMap = state.rects;

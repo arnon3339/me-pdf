@@ -21,6 +21,7 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
   const { provides: im } = useInteractionManagerCapability();
   const { register } = usePointerHandlers({ pageIndex });
   const [rects, setRects] = useState<Array<Rect>>([]);
+  const [boundingRect, setBoundingRect] = useState<Rect | null>(null);
   const { setCursor, removeCursor } = useCursor();
 
   /* subscribe to rect updates */
@@ -30,8 +31,10 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
       const mode = im?.getActiveMode();
       if (mode === 'default') {
         setRects(sel.getHighlightRectsForPage(pageIndex));
+        setBoundingRect(sel.getBoundingRectForPage(pageIndex));
       } else {
         setRects([]);
+        setBoundingRect(null);
       }
     });
   }, [sel, pageIndex]);
@@ -101,15 +104,27 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
     return register(handlers);
   }, [register, handlers]);
 
+  if (!boundingRect) return null;
+
   return (
-    <>
+    <div
+      style={{
+        position: 'absolute',
+        left: boundingRect.origin.x * scale,
+        top: boundingRect.origin.y * scale,
+        width: boundingRect.size.width * scale,
+        height: boundingRect.size.height * scale,
+        mixBlendMode: 'multiply',
+        isolation: 'isolate',
+      }}
+    >
       {rects.map((b, i) => (
         <div
           key={i}
           style={{
             position: 'absolute',
-            left: b.origin.x * scale,
-            top: b.origin.y * scale,
+            left: (b.origin.x - boundingRect.origin.x) * scale,
+            top: (b.origin.y - boundingRect.origin.y) * scale,
             width: b.size.width * scale,
             height: b.size.height * scale,
             background,
@@ -117,6 +132,6 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
           }}
         />
       ))}
-    </>
+    </div>
   );
 }

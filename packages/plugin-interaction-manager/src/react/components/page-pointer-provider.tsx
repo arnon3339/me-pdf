@@ -63,17 +63,13 @@ export const PagePointerProvider = ({
     <div
       ref={ref}
       style={{
-        position: 'absolute',
-        inset: 0,
-        mixBlendMode: 'multiply',
-        isolation: 'isolate',
         ...style,
       }}
       {...props}
     >
       {children}
       {isPageExclusive && (
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10 }} />
       )}
     </div>
   );

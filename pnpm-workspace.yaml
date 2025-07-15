@@ -4,3 +4,5 @@ packages:
   - 'examples/**'
   - 'website'
   - 'snippet'
+    # exclude the git submodule (and everything inside it)
+  - '!packages/pdfium/pdfium-src/**'
