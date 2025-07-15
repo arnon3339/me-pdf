@@ -17,6 +17,8 @@ interface InkPaintProps {
   pageHeight: number;
 }
 
+const MAX_STROKE_WIDTH = 30;
+
 /**
  * Allows the user to draw freehand ink annotations.
  * Hook it into the interaction-manager with modeId = 'inkPaint'.
@@ -121,7 +123,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
             const maxY = Math.max(...allPoints.map((p) => p.y));
 
             // Account for stroke width - expand rect by half stroke width on all sides
-            const halfStroke = toolStrokeWidth / 2;
+            const halfStroke = MAX_STROKE_WIDTH / 2;
             const rectMinX = minX - halfStroke;
             const rectMinY = minY - halfStroke;
             const rectMaxX = maxX + halfStroke;
@@ -207,7 +209,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
   const maxY = Math.max(...allPoints.map((p) => p.y));
 
   // Account for stroke width - expand bounds by half stroke width on all sides
-  const halfStroke = toolStrokeWidth / 2;
+  const halfStroke = MAX_STROKE_WIDTH / 2;
   const svgMinX = minX - halfStroke;
   const svgMinY = minY - halfStroke;
   const svgMaxX = maxX + halfStroke;

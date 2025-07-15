@@ -2472,6 +2472,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                             scale={scale}
                                             pageWidth={width}
                                             pageHeight={height}
+                                            rotation={rotation}
                                           />
                                           <MarqueeZoom
                                             pageIndex={pageIndex}

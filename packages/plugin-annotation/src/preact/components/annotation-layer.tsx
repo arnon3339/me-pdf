@@ -9,6 +9,7 @@ type AnnotationLayerProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & 
   scale: number;
   pageWidth: number;
   pageHeight: number;
+  rotation: number;
   style?: JSX.CSSProperties;
 };
 
@@ -17,6 +18,7 @@ export function AnnotationLayer({
   scale,
   pageWidth,
   pageHeight,
+  rotation,
   style,
   ...props
 }: AnnotationLayerProps) {
@@ -27,7 +29,7 @@ export function AnnotationLayer({
       }}
       {...props}
     >
-      <Annotations pageIndex={pageIndex} scale={scale} />
+      <Annotations pageIndex={pageIndex} scale={scale} rotation={rotation} />
       <TextMarkup pageIndex={pageIndex} scale={scale} />
       <InkPaint pageIndex={pageIndex} scale={scale} pageWidth={pageWidth} pageHeight={pageHeight} />
     </div>

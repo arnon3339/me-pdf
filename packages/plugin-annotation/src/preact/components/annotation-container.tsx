@@ -2,7 +2,7 @@
 import { ComponentChildren, JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationObject, Rect } from '@embedpdf/models';
+import { PdfAnnotationObject, Rect, restoreOffset, restoreRect } from '@embedpdf/models';
 import { useAnnotationCapability } from '../hooks';
 import { ResizeDirection } from '../../shared/types';
 
@@ -10,6 +10,7 @@ type AnnotationContainerProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'
   scale: number;
   isSelected?: boolean;
   pageIndex: number;
+  rotation: number;
   trackedAnnotation: TrackedAnnotation;
   children: ComponentChildren | ((annotation: PdfAnnotationObject) => ComponentChildren);
   style?: JSX.CSSProperties;
@@ -28,6 +29,7 @@ type Point = { x: number; y: number };
 export function AnnotationContainer({
   scale,
   pageIndex,
+  rotation,
   trackedAnnotation,
   children,
   style,
@@ -78,8 +80,8 @@ export function AnnotationContainer({
   const handlePointerMove = (e: PointerEvent) => {
     if (dragState === 'idle' || !startPos || !startRect) return;
 
-    const dx = (e.clientX - startPos.x) / scale;
-    const dy = (e.clientY - startPos.y) / scale;
+    const dispDelta = { x: e.clientX - startPos.x, y: e.clientY - startPos.y };
+    const { x: dx, y: dy } = restoreOffset(dispDelta, rotation, scale);
 
     let newOriginX = startRect.origin.x;
     let newOriginY = startRect.origin.y;
@@ -187,7 +189,7 @@ export function AnnotationContainer({
               height: 13,
               background: 'blue',
               borderRadius: '50%',
-              cursor: 'nwse-resize',
+              cursor: rotation % 2 ? 'nesw-resize' : 'nwse-resize',
             }}
           />
           <div
@@ -201,7 +203,7 @@ export function AnnotationContainer({
               height: 13,
               background: 'blue',
               borderRadius: '50%',
-              cursor: 'nesw-resize',
+              cursor: rotation % 2 ? 'nwse-resize' : 'nesw-resize',
             }}
           />
           <div
@@ -215,7 +217,7 @@ export function AnnotationContainer({
               height: 13,
               background: 'blue',
               borderRadius: '50%',
-              cursor: 'nesw-resize',
+              cursor: rotation % 2 ? 'nwse-resize' : 'nesw-resize',
             }}
           />
           <div
@@ -229,7 +231,7 @@ export function AnnotationContainer({
               height: 13,
               background: 'blue',
               borderRadius: '50%',
-              cursor: 'nwse-resize',
+              cursor: rotation % 2 ? 'nesw-resize' : 'nwse-resize',
             }}
           />
         </>

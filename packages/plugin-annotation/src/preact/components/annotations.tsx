@@ -22,9 +22,11 @@ import { resizeInkAnnotation } from '../../shared/resize-ink';
 interface AnnotationsProps {
   pageIndex: number;
   scale: number;
+  rotation: number;
 }
 
-export function Annotations({ pageIndex, scale }: AnnotationsProps) {
+export function Annotations(annotationsProps: AnnotationsProps) {
+  const { pageIndex, scale } = annotationsProps;
   const { provides: annotationProvides } = useAnnotationCapability();
   const { provides: selectionProvides } = useSelectionCapability();
   const [annotations, setAnnotations] = useState<TrackedAnnotation[]>([]);
@@ -78,12 +80,11 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
               <AnnotationContainer
                 key={annotation.localId}
                 trackedAnnotation={annotation}
-                scale={scale}
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
-                pageIndex={pageIndex}
                 style={{ mixBlendMode: 'multiply' }}
+                {...annotationsProps}
               >
                 <Underline
                   rect={annotation.object.rect}
@@ -100,12 +101,11 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
               <AnnotationContainer
                 key={annotation.localId}
                 trackedAnnotation={annotation}
-                scale={scale}
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
-                pageIndex={pageIndex}
                 style={{ mixBlendMode: 'multiply' }}
+                {...annotationsProps}
               >
                 <Strikeout
                   rect={annotation.object.rect}
@@ -122,12 +122,11 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
               <AnnotationContainer
                 key={annotation.localId}
                 trackedAnnotation={annotation}
-                scale={scale}
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
-                pageIndex={pageIndex}
                 style={{ mixBlendMode: 'multiply' }}
+                {...annotationsProps}
               >
                 <Squiggly
                   color={annotation.object.color}
@@ -144,12 +143,11 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
               <AnnotationContainer
                 key={annotation.localId}
                 trackedAnnotation={annotation}
-                scale={scale}
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
-                pageIndex={pageIndex}
                 style={{ mixBlendMode: 'multiply' }}
+                {...annotationsProps}
               >
                 <Highlight
                   color={annotation.object.color}
@@ -165,12 +163,11 @@ export function Annotations({ pageIndex, scale }: AnnotationsProps) {
             return (
               <AnnotationContainer
                 key={annotation.localId}
-                scale={scale}
                 isSelected={isSelected}
-                pageIndex={pageIndex}
                 trackedAnnotation={annotation}
                 outlineOffset={6}
                 computeResizePatch={resizeInkAnnotation}
+                {...annotationsProps}
               >
                 {(obj: PdfInkAnnoObject) => (
                   <Ink
