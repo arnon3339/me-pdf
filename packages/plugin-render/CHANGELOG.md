@@ -1,5 +1,11 @@
 # @embedpdf/plugin-render
 
+## 1.0.10
+
+### Patch Changes
+
+- [`f629db4`](https://github.com/embedpdf/embed-pdf-viewer/commit/f629db47e1a2693e913defbc1a9e76912af945e3) by [@bobsingor](https://github.com/bobsingor) – Some small bugfixes, in some cases interactionmanager state can be null and gives error on fast reload, add get state to selection manager for debugging purposes and make @embedpdf/model a dependency of scroll to make sure it doesn't get add inline inside the component
+
 ## 1.0.9
 
 ## 1.0.8
