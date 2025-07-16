@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.0.9
+
+### Patch Changes
+
+- [`d4c602c`](https://github.com/embedpdf/embed-pdf-viewer/commit/d4c602cf2045ee06eec56ec794d5f4dbb4613131) by [@bobsingor](https://github.com/bobsingor) – Make config of the usePdfiumEngine completely optional
+
 ## 1.0.8
 
 ### Patch Changes
