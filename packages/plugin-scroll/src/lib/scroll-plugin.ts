@@ -59,12 +59,14 @@ export class ScrollPlugin extends BasePlugin<
   private currentRotation: Rotation = Rotation.Degree0;
   private initialPage?: number;
   private currentPage: number = 1;
+  private layoutReady: boolean = false;
 
   private readonly layout$ = createBehaviorEmitter<LayoutChangePayload>();
   private readonly scroll$ = createBehaviorEmitter<ScrollMetrics>();
   private readonly state$ = createBehaviorEmitter<ScrollState>();
   private readonly scrollerLayout$ = createBehaviorEmitter<ScrollerLayout>();
   private readonly pageChange$ = createBehaviorEmitter<PageChangePayload>();
+  private readonly layoutReady$ = createBehaviorEmitter<boolean>();
 
   constructor(
     public readonly id: string,
@@ -219,6 +221,13 @@ export class ScrollPlugin extends BasePlugin<
     this.refreshAll(pages, this.viewport.getMetrics());
   }
 
+  public setLayoutReady() {
+    if (this.layoutReady) return;
+
+    this.layoutReady = true;
+    this.layoutReady$.emit(true);
+  }
+
   protected buildCapability(): ScrollCapability {
     return {
       onStateChange: this.state$.on,
@@ -226,6 +235,7 @@ export class ScrollPlugin extends BasePlugin<
       onScroll: this.scroll$.on,
       onPageChange: this.pageChange$.on,
       onScrollerData: this.scrollerLayout$.on,
+      onLayoutReady: this.layoutReady$.on,
       getCurrentPage: () => this.currentPage,
       getTotalPages: () => this.state.totalPages,
       scrollToPage: (options: ScrollToPageOptions) => {
@@ -324,6 +334,8 @@ export class ScrollPlugin extends BasePlugin<
     this.scroll$.clear();
     this.pageChange$.clear();
     this.state$.clear();
+    this.scrollerLayout$.clear();
+    this.layoutReady$.clear();
     super.destroy();
   }
 }

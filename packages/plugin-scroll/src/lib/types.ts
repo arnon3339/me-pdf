@@ -98,6 +98,7 @@ export interface ScrollCapability {
   getTotalPages(): number;
   onPageChange: EventHook<PageChangePayload>;
   onLayoutChange: EventHook<LayoutChangePayload>;
+  onLayoutReady: EventHook<boolean>;
   scrollToPage(options: ScrollToPageOptions): void;
   scrollToNextPage(behavior?: ScrollBehavior): void;
   scrollToPreviousPage(behavior?: ScrollBehavior): void;
