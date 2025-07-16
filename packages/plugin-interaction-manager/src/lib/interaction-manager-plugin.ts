@@ -245,6 +245,8 @@ export class InteractionManagerPlugin extends BasePlugin<
    *  – Handlers that belong to the current mode are added on top **iff**
    *    the mode’s own scope matches the provider’s scope.            */
   private getHandlersForScope(scope: InteractionScope): PointerEventHandlers | null {
+    if (!this.state) return null;
+
     const mode = this.modes.get(this.state.activeMode);
     if (!mode) return null;
 

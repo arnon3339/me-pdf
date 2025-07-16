@@ -7,7 +7,6 @@ import {
 } from '@embedpdf/core';
 import {
   PdfEngine,
-  PdfDocumentObject,
   PdfPageGeometry,
   Rect,
   PdfTask,
@@ -44,7 +43,6 @@ export class SelectionPlugin extends BasePlugin<
   SelectionAction
 > {
   static readonly id = 'selection' as const;
-  private doc?: PdfDocumentObject;
 
   /** Modes that should trigger text-selection logic */
   private enabledModes = new Set<string>(['default']);
@@ -66,9 +64,8 @@ export class SelectionPlugin extends BasePlugin<
   ) {
     super(id, registry);
 
-    this.coreStore.onAction(SET_DOCUMENT, (_action, state) => {
+    this.coreStore.onAction(SET_DOCUMENT, (_action) => {
       this.dispatch(reset());
-      this.doc = state.core.document ?? undefined;
     });
   }
 
@@ -101,6 +98,7 @@ export class SelectionPlugin extends BasePlugin<
       copyToClipboard: () => this.copyToClipboard(),
       enableForMode: (id: string) => this.enabledModes.add(id),
       isEnabledForMode: (id: string) => this.enabledModes.has(id),
+      getState: () => this.state,
     };
   }
 
@@ -109,11 +107,11 @@ export class SelectionPlugin extends BasePlugin<
     const cached = this.state.geometry[pageIdx];
     if (cached) return PdfTaskHelper.resolve(cached);
 
-    if (!this.doc)
+    if (!this.coreState.core.document)
       return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Doc Not Found' });
-    const page = this.doc.pages.find((p) => p.index === pageIdx)!;
+    const page = this.coreState.core.document.pages.find((p) => p.index === pageIdx)!;
 
-    const task = this.engine.getPageGeometry(this.doc!, page);
+    const task = this.engine.getPageGeometry(this.coreState.core.document, page);
 
     task.wait((geo) => {
       this.dispatch(cachePageGeometry(pageIdx, geo));
@@ -177,7 +175,7 @@ export class SelectionPlugin extends BasePlugin<
   }
 
   private getSelectedText(): PdfTask<string[]> {
-    if (!this.doc || !this.state.selection) {
+    if (!this.coreState.core.document || !this.state.selection) {
       return PdfTaskHelper.reject({
         code: PdfErrorCode.NotFound,
         message: 'Doc Not Found or No Selection',
@@ -194,7 +192,7 @@ export class SelectionPlugin extends BasePlugin<
 
     if (req.length === 0) return PdfTaskHelper.resolve([] as string[]);
 
-    const task = this.engine.getTextSlices(this.doc!, req);
+    const task = this.engine.getTextSlices(this.coreState.core.document, req);
 
     // Emit the text when it's retrieved
     task.wait((text) => {

@@ -1,5 +1,5 @@
 /** @jsxImportSource preact */
-import { ComponentChildren, Fragment, JSX } from 'preact';
+import { Fragment, JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { ignore, PdfErrorCode } from '@embedpdf/models';
 

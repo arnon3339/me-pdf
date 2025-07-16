@@ -65,4 +65,6 @@ export interface SelectionCapability {
   enableForMode(modeId: string): void;
   /** Quick check used by SelectionLayer during pointer events. */
   isEnabledForMode(modeId: string): boolean;
+  /** Get the current state of the selection plugin. */
+  getState(): SelectionState;
 }
