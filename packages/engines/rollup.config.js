@@ -81,6 +81,7 @@ const entries = {
   converters: 'src/lib/converters/index.ts',
   react: 'src/react/index.ts',
   preact: 'src/preact/index.ts',
+  vue: 'src/vue/index.ts',
 };
 
 const createConfig = (format) =>
