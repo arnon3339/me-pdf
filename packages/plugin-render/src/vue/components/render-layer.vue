@@ -39,18 +39,15 @@ function startRender() {
   if (!renderProvides.value) return;
 
   const task = renderProvides.value.renderPage({
-    pageIndex : props.pageIndex,
+    pageIndex: props.pageIndex,
     scaleFactor: props.scaleFactor,
-    dpr       : props.dpr,
+    dpr: props.dpr,
   });
 
-  task.wait(
-    (blob) => {
-      currentBlobUrl  = URL.createObjectURL(blob);
-      imageUrl.value  = currentBlobUrl;
-    },
-    ignore,
-  );
+  task.wait((blob) => {
+    currentBlobUrl = URL.createObjectURL(blob);
+    imageUrl.value = currentBlobUrl;
+  }, ignore);
 
   onBeforeUnmount(() => {
     /* if we unmount before task resolves, abort it */
@@ -63,20 +60,14 @@ function startRender() {
   });
 }
 
-watch(
-  () => [props.pageIndex, props.scaleFactor, props.dpr, renderProvides.value],
-  startRender,
-  { immediate: true },
-);
+watch(() => [props.pageIndex, props.scaleFactor, props.dpr, renderProvides.value], startRender, {
+  immediate: true,
+});
 
 /* ------------------------------------------ */
 onBeforeUnmount(revoke);
 </script>
 
 <template>
-  <img
-    v-if="imageUrl"
-    :src="imageUrl"
-    :style="[{ width: '100%', height: '100%' }, props.style]"
-  />
+  <img v-if="imageUrl" :src="imageUrl" :style="[{ width: '100%', height: '100%' }, props.style]" />
 </template>
