@@ -1,4 +1,4 @@
-import { PdfPageGeometry, Rect } from '@embedpdf/models';
+import { PdfPageGeometry, Position, Rect } from '@embedpdf/models';
 import { SelectionRangeX } from './types';
 
 /**
@@ -7,7 +7,7 @@ import { SelectionRangeX } from './types';
  * @param pt - point
  * @returns glyph index
  */
-export function glyphAt(geo: PdfPageGeometry, pt: { x: number; y: number }) {
+export function glyphAt(geo: PdfPageGeometry, pt: Position) {
   for (const run of geo.runs) {
     const inRun =
       pt.y >= run.rect.y &&

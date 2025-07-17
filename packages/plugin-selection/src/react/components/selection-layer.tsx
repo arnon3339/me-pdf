@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ignore, PdfErrorCode, PdfPageGeometry, Rect } from '@embedpdf/models';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ignore, PdfErrorCode, PdfPageGeometry, Position, Rect } from '@embedpdf/models';
 import {
   useCursor,
   useInteractionManagerCapability,
@@ -23,6 +23,7 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
   const [rects, setRects] = useState<Array<Rect>>([]);
   const [boundingRect, setBoundingRect] = useState<Rect | null>(null);
   const { setCursor, removeCursor } = useCursor();
+  const geoCacheRef = useRef<PdfPageGeometry | null>(null);
 
   /* subscribe to rect updates */
   useEffect(() => {
@@ -40,23 +41,23 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
   }, [sel, pageIndex]);
 
   /* cheap glyphAt cache for the active page */
-  let geoCache: PdfPageGeometry | undefined;
-  const cachedGlyphAt = useCallback((pt: { x: number; y: number }) => {
-    if (!geoCache) return -1;
-    return glyphAt(geoCache, pt);
+  const cachedGlyphAt = useCallback((pt: Position) => {
+    const geo = geoCacheRef.current;
+    return geo ? glyphAt(geo, pt) : -1;
   }, []);
 
   // Initialize geometry cache
   useEffect(() => {
     if (!sel) return;
     const task = sel.getGeometry(pageIndex);
-    task.wait((g) => (geoCache = g), ignore);
+    task.wait((g) => (geoCacheRef.current = g), ignore);
 
     return () => {
       task.abort({
         code: PdfErrorCode.Cancelled,
         message: 'Cancelled',
       });
+      geoCacheRef.current = null;
     };
   }, [sel, pageIndex]);
 
