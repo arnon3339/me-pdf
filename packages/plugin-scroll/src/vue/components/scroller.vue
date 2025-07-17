@@ -1,25 +1,21 @@
 <script setup lang="ts">
+/* ------------------------------------------------------------------ */
+/* imports                                                            */
+/* ------------------------------------------------------------------ */
 import { computed, onMounted, ref, watchEffect, useAttrs } from 'vue';
 import type { StyleValue } from 'vue';
-import { useRegistry } from '@embedpdf/core/vue';
 
 import { useScrollCapability, useScrollPlugin } from '../hooks';
 import { ScrollStrategy, type ScrollerLayout, type PageLayout } from '@embedpdf/plugin-scroll';
+import { useRegistry } from '@embedpdf/core/vue';
 import type { PdfDocumentObject, Rotation } from '@embedpdf/models';
 
-/* -------------------------------------------------- */
-/* props                                              */
-/* -------------------------------------------------- */
-interface RenderPageProps extends PageLayout {
-  rotation: Rotation;
-  scale: number;
-  document: PdfDocumentObject | null;
-}
-
+/* ------------------------------------------------------------------ */
+/* props – pure layout; page content comes from the *slot*            */
+/* ------------------------------------------------------------------ */
 const props = withDefaults(
   defineProps<{
     style?: StyleValue;
-    renderPage: (p: RenderPageProps) => any;
     overlayElements?: any[];
   }>(),
   { overlayElements: () => [] },
@@ -27,16 +23,16 @@ const props = withDefaults(
 
 const attrs = useAttrs();
 
-/* -------------------------------------------------- */
-/* plugin + state                                     */
-/* -------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* plugin + reactive state                                            */
+/* ------------------------------------------------------------------ */
 const { provides: scrollProvides } = useScrollCapability();
 const { plugin: scrollPlugin } = useScrollPlugin();
-const { registry } = useRegistry();
+const { registry } = useRegistry(); // shallowRef<PluginRegistry|null>
 
 const layout = ref<ScrollerLayout | null>(null);
 
-/* subscribe to scroller‑data */
+/* subscribe to scroller‑layout updates */
 watchEffect((onCleanup) => {
   if (!scrollProvides.value) return;
 
@@ -45,14 +41,34 @@ watchEffect((onCleanup) => {
   onCleanup(off);
 });
 
-/* mark layout ready once plugin instance exists */
+/* inform plugin once the DOM is ready */
 onMounted(() => {
-  if (scrollPlugin.value) scrollPlugin.value.setLayoutReady();
+  scrollPlugin.value?.setLayoutReady();
 });
 
-/* -------------------------------------------------- */
-/* combined root style                                */
-/* -------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* helpers                                                            */
+/* ------------------------------------------------------------------ */
+interface PageSlotProps extends PageLayout {
+  rotation: Rotation;
+  scale: number;
+  document: PdfDocumentObject | null;
+}
+
+/** Build the prop object that we’ll forward into the default slot */
+function pageSlotProps(pl: PageLayout): PageSlotProps {
+  const core = registry.value!.getStore().getState().core;
+  return {
+    ...pl,
+    rotation: core.rotation,
+    scale: core.scale,
+    document: core.document,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* computed root style                                                */
+/* ------------------------------------------------------------------ */
 const rootStyle = computed<StyleValue>(() => {
   if (!layout.value) return props.style;
 
@@ -79,7 +95,8 @@ const rootStyle = computed<StyleValue>(() => {
 </script>
 
 <template>
-  <div :style="rootStyle" v-bind="attrs" v-if="layout && registry">
+  <!-- render nothing until both layout + registry exist -->
+  <div v-if="layout && registry" :style="rootStyle" v-bind="attrs">
     <!-- leading spacer -->
     <div
       v-if="layout.strategy === 'horizontal'"
@@ -87,7 +104,7 @@ const rootStyle = computed<StyleValue>(() => {
     />
     <div v-else :style="{ height: layout.startSpacing + 'px', width: '100%' }" />
 
-    <!-- page grid -->
+    <!-- actual page grid -->
     <div
       :style="{
         gap: layout.pageGap + 'px',
@@ -101,28 +118,14 @@ const rootStyle = computed<StyleValue>(() => {
       }"
     >
       <template v-for="item in layout.items" :key="item.pageNumbers[0]">
-        <div
-          :style="{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: layout.pageGap + 'px',
-          }"
-        >
+        <div :style="{ display: 'flex', justifyContent: 'center', gap: layout.pageGap + 'px' }">
           <div
             v-for="pl in item.pageLayouts"
             :key="pl.pageNumber"
             :style="{ width: pl.rotatedWidth + 'px', height: pl.rotatedHeight + 'px' }"
           >
-            <!-- call the renderPage prop -->
-            <component
-              :is="props.renderPage"
-              v-bind="{
-                ...pl,
-                rotation: registry.getStore().getState().core.rotation,
-                scale: registry.getStore().getState().core.scale,
-                document: registry.getStore().getState().core.document,
-              }"
-            />
+            <!-- 🔑 give the host app full control over page content -->
+            <slot :page="pageSlotProps(pl)" />
           </div>
         </div>
       </template>
@@ -135,7 +138,7 @@ const rootStyle = computed<StyleValue>(() => {
     />
     <div v-else :style="{ height: layout.endSpacing + 'px', width: '100%' }" />
 
-    <!-- overlay elements -->
+    <!-- optional overlay components -->
     <component v-for="(el, i) in props.overlayElements" :is="el" :key="i" />
   </div>
 </template>

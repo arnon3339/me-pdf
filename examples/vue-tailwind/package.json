@@ -10,8 +10,13 @@
     "lint": "eslint . --ext ts,vue --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@embedpdf/core": "workspace:*",
     "@embedpdf/engines": "workspace:*",
     "@embedpdf/models": "workspace:*",
+    "@embedpdf/plugin-loader": "workspace:*",
+    "@embedpdf/plugin-viewport": "workspace:*",
+    "@embedpdf/plugin-scroll": "workspace:*",
+    "@embedpdf/plugin-render": "workspace:*",
     "vue": "^3.5.0"
   },
   "devDependencies": {

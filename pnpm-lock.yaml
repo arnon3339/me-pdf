@@ -289,12 +289,27 @@ importers:
 
   examples/vue-tailwind:
     dependencies:
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@embedpdf/engines':
         specifier: workspace:*
         version: link:../../packages/engines
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../../packages/models
+      '@embedpdf/plugin-loader':
+        specifier: workspace:*
+        version: link:../../packages/plugin-loader
+      '@embedpdf/plugin-render':
+        specifier: workspace:*
+        version: link:../../packages/plugin-render
+      '@embedpdf/plugin-scroll':
+        specifier: workspace:*
+        version: link:../../packages/plugin-scroll
+      '@embedpdf/plugin-viewport':
+        specifier: workspace:*
+        version: link:../../packages/plugin-viewport
       vue:
         specifier: ^3.5.0
         version: 3.5.17(typescript@5.8.3)
