@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { CoreState, PluginRegistry, StoreState } from '@embedpdf/core';
+import { CoreState, StoreState } from '@embedpdf/core';
 import { useRegistry } from './use-registry';
 
 /**
