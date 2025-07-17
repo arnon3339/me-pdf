@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { computed, onMounted, ref, watchEffect, useAttrs } from 'vue';
 import type { StyleValue } from 'vue';
@@ -32,8 +31,8 @@ const attrs = useAttrs();
 /* plugin + state                                     */
 /* -------------------------------------------------- */
 const { provides: scrollProvides } = useScrollCapability();
-const { plugin: scrollPlugin }   = useScrollPlugin();
-const { registry }               = useRegistry();
+const { plugin: scrollPlugin } = useScrollPlugin();
+const { registry } = useRegistry();
 
 const layout = ref<ScrollerLayout | null>(null);
 
@@ -60,12 +59,12 @@ const rootStyle = computed<StyleValue>(() => {
   const base =
     typeof props.style === 'object' && !Array.isArray(props.style)
       ? { ...props.style }
-      : props.style ?? {};
+      : (props.style ?? {});
 
   return [
     base,
     {
-      width:  `${layout.value.totalWidth}px`,
+      width: `${layout.value.totalWidth}px`,
       height: `${layout.value.totalHeight}px`,
       position: 'relative',
       boxSizing: 'border-box',
@@ -86,10 +85,7 @@ const rootStyle = computed<StyleValue>(() => {
       v-if="layout.strategy === 'horizontal'"
       :style="{ width: layout.startSpacing + 'px', height: '100%', flexShrink: 0 }"
     />
-    <div
-      v-else
-      :style="{ height: layout.startSpacing + 'px', width: '100%' }"
-    />
+    <div v-else :style="{ height: layout.startSpacing + 'px', width: '100%' }" />
 
     <!-- page grid -->
     <div
@@ -101,7 +97,7 @@ const rootStyle = computed<StyleValue>(() => {
         boxSizing: 'border-box',
         flexDirection: layout.strategy === 'horizontal' ? 'row' : 'column',
         minHeight: layout.strategy === 'horizontal' ? '100%' : undefined,
-        minWidth : layout.strategy === 'vertical'   ? 'fit-content' : undefined,
+        minWidth: layout.strategy === 'vertical' ? 'fit-content' : undefined,
       }"
     >
       <template v-for="item in layout.items" :key="item.pageNumbers[0]">
@@ -123,7 +119,7 @@ const rootStyle = computed<StyleValue>(() => {
               v-bind="{
                 ...pl,
                 rotation: registry.getStore().getState().core.rotation,
-                scale   : registry.getStore().getState().core.scale,
+                scale: registry.getStore().getState().core.scale,
                 document: registry.getStore().getState().core.document,
               }"
             />
@@ -137,12 +133,9 @@ const rootStyle = computed<StyleValue>(() => {
       v-if="layout.strategy === 'horizontal'"
       :style="{ width: layout.endSpacing + 'px', height: '100%', flexShrink: 0 }"
     />
-    <div
-      v-else
-      :style="{ height: layout.endSpacing + 'px', width: '100%' }"
-    />
+    <div v-else :style="{ height: layout.endSpacing + 'px', width: '100%' }" />
 
     <!-- overlay elements -->
-    <component v-for="(el,i) in props.overlayElements" :is="el" :key="i" />
+    <component v-for="(el, i) in props.overlayElements" :is="el" :key="i" />
   </div>
 </template>
