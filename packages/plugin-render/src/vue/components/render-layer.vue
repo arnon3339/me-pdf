@@ -69,5 +69,10 @@ onBeforeUnmount(revoke);
 </script>
 
 <template>
-  <img v-if="imageUrl" :src="imageUrl" :style="[{ width: '100%', height: '100%' }, props.style]" />
+  <img
+    v-if="imageUrl"
+    :src="imageUrl"
+    :style="[{ width: '100%', height: '100%' }, props.style]"
+    @load="revoke"
+  />
 </template>
