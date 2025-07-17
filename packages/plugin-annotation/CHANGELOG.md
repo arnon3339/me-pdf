@@ -1,5 +1,7 @@
 # @embedpdf/plugin-annotation
 
+## 1.0.11
+
 ## 1.0.10
 
 ## 1.0.9

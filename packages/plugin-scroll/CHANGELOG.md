@@ -1,5 +1,11 @@
 # @embedpdf/plugin-scroll
 
+## 1.0.11
+
+### Patch Changes
+
+- [`8bb2d1f`](https://github.com/embedpdf/embed-pdf-viewer/commit/8bb2d1f56280ea227b323ec0cdd90478d076ad97) by [@bobsingor](https://github.com/bobsingor) – Send emit message when the layout is ready so that you can easily do initial page scroll
+
 ## 1.0.10
 
 ### Patch Changes
