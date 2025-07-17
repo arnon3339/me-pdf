@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h, ComponentChildren } from 'preact';
-import { useState, useEffect, useCallback, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';

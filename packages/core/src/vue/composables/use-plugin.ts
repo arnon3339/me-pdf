@@ -2,7 +2,7 @@ import { shallowRef, ref, onMounted, watch, type ShallowRef, type Ref } from 'vu
 import type { BasePlugin } from '@embedpdf/core';
 import { useRegistry } from './use-registry';
 
-interface PluginState<T extends BasePlugin> {
+export interface PluginState<T extends BasePlugin> {
   plugin: ShallowRef<T | null>;
   isLoading: Ref<boolean>;
   ready: Ref<Promise<void>>;

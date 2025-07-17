@@ -1,18 +1,16 @@
 import { Rect } from '@embedpdf/models';
-import { RefObject } from 'preact';
-import { useLayoutEffect, useRef } from 'preact/hooks';
+import { onMounted, onUnmounted, ref } from 'vue';
 
 import { useViewportPlugin } from './use-viewport';
 
-export function useViewportRef(): RefObject<HTMLDivElement> {
-  const { plugin: viewportPlugin } = useViewportPlugin();
-  const containerRef = useRef<HTMLDivElement>(null);
+export function useViewportRef() {
+  const { plugin: pluginRef } = useViewportPlugin();
+  const containerRef = ref<HTMLDivElement | null>(null);
 
-  useLayoutEffect(() => {
-    if (!viewportPlugin) return;
-
-    const container = containerRef.current;
-    if (!container) return;
+  onMounted(() => {
+    const viewportPlugin = pluginRef.value;
+    const container = containerRef.value;
+    if (!container || !viewportPlugin) return;
 
     /* ---------- live rect provider --------------------------------- */
     const provideRect = (): Rect => {
@@ -56,15 +54,14 @@ export function useViewportRef(): RefObject<HTMLDivElement> {
       },
     );
 
-    // Cleanup
-    return () => {
+    onUnmounted(() => {
       viewportPlugin.registerBoundingRectProvider(null);
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
       unsubscribeScrollRequest();
-    };
-  }, [viewportPlugin]);
+    });
+  });
 
-  // Return the ref so your React code can attach it to a div
+  // Return the ref so your Vue code can attach it to a div
   return containerRef;
 }

@@ -2,7 +2,7 @@ import type { BasePlugin } from '@embedpdf/core';
 import { computed, type Ref } from 'vue';
 import { usePlugin } from './use-plugin';
 
-interface CapabilityState<C> {
+export interface CapabilityState<C> {
   provides: Ref<C | null>;
   isLoading: Ref<boolean>;
   ready: Ref<Promise<void>>;
