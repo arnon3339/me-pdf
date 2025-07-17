@@ -8,7 +8,7 @@ import { useViewportCapability, useViewportRef } from '../hooks';
 /* props & attrs                                      */
 /* -------------------------------------------------- */
 const props = defineProps<{ style?: StyleValue }>();
-const attrs = useAttrs();         // forward class/id/… to <div>
+const attrs = useAttrs(); // forward class/id/… to <div>
 
 /* -------------------------------------------------- */
 /* plugin + reactive viewport gap                     */
@@ -18,7 +18,9 @@ const viewportGap = ref(0);
 
 watch(
   viewportProvides,
-  (vp) => { if (vp) viewportGap.value = vp.getViewportGap(); },
+  (vp) => {
+    if (vp) viewportGap.value = vp.getViewportGap();
+  },
   { immediate: true },
 );
 
@@ -48,11 +50,7 @@ const mergedStyle = computed<StyleValue>(() => {
 </script>
 
 <template>
-  <div
-    ref="viewportRef"
-    v-bind="attrs"
-    :style="mergedStyle"
-  >
+  <div ref="viewportRef" v-bind="attrs" :style="mergedStyle">
     <slot />
   </div>
 </template>
