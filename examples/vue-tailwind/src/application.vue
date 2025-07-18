@@ -11,6 +11,11 @@ import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/vue';
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/vue';
+import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager';
+import {
+  GlobalPointerProvider,
+  PagePointerProvider,
+} from '@embedpdf/plugin-interaction-manager/vue';
 import { ConsoleLogger } from '@embedpdf/models';
 
 const logger = new ConsoleLogger();
@@ -55,28 +60,38 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
             overlapPx: 2.5,
             extraRings: 0,
           }),
+          createPluginRegistration(InteractionManagerPluginPackage),
         ]"
       >
         <template #default="{ pluginsReady }">
-          <Viewport v-if="pluginsReady" class="h-full w-full select-none overflow-auto">
-            <Scroller>
-              <template #default="{ page }">
-                <div class="absolute">
-                  <RenderLayer
+          <GlobalPointerProvider>
+            <Viewport v-if="pluginsReady" class="h-full w-full select-none overflow-auto">
+              <Scroller>
+                <template #default="{ page }">
+                  <PagePointerProvider
                     :page-index="page.pageIndex"
-                    :scale-factor="page.scale"
-                    class="pointer-events-none"
-                  />
-                  <TilingLayer
-                    :page-index="page.pageIndex"
+                    :page-width="page.width"
+                    :page-height="page.height"
+                    :rotation="page.rotation"
                     :scale="page.scale"
-                    class="pointer-events-none"
-                  />
-                </div>
-              </template>
-            </Scroller>
-          </Viewport>
-          <div v-else class="flex h-full items-center justify-center">Loading plugins...</div>
+                    class="absolute"
+                  >
+                    <RenderLayer
+                      :page-index="page.pageIndex"
+                      :scale-factor="page.scale"
+                      class="pointer-events-none"
+                    />
+                    <TilingLayer
+                      :page-index="page.pageIndex"
+                      :scale="page.scale"
+                      class="pointer-events-none"
+                    />
+                  </PagePointerProvider>
+                </template>
+              </Scroller>
+            </Viewport>
+            <div v-else class="flex h-full items-center justify-center">Loading plugins...</div>
+          </GlobalPointerProvider>
         </template>
       </EmbedPDF>
     </div>

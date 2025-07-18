@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { ignore, PdfErrorCode, PdfErrorReason, Task } from '@embedpdf/models';
-import type { StyleValue } from 'vue';
 
 import { useRenderCapability } from '../hooks';
 
@@ -9,7 +8,6 @@ interface Props {
   pageIndex: number;
   scaleFactor?: number;
   dpr?: number;
-  style?: StyleValue;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -83,10 +81,5 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <img
-    v-if="imageUrl"
-    :src="imageUrl"
-    :style="[{ width: '100%', height: '100%' }, props.style]"
-    @load="revoke"
-  />
+  <img v-if="imageUrl" :src="imageUrl" :style="{ width: '100%', height: '100%' }" @load="revoke" />
 </template>

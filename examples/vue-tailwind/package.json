@@ -18,6 +18,7 @@
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
     "@embedpdf/plugin-tiling": "workspace:*",
+    "@embedpdf/plugin-interaction-manager": "workspace:*",
     "vue": "^3.5.0"
   },
   "devDependencies": {
