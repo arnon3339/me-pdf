@@ -1,5 +1,11 @@
 # @embedpdf/plugin-selection
 
+## 1.0.11
+
+### Patch Changes
+
+- [`c632b8b`](https://github.com/embedpdf/embed-pdf-viewer/commit/c632b8ba482057e3034bd4d7e01e067f3107b642) by [@bobsingor](https://github.com/bobsingor) – Fix issue with text selection not working properly
+
 ## 1.0.10
 
 ### Patch Changes
