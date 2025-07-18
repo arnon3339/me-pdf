@@ -10,7 +10,10 @@
     "outDir": "dist",
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {
+      "@embedpdf/plugin-render": ["./src/index.ts"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
