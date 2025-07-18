@@ -50,6 +50,11 @@
     "typescript": "latest"
   },
   "lint-staged": {
-    "**/*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
+    "**/*.{ts,tsx,js,jsx,json,css,md,vue}": "prettier --write"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/node": "^22.0.0"
+    }
   }
 }

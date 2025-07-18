@@ -1,9 +1,10 @@
 import { Rect } from '@embedpdf/models';
+import { RefObject } from 'preact';
 import { useLayoutEffect, useRef } from 'preact/hooks';
 
 import { useViewportPlugin } from './use-viewport';
 
-export function useViewportRef() {
+export function useViewportRef(): RefObject<HTMLDivElement> {
   const { plugin: viewportPlugin } = useViewportPlugin();
   const containerRef = useRef<HTMLDivElement>(null);
 

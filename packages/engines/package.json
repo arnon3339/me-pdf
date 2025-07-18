@@ -46,6 +46,11 @@
       "types": "./dist/preact.d.ts",
       "import": "./dist/preact.js",
       "require": "./dist/preact.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue.d.ts",
+      "import": "./dist/vue.js",
+      "require": "./dist/vue.cjs"
     }
   },
   "keywords": [
@@ -99,7 +104,8 @@
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0",
-    "preact": "^10.26.4"
+    "preact": "^10.26.4",
+    "vue": ">=3.2.0"
   },
   "publishConfig": {
     "access": "public"

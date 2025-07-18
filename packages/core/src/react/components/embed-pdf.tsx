@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
