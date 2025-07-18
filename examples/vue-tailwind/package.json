@@ -17,6 +17,7 @@
     "@embedpdf/plugin-viewport": "workspace:*",
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
+    "@embedpdf/plugin-tiling": "workspace:*",
     "vue": "^3.5.0"
   },
   "devDependencies": {

@@ -9,8 +9,13 @@ import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/vue';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/vue';
+import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
+import { TilingLayer } from '@embedpdf/plugin-tiling/vue';
+import { ConsoleLogger } from '@embedpdf/models';
 
-const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine();
+const logger = new ConsoleLogger();
+
+const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine({ logger });
 </script>
 
 <template>
@@ -45,13 +50,29 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
             pageGap: 10,
           }),
           createPluginRegistration(RenderPluginPackage),
+          createPluginRegistration(TilingPluginPackage, {
+            tileSize: 768,
+            overlapPx: 2.5,
+            extraRings: 0,
+          }),
         ]"
       >
         <template #default="{ pluginsReady }">
           <Viewport v-if="pluginsReady" class="h-full w-full select-none overflow-auto">
             <Scroller>
               <template #default="{ page }">
-                <RenderLayer :page-index="page.pageIndex" :scale-factor="page.scale" />
+                <div class="absolute">
+                  <RenderLayer
+                    :page-index="page.pageIndex"
+                    :scale-factor="page.scale"
+                    class="pointer-events-none"
+                  />
+                  <TilingLayer
+                    :page-index="page.pageIndex"
+                    :scale="page.scale"
+                    class="pointer-events-none"
+                  />
+                </div>
               </template>
             </Scroller>
           </Viewport>
