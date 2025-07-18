@@ -1,3 +1,4 @@
+// vite.config.ts
 import { defineConfig, PluginOption } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import dts from 'unplugin-dts/vite';
@@ -5,17 +6,25 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const SRC = path.resolve('src');
+
+// Collect adapter entry points that actually exist
 const adapters = ['react', 'preact', 'vue', 'svelte']
   .filter((fw) => fs.existsSync(path.join(SRC, fw, 'index.ts')))
   .reduce((o, fw) => ({ ...o, [`${fw}/index`]: path.join(SRC, fw, 'index.ts') }), {});
 
-// Optional: If Svelte adapter exists, import and add @vitejs/plugin-svelte
-// import svelte from '@vitejs/plugin-svelte';
-
-const plugins: PluginOption[] = [vue(), dts()];
-
 export default defineConfig({
-  plugins,
+  plugins: [
+    vue(),
+    dts({
+      tsconfigPath: './tsconfig.json',
+      /** Tell unplugin‑dts the same alias we give Vite */
+      aliases: { '@embedpdf/plugin-viewport': SRC },
+    }) as PluginOption,
+  ],
+  /** ⬇️  let Vite/Rollup resolve the same alias at build time */
+  resolve: {
+    alias: { '@embedpdf/plugin-viewport': SRC },
+  },
   build: {
     lib: {
       entry: {
@@ -23,14 +32,11 @@ export default defineConfig({
         ...adapters,
       },
       formats: ['es', 'cjs'],
-      fileName: (format: string, entryName: string) =>
-        `${entryName}.${format === 'es' ? 'js' : 'cjs'}`,
+      fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'js' : 'cjs'}`,
     },
     sourcemap: true,
     rollupOptions: {
-      output: {
-        dir: 'dist',
-      },
+      output: { dir: 'dist' },
       external: [
         'vue',
         'react',
@@ -38,6 +44,7 @@ export default defineConfig({
         'preact',
         'preact/jsx-runtime',
         'preact/hooks',
+        // everything else under @embedpdf/* lives in other workspace packages
         /^@embedpdf\//,
       ],
     },
