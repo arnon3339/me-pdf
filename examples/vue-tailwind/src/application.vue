@@ -18,11 +18,10 @@ import {
   GlobalPointerProvider,
   PagePointerProvider,
 } from '@embedpdf/plugin-interaction-manager/vue';
-import { ConsoleLogger } from '@embedpdf/models';
+import { RotatePluginPackage } from '@embedpdf/plugin-rotate';
+import { Rotate } from '@embedpdf/plugin-rotate/vue';
 
-const logger = new ConsoleLogger();
-
-const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine({ logger });
+const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine();
 </script>
 
 <template>
@@ -64,6 +63,7 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
           }),
           createPluginRegistration(InteractionManagerPluginPackage),
           createPluginRegistration(SelectionPluginPackage),
+          createPluginRegistration(RotatePluginPackage),
         ]"
       >
         <template #default="{ pluginsReady }">
@@ -71,26 +71,32 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
             <Viewport v-if="pluginsReady" class="h-full w-full select-none overflow-auto">
               <Scroller>
                 <template #default="{ page }">
-                  <PagePointerProvider
-                    :page-index="page.pageIndex"
-                    :page-width="page.width"
-                    :page-height="page.height"
-                    :rotation="page.rotation"
-                    :scale="page.scale"
-                    class="absolute"
-                  >
-                    <RenderLayer
+                  <Rotate :page-size="{ width: page.width, height: page.height }">
+                    <PagePointerProvider
                       :page-index="page.pageIndex"
-                      :scale-factor="page.scale"
-                      class="pointer-events-none"
-                    />
-                    <TilingLayer
-                      :page-index="page.pageIndex"
+                      :page-width="page.width"
+                      :page-height="page.height"
+                      :rotation="page.rotation"
                       :scale="page.scale"
-                      class="pointer-events-none"
-                    />
-                    <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
-                  </PagePointerProvider>
+                      class="absolute"
+                      :style="{
+                        width: page.width + 'px',
+                        height: page.height + 'px',
+                      }"
+                    >
+                      <RenderLayer
+                        :page-index="page.pageIndex"
+                        :scale-factor="page.scale"
+                        class="pointer-events-none"
+                      />
+                      <TilingLayer
+                        :page-index="page.pageIndex"
+                        :scale="page.scale"
+                        class="pointer-events-none"
+                      />
+                      <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
+                    </PagePointerProvider>
+                  </Rotate>
                 </template>
               </Scroller>
             </Viewport>
