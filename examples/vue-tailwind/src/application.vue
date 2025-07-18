@@ -11,6 +11,8 @@ import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/vue';
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/vue';
+import { SelectionPluginPackage } from '@embedpdf/plugin-selection';
+import { SelectionLayer } from '@embedpdf/plugin-selection/vue';
 import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager';
 import {
   GlobalPointerProvider,
@@ -61,6 +63,7 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
             extraRings: 0,
           }),
           createPluginRegistration(InteractionManagerPluginPackage),
+          createPluginRegistration(SelectionPluginPackage),
         ]"
       >
         <template #default="{ pluginsReady }">
@@ -86,6 +89,7 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
                       :scale="page.scale"
                       class="pointer-events-none"
                     />
+                    <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
                   </PagePointerProvider>
                 </template>
               </Scroller>
