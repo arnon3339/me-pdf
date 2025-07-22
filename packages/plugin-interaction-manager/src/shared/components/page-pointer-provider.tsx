@@ -1,19 +1,24 @@
-/** @jsxImportSource preact */
-import { ComponentChildren, JSX } from 'preact';
-import { useCallback, useEffect, useRef } from 'preact/hooks';
+import {
+  ReactNode,
+  useEffect,
+  useRef,
+  useCallback,
+  HTMLAttributes,
+  CSSProperties,
+} from '@framework';
 import { Position, restorePosition } from '@embedpdf/models';
-import { createPointerProvider } from '../../shared/utils';
+import { createPointerProvider } from '../utils';
 
 import { useInteractionManagerCapability, useIsPageExclusive } from '../hooks';
 
-interface PagePointerProviderProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  children: ComponentChildren;
+interface PagePointerProviderProps extends HTMLAttributes<HTMLDivElement> {
+  children: ReactNode;
   pageIndex: number;
   pageWidth: number;
   pageHeight: number;
   rotation: number;
   scale: number;
-  style?: JSX.CSSProperties;
+  style?: CSSProperties;
   convertEventToPoint?: (event: PointerEvent, element: HTMLElement) => Position;
 }
 
@@ -32,6 +37,7 @@ export const PagePointerProvider = ({
   const { provides: cap } = useInteractionManagerCapability();
   const isPageExclusive = useIsPageExclusive();
 
+  // Memoize the default conversion function
   const defaultConvertEventToPoint = useCallback(
     (event: PointerEvent, element: HTMLElement): Position => {
       const rect = element.getBoundingClientRect();

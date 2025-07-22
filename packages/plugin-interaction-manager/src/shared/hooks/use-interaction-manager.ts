@@ -1,4 +1,4 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import {
   initialState,
   InteractionManagerPlugin,
@@ -6,7 +6,7 @@ import {
   PointerEventHandlers,
   PointerEventHandlersWithLifecycle,
 } from '@embedpdf/plugin-interaction-manager';
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from '@framework';
 
 export const useInteractionManagerPlugin = () =>
   usePlugin<InteractionManagerPlugin>(InteractionManagerPlugin.id);

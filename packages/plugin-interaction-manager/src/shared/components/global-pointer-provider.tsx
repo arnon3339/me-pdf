@@ -1,11 +1,11 @@
-import { ReactNode, useEffect, useRef } from 'react';
-import { createPointerProvider } from '../../shared/utils';
+import { ReactNode, useEffect, useRef, HTMLAttributes, CSSProperties } from '@framework';
+import { createPointerProvider } from '../utils';
 
 import { useInteractionManagerCapability } from '../hooks';
 
-interface GlobalPointerProviderProps extends React.HTMLAttributes<HTMLDivElement> {
+interface GlobalPointerProviderProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 export const GlobalPointerProvider = ({
