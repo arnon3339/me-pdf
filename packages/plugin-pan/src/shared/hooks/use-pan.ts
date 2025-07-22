@@ -1,7 +1,7 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
-import { useInteractionManagerCapability } from '@embedpdf/plugin-interaction-manager/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
+import { useInteractionManagerCapability } from '@embedpdf/plugin-interaction-manager/@framework';
 import { PanPlugin } from '@embedpdf/plugin-pan';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '@framework';
 
 export const usePanPlugin = () => usePlugin<PanPlugin>(PanPlugin.id);
 export const usePanCapability = () => useCapability<PanPlugin>(PanPlugin.id);

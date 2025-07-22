@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
-import { useCursor, usePointerHandlers } from '@embedpdf/plugin-interaction-manager/react';
-import { useViewportCapability } from '@embedpdf/plugin-viewport/react';
+import { useCursor, usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
+import { useViewportCapability } from '@embedpdf/plugin-viewport/@framework';
 
 export const PanMode = () => {
   const { register } = usePointerHandlers({ modeId: 'panMode' });
