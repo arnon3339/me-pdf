@@ -119,15 +119,15 @@ export class MenuManager {
   /**
    * Get menu items by their IDs
    */
-  getItemsByIds(ids: string[]): MenuItem[] {
-    return ids.map((id) => this.resolve(id)).filter((item) => item !== undefined) as MenuItem[];
+  getItemsByIds(ids: string[]): ResolvedMenuItem[] {
+    return ids.map((id) => this.resolve(id)).filter((item) => item !== undefined);
   }
 
   /**
    * Get child items for a given menu ID
    * If flatten is true, it will recursively include submenu children but not groups
    */
-  getChildItems(menuId: string, options: { flatten?: boolean } = {}): MenuItem[] {
+  getChildItems(menuId: string, options: { flatten?: boolean } = {}): ResolvedMenuItem[] {
     const item = this.resolve(menuId);
     if (!item || !('children' in item) || !item.children?.length) {
       return [];
@@ -142,7 +142,7 @@ export class MenuManager {
     }
 
     // If flatten is true, recursively include menu children
-    const flattened: MenuItem[] = [];
+    const flattened: ResolvedMenuItem[] = [];
 
     for (const child of children) {
       if (child.type === 'group') {

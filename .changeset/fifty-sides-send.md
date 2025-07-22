@@ -1,0 +1,5 @@
+---
+'@embedpdf/plugin-ui': patch
+---
+
+Update UI plugin to have shared code between react and preact to simplify workflow

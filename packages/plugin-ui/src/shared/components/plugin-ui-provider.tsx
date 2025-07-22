@@ -1,5 +1,4 @@
-/** @jsxImportSource preact */
-import { h, JSX, ComponentChildren } from 'preact';
+import { ReactNode } from '@framework';
 import { useUICapability } from '../hooks';
 import { ComponentWrapper } from './component-wrapper';
 import { UIComponent } from '@embedpdf/plugin-ui';
@@ -9,20 +8,20 @@ import { UIComponent } from '@embedpdf/plugin-ui';
  */
 export interface UIComponentsMap {
   headers: {
-    top: JSX.Element[];
-    bottom: JSX.Element[];
-    left: JSX.Element[];
-    right: JSX.Element[];
+    top: ReactNode[];
+    bottom: ReactNode[];
+    left: ReactNode[];
+    right: ReactNode[];
   };
   panels: {
-    left: JSX.Element[];
-    right: JSX.Element[];
+    left: ReactNode[];
+    right: ReactNode[];
   };
   floating: {
-    insideScroller: JSX.Element[];
-    outsideScroller: JSX.Element[];
+    insideScroller: ReactNode[];
+    outsideScroller: ReactNode[];
   };
-  commandMenu: JSX.Element | null;
+  commandMenu: ReactNode | null;
 }
 
 /**
@@ -32,7 +31,7 @@ export interface PluginUIProviderProps {
   /**
    * Render function that receives UI components
    */
-  children: (components: UIComponentsMap) => JSX.Element;
+  children: (components: UIComponentsMap) => ReactNode;
 }
 
 /**
@@ -45,7 +44,7 @@ export function PluginUIProvider({ children }: PluginUIProviderProps) {
   const { provides: uiProvides } = useUICapability();
 
   // Helper function to wrap UIComponents as JSX elements
-  const wrapComponents = (components: UIComponent<any>[]): JSX.Element[] => {
+  const wrapComponents = (components: UIComponent<any>[]): ReactNode[] => {
     return components.map((component) => (
       <ComponentWrapper key={component.props.id} component={component} />
     ));

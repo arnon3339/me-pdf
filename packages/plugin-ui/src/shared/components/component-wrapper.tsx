@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect } from '@framework';
 import { childrenFunctionOptions, UIComponent } from '@embedpdf/plugin-ui';
 
 export function ComponentWrapper({
