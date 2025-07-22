@@ -1,6 +1,6 @@
-import { useCapability, usePlugin } from '@embedpdf/core/preact';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import { SearchPlugin, SearchState } from '@embedpdf/plugin-search';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from '@framework';
 
 export const useSearchPlugin = () => usePlugin<SearchPlugin>(SearchPlugin.id);
 export const useSearchCapability = () => useCapability<SearchPlugin>(SearchPlugin.id);

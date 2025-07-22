@@ -1,16 +1,14 @@
-/** @jsxImportSource preact */
-import { ComponentChildren, Fragment, JSX } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState, HTMLAttributes, CSSProperties } from '@framework';
 import { SearchResultState } from '@embedpdf/plugin-search';
 
 import { useSearchCapability } from '../hooks';
 
-type SearchLayoutProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
+type SearchLayoutProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
   scale: number;
   highlightColor?: string;
   activeHighlightColor?: string;
-  style?: JSX.CSSProperties;
+  style?: CSSProperties;
 };
 
 export function SearchLayer({
