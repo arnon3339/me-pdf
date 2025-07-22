@@ -1,13 +1,13 @@
 import { Tile } from '@embedpdf/plugin-tiling';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, HTMLAttributes, CSSProperties } from '@framework';
 
 import { TileImg } from './tile-img';
 import { useTilingCapability } from '../hooks/use-tiling';
 
-type TilingLayoutProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'style'> & {
+type TilingLayoutProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
   scale: number;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 };
 
 export function TilingLayer({ pageIndex, scale, style, ...props }: TilingLayoutProps) {

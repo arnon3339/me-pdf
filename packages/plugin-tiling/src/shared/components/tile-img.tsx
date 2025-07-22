@@ -1,6 +1,6 @@
 import { ignore, PdfErrorCode } from '@embedpdf/models';
 import { Tile } from '@embedpdf/plugin-tiling';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from '@framework';
 
 import { useTilingCapability } from '../hooks/use-tiling';
 
