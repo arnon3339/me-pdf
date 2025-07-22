@@ -1,5 +1,4 @@
-/** @jsxImportSource preact */
-import { useEffect, useRef } from 'preact/hooks';
+import { ChangeEvent, useEffect, useRef } from '@framework';
 import { useLoaderCapability } from '../hooks';
 
 /** Wrap the viewer root */
@@ -17,7 +16,7 @@ export function FilePicker() {
   }, [cap]);
 
   /* ─── handle actual file selection ─── */
-  const onChange = async (e: Event) => {
+  const onChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
     if (file && cap)
       await cap.loadDocument({
