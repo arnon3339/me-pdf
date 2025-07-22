@@ -1,11 +1,10 @@
-/** @jsxImportSource preact */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from '@framework';
 import { ignore, PdfErrorCode, PdfPageGeometry, Position, Rect } from '@embedpdf/models';
 import {
   useCursor,
   useInteractionManagerCapability,
   usePointerHandlers,
-} from '@embedpdf/plugin-interaction-manager/preact';
+} from '@embedpdf/plugin-interaction-manager/@framework';
 import { PointerEventHandlersWithLifecycle } from '@embedpdf/plugin-interaction-manager';
 import { glyphAt } from '@embedpdf/plugin-selection';
 

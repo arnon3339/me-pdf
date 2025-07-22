@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect } from '@framework';
 
 import { useSelectionCapability } from '../hooks';
 
