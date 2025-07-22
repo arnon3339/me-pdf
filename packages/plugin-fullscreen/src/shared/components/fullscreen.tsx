@@ -1,13 +1,10 @@
-/** @jsxImportSource preact */
-import { setFullscreen } from '@embedpdf/plugin-fullscreen';
-import { ComponentChildren, JSX } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, HTMLAttributes, CSSProperties, ReactNode } from '@framework';
 
 import { useFullscreenPlugin, useFullscreenCapability } from '../hooks';
 
-type FullscreenProviderProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
-  children: ComponentChildren;
-  style?: JSX.CSSProperties;
+type FullscreenProviderProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
+  children: ReactNode;
+  style?: CSSProperties;
 };
 
 export function FullscreenProvider({ children, ...props }: FullscreenProviderProps) {
