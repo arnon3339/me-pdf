@@ -1,5 +1,5 @@
 import { ignore } from '@embedpdf/models';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from '@framework';
 
 import { useExportCapability } from '../hooks';
 
