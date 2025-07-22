@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
-import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/react';
+import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { Rect } from '@embedpdf/models';
 
 import { useCaptureCapability } from '../hooks/use-capture';
