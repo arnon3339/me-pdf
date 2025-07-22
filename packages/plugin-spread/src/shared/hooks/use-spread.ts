@@ -1,6 +1,6 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import { SpreadMode, SpreadPlugin } from '@embedpdf/plugin-spread';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '@framework';
 
 export const useSpreadPlugin = () => usePlugin<SpreadPlugin>(SpreadPlugin.id);
 export const useSpreadCapability = () => useCapability<SpreadPlugin>(SpreadPlugin.id);
