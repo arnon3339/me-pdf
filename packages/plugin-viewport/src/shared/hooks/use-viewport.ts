@@ -1,4 +1,4 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import { ViewportPlugin } from '@embedpdf/plugin-viewport';
 
 export const useViewportPlugin = () => usePlugin<ViewportPlugin>(ViewportPlugin.id);

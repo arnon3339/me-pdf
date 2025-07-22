@@ -1,9 +1,9 @@
-import React, { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, HTMLAttributes } from '@framework';
 
 import { useViewportCapability } from '../hooks';
 import { useViewportRef } from '../hooks/use-viewport-ref';
 
-type ViewportProps = React.HTMLAttributes<HTMLDivElement> & {
+type ViewportProps = HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
 };
 

@@ -1,5 +1,5 @@
 import { Rect } from '@embedpdf/models';
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from '@framework';
 
 import { useViewportPlugin } from './use-viewport';
 
