@@ -1,18 +1,17 @@
-/** @jsxImportSource preact */
-import { JSX } from 'preact';
+import { HTMLAttributes, CSSProperties, MouseEvent } from '@framework';
 import { Rect } from '@embedpdf/models';
 
-type UnderlineProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
+type SquigglyProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   color?: string;
   opacity?: number;
   rects: Rect[];
   rect?: Rect;
   scale: number;
-  onClick?: (e: MouseEvent) => void;
-  style?: JSX.CSSProperties;
+  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  style?: CSSProperties;
 };
 
-export function Underline({
+export function Squiggly({
   color = '#FFFF00',
   opacity = 0.5,
   rects,
@@ -21,8 +20,17 @@ export function Underline({
   onClick,
   style,
   ...props
-}: UnderlineProps) {
-  const thickness = 2 * scale; // 2 CSS px at 100 % zoom
+}: SquigglyProps) {
+  const amplitude = 2 * scale; // wave height
+  const period = 6 * scale; // wave length
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${period}" height="${amplitude * 2}" viewBox="0 0 ${period} ${amplitude * 2}">
+      <path d="M0 ${amplitude} Q ${period / 4} 0 ${period / 2} ${amplitude} T ${period} ${amplitude}"
+            fill="none" stroke="${color}" stroke-width="${amplitude}" stroke-linecap="round"/>
+    </svg>`;
+
+  // Completely escape the SVG markup
+  const svgDataUri = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 
   return (
     <>
@@ -44,15 +52,17 @@ export function Underline({
           }}
           {...props}
         >
-          {/* Visual underline */}
+          {/* Visual squiggly line */}
           <div
             style={{
               position: 'absolute',
               left: 0,
               bottom: 0,
               width: '100%',
-              height: thickness,
-              background: color,
+              height: amplitude * 2,
+              backgroundImage: svgDataUri,
+              backgroundRepeat: 'repeat-x',
+              backgroundSize: `${period}px ${amplitude * 2}px`,
               opacity: opacity,
               pointerEvents: 'none',
             }}

@@ -1,19 +1,25 @@
-/** @jsxImportSource preact */
-import { ComponentChildren, JSX } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import {
+  JSX,
+  HTMLAttributes,
+  CSSProperties,
+  useEffect,
+  useRef,
+  useState,
+  PointerEvent,
+} from '@framework';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationObject, Rect, restoreOffset, restoreRect } from '@embedpdf/models';
+import { PdfAnnotationObject, Rect, restoreOffset } from '@embedpdf/models';
 import { useAnnotationCapability } from '../hooks';
 import { ResizeDirection } from '../../shared/types';
 
-type AnnotationContainerProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
+type AnnotationContainerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style' | 'children'> & {
   scale: number;
   isSelected?: boolean;
   pageIndex: number;
   rotation: number;
   trackedAnnotation: TrackedAnnotation;
-  children: ComponentChildren | ((annotation: PdfAnnotationObject) => ComponentChildren);
-  style?: JSX.CSSProperties;
+  children: JSX.Element | ((annotation: PdfAnnotationObject) => JSX.Element);
+  style?: CSSProperties;
   isDraggable?: boolean;
   isResizable?: boolean;
   outlineOffset?: number;
@@ -39,7 +45,7 @@ export function AnnotationContainer({
   isResizable = true,
   computeResizePatch,
   ...props
-}: AnnotationContainerProps) {
+}: AnnotationContainerProps): JSX.Element {
   const { provides: annotationProvides } = useAnnotationCapability();
   const ref = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<'idle' | 'dragging' | 'resizing'>('idle');
@@ -54,7 +60,7 @@ export function AnnotationContainer({
     setPreviewObject(null);
   }, [trackedAnnotation]);
 
-  const handlePointerDown = (e: PointerEvent) => {
+  const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (!isSelected) return;
 
     e.stopPropagation();
@@ -77,7 +83,7 @@ export function AnnotationContainer({
     ref.current?.setPointerCapture(e.pointerId);
   };
 
-  const handlePointerMove = (e: PointerEvent) => {
+  const handlePointerMove = (e: PointerEvent<HTMLDivElement>) => {
     if (dragState === 'idle' || !startPos || !startRect) return;
 
     const dispDelta = { x: e.clientX - startPos.x, y: e.clientY - startPos.y };
@@ -128,7 +134,7 @@ export function AnnotationContainer({
     setPreviewObject(previewPatch);
   };
 
-  const handlePointerUp = (e: PointerEvent) => {
+  const handlePointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (dragState === 'idle') return;
 
     const usedDirection = resizeDirection || 'bottom-right';

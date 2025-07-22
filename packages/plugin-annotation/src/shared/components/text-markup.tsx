@@ -1,10 +1,8 @@
-/** @jsxImportSource preact */
-import { JSX } from 'preact';
 import { blendModeToCss, PdfAnnotationSubtype, PdfBlendMode, Rect } from '@embedpdf/models';
 import { ActiveTool, makeVariantKey } from '@embedpdf/plugin-annotation';
-import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
+import { useSelectionCapability } from '@embedpdf/plugin-selection/@framework';
 
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from '@framework';
 import { useAnnotationCapability } from '../hooks';
 import { Highlight } from './text-markup/highlight';
 import { Squiggly } from './text-markup/squiggly';

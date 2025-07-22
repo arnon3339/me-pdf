@@ -1,7 +1,6 @@
-/** @jsxImportSource preact */
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
-import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/preact';
+import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { ActiveTool } from '@embedpdf/plugin-annotation';
 import { PdfInkListObject, Rect, PdfAnnotationSubtype, PdfInkAnnoObject } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';

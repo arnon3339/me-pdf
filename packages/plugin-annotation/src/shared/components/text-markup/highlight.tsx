@@ -1,15 +1,14 @@
-/** @jsxImportSource preact */
-import { JSX } from 'preact';
+import { HTMLAttributes, CSSProperties, MouseEvent } from '@framework';
 import { Rect } from '@embedpdf/models';
 
-type HighlightProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
+type HighlightProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   color?: string;
   opacity?: number;
   rects: Rect[];
   rect?: Rect;
   scale: number;
-  onClick?: (e: MouseEvent) => void;
-  style?: JSX.CSSProperties;
+  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  style?: CSSProperties;
 };
 
 export function Highlight({
@@ -38,7 +37,7 @@ export function Highlight({
             opacity: opacity,
             pointerEvents: onClick ? 'auto' : 'none',
             cursor: onClick ? 'pointer' : 'default',
-            zIndex: onClick ? 1 : null,
+            zIndex: onClick ? 1 : undefined,
             ...style,
           }}
           {...props}

@@ -1,16 +1,15 @@
-/** @jsxImportSource preact */
-import { JSX } from 'preact';
+import { HTMLAttributes, CSSProperties } from '@framework';
 import { Annotations } from './annotations';
 import { TextMarkup } from './text-markup';
 import { InkPaint } from './annotations/ink-paint';
 
-type AnnotationLayerProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
+type AnnotationLayerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
   scale: number;
   pageWidth: number;
   pageHeight: number;
   rotation: number;
-  style?: JSX.CSSProperties;
+  style?: CSSProperties;
 };
 
 export function AnnotationLayer({

@@ -1,6 +1,4 @@
-/** @jsxImportSource preact */
-import { JSX } from 'preact';
-import { useMemo } from 'preact/hooks';
+import { useMemo, MouseEvent } from '@framework';
 import { PdfInkListObject, Rect } from '@embedpdf/models';
 
 /* ---------------------------------------------------------------- *\
@@ -21,7 +19,7 @@ interface InkProps {
   /** Page zoom factor */
   scale: number;
   /** Callback for when the annotation is clicked */
-  onClick?: (e: MouseEvent) => void;
+  onClick?: (e: MouseEvent<SVGPathElement>) => void;
 }
 
 /**
@@ -35,7 +33,7 @@ export function Ink({
   rect,
   scale,
   onClick,
-}: InkProps) {
+}: InkProps): JSX.Element {
   /* convert each stroke to an SVG <path d=""> string */
   const paths = useMemo(() => {
     return inkList.map(({ points }) => {

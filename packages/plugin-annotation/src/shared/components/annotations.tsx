@@ -1,27 +1,26 @@
-/** @jsxImportSource preact */
-import { JSX } from 'preact';
 import {
   blendModeToCss,
+  PdfAnnotationObject,
   PdfAnnotationSubtype,
   PdfBlendMode,
   PdfInkAnnoObject,
 } from '@embedpdf/models';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
-import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/preact';
+import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import {
   getAnnotationsByPageIndex,
   getSelectedAnnotationByPageIndex,
   TrackedAnnotation,
 } from '@embedpdf/plugin-annotation';
 import { useAnnotationCapability } from '../hooks';
-import { useMemo, useState, useEffect, useCallback } from 'preact/hooks';
+import { useMemo, useState, useEffect, useCallback, MouseEvent } from '@framework';
 import { AnnotationContainer } from './annotation-container';
 import { Highlight } from './text-markup/highlight';
 import { Underline } from './text-markup/underline';
 import { Strikeout } from './text-markup/strikeout';
 import { Squiggly } from './text-markup/squiggly';
 import { Ink } from './annotations/ink';
-import { useSelectionCapability } from '@embedpdf/plugin-selection/preact';
+import { useSelectionCapability } from '@embedpdf/plugin-selection/@framework';
 import { resizeInkAnnotation } from '../../shared/resize-ink';
 
 interface AnnotationsProps {
@@ -187,13 +186,13 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 }}
                 {...annotationsProps}
               >
-                {(obj: PdfInkAnnoObject) => (
+                {(obj: PdfAnnotationObject) => (
                   <Ink
-                    color={obj.color}
-                    opacity={obj.opacity}
-                    strokeWidth={obj.strokeWidth}
-                    inkList={obj.inkList}
-                    rect={obj.rect}
+                    color={(obj as PdfInkAnnoObject).color}
+                    opacity={(obj as PdfInkAnnoObject).opacity}
+                    strokeWidth={(obj as PdfInkAnnoObject).strokeWidth}
+                    inkList={(obj as PdfInkAnnoObject).inkList}
+                    rect={(obj as PdfInkAnnoObject).rect}
                     scale={scale}
                     onClick={(e) => handleClick(e, annotation)}
                   />

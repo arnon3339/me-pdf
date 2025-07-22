@@ -1,18 +1,17 @@
-/** @jsxImportSource preact */
-import { JSX } from 'preact';
+import { HTMLAttributes, CSSProperties, MouseEvent } from '@framework';
 import { Rect } from '@embedpdf/models';
 
-type StrikeoutProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, 'style'> & {
+type UnderlineProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   color?: string;
   opacity?: number;
   rects: Rect[];
   rect?: Rect;
   scale: number;
-  onClick?: (e: MouseEvent) => void;
-  style?: JSX.CSSProperties;
+  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  style?: CSSProperties;
 };
 
-export function Strikeout({
+export function Underline({
   color = '#FFFF00',
   opacity = 0.5,
   rects,
@@ -21,8 +20,8 @@ export function Strikeout({
   onClick,
   style,
   ...props
-}: StrikeoutProps) {
-  const thickness = 2 * scale;
+}: UnderlineProps) {
+  const thickness = 2 * scale; // 2 CSS px at 100 % zoom
 
   return (
     <>
@@ -44,17 +43,16 @@ export function Strikeout({
           }}
           {...props}
         >
-          {/* Visual strikeout line */}
+          {/* Visual underline */}
           <div
             style={{
               position: 'absolute',
               left: 0,
-              top: '50%',
+              bottom: 0,
               width: '100%',
               height: thickness,
               background: color,
               opacity: opacity,
-              transform: 'translateY(-50%)',
               pointerEvents: 'none',
             }}
           />

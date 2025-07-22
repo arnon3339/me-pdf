@@ -226,13 +226,31 @@ export enum PdfBlendMode {
 export const MixedBlendMode = Symbol('mixed');
 export type UiBlendModeValue = PdfBlendMode | typeof MixedBlendMode;
 
+export type CssBlendMode =
+  | 'normal'
+  | 'multiply'
+  | 'screen'
+  | 'overlay'
+  | 'darken'
+  | 'lighten'
+  | 'color-dodge'
+  | 'color-burn'
+  | 'hard-light'
+  | 'soft-light'
+  | 'difference'
+  | 'exclusion'
+  | 'hue'
+  | 'saturation'
+  | 'color'
+  | 'luminosity';
+
 interface BlendModeInfo {
   /** Pdf enum value */
   id: PdfBlendMode;
   /** Human label for UI */
   label: string;
   /** CSS mix-blend-mode token */
-  css: string;
+  css: CssBlendMode;
 }
 
 /** Canonical ordered descriptor list (matches enum numeric order). */
@@ -264,10 +282,13 @@ const enumToInfo: Record<PdfBlendMode, BlendModeInfo> = BLEND_MODE_INFOS.reduce(
   {} as Record<PdfBlendMode, BlendModeInfo>,
 );
 
-const cssToEnum = BLEND_MODE_INFOS.reduce<Record<string, PdfBlendMode>>((m, info) => {
-  m[info.css] = info.id;
-  return m;
-}, {});
+const cssToEnum = BLEND_MODE_INFOS.reduce<Record<CssBlendMode, PdfBlendMode>>(
+  (m, info) => {
+    m[info.css] = info.id;
+    return m;
+  },
+  {} as Record<CssBlendMode, PdfBlendMode>,
+);
 
 /** Get descriptor (falls back to Normal if unknown number sneaks in).
  *
@@ -281,7 +302,7 @@ export function getBlendModeInfo(mode: PdfBlendMode): BlendModeInfo {
  *
  * @public
  */
-export function blendModeToCss(mode: PdfBlendMode): string {
+export function blendModeToCss(mode: PdfBlendMode): CssBlendMode {
   return getBlendModeInfo(mode).css;
 }
 
@@ -289,8 +310,8 @@ export function blendModeToCss(mode: PdfBlendMode): string {
  *
  * @public
  */
-export function cssToBlendMode(value: string): PdfBlendMode | undefined {
-  return cssToEnum[value as keyof typeof cssToEnum];
+export function cssToBlendMode(value: CssBlendMode): PdfBlendMode | undefined {
+  return cssToEnum[value];
 }
 
 /** Enum → UI label.

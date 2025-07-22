@@ -1,16 +1,14 @@
-/** @jsxImportSource preact */
-import { Fragment, JSX } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { Fragment, HTMLAttributes, CSSProperties, useEffect, useRef, useState } from '@framework';
 import { ignore, PdfAnnotationObject, PdfErrorCode } from '@embedpdf/models';
 
 import { useAnnotationCapability } from '../hooks/use-annotation';
 
-type RenderAnnotationProps = Omit<JSX.HTMLAttributes<HTMLImageElement>, 'style'> & {
+type RenderAnnotationProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
   pageIndex: number;
   annotation: PdfAnnotationObject;
   scaleFactor?: number;
   dpr?: number;
-  style?: JSX.CSSProperties;
+  style?: CSSProperties;
 };
 
 export function RenderAnnotation({
