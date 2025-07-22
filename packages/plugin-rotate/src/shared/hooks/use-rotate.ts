@@ -1,4 +1,4 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import { RotatePlugin } from '@embedpdf/plugin-rotate';
 
 export const useRotatePlugin = () => usePlugin<RotatePlugin>(RotatePlugin.id);

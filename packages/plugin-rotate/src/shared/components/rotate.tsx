@@ -1,11 +1,10 @@
-/** @jsxImportSource preact */
-import { ComponentChildren, JSX } from 'preact';
+import { ReactNode, HTMLAttributes } from '@framework';
 import { Size } from '@embedpdf/models';
 
 import { useRotateCapability } from '../hooks';
 
-type RotateProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  children: ComponentChildren;
+type RotateProps = HTMLAttributes<HTMLDivElement> & {
+  children: ReactNode;
   pageSize: Size;
 };
 

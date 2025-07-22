@@ -1,15 +1,15 @@
-/** @jsxImportSource preact */
-import { Fragment, JSX } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { Fragment, useEffect, useRef, useState } from '@framework';
+import type { CSSProperties, HTMLAttributes } from '@framework';
+
 import { ignore, PdfErrorCode } from '@embedpdf/models';
 
 import { useRenderCapability } from '../hooks/use-render';
 
-type RenderLayoutProps = Omit<JSX.HTMLAttributes<HTMLImageElement>, 'style'> & {
+type RenderLayerProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
   pageIndex: number;
   scaleFactor?: number;
   dpr?: number;
-  style?: JSX.CSSProperties;
+  style?: CSSProperties;
 };
 
 export function RenderLayer({
@@ -18,7 +18,7 @@ export function RenderLayer({
   dpr = 1,
   style,
   ...props
-}: RenderLayoutProps) {
+}: RenderLayerProps) {
   const { provides: renderProvides } = useRenderCapability();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
