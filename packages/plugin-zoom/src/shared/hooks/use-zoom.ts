@@ -1,6 +1,6 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import { initialState, ZoomPlugin, ZoomState } from '@embedpdf/plugin-zoom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '@framework';
 
 export const useZoomCapability = () => useCapability<ZoomPlugin>(ZoomPlugin.id);
 export const useZoomPlugin = () => usePlugin<ZoomPlugin>(ZoomPlugin.id);

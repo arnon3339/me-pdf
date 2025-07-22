@@ -1238,6 +1238,9 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@embedpdf/build':
+        specifier: workspace:*
+        version: link:../build
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
@@ -1256,9 +1259,6 @@ importers:
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.18
-      tsup:
-        specifier: ^8.0.0
-        version: 8.4.0(@microsoft/api-extractor@7.52.8(@types/node@22.16.4))(jiti@2.4.2)(postcss@8.5.6)(typescript@5.8.2)(yaml@2.8.0)
       typescript:
         specifier: ^5.0.0
         version: 5.8.2
@@ -9738,25 +9738,6 @@ packages:
 
   tsup@8.3.6:
     resolution: {integrity: sha512-XkVtlDV/58S9Ye0JxUUTcrQk4S+EqlOHKzg6Roa62rdjL1nGWNUstG0xgI4vanHdfIpjP448J8vlN0oK6XOJ5g==}
-    engines: {node: '>=18'}
-    hasBin: true
-    peerDependencies:
-      '@microsoft/api-extractor': ^7.36.0
-      '@swc/core': ^1
-      postcss: ^8.4.12
-      typescript: '>=4.5.0'
-    peerDependenciesMeta:
-      '@microsoft/api-extractor':
-        optional: true
-      '@swc/core':
-        optional: true
-      postcss:
-        optional: true
-      typescript:
-        optional: true
-
-  tsup@8.4.0:
-    resolution: {integrity: sha512-b+eZbPCjz10fRryaAA7C8xlIHnf8VnsaRqydheLIqwG/Mcpfk8Z5zp3HayX7GaTygkigHl5cBUs+IhcySiIexQ==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -20402,34 +20383,6 @@ snapshots:
       '@microsoft/api-extractor': 7.52.8(@types/node@22.16.4)
       postcss: 8.5.6
       typescript: 5.7.3
-    transitivePeerDependencies:
-      - jiti
-      - supports-color
-      - tsx
-      - yaml
-
-  tsup@8.4.0(@microsoft/api-extractor@7.52.8(@types/node@22.16.4))(jiti@2.4.2)(postcss@8.5.6)(typescript@5.8.2)(yaml@2.8.0):
-    dependencies:
-      bundle-require: 5.1.0(esbuild@0.25.0)
-      cac: 6.7.14
-      chokidar: 4.0.3
-      consola: 3.4.0
-      debug: 4.4.0
-      esbuild: 0.25.0
-      joycon: 3.1.1
-      picocolors: 1.1.1
-      postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.6)(yaml@2.8.0)
-      resolve-from: 5.0.0
-      rollup: 4.41.1
-      source-map: 0.8.0-beta.0
-      sucrase: 3.35.0
-      tinyexec: 0.3.2
-      tinyglobby: 0.2.12
-      tree-kill: 1.2.2
-    optionalDependencies:
-      '@microsoft/api-extractor': 7.52.8(@types/node@22.16.4)
-      postcss: 8.5.6
-      typescript: 5.8.2
     transitivePeerDependencies:
       - jiti
       - supports-color

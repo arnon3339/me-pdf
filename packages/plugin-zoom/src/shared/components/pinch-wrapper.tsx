@@ -1,10 +1,10 @@
-import { ReactNode } from 'react';
+import { ReactNode, HTMLAttributes, CSSProperties } from '@framework';
 
 import { usePinch } from '../hooks';
 
-type PinchWrapperProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'style'> & {
+type PinchWrapperProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   children: ReactNode;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 };
 
 export function PinchWrapper({ children, style, ...props }: PinchWrapperProps) {

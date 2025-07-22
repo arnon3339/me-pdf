@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'preact/hooks';
-import { useCapability } from '@embedpdf/core/preact';
+import { useEffect, useRef } from '@framework';
+import { useCapability } from '@embedpdf/core/@framework';
 import { ViewportPlugin } from '@embedpdf/plugin-viewport';
 import { ZoomState } from '@embedpdf/plugin-zoom';
 

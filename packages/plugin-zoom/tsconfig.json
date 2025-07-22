@@ -12,8 +12,10 @@
     "jsxImportSource": "react",
     "rootDir": "src",
     "paths": {
-      "preact": ["./node_modules/preact"],
-      "preact/hooks": ["./node_modules/preact/hooks"]
+      "@framework": ["./src/react/adapter.ts"],
+      "@embedpdf/core/@framework": ["./src/react/core.ts"],
+      "@embedpdf/plugin-interaction-manager/@framework": ["./src/react/interaction-manager.ts"],
+      "@embedpdf/plugin-zoom": ["./src/index.ts"]
     }
   },
   "include": ["src"],
