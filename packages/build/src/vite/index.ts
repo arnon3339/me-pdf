@@ -82,7 +82,7 @@ export function defineLibrary() {
           tsconfigPath: 'react/tsconfig.react.json',
           entryPath: 'react/index.ts',
           outputPrefix: 'react',
-          external: ['react', 'react/jsx-runtime'],
+          external: ['react', 'react/jsx-runtime', 'react-dom'],
           // React build needs no extra esbuild tweaks
         });
 

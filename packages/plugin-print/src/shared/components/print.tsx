@@ -1,7 +1,12 @@
-/** @jsxImportSource preact */
-import { createContext, render } from 'preact';
-import { useContext, useRef, useEffect, useState } from 'preact/hooks';
-import { ComponentChildren } from 'preact';
+import {
+  createContext,
+  render,
+  useContext,
+  useRef,
+  useEffect,
+  useState,
+  ReactNode,
+} from '@framework';
 import { usePrintCapability } from '../hooks/use-print';
 import { PrintOptions, PrintProgress, PrintPageResult, ParsedPageRange } from '../../lib/types';
 
@@ -16,7 +21,7 @@ interface PrintContextValue {
 const PrintContext = createContext<PrintContextValue | null>(null);
 
 interface PrintProviderProps {
-  children: ComponentChildren;
+  children: ReactNode;
 }
 
 interface PrintPageProps {
