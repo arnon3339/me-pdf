@@ -1,4 +1,4 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import { HistoryPlugin } from '@embedpdf/plugin-history';
 
 export const useHistoryPlugin = () => usePlugin<HistoryPlugin>(HistoryPlugin.id);
