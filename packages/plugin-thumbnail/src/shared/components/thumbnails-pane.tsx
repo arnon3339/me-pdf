@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, HTMLAttributes, CSSProperties, ReactNode } from '@framework';
 import { ThumbMeta, WindowState } from '@embedpdf/plugin-thumbnail';
 import { useThumbnailCapability } from '../hooks';
 
-type ThumbnailsProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'style' | 'children'> & {
-  style?: React.CSSProperties;
-  children: (m: ThumbMeta) => React.ReactNode;
+type ThumbnailsProps = Omit<HTMLAttributes<HTMLDivElement>, 'style' | 'children'> & {
+  style?: CSSProperties;
+  children: (m: ThumbMeta) => ReactNode;
   selectedPage?: number;
   scrollOptions?: ScrollIntoViewOptions;
 };

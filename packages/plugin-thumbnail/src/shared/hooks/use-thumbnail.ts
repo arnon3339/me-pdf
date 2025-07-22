@@ -1,4 +1,4 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import { ThumbnailPlugin } from '@embedpdf/plugin-thumbnail';
 
 export const useThumbnailPlugin = () => usePlugin<ThumbnailPlugin>(ThumbnailPlugin.id);

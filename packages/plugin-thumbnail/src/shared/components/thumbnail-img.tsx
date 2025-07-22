@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, HTMLAttributes, CSSProperties } from '@framework';
 import { ThumbMeta } from '@embedpdf/plugin-thumbnail';
 import { ignore, PdfErrorCode } from '@embedpdf/models';
 import { useThumbnailCapability } from '../hooks';
 
-type ThumbnailImgProps = Omit<React.HTMLAttributes<HTMLImageElement>, 'style'> & {
-  style?: React.CSSProperties;
+type ThumbnailImgProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
+  style?: CSSProperties;
   meta: ThumbMeta;
 };
 
