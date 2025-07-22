@@ -1,6 +1,11 @@
 /** @jsxImportSource preact */
 import { JSX } from 'preact';
-import { PdfAnnotationSubtype, PdfInkAnnoObject } from '@embedpdf/models';
+import {
+  blendModeToCss,
+  PdfAnnotationSubtype,
+  PdfBlendMode,
+  PdfInkAnnoObject,
+} from '@embedpdf/models';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/preact';
 import {
@@ -83,7 +88,9 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
-                style={{ mixBlendMode: 'multiply' }}
+                style={{
+                  mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+                }}
                 {...annotationsProps}
               >
                 <Underline
@@ -104,7 +111,9 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
-                style={{ mixBlendMode: 'multiply' }}
+                style={{
+                  mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+                }}
                 {...annotationsProps}
               >
                 <Strikeout
@@ -125,7 +134,9 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
-                style={{ mixBlendMode: 'multiply' }}
+                style={{
+                  mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+                }}
                 {...annotationsProps}
               >
                 <Squiggly
@@ -146,7 +157,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
-                style={{ mixBlendMode: 'multiply' }}
+                style={{
+                  mixBlendMode: blendModeToCss(
+                    annotation.object.blendMode ?? PdfBlendMode.Multiply,
+                  ),
+                }}
                 {...annotationsProps}
               >
                 <Highlight
@@ -167,6 +182,9 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 trackedAnnotation={annotation}
                 outlineOffset={6}
                 computeResizePatch={resizeInkAnnotation}
+                style={{
+                  mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+                }}
                 {...annotationsProps}
               >
                 {(obj: PdfInkAnnoObject) => (
