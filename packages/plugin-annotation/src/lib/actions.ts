@@ -1,13 +1,12 @@
 import { Action } from '@embedpdf/core';
 import { PdfAnnotationObject } from '@embedpdf/models';
-import { StylableSubtype, ToolDefaultsBySubtype } from './types';
+import { AnnotationDefaults, ToolDefaultsByMode } from './types';
 
 /* ─────────── action constants ─────────── */
 export const SET_ANNOTATIONS = 'ANNOTATION/SET_ANNOTATIONS';
 export const REINDEX_PAGE_ANNOTATIONS = 'ANNOTATION/REINDEX_PAGE';
 export const SELECT_ANNOTATION = 'ANNOTATION/SELECT_ANNOTATION';
 export const DESELECT_ANNOTATION = 'ANNOTATION/DESELECT_ANNOTATION';
-export const SET_ANNOTATION_MODE = 'ANNOTATION/SET_ANNOTATION_MODE';
 export const UPDATE_TOOL_DEFAULTS = 'ANNOTATION/UPDATE_TOOL_DEFAULTS';
 export const ADD_COLOR_PRESET = 'ANNOTATION/ADD_COLOR_PRESET';
 export const CREATE_ANNOTATION = 'ANNOTATION/CREATE_ANNOTATION';
@@ -16,6 +15,7 @@ export const DELETE_ANNOTATION = 'ANNOTATION/DELETE_ANNOTATION';
 export const COMMIT_PENDING_CHANGES = 'ANNOTATION/COMMIT';
 export const STORE_PDF_ID = 'ANNOTATION/STORE_PDF_ID';
 export const PURGE_ANNOTATION = 'ANNOTATION/PURGE_ANNOTATION';
+export const SET_ACTIVE_VARIANT = 'ANNOTATION/SET_ACTIVE_VARIANT';
 
 /* ─────────── action interfaces ─────────── */
 export interface SetAnnotationsAction extends Action {
@@ -33,14 +33,10 @@ export interface SelectAnnotationAction extends Action {
 export interface DeselectAnnotationAction extends Action {
   type: typeof DESELECT_ANNOTATION;
 }
-export interface SetAnnotationModeAction extends Action {
-  type: typeof SET_ANNOTATION_MODE;
-  payload: StylableSubtype | null;
-}
 
 export interface UpdateToolDefaultsAction extends Action {
   type: typeof UPDATE_TOOL_DEFAULTS;
-  payload: { subtype: StylableSubtype; patch: Partial<ToolDefaultsBySubtype[StylableSubtype]> };
+  payload: { variantKey: string; patch: Partial<AnnotationDefaults> };
 }
 
 export interface AddColorPresetAction extends Action {
@@ -73,12 +69,16 @@ export interface PurgeAnnotationAction extends Action {
   payload: { uid: string };
 }
 
+export interface SetActiveVariantAction extends Action {
+  type: typeof SET_ACTIVE_VARIANT;
+  payload: string | null;
+}
+
 export type AnnotationAction =
   | SetAnnotationsAction
   | ReindexPageAnnotationsAction
   | SelectAnnotationAction
   | DeselectAnnotationAction
-  | SetAnnotationModeAction
   | UpdateToolDefaultsAction
   | AddColorPresetAction
   | CreateAnnotationAction
@@ -86,7 +86,8 @@ export type AnnotationAction =
   | DeleteAnnotationAction
   | CommitAction
   | StorePdfIdAction
-  | PurgeAnnotationAction;
+  | PurgeAnnotationAction
+  | SetActiveVariantAction;
 
 /* ─────────── action creators ─────────── */
 export const setAnnotations = (p: Record<number, PdfAnnotationObject[]>): SetAnnotationsAction => ({
@@ -106,15 +107,10 @@ export const selectAnnotation = (pageIndex: number, localId: number): SelectAnno
 
 export const deselectAnnotation = (): DeselectAnnotationAction => ({ type: DESELECT_ANNOTATION });
 
-export const setAnnotationMode = (m: StylableSubtype | null): SetAnnotationModeAction => ({
-  type: SET_ANNOTATION_MODE,
-  payload: m,
-});
-
-export const updateToolDefaults = <S extends StylableSubtype>(
-  subtype: S,
-  patch: Partial<ToolDefaultsBySubtype[S]>,
-): UpdateToolDefaultsAction => ({ type: UPDATE_TOOL_DEFAULTS, payload: { subtype, patch } });
+export const updateToolDefaults = (
+  variantKey: string,
+  patch: Partial<AnnotationDefaults>,
+): UpdateToolDefaultsAction => ({ type: UPDATE_TOOL_DEFAULTS, payload: { variantKey, patch } });
 
 export const addColorPreset = (c: string): AddColorPresetAction => ({
   type: ADD_COLOR_PRESET,
@@ -154,4 +150,9 @@ export const storePdfId = (uid: string, pdfId: number): StorePdfIdAction => ({
 export const purgeAnnotation = (uid: string): PurgeAnnotationAction => ({
   type: PURGE_ANNOTATION,
   payload: { uid },
+});
+
+export const setActiveVariant = (k: string | null): SetActiveVariantAction => ({
+  type: SET_ACTIVE_VARIANT,
+  payload: k,
 });
