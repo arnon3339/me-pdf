@@ -1,6 +1,6 @@
-import { useCapability, usePlugin } from '@embedpdf/core/react';
+import { useCapability, usePlugin } from '@embedpdf/core/@framework';
 import { ScrollPlugin } from '@embedpdf/plugin-scroll';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '@framework';
 
 export const useScrollPlugin = () => usePlugin<ScrollPlugin>(ScrollPlugin.id);
 export const useScrollCapability = () => useCapability<ScrollPlugin>(ScrollPlugin.id);
