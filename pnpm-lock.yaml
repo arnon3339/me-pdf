@@ -459,7 +459,7 @@ importers:
         version: 6.2.1(rollup@3.29.5)(typescript@5.7.3)
       ts-jest:
         specifier: ^29.2.5
-        version: 29.2.5(@babel/core@7.27.3)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.27.3))(esbuild@0.25.0)(jest@29.7.0(@types/node@22.16.4)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@22.16.4)(typescript@5.7.3)))(typescript@5.7.3)
+        version: 29.2.5(@babel/core@7.27.3)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.27.3))(esbuild@0.24.2)(jest@29.7.0(@types/node@22.16.4)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@22.16.4)(typescript@5.7.3)))(typescript@5.7.3)
       tsup:
         specifier: ^8.0.0
         version: 8.3.6(@microsoft/api-extractor@7.52.8(@types/node@22.16.4))(jiti@2.4.2)(postcss@8.5.6)(typescript@5.7.3)(yaml@2.8.0)
@@ -484,15 +484,15 @@ importers:
 
   packages/models:
     devDependencies:
+      '@embedpdf/build':
+        specifier: workspace:*
+        version: link:../build
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@22.16.4)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@22.16.4)(typescript@5.7.3))
-      tsup:
-        specifier: ^8.0.0
-        version: 8.3.6(@microsoft/api-extractor@7.52.8(@types/node@22.16.4))(jiti@2.4.2)(postcss@8.5.6)(typescript@5.7.3)(yaml@2.8.0)
       typescript:
         specifier: ^5.0.0
         version: 5.7.3
@@ -20228,7 +20228,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-jest@29.2.5(@babel/core@7.27.3)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.27.3))(esbuild@0.25.0)(jest@29.7.0(@types/node@22.16.4)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@22.16.4)(typescript@5.7.3)))(typescript@5.7.3):
+  ts-jest@29.2.5(@babel/core@7.27.3)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.27.3))(esbuild@0.24.2)(jest@29.7.0(@types/node@22.16.4)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@22.16.4)(typescript@5.7.3)))(typescript@5.7.3):
     dependencies:
       bs-logger: 0.2.6
       ejs: 3.1.10
@@ -20246,7 +20246,7 @@ snapshots:
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
       babel-jest: 29.7.0(@babel/core@7.27.3)
-      esbuild: 0.25.0
+      esbuild: 0.24.2
 
   ts-node@10.9.2(@types/node@22.16.4)(typescript@5.7.3):
     dependencies:
