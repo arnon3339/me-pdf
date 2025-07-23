@@ -23,23 +23,22 @@
     }
   },
   "scripts": {
-    "build": "vite build",
-    "build:watch": "vite build --watch",
-    "clean": "PROJECT_CWD=$(pwd) pnpm -w p:clean",
-    "lint": "PROJECT_CWD=$(pwd) pnpm -w p:lint",
-    "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
-    "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
+    "build:base": "vite build --mode base",
+    "build:react": "vite build --mode react",
+    "build:preact": "vite build --mode preact",
+    "build": "pnpm run clean && concurrently -c auto -n base,react,preact \"vite build --mode base\" \"vite build --mode react\" \"vite build --mode preact\"",
+    "clean": "rimraf dist",
+    "lint": "eslint src --color",
+    "lint:fix": "eslint src --color --fix"
   },
   "dependencies": {
     "@embedpdf/models": "workspace:*"
   },
   "devDependencies": {
     "@embedpdf/core": "workspace:*",
+    "@embedpdf/build": "workspace:*",
     "@types/react": "^18.2.0",
-    "@vitejs/plugin-vue": "^6.0.0",
-    "typescript": "^5.0.0",
-    "unplugin-dts": "1.0.0-beta.4",
-    "vite": "^6.3.5"
+    "typescript": "^5.0.0"
   },
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",

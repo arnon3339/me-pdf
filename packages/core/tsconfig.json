@@ -12,6 +12,7 @@
     "jsxImportSource": "react",
     "rootDir": "src",
     "paths": {
+      "@framework": ["./src/react/adapter.ts"],
       "@embedpdf/core": ["./src/index.ts"]
     }
   },

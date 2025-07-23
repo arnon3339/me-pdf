@@ -23,12 +23,13 @@
     }
   },
   "scripts": {
-    "build": "PROJECT_CWD=$(pwd) pnpm -w p:build",
-    "build:watch": "PROJECT_CWD=$(pwd) pnpm -w p:build:watch",
-    "clean": "PROJECT_CWD=$(pwd) pnpm -w p:clean",
-    "lint": "PROJECT_CWD=$(pwd) pnpm -w p:lint",
-    "lint:fix": "PROJECT_CWD=$(pwd) pnpm -w p:lint:fix",
-    "typecheck": "PROJECT_CWD=$(pwd) pnpm -w p:typecheck"
+    "build:base": "vite build --mode base",
+    "build:react": "vite build --mode react",
+    "build:preact": "vite build --mode preact",
+    "build": "pnpm run clean && concurrently -c auto -n base,react,preact \"vite build --mode base\" \"vite build --mode react\" \"vite build --mode preact\"",
+    "clean": "rimraf dist",
+    "lint": "eslint src --color",
+    "lint:fix": "eslint src --color --fix"
   },
   "dependencies": {
     "@embedpdf/models": "workspace:*",
@@ -36,12 +37,12 @@
   },
   "devDependencies": {
     "@embedpdf/core": "workspace:*",
+    "@embedpdf/build": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@types/hammerjs": "^2.0.46",
     "@types/react": "^18.2.0",
-    "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {

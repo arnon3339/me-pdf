@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'preact/compat';
 import { h, Fragment } from 'preact';
 import styles from '../styles/index.css';
 import { EmbedPDF } from '@embedpdf/core/preact';
@@ -7,7 +6,6 @@ import { usePdfiumEngine } from '@embedpdf/engines/preact';
 import {
   AllLogger,
   ConsoleLogger,
-  NoopLogger,
   PdfAnnotationSubtype,
   PerfLogger,
   Rotation,
@@ -112,7 +110,6 @@ import {
   AnnotationPlugin,
   AnnotationPluginPackage,
   AnnotationState,
-  getSelectedAnnotation,
   getSelectedAnnotationWithPageIndex,
   makeVariantKey,
 } from '@embedpdf/plugin-annotation';

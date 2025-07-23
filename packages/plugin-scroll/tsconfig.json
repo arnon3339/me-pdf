@@ -12,6 +12,8 @@
     "jsxImportSource": "react",
     "rootDir": "src",
     "paths": {
+      "@framework": ["./src/react/adapter.ts"],
+      "@embedpdf/core/@framework": ["./src/react/core.ts"],
       "@embedpdf/plugin-scroll": ["./src/index.ts"]
     }
   },
