@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from '@framework';
+import { useEffect, useMemo, useRef, useState, JSX } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { ActiveTool } from '@embedpdf/plugin-annotation';
@@ -249,11 +249,13 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
           key={i}
           d={d}
           fill="none"
-          stroke={toolColor}
-          strokeWidth={toolStrokeWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
           opacity={toolOpacity}
+          style={{
+            stroke: toolColor,
+            strokeWidth: toolStrokeWidth,
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+          }}
         />
       ))}
     </svg>

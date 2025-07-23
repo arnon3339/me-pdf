@@ -70,15 +70,15 @@ export function Ink({
           key={i}
           d={d}
           fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
           opacity={opacity}
-          pointerEvents="visibleStroke"
           onMouseDown={onClick}
           style={{
             cursor: 'pointer',
+            pointerEvents: 'visibleStroke',
+            stroke: color,
+            strokeWidth: strokeWidth,
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
           }}
         />
       ))}
