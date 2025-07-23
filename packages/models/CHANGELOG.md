@@ -1,5 +1,13 @@
 # @embedpdf/models
 
+## 1.0.12
+
+### Patch Changes
+
+- [#46](https://github.com/embedpdf/embed-pdf-viewer/pull/46) by [@bobsingor](https://github.com/bobsingor) – Ability to generate AP stream with blend mode and show blendmode in annotations
+
+- [#47](https://github.com/embedpdf/embed-pdf-viewer/pull/47) by [@bobsingor](https://github.com/bobsingor) – Update models to have shared code between react and preact to simplify workflow
+
 ## 1.0.11
 
 ## 1.0.10

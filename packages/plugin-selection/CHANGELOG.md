@@ -1,5 +1,13 @@
 # @embedpdf/plugin-selection
 
+## 1.0.12
+
+### Patch Changes
+
+- [#43](https://github.com/embedpdf/embed-pdf-viewer/pull/43) by [@bobsingor](https://github.com/bobsingor) – Add vue layer to the selection plugin
+
+- [#47](https://github.com/embedpdf/embed-pdf-viewer/pull/47) by [@bobsingor](https://github.com/bobsingor) – Update selection plugin to have shared code between react and preact to simplify workflow
+
 ## 1.0.11
 
 ### Patch Changes

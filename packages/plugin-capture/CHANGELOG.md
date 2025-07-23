@@ -1,5 +1,11 @@
 # @embedpdf/plugin-capture
 
+## 1.0.12
+
+### Patch Changes
+
+- [#47](https://github.com/embedpdf/embed-pdf-viewer/pull/47) by [@bobsingor](https://github.com/bobsingor) – Update capture plugin to have shared code between react and preact to simplify workflow
+
 ## 1.0.11
 
 ## 1.0.10
