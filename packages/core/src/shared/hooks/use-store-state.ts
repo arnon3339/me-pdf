@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect } from '@framework';
 import { CoreState, StoreState } from '@embedpdf/core';
 import { useRegistry } from './use-registry';
 

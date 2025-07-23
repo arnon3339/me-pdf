@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ReactNode } from '@framework';
 import { PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
@@ -9,7 +9,7 @@ interface EmbedPDFProps {
   engine: PdfEngine;
   onInitialized?: (registry: PluginRegistry) => Promise<void>;
   plugins: PluginBatchRegistration<IPlugin<any>, any>[];
-  children: React.ReactNode | ((state: PDFContextState) => React.ReactNode);
+  children: ReactNode | ((state: PDFContextState) => ReactNode);
 }
 
 export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFProps) {

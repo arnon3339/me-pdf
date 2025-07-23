@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from '@framework';
 import { CoreState, arePropsEqual } from '@embedpdf/core';
 import { useRegistry } from './use-registry';
 

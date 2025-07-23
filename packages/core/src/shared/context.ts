@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext } from '@framework';
 import type { PluginRegistry } from '@embedpdf/core';
 
 export interface PDFContextState {

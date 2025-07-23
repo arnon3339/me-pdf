@@ -1,4 +1,4 @@
-import { useContext } from 'preact/hooks';
+import { useContext } from '@framework';
 import { PDFContext, PDFContextState } from '../context';
 
 /**
