@@ -49,12 +49,12 @@ const exists = (rel: string) =>
 /* ───── preset core ───────────────────────────────────────────────── */
 export interface ConfigOptions {
   tsconfigPath: string;
-  entryPath: string;
+  entryPath: string | Record<string, string>;  // ⚠️ Support both single and multiple entries
   outputPrefix?: string;
   external?: string[];
   additionalPlugins?: any[];
-  esbuildOptions?: UserConfig['esbuild'];   // ⚠️ allow caller to pass esbuild opts
-  dtsExclude?: string[];                    // ⚠️ exclude patterns for dts plugin
+  esbuildOptions?: UserConfig['esbuild'];
+  dtsExclude?: string[];
 }
 
 export function createConfig(opts: ConfigOptions): UserConfig {
@@ -64,8 +64,8 @@ export function createConfig(opts: ConfigOptions): UserConfig {
     outputPrefix = '',
     external = [],
     additionalPlugins = [],
-    esbuildOptions = {},                    // ⚠️
-    dtsExclude = [],                        // ⚠️
+    esbuildOptions = {},
+    dtsExclude = [],
   } = opts;
 
   const pkgRoot = process.cwd();
@@ -73,17 +73,27 @@ export function createConfig(opts: ConfigOptions): UserConfig {
     pkgRoot,
     tsconfigPath.startsWith('.') ? tsconfigPath : path.join('src', tsconfigPath),
   );
-  const entryAbs = path.resolve(pkgRoot, 'src', entryPath);
+  
+  // ⚠️ Handle both single and multiple entries
+  const entry = typeof entryPath === 'string' 
+    ? path.resolve(pkgRoot, 'src', entryPath)
+    : Object.fromEntries(
+        Object.entries(entryPath).map(([name, entryPath]) => [
+          name, 
+          path.resolve(pkgRoot, 'src', entryPath)
+        ])
+      );
+
   const filePrefix = outputPrefix ? `${outputPrefix}/` : '';
 
   return {
     resolve: { alias: aliasFromTsconfig(tsconfigAbs) },
-    esbuild: esbuildOptions,               // ⚠️  hand straight to vite:esbuild
+    esbuild: esbuildOptions,
     plugins: [
       ...additionalPlugins, 
       dts({ 
         tsconfigPath: tsconfigAbs,
-        exclude: dtsExclude,                // ⚠️ use the passed exclude patterns
+        exclude: dtsExclude,
         beforeWriteFile: beforeWriteFile(outputPrefix)
       })
     ],
@@ -91,11 +101,17 @@ export function createConfig(opts: ConfigOptions): UserConfig {
       emptyOutDir: false,
       sourcemap: true,
       lib: {
-        entry: entryAbs,
+        entry,
         formats: ['es', 'cjs'],
-        fileName: (fmt) =>
-          `${filePrefix}index.${fmt === 'es' ? 'js' : 'cjs'}`,
+        fileName: (fmt, entryName) => {
+          // ⚠️ Handle multiple entries in fileName
+          if (typeof entryPath === 'object') {
+            return `${filePrefix}${entryName}.${fmt === 'es' ? 'js' : 'cjs'}`;
+          }
+          return `${filePrefix}index.${fmt === 'es' ? 'js' : 'cjs'}`;
+        },
       },
+      minify: 'terser',
       rollupOptions: {
         external: [...external, ...sharedExternal],
         output: { dir: path.resolve(pkgRoot, 'dist') },

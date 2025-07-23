@@ -1,0 +1,5 @@
+---
+'@embedpdf/engines': patch
+---
+
+Update engines to have shared code between react and preact to simplify workflow
