@@ -20,6 +20,8 @@ interface InkProps {
   scale: number;
   /** Callback for when the annotation is clicked */
   onClick?: (e: MouseEvent<SVGPathElement>) => void;
+  /** Cursor on the ink */
+  cursor?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function Ink({
   rect,
   scale,
   onClick,
+  cursor,
 }: InkProps): JSX.Element {
   /* convert each stroke to an SVG <path d=""> string */
   const paths = useMemo(() => {
@@ -73,7 +76,7 @@ export function Ink({
           opacity={opacity}
           onMouseDown={onClick}
           style={{
-            cursor: 'pointer',
+            cursor,
             pointerEvents: 'visibleStroke',
             stroke: color,
             strokeWidth: strokeWidth,

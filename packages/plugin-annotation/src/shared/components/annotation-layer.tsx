@@ -2,6 +2,7 @@ import { HTMLAttributes, CSSProperties } from '@framework';
 import { Annotations } from './annotations';
 import { TextMarkup } from './text-markup';
 import { InkPaint } from './annotations/ink-paint';
+import { SelectionMenu } from '../types';
 
 type AnnotationLayerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
@@ -9,6 +10,7 @@ type AnnotationLayerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageWidth: number;
   pageHeight: number;
   rotation: number;
+  selectionMenu?: SelectionMenu;
   style?: CSSProperties;
 };
 
@@ -18,6 +20,7 @@ export function AnnotationLayer({
   pageWidth,
   pageHeight,
   rotation,
+  selectionMenu,
   style,
   ...props
 }: AnnotationLayerProps) {
@@ -28,7 +31,14 @@ export function AnnotationLayer({
       }}
       {...props}
     >
-      <Annotations pageIndex={pageIndex} scale={scale} rotation={rotation} />
+      <Annotations
+        selectionMenu={selectionMenu}
+        pageIndex={pageIndex}
+        scale={scale}
+        rotation={rotation}
+        pageWidth={pageWidth}
+        pageHeight={pageHeight}
+      />
       <TextMarkup pageIndex={pageIndex} scale={scale} />
       <InkPaint pageIndex={pageIndex} scale={scale} pageWidth={pageWidth} pageHeight={pageHeight} />
     </div>

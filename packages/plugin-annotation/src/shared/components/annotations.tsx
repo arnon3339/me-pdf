@@ -5,32 +5,37 @@ import {
   PdfBlendMode,
   PdfInkAnnoObject,
 } from '@embedpdf/models';
-import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
-import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import {
   getAnnotationsByPageIndex,
   getSelectedAnnotationByPageIndex,
   TrackedAnnotation,
 } from '@embedpdf/plugin-annotation';
+import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
+import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
+import { useSelectionCapability } from '@embedpdf/plugin-selection/@framework';
+import { useMemo, useState, useEffect, useCallback, MouseEvent, JSX, Fragment } from '@framework';
+
 import { useAnnotationCapability } from '../hooks';
-import { useMemo, useState, useEffect, useCallback, MouseEvent } from '@framework';
 import { AnnotationContainer } from './annotation-container';
 import { Highlight } from './text-markup/highlight';
 import { Underline } from './text-markup/underline';
 import { Strikeout } from './text-markup/strikeout';
 import { Squiggly } from './text-markup/squiggly';
 import { Ink } from './annotations/ink';
-import { useSelectionCapability } from '@embedpdf/plugin-selection/@framework';
 import { resizeInkAnnotation } from '../../shared/resize-ink';
+import { SelectionMenu } from '../types';
 
 interface AnnotationsProps {
   pageIndex: number;
   scale: number;
   rotation: number;
+  pageWidth: number;
+  pageHeight: number;
+  selectionMenu?: SelectionMenu;
 }
 
 export function Annotations(annotationsProps: AnnotationsProps) {
-  const { pageIndex, scale } = annotationsProps;
+  const { pageIndex, scale, selectionMenu } = annotationsProps;
   const { provides: annotationProvides } = useAnnotationCapability();
   const { provides: selectionProvides } = useSelectionCapability();
   const [annotations, setAnnotations] = useState<TrackedAnnotation[]>([]);
@@ -87,6 +92,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
+                selectionMenu={selectionMenu}
                 style={{
                   mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
                 }}
@@ -110,6 +116,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
+                selectionMenu={selectionMenu}
                 style={{
                   mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
                 }}
@@ -133,6 +140,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
+                selectionMenu={selectionMenu}
                 style={{
                   mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
                 }}
@@ -156,6 +164,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 isSelected={isSelected}
                 isDraggable={false}
                 isResizable={false}
+                selectionMenu={selectionMenu}
                 style={{
                   mixBlendMode: blendModeToCss(
                     annotation.object.blendMode ?? PdfBlendMode.Multiply,
@@ -181,6 +190,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                 trackedAnnotation={annotation}
                 outlineOffset={6}
                 computeResizePatch={resizeInkAnnotation}
+                selectionMenu={selectionMenu}
                 style={{
                   mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
                 }}
@@ -188,6 +198,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               >
                 {(obj: PdfAnnotationObject) => (
                   <Ink
+                    cursor={isSelected ? 'move' : 'pointer'}
                     color={(obj as PdfInkAnnoObject).color}
                     opacity={(obj as PdfInkAnnoObject).opacity}
                     strokeWidth={(obj as PdfInkAnnoObject).strokeWidth}

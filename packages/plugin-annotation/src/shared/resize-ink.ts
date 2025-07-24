@@ -71,7 +71,7 @@ export function resizeInkAnnotation(
   // Scale strokeWidth: Use average scale (preserves "thickness feel")
   // Alternatives: Math.min(scaleX, scaleY) for conservative, or sqrt(scaleX * scaleY) for area-preserving
   const avgScale = (scaleX + scaleY) / 2;
-  const newStrokeWidth = original.strokeWidth * avgScale;
+  const newStrokeWidth = Math.round(original.strokeWidth * avgScale);
 
   // Optional: Adjust based on direction (e.g., if resizing from top-left, points might need flip/recalc, but usually not needed as scaling handles it)
 
