@@ -12,6 +12,7 @@ import {
   ArrowDown,
   MousePointer2,
   Heart,
+  Play,
 } from 'lucide-react'
 import { JavaScript } from '@/components/icons/javascript'
 import { Typescript } from '@/components/icons/typescript'
@@ -104,6 +105,25 @@ const HeaderAndHero = () => {
                   </span>
                 </Link>
 
+                {/* Bold Demo Button */}
+                <a
+                  href="https://app.embedpdf.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-purple-600 via-blue-500 to-orange-400 px-8 py-4 text-base font-medium text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
+                >
+                  <span className="absolute left-0 top-0 h-full w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 opacity-0 transition-opacity group-hover:opacity-100"></span>
+                  <span className="relative z-10 flex items-center">
+                    <div className="mr-3 rounded-full bg-white/20 p-1.5 backdrop-blur-sm">
+                      <Play className="h-4 w-4 fill-current transition-transform group-hover:scale-110" />
+                    </div>
+                    Live Demo
+                  </span>
+
+                  {/* Animated ring */}
+                  <div className="absolute inset-0 rounded-full border-2 border-white/30 transition-all group-hover:scale-110 group-hover:border-white/50"></div>
+                </a>
+
                 <a
                   href="https://github.com/embedpdf/embed-pdf-viewer"
                   target="_blank"
@@ -115,6 +135,10 @@ const HeaderAndHero = () => {
                     <span>Source on GitHub</span>
                   </div>
                 </a>
+              </div>
+
+              {/* Technology badges */}
+              <div className="mt-8 flex items-center justify-center gap-8">
                 <div className="flex flex-col items-center">
                   <div className="flex h-12 w-12 items-center justify-center bg-white">
                     <JavaScript />
