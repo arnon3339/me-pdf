@@ -111,8 +111,8 @@ const StatsSection = () => {
                   </span>
                 </h2>
                 <p className="text-xl text-slate-300">
-                  Be part of building the world's most powerful open source PDF
-                  editor
+                  Be part of building the world&apos;s most powerful open source
+                  PDF editor
                 </p>
               </div>
 
@@ -301,9 +301,9 @@ export default function Editor() {
             </h1>
 
             <p className="mx-auto mb-12 max-w-3xl text-xl leading-relaxed text-gray-600">
-              We're building the world's most powerful open source PDF editor.
-              Join thousands of developers who believe PDF editing should be
-              free, customizable, and owned by the community.
+              We&apos;re building the world&apos;s most powerful open source PDF
+              editor. Join thousands of developers who believe PDF editing
+              should be free, customizable, and owned by the community.
             </p>
 
             <div className="flex flex-col items-center justify-center gap-6 sm:flex-row">
@@ -344,7 +344,7 @@ export default function Editor() {
               </h2>
               <p className="mx-auto max-w-2xl text-xl text-gray-600">
                 See our annotation features in action. This is just the
-                beginning of what's possible.
+                beginning of what&apos;s possible.
               </p>
             </div>
 
@@ -407,7 +407,7 @@ export default function Editor() {
                 Coming Very Soon
               </h2>
               <p className="mx-auto max-w-2xl text-xl text-gray-600">
-                The next wave of features we're actively developing
+                The next wave of features we&apos;re actively developing
               </p>
             </div>
 
@@ -441,10 +441,11 @@ export default function Editor() {
                 </h2>
 
                 <p className="mb-12 text-xl leading-relaxed text-gray-300">
-                  We're not just building another PDF editor. We're creating a
-                  movement. A world where powerful document editing belongs to
-                  everyone, not locked behind expensive licenses. Join us in
-                  making PDF editing free, powerful, and accessible to all.
+                  We&apos;re not just building another PDF editor. We&apos;re
+                  creating a movement. A world where powerful document editing
+                  belongs to everyone, not locked behind expensive licenses.
+                  Join us in making PDF editing free, powerful, and accessible
+                  to all.
                 </p>
 
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -492,9 +493,9 @@ export default function Editor() {
               </h2>
 
               <p className="mb-12 text-xl text-gray-600">
-                Whether you're a developer, designer, or just passionate about
-                open source, there's a place for you in our community. Let's
-                build something amazing together!
+                Whether you&apos;re a developer, designer, or just passionate
+                about open source, there&apos;s a place for you in our
+                community. Let&apos;s build something amazing together!
               </p>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
