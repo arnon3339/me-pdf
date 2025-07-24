@@ -6,6 +6,13 @@ export default {
       timestamp: false,
     },
   },
+  editor: {
+    title: 'Editor',
+    type: 'page',
+    theme: {
+      timestamp: false,
+    },
+  },
   docs: {
     title: 'Docs',
     type: 'page',
