@@ -1,5 +1,5 @@
 import { Reducer } from '@embedpdf/core';
-import { PdfAnnotationSubtype, PdfBlendMode } from '@embedpdf/models';
+import { PdfAnnotationBorderStyle, PdfAnnotationSubtype, PdfBlendMode } from '@embedpdf/models';
 import {
   ADD_COLOR_PRESET,
   COMMIT_PENDING_CHANGES,
@@ -120,6 +120,40 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
       opacity: 1,
       strokeWidth: 11,
       blendMode: PdfBlendMode.Multiply,
+    },
+    [makeVariantKey(PdfAnnotationSubtype.CIRCLE)]: {
+      name: 'Circle',
+      subtype: PdfAnnotationSubtype.CIRCLE,
+      interaction: { mode: 'circle', exclusive: true, cursor: 'crosshair' },
+      color: 'transparent',
+      opacity: 1,
+      strokeWidth: 4,
+      strokeColor: '#E44234',
+      strokeStyle: PdfAnnotationBorderStyle.SOLID,
+    },
+    [makeVariantKey(PdfAnnotationSubtype.SQUARE)]: {
+      name: 'Square',
+      subtype: PdfAnnotationSubtype.SQUARE,
+      interaction: { mode: 'square', exclusive: true, cursor: 'crosshair' },
+      color: 'transparent',
+      opacity: 1,
+      strokeWidth: 4,
+      strokeColor: '#E44234',
+      strokeStyle: PdfAnnotationBorderStyle.SOLID,
+    },
+    [makeVariantKey(PdfAnnotationSubtype.LINE)]: {
+      name: 'Line',
+      subtype: PdfAnnotationSubtype.LINE,
+      interaction: { mode: 'line', exclusive: true, cursor: 'crosshair' },
+      color: '#E44234',
+      opacity: 1,
+    },
+    [makeVariantKey(PdfAnnotationSubtype.POLYGON)]: {
+      name: 'Polygon',
+      subtype: PdfAnnotationSubtype.POLYGON,
+      interaction: { mode: 'polygon', exclusive: true, cursor: 'crosshair' },
+      color: '#E44234',
+      opacity: 1,
     },
     ...cfg.toolDefaults,
   },

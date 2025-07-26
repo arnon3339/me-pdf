@@ -14,30 +14,29 @@ import { useAnnotationCapability } from '../hooks';
 import { ResizeDirection, SelectionMenuProps } from '../../shared/types';
 import { CounterRotate } from './counter-rotate-container';
 
-type AnnotationContainerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style' | 'children'> & {
+type AnnotationContainerProps<T extends PdfAnnotationObject> = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'style' | 'children'
+> & {
   scale: number;
   isSelected?: boolean;
   pageIndex: number;
   pageWidth: number;
   pageHeight: number;
   rotation: number;
-  trackedAnnotation: TrackedAnnotation;
-  children: JSX.Element | ((annotation: PdfAnnotationObject) => JSX.Element);
+  trackedAnnotation: TrackedAnnotation<T>;
+  children: JSX.Element | ((annotation: T) => JSX.Element);
   style?: CSSProperties;
   isDraggable?: boolean;
   isResizable?: boolean;
   outlineOffset?: number;
   selectionMenu?: (props: SelectionMenuProps) => JSX.Element;
-  computeResizePatch?: (
-    original: PdfAnnotationObject,
-    newRect: Rect,
-    direction: ResizeDirection,
-  ) => Partial<PdfAnnotationObject>;
+  computeResizePatch?: (original: T, newRect: Rect, direction: ResizeDirection) => Partial<T>;
 };
 
 type Point = { x: number; y: number };
 
-export function AnnotationContainer({
+export function AnnotationContainer<T extends PdfAnnotationObject>({
   scale,
   pageIndex,
   rotation,
@@ -53,16 +52,15 @@ export function AnnotationContainer({
   computeResizePatch,
   selectionMenu,
   ...props
-}: AnnotationContainerProps): JSX.Element {
+}: AnnotationContainerProps<T>): JSX.Element {
   const { provides: annotationProvides } = useAnnotationCapability();
   const ref = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<'idle' | 'dragging' | 'resizing'>('idle');
   const [resizeDirection, setResizeDirection] = useState<ResizeDirection | null>(null);
   const [startPos, setStartPos] = useState<Point | null>(null);
   const [startRect, setStartRect] = useState<Rect | null>(null);
   const [currentRect, setCurrentRect] = useState<Rect>(trackedAnnotation.object.rect);
-  const [previewObject, setPreviewObject] = useState<Partial<PdfAnnotationObject> | null>(null);
+  const [previewObject, setPreviewObject] = useState<Partial<T> | null>(null);
 
   // Helper function to clamp values within bounds
   const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
@@ -146,7 +144,8 @@ export function AnnotationContainer({
       size: { width: newWidth, height: newHeight },
     };
 
-    let previewPatch: Partial<PdfAnnotationObject> = { rect: tentativeRect };
+    let previewPatch: Partial<T> = {};
+    previewPatch.rect = tentativeRect;
 
     if (computeResizePatch) {
       const dir = dragState === 'resizing' ? resizeDirection : 'bottom-right';
@@ -170,7 +169,8 @@ export function AnnotationContainer({
 
     // Commit the changes
     if (annotationProvides && trackedAnnotation) {
-      let patch: Partial<PdfAnnotationObject> = { rect: currentRect };
+      let patch: Partial<T> = {};
+      patch.rect = currentRect;
       if (computeResizePatch && usedDirection) {
         patch = computeResizePatch(trackedAnnotation.object, currentRect, usedDirection);
       }
@@ -183,7 +183,7 @@ export function AnnotationContainer({
   };
 
   const currentObject = previewObject
-    ? ({ ...trackedAnnotation.object, ...previewObject } as PdfAnnotationObject)
+    ? { ...trackedAnnotation.object, ...previewObject }
     : trackedAnnotation.object;
 
   return (

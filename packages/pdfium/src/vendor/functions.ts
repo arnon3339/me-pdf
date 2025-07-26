@@ -4,6 +4,7 @@ export const functions = {
     ['number', 'number', 'number', 'number', 'number', 'number'] as const,
     'boolean',
   ] as const,
+  EPDFAnnot_ClearColor: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_GenerateAppearance: [['number'] as const, 'boolean'] as const,
   EPDFAnnot_GenerateAppearanceWithBlend: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_GetBlendMode: [['number'] as const, 'number'] as const,
@@ -21,6 +22,7 @@ export const functions = {
     'boolean',
   ] as const,
   EPDFAnnot_GetRichContent: [['number', 'number', 'number'] as const, 'number'] as const,
+  EPDFAnnot_SetBorderDashPattern: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetBorderStyle: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetColor: [
     ['number', 'number', 'number', 'number', 'number', 'number'] as const,

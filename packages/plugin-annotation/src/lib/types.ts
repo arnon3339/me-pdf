@@ -12,6 +12,7 @@ import {
   PdfPageObject,
   PdfDocumentObject,
   PdfBlendMode,
+  PdfAnnotationBorderStyle,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -22,7 +23,7 @@ export type CommitState =
   | 'synced' // identical to the PDF
   | 'ignored'; // managed by a different plugin – never auto-committed
 
-export interface TrackedAnnotation {
+export interface TrackedAnnotation<T extends PdfAnnotationObject = PdfAnnotationObject> {
   /** A stable, client-side unique identifier for history and state management. */
   localId: number;
   /**
@@ -34,7 +35,7 @@ export interface TrackedAnnotation {
   /** local commit bookkeeping */
   commitState: CommitState;
   /** the actual annotation object */
-  object: PdfAnnotationObject;
+  object: T;
 }
 
 export interface RenderAnnotationOptions {
@@ -81,7 +82,38 @@ export interface TextDefaults extends BaseAnnotationDefaults {
   fontSize: number;
 }
 
-export type AnnotationDefaults = TextMarkupDefaults | InkDefaults | TextDefaults;
+export interface CircleDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.CIRCLE;
+  strokeWidth: number;
+  strokeColor: string;
+  strokeStyle: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
+}
+
+export interface SquareDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.SQUARE;
+  strokeWidth: number;
+  strokeColor: string;
+  strokeStyle: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
+}
+
+export interface LineDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.LINE;
+}
+
+export interface PolygonDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.POLYGON;
+}
+
+export type AnnotationDefaults =
+  | TextMarkupDefaults
+  | InkDefaults
+  | TextDefaults
+  | CircleDefaults
+  | SquareDefaults
+  | LineDefaults
+  | PolygonDefaults;
 
 export type ToolDefaultsByMode = {
   [K in string]: AnnotationDefaults;
@@ -125,11 +157,13 @@ export interface AnnotationCapability {
   setActiveVariant: (variantKey: string | null) => void;
   /** strongly typed – only sub-types we have defaults for */
   getToolDefaults: (variantKey: string) => AnnotationDefaults;
-  getToolDefaultsBySubtypeAndIntent: (
-    subtype: PdfAnnotationSubtype,
-    intent?: string,
-  ) => AnnotationDefaults;
-  getToolDefaultsBySubtype: (subtype: PdfAnnotationSubtype) => AnnotationDefaults;
+  getToolDefaultsBySubtypeAndIntent: <Sub extends AnnotationDefaults['subtype']>(
+    subtype: Sub,
+    intent?: string | null,
+  ) => Extract<AnnotationDefaults, { subtype: Sub }>;
+  getToolDefaultsBySubtype: <Sub extends AnnotationDefaults['subtype']>(
+    subtype: Sub,
+  ) => Extract<AnnotationDefaults, { subtype: Sub }>;
   /** Partially patch a single tool’s defaults */
   setToolDefaults: (variantKey: string, patch: Partial<AnnotationDefaults>) => void;
   /** current palette – UI just reads this */
@@ -151,10 +185,10 @@ export interface AnnotationCapability {
   commit: () => void;
 }
 
-export interface SelectedAnnotation {
+export interface SelectedAnnotation<T extends PdfAnnotationObject = PdfAnnotationObject> {
   pageIndex: number;
   localId: number;
-  annotation: PdfAnnotationObject;
+  annotation: T;
 }
 
 export interface GetPageAnnotationsOptions {

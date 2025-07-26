@@ -1385,6 +1385,10 @@ export interface PdfCircleAnnoObject extends PdfAnnotationObjectBase {
    */
   flags: PdfAnnotationFlagName[];
   /**
+   * Text contents of the circle annotation
+   */
+  contents?: string;
+  /**
    * color of circle annotation
    */
   color: string;
@@ -1426,6 +1430,10 @@ export interface PdfCircleAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfSquareAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.SQUARE;
+  /**
+   * Text contents of the square annotation
+   */
+  contents?: string;
   /**
    * flags of square annotation
    */
