@@ -1,5 +1,6 @@
-import { AnnotationState, SelectedAnnotation } from './types';
+import { AnnotationDefaults, AnnotationState, SelectedAnnotation } from './types';
 import { parseUid } from './utils';
+import { makeVariantKey } from './variant-key';
 
 /* helper – mirrors the one in reducer */
 const makeUid = (page: number, id: number) => `p${page}#${id}`;
@@ -48,3 +49,33 @@ export const getSelectedAnnotationVariant = (s: AnnotationState) => s.activeVari
 /** Check if a given anno on a page is the current selection. */
 export const isAnnotationSelected = (s: AnnotationState, page: number, id: number) =>
   s.selectedUid === makeUid(page, id);
+
+/**
+ * Return the tool-defaults for a given subtype and (optionally) intent.
+ * If the exact variant (subtype + intent) is not present, it gracefully
+ * falls back to the plain subtype variant.
+ *
+ * The return type is inferred so that you always get the concrete default
+ * interface for the supplied subtype (e.g. `InkDefaults` for `INK`,
+ * `CircleDefaults` for `CIRCLE`, …).
+ */
+export function getToolDefaultsBySubtypeAndIntent<
+  S extends AnnotationState,
+  TSub extends AnnotationDefaults['subtype'],
+>(state: S, subtype: TSub, intent?: string | null): Extract<AnnotationDefaults, { subtype: TSub }> {
+  // Build keys
+  const variantKey = makeVariantKey(subtype, intent ?? undefined);
+  const fallbackKey = makeVariantKey(subtype);
+
+  // Try exact match first, otherwise fall back to plain subtype
+  const defaults = state.toolDefaults[variantKey] ?? state.toolDefaults[fallbackKey];
+
+  if (!defaults) {
+    throw new Error(
+      `No tool defaults found for subtype ${subtype}${intent ? ` and intent ${intent}` : ''}`,
+    );
+  }
+
+  // Cast is safe because we narrow the union by subtype
+  return defaults as Extract<AnnotationDefaults, { subtype: TSub }>;
+}

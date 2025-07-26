@@ -55,7 +55,7 @@ import {
 } from '@embedpdf/plugin-interaction-manager';
 import { SelectionPlugin, SelectionCapability } from '@embedpdf/plugin-selection';
 import { HistoryPlugin, HistoryCapability, Command } from '@embedpdf/plugin-history';
-import { getSelectedAnnotation } from './selectors';
+import { getSelectedAnnotation, getToolDefaultsBySubtypeAndIntent } from './selectors';
 import { makeUid, parseUid } from './utils';
 import { makeVariantKey } from './variant-key';
 
@@ -229,19 +229,10 @@ export class AnnotationPlugin extends BasePlugin<
         return defaults;
       },
       getToolDefaultsBySubtypeAndIntent: (subtype, intent) => {
-        const variantKey = makeVariantKey(subtype, intent);
-        const defaults = this.state.toolDefaults[variantKey];
-        if (!defaults) {
-          throw new Error(`No defaults found for variant: ${variantKey}`);
-        }
-        return defaults;
+        return getToolDefaultsBySubtypeAndIntent(this.state, subtype, intent);
       },
       getToolDefaultsBySubtype: (subtype) => {
-        const defaults = this.state.toolDefaults[subtype];
-        if (!defaults) {
-          throw new Error(`No defaults found for subtype: ${subtype}`);
-        }
-        return defaults;
+        return getToolDefaultsBySubtypeAndIntent(this.state, subtype);
       },
       setToolDefaults: (variantKey, patch) => {
         this.dispatch(updateToolDefaults(variantKey, patch));

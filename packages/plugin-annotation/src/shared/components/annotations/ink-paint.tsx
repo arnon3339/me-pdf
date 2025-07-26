@@ -14,8 +14,6 @@ interface InkPaintProps {
   pageWidth: number;
   /** Height of the page */
   pageHeight: number;
-  /** Cursor on the ink paint */
-  cursor?: string;
 }
 
 const MAX_STROKE_WIDTH = 30;
@@ -25,7 +23,7 @@ const MAX_STROKE_WIDTH = 30;
  * Hook it into the interaction-manager with modeId = 'inkPaint'.
  * Supports multi-stroke annotations: if the user starts a new stroke within 3 seconds of releasing the previous one, it adds to the same annotation.
  */
-export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: InkPaintProps) => {
+export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintProps) => {
   /* ------------------------------------------------------------------ */
   /* annotation capability                                              */
   /* ------------------------------------------------------------------ */
@@ -253,7 +251,6 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: In
           fill="none"
           opacity={toolOpacity}
           style={{
-            cursor,
             stroke: toolColor,
             strokeWidth: toolStrokeWidth,
             strokeLinecap: 'round',

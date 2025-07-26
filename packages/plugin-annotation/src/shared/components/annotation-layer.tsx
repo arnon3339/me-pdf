@@ -3,6 +3,8 @@ import { Annotations } from './annotations';
 import { TextMarkup } from './text-markup';
 import { InkPaint } from './annotations/ink-paint';
 import { SelectionMenu } from '../types';
+import { CirclePaint } from './annotations/circle-paint';
+import { SquarePaint } from './annotations/square-paint';
 
 type AnnotationLayerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
@@ -41,6 +43,18 @@ export function AnnotationLayer({
       />
       <TextMarkup pageIndex={pageIndex} scale={scale} />
       <InkPaint pageIndex={pageIndex} scale={scale} pageWidth={pageWidth} pageHeight={pageHeight} />
+      <CirclePaint
+        pageIndex={pageIndex}
+        scale={scale}
+        pageWidth={pageWidth}
+        pageHeight={pageHeight}
+      />
+      <SquarePaint
+        pageIndex={pageIndex}
+        scale={scale}
+        pageWidth={pageWidth}
+        pageHeight={pageHeight}
+      />
     </div>
   );
 }

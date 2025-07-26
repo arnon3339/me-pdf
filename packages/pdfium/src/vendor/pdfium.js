@@ -28,6 +28,7 @@ var createPdfium = (() => {
     });
     [
       '_EPDF_RenderAnnotBitmap',
+      '_EPDFAnnot_ClearColor',
       '_EPDFAnnot_GenerateAppearance',
       '_EPDFAnnot_GenerateAppearanceWithBlend',
       '_EPDFAnnot_GetBlendMode',
@@ -39,6 +40,7 @@ var createPdfium = (() => {
       '_EPDFAnnot_GetIntent',
       '_EPDFAnnot_GetRectangleDifferences',
       '_EPDFAnnot_GetRichContent',
+      '_EPDFAnnot_SetBorderDashPattern',
       '_EPDFAnnot_SetBorderStyle',
       '_EPDFAnnot_SetColor',
       '_EPDFAnnot_SetIntent',
@@ -5946,6 +5948,10 @@ var createPdfium = (() => {
       'EPDFAnnot_GetColor',
       6,
     ));
+    var _EPDFAnnot_ClearColor = (Module['_EPDFAnnot_ClearColor'] = createExportWrapper(
+      'EPDFAnnot_ClearColor',
+      2,
+    ));
     var _EPDFAnnot_GetBorderEffect = (Module['_EPDFAnnot_GetBorderEffect'] = createExportWrapper(
       'EPDFAnnot_GetBorderEffect',
       2,
@@ -5956,6 +5962,8 @@ var createPdfium = (() => {
       createExportWrapper('EPDFAnnot_GetBorderDashPatternCount', 1));
     var _EPDFAnnot_GetBorderDashPattern = (Module['_EPDFAnnot_GetBorderDashPattern'] =
       createExportWrapper('EPDFAnnot_GetBorderDashPattern', 3));
+    var _EPDFAnnot_SetBorderDashPattern = (Module['_EPDFAnnot_SetBorderDashPattern'] =
+      createExportWrapper('EPDFAnnot_SetBorderDashPattern', 3));
     var _EPDFAnnot_GetBorderStyle = (Module['_EPDFAnnot_GetBorderStyle'] = createExportWrapper(
       'EPDFAnnot_GetBorderStyle',
       2,

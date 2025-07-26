@@ -96,6 +96,7 @@ import {
   flagsToNames,
   PdfAnnotationFlagName,
   makeMatrix,
+  namesToFlags,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1143,6 +1144,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.contents,
         );
         break;
+      case PdfAnnotationSubtype.CIRCLE:
+      case PdfAnnotationSubtype.SQUARE:
+        isSucceed = this.addShapeContent(page, pageCtx.pagePtr, annotationPtr, annotation);
+        break;
       case PdfAnnotationSubtype.UNDERLINE:
       case PdfAnnotationSubtype.STRIKEOUT:
       case PdfAnnotationSubtype.SQUIGGLY:
@@ -1290,6 +1295,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.rect,
           annotation.contents,
         );
+        break;
+      }
+
+      /* ── Shape ───────────────────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.CIRCLE:
+      case PdfAnnotationSubtype.SQUARE: {
+        ok = this.addShapeContent(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -2285,6 +2297,78 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         annotationPtr,
         {
           color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.Color,
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Add shape content to annotation
+   * @param page - page info
+   * @param pagePtr - pointer to page object
+   * @param annotationPtr - pointer to shape annotation
+   * @param annotation - shape annotation
+   * @returns whether shape content is added to annotation
+   *
+   * @private
+   */
+  addShapeContent(
+    page: PdfPageObject,
+    pagePtr: number,
+    annotationPtr: number,
+    annotation: PdfCircleAnnoObject | PdfSquareAnnoObject,
+  ) {
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
+      return false;
+    }
+    if (!this.setBorderStyle(annotationPtr, annotation.strokeStyle, annotation.strokeWidth)) {
+      return false;
+    }
+    if (!this.setBorderDashPattern(annotationPtr, annotation.strokeDashArray ?? [])) {
+      return false;
+    }
+    if (!this.setAnnotationFlags(annotationPtr, annotation.flags)) {
+      return false;
+    }
+    if (!annotation.color || annotation.color === 'transparent') {
+      if (
+        !this.pdfiumModule.EPDFAnnot_ClearColor(annotationPtr, PdfAnnotationColorType.InteriorColor)
+      ) {
+        return false;
+      }
+    } else if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.InteriorColor,
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.strokeColor ?? '#FFFF00',
           opacity: annotation.opacity ?? 1,
         },
         PdfAnnotationColorType.Color,
@@ -3485,6 +3569,45 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * Write the /BS /D dash pattern array for an annotation border.
+   *
+   * @param annotationPtr Pointer to FPDF_ANNOTATION
+   * @param pattern       Array of dash/space lengths in *points* (e.g. [3, 2])
+   *                      Empty array clears the pattern (solid line).
+   * @returns true on success
+   *
+   * @private
+   */
+  private setBorderDashPattern(annotationPtr: number, pattern: number[]): boolean {
+    // Empty → clear the pattern (PDF spec: no /D = solid)
+    if (!pattern || pattern.length === 0) {
+      return this.pdfiumModule.EPDFAnnot_SetBorderDashPattern(annotationPtr, 0, 0);
+    }
+
+    // Validate and sanitize numbers (must be positive floats, spec allows 1–8 numbers typically)
+    const clean = pattern.map((n) => (Number.isFinite(n) && n > 0 ? n : 0)).filter((n) => n > 0);
+    if (clean.length === 0) {
+      // nothing valid → treat as clear
+      return this.pdfiumModule.EPDFAnnot_SetBorderDashPattern(annotationPtr, 0, 0);
+    }
+
+    const bytes = 4 * clean.length;
+    const bufPtr = this.malloc(bytes);
+    for (let i = 0; i < clean.length; i++) {
+      this.pdfiumModule.pdfium.setValue(bufPtr + 4 * i, clean[i], 'float');
+    }
+
+    const ok = !!this.pdfiumModule.EPDFAnnot_SetBorderDashPattern(
+      annotationPtr,
+      bufPtr,
+      clean.length,
+    );
+
+    this.free(bufPtr);
+    return ok;
+  }
+
+  /**
    * Read `/QuadPoints` from any annotation and convert each quadrilateral to
    * device-space coordinates.
    *
@@ -4520,6 +4643,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     return flagsToNames(rawFlags);
   }
 
+  private setAnnotationFlags(annotationPtr: number, flags: PdfAnnotationFlagName[]): boolean {
+    const rawFlags = namesToFlags(flags);
+    return this.pdfiumModule.FPDFAnnot_SetFlags(annotationPtr, rawFlags);
+  }
+
   /**
    * Read circle annotation
    * @param page  - pdf page infor
@@ -4549,28 +4677,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const { color: strokeColor } = this.resolveAnnotationColor(annotationPtr);
     let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
-    let cloudyBorderIntensity: number | undefined;
-    let cloudyBorderInset: number[] | undefined;
-    if (
-      strokeStyle === PdfAnnotationBorderStyle.CLOUDY ||
-      strokeStyle === PdfAnnotationBorderStyle.UNKNOWN
-    ) {
-      const { ok: hasEffect, intensity } = this.getBorderEffect(annotationPtr);
-
-      if (hasEffect) {
-        cloudyBorderIntensity = intensity;
-        strokeStyle = PdfAnnotationBorderStyle.CLOUDY;
-        const {
-          ok: hasInset,
-          left,
-          top,
-          right,
-          bottom,
-        } = this.getRectangleDifferences(annotationPtr);
-        if (hasInset) cloudyBorderInset = [left, top, right, bottom];
-      }
-    }
-
     let strokeDashArray: number[] | undefined;
     if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
       const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
@@ -4592,8 +4698,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       rect,
       author,
       modified,
-      ...(cloudyBorderIntensity !== undefined && { cloudyBorderIntensity }),
-      ...(cloudyBorderInset !== undefined && { cloudyBorderInset }),
       ...(strokeDashArray !== undefined && { strokeDashArray }),
     };
   }
