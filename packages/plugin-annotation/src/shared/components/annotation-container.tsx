@@ -203,7 +203,6 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
           height: `${currentRect.size.height * scale}px`,
           pointerEvents: isSelected ? 'auto' : 'none',
           cursor: isSelected && isDraggable ? 'move' : 'default',
-          zIndex: 2,
           ...style,
         }}
         {...props}
@@ -277,12 +276,13 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
         }}
         rotation={rotation}
       >
-        {({ rect }) =>
+        {({ rect, menuWrapperProps }) =>
           selectionMenu &&
           selectionMenu({
             annotation: trackedAnnotation,
             selected: isSelected,
             rect,
+            menuWrapperProps,
           })
         }
       </CounterRotate>

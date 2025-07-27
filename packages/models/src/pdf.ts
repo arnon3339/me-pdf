@@ -1277,6 +1277,11 @@ export interface PdfPolygonAnnoObject extends PdfAnnotationObjectBase {
    * stroke-width of ink annotation
    */
   strokeWidth: number;
+
+  /**
+   * stroke color of polygon annotation
+   */
+  strokeColor: string;
 }
 
 /**

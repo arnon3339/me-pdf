@@ -11,6 +11,8 @@ import {
   TrackedAnnotation,
   isSquare,
   isLine,
+  isPolyline,
+  isPolygon,
 } from '@embedpdf/plugin-annotation';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
@@ -29,6 +31,8 @@ import { SelectionMenu } from '../types';
 import { Circle } from './annotations/circle';
 import { resizeInkAnnotation } from '../resize-ink';
 import { Line } from './annotations/line';
+import { Polyline } from './annotations/polyline';
+import { Polygon } from './annotations/polygon';
 
 interface AnnotationsProps {
   pageIndex: number;
@@ -317,6 +321,69 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                   opacity={obj.opacity}
                   linePoints={obj.linePoints}
                   lineEndings={obj.lineEndings}
+                  strokeWidth={obj.strokeWidth}
+                  strokeColor={obj.strokeColor}
+                  scale={scale}
+                  onClick={(e) => handleClick(e, annotation)}
+                />
+              )}
+            </AnnotationContainer>
+          );
+        }
+
+        if (isPolyline(annotation)) {
+          return (
+            <AnnotationContainer
+              key={annotation.localId}
+              trackedAnnotation={annotation}
+              isSelected={isSelected}
+              isDraggable={true}
+              isResizable={false}
+              selectionMenu={selectionMenu}
+              style={{
+                mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+              }}
+              {...annotationsProps}
+            >
+              {(obj) => (
+                <Polyline
+                  cursor={isSelected ? 'move' : 'pointer'}
+                  rect={obj.rect}
+                  color={obj.color}
+                  opacity={obj.opacity}
+                  vertices={obj.vertices}
+                  lineEndings={obj.lineEndings}
+                  strokeWidth={obj.strokeWidth}
+                  strokeColor={obj.strokeColor}
+                  scale={scale}
+                  onClick={(e) => handleClick(e, annotation)}
+                />
+              )}
+            </AnnotationContainer>
+          );
+        }
+
+        if (isPolygon(annotation)) {
+          return (
+            <AnnotationContainer
+              key={annotation.localId}
+              trackedAnnotation={annotation}
+              isSelected={isSelected}
+              isDraggable={true}
+              isResizable={false}
+              selectionMenu={selectionMenu}
+              style={{
+                mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+              }}
+              {...annotationsProps}
+            >
+              {(obj) => (
+                <Polygon
+                  cursor={isSelected ? 'move' : 'pointer'}
+                  rect={obj.rect}
+                  color={obj.color}
+                  opacity={obj.opacity}
+                  vertices={obj.vertices}
                   strokeWidth={obj.strokeWidth}
                   strokeColor={obj.strokeColor}
                   scale={scale}

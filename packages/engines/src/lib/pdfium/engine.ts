@@ -4186,7 +4186,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
     const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const strokeColor = this.resolveAnnotationColor(annotationPtr);
+    const interiorColor = this.resolveAnnotationColor(
+      annotationPtr,
+      PdfAnnotationColorType.InteriorColor,
+      undefined,
+    );
     const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     return {
@@ -4194,8 +4199,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.POLYGON,
       contents,
-      ...webAlphaColor,
-      strokeWidth,
+      strokeColor: strokeColor.color,
+      color: interiorColor?.color ?? 'transparent',
+      opacity: interiorColor?.opacity ?? strokeColor.opacity,
+      strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
       rect,
       vertices,
       author,
@@ -4243,7 +4250,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       strokeColor: strokeColor.color,
       color: interiorColor?.color ?? 'transparent',
       opacity: interiorColor?.opacity ?? strokeColor.opacity,
-      strokeWidth,
+      strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
       lineEndings,
       rect,
       vertices,
