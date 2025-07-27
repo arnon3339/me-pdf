@@ -771,6 +771,10 @@ export enum PdfAnnotationLineEnding {
    */
   ROpenArrow = 7,
   /**
+   * Right closed arrow line ending
+   */
+  RClosedArrow = 8,
+  /**
    * Slash line ending
    */
   Slash = 9,

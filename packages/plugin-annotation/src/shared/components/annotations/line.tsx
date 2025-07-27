@@ -129,6 +129,18 @@ export function Line({
             transform: `translate(${px} ${py}) rotate(${(perp * 180) / Math.PI})`,
             filled: false as const,
           };
+        case PdfAnnotationLineEnding.ROpenArrow:
+          return {
+            d: buildOpenArrow(strokeWidth * 9),
+            transform: `translate(${px} ${py}) rotate(${((rad + Math.PI) * 180) / Math.PI})`,
+            filled: false as const,
+          };
+        case PdfAnnotationLineEnding.RClosedArrow:
+          return {
+            d: buildClosedArrow(strokeWidth * 9),
+            transform: `translate(${px} ${py}) rotate(${((rad + Math.PI) * 180) / Math.PI})`,
+            filled: true as const,
+          };
         default:
           return null;
       }
