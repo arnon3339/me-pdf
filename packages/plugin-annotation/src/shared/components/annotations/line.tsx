@@ -1,5 +1,6 @@
 import { useMemo, MouseEvent } from '@framework';
-import { Rect, LinePoints, LineEndings, PdfAnnotationLineEnding } from '@embedpdf/models';
+import { Rect, LinePoints, LineEndings } from '@embedpdf/models';
+import { createEnding } from './line-endings';
 
 /* ---------------------------------------------------------------- *\
 |* Types                                                            *|
@@ -27,59 +28,6 @@ interface LineProps {
   /** Cursor shown over the annotation */
   cursor?: string;
 }
-
-/* ---------------------------------------------------------------- *\
-|* Helper funcs                                                     *|
-\* ---------------------------------------------------------------- */
-
-/** Open-arrow geometry (outline) relative to its tip (0,0). */
-const buildOpenArrow = (len: number, halfAngleRad = Math.PI / 6): string => {
-  const a = halfAngleRad;
-  const x = -len * Math.cos(a);
-  const y = len * Math.sin(a);
-  // two arms meeting at the tip
-  return `M 0 0 L ${x} ${y} M 0 0 L ${x} ${-y}`;
-};
-
-/** Closed-arrow (filled triangle) relative to its tip (0,0). */
-const buildClosedArrow = (len: number, halfAngleRad = Math.PI / 6): string => {
-  const a = halfAngleRad;
-  const x = -len * Math.cos(a);
-  const y = len * Math.sin(a);
-  return `M 0 0 L ${x} ${y} L ${x} ${-y} Z`;
-};
-
-/** Butt = small perpendicular segment centred on the tip. */
-const buildButt = (len: number): string => {
-  const l = len / 2;
-  return `M ${-l} 0 L ${l} 0`;
-};
-
-/** Square outline centred on the tip (len = side length). */
-const buildSquare = (len: number): string => {
-  const h = len / 2;
-  return `M ${-h} ${-h} L ${h} ${-h} L ${h} ${h} L ${-h} ${h} Z`;
-};
-
-/** Diamond centred on tip (len = diagonal length). */
-const buildDiamond = (len: number): string => {
-  const h = len / 2;
-  return `M 0 ${-h} L ${h} 0 L 0 ${h} L ${-h} 0 Z`;
-};
-
-/** Slash: thin diagonal line (len = segment length). */
-const buildSlash = (len: number): string => {
-  const h = len / 2;
-  return `M ${-h} 0 L ${h} 0`;
-};
-
-/** Circle outline centred on the tip – len is *diameter*. */
-const buildCircle = (diameter: number): string => {
-  const r = diameter / 2;
-  // Path: move right to (r,0), full circle back to start
-  // SVG arc flags: large-arc-flag=1, sweep-flag=1 for first half, then again
-  return `M ${r} 0 A ${r} ${r} 0 1 1 ${-r} 0 A ${r} ${r} 0 1 1 ${r} 0`;
-};
 
 /**
  * Renders a PDF Line annotation as SVG (with arrow/butt endings).
@@ -109,82 +57,13 @@ export function Line({
   }, [linePoints, rect]);
 
   /* -------------------------------------------------------------- */
-  /*  Arrow-head path data + transforms                             */
+  /*  Arrow-head path data via shared factory                       */
   /* -------------------------------------------------------------- */
   const endings = useMemo(() => {
     const angle = Math.atan2(y2 - y1, x2 - x1);
-    const perp = angle + Math.PI / 2;
-
-    const make = (
-      ending: PdfAnnotationLineEnding | undefined,
-      px: number,
-      py: number,
-      rad: number,
-    ) => {
-      switch (ending) {
-        case PdfAnnotationLineEnding.ClosedArrow:
-          return {
-            d: buildClosedArrow(strokeWidth * 9),
-            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
-            /** Closed arrow should be filled */
-            filled: true as const,
-          } as const;
-        case PdfAnnotationLineEnding.OpenArrow:
-          return {
-            d: buildOpenArrow(strokeWidth * 9),
-            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
-            filled: false as const,
-          };
-        case PdfAnnotationLineEnding.Circle:
-          return {
-            d: buildCircle(strokeWidth * 5),
-            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
-            filled: true as const,
-          };
-        case PdfAnnotationLineEnding.Butt:
-          return {
-            d: buildButt(strokeWidth * 6),
-            transform: `translate(${px} ${py}) rotate(${(perp * 180) / Math.PI})`,
-            filled: false as const,
-          };
-        case PdfAnnotationLineEnding.ROpenArrow:
-          return {
-            d: buildOpenArrow(strokeWidth * 9),
-            transform: `translate(${px} ${py}) rotate(${((rad + Math.PI) * 180) / Math.PI})`,
-            filled: false as const,
-          };
-        case PdfAnnotationLineEnding.RClosedArrow:
-          return {
-            d: buildClosedArrow(strokeWidth * 9),
-            transform: `translate(${px} ${py}) rotate(${((rad + Math.PI) * 180) / Math.PI})`,
-            filled: true as const,
-          };
-        case PdfAnnotationLineEnding.Square:
-          return {
-            d: buildSquare(strokeWidth * 6),
-            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
-            filled: true as const,
-          };
-        case PdfAnnotationLineEnding.Diamond:
-          return {
-            d: buildDiamond(strokeWidth * 6),
-            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
-            filled: true as const,
-          };
-        case PdfAnnotationLineEnding.Slash:
-          return {
-            d: buildSlash(strokeWidth * 18),
-            transform: `translate(${px} ${py}) rotate(${((rad + Math.PI / 1.5) * 180) / Math.PI})`,
-            filled: false as const,
-          };
-        default:
-          return null;
-      }
-    };
-
     return {
-      start: make(lineEndings?.start, x1, y1, angle + Math.PI),
-      end: make(lineEndings?.end, x2, y2, angle),
+      start: createEnding(lineEndings?.start, strokeWidth, angle + Math.PI, x1, y1),
+      end: createEnding(lineEndings?.end, strokeWidth, angle, x2, y2),
     };
   }, [lineEndings, strokeWidth, x1, y1, x2, y2]);
 

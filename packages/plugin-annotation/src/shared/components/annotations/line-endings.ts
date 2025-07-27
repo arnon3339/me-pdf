@@ -11,7 +11,7 @@ const buildOpenArrow = (len: number, halfAngleRad = Math.PI / 6) => {
   const a = halfAngleRad;
   const x = -len * Math.cos(a);
   const y = len * Math.sin(a);
-  return `M 0 0 L ${x} ${y} M 0 0 L ${x} ${-y}`;
+  return `M ${x} ${y} L 0 0 L ${x} ${-y}`;
 };
 
 const buildClosedArrow = (len: number, halfAngleRad = Math.PI / 6) => {
