@@ -55,6 +55,24 @@ const buildButt = (len: number): string => {
   return `M ${-l} 0 L ${l} 0`;
 };
 
+/** Square outline centred on the tip (len = side length). */
+const buildSquare = (len: number): string => {
+  const h = len / 2;
+  return `M ${-h} ${-h} L ${h} ${-h} L ${h} ${h} L ${-h} ${h} Z`;
+};
+
+/** Diamond centred on tip (len = diagonal length). */
+const buildDiamond = (len: number): string => {
+  const h = len / 2;
+  return `M 0 ${-h} L ${h} 0 L 0 ${h} L ${-h} 0 Z`;
+};
+
+/** Slash: thin diagonal line (len = segment length). */
+const buildSlash = (len: number): string => {
+  const h = len / 2;
+  return `M ${-h} 0 L ${h} 0`;
+};
+
 /** Circle outline centred on the tip – len is *diameter*. */
 const buildCircle = (diameter: number): string => {
   const r = diameter / 2;
@@ -140,6 +158,24 @@ export function Line({
             d: buildClosedArrow(strokeWidth * 9),
             transform: `translate(${px} ${py}) rotate(${((rad + Math.PI) * 180) / Math.PI})`,
             filled: true as const,
+          };
+        case PdfAnnotationLineEnding.Square:
+          return {
+            d: buildSquare(strokeWidth * 6),
+            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
+            filled: true as const,
+          };
+        case PdfAnnotationLineEnding.Diamond:
+          return {
+            d: buildDiamond(strokeWidth * 6),
+            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
+            filled: true as const,
+          };
+        case PdfAnnotationLineEnding.Slash:
+          return {
+            d: buildSlash(strokeWidth * 18),
+            transform: `translate(${px} ${py}) rotate(${((rad + Math.PI / 1.5) * 180) / Math.PI})`,
+            filled: false as const,
           };
         default:
           return null;
