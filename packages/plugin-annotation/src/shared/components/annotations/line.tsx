@@ -6,12 +6,14 @@ import { Rect, LinePoints, LineEndings, PdfAnnotationLineEnding } from '@embedpd
 \* ---------------------------------------------------------------- */
 
 interface LineProps {
-  /** Stroke colour (falls back to PDFium default black) */
+  /** interior colour */
   color?: string;
   /** 0 – 1 */
   opacity?: number;
   /** Stroke width in PDF units */
   strokeWidth: number;
+  /** Stroke colour (falls back to PDFium default black) */
+  strokeColor?: string;
   /** Bounding box of the annotation */
   rect: Rect;
   /** Line start / end points (page units) */
@@ -30,13 +32,21 @@ interface LineProps {
 |* Helper funcs                                                     *|
 \* ---------------------------------------------------------------- */
 
-/** Arrow geometry relative to its tip (0,0). */
+/** Open-arrow geometry (outline) relative to its tip (0,0). */
 const buildOpenArrow = (len: number, halfAngleRad = Math.PI / 6): string => {
   const a = halfAngleRad;
   const x = -len * Math.cos(a);
   const y = len * Math.sin(a);
-  // one path, two segments sharing the same corner
-  return `M 0 0 L ${x} ${y} L 0 0 L ${x} ${-y}`;
+  // two arms meeting at the tip
+  return `M 0 0 L ${x} ${y} M 0 0 L ${x} ${-y}`;
+};
+
+/** Closed-arrow (filled triangle) relative to its tip (0,0). */
+const buildClosedArrow = (len: number, halfAngleRad = Math.PI / 6): string => {
+  const a = halfAngleRad;
+  const x = -len * Math.cos(a);
+  const y = len * Math.sin(a);
+  return `M 0 0 L ${x} ${y} L ${x} ${-y} Z`;
 };
 
 /** Butt = small perpendicular segment centred on the tip. */
@@ -49,9 +59,10 @@ const buildButt = (len: number): string => {
  * Renders a PDF Line annotation as SVG (with arrow/butt endings).
  */
 export function Line({
-  color = '#000000',
+  color = 'transparent',
   opacity = 1,
   strokeWidth,
+  strokeColor = '#000000',
   rect,
   linePoints,
   lineEndings,
@@ -85,15 +96,24 @@ export function Line({
       rad: number,
     ) => {
       switch (ending) {
+        case PdfAnnotationLineEnding.ClosedArrow:
+          return {
+            d: buildClosedArrow(strokeWidth * 9),
+            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
+            /** Closed arrow should be filled */
+            filled: true as const,
+          } as const;
         case PdfAnnotationLineEnding.OpenArrow:
           return {
             d: buildOpenArrow(strokeWidth * 9),
             transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
+            filled: false as const,
           };
         case PdfAnnotationLineEnding.Butt:
           return {
             d: buildButt(strokeWidth * 6),
             transform: `translate(${px} ${py}) rotate(${(perp * 180) / Math.PI})`,
+            filled: false as const,
           };
         default:
           return null;
@@ -136,7 +156,7 @@ export function Line({
         style={{
           cursor,
           pointerEvents: 'visibleStroke',
-          stroke: color,
+          stroke: strokeColor,
           strokeWidth,
           strokeLinecap: 'butt',
         }}
@@ -147,26 +167,26 @@ export function Line({
         <path
           d={endings.start.d}
           transform={endings.start.transform}
-          stroke={color}
+          stroke={strokeColor}
           style={{
             strokeWidth,
             strokeLinecap: 'butt',
             pointerEvents: 'visibleStroke',
           }}
-          fill="none"
+          fill={endings.start.filled ? color : 'none'}
         />
       )}
       {endings.end && (
         <path
           d={endings.end.d}
           transform={endings.end.transform}
-          stroke={color}
+          stroke={strokeColor}
           style={{
             strokeWidth,
             strokeLinecap: 'butt',
             pointerEvents: 'visibleStroke',
           }}
-          fill="none"
+          fill={endings.end.filled ? color : 'none'}
         />
       )}
     </svg>

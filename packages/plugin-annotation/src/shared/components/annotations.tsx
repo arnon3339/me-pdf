@@ -318,6 +318,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                   linePoints={obj.linePoints}
                   lineEndings={obj.lineEndings}
                   strokeWidth={obj.strokeWidth}
+                  strokeColor={obj.strokeColor}
                   scale={scale}
                   onClick={(e) => handleClick(e, annotation)}
                 />

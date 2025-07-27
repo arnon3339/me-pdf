@@ -1300,7 +1300,7 @@ export interface PdfPolylineAnnoObject extends PdfAnnotationObjectBase {
   vertices: Position[];
 
   /**
-   * color of ink annotation
+   * interior color of line annotation
    */
   color: string;
 
@@ -1313,6 +1313,11 @@ export interface PdfPolylineAnnoObject extends PdfAnnotationObjectBase {
    * stroke-width of ink annotation
    */
   strokeWidth: number;
+
+  /**
+   * stroke color of line annotation
+   */
+  strokeColor: string;
 }
 
 /**
@@ -1340,7 +1345,7 @@ export interface PdfLineAnnoObject extends PdfAnnotationObjectBase {
   lineEndings?: LineEndings;
 
   /**
-   * color of ink annotation
+   * interior color of line annotation
    */
   color: string;
 
@@ -1353,6 +1358,11 @@ export interface PdfLineAnnoObject extends PdfAnnotationObjectBase {
    * stroke-width of ink annotation
    */
   strokeWidth: number;
+
+  /**
+   * stroke color of line annotation
+   */
+  strokeColor: string;
 }
 
 /**

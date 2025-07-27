@@ -4226,7 +4226,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
     const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const strokeColor = this.resolveAnnotationColor(annotationPtr);
+    const interiorColor = this.resolveAnnotationColor(
+      annotationPtr,
+      PdfAnnotationColorType.InteriorColor,
+      undefined,
+    );
     const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
     const lineEndings = this.getLineEndings(annotationPtr);
 
@@ -4235,7 +4240,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.POLYLINE,
       contents,
-      ...webAlphaColor,
+      strokeColor: strokeColor.color,
+      color: interiorColor?.color ?? 'transparent',
+      opacity: interiorColor?.opacity ?? strokeColor.opacity,
       strokeWidth,
       lineEndings,
       rect,
@@ -4269,7 +4276,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const linePoints = this.getLinePoints(annotationPtr, page);
     const lineEndings = this.getLineEndings(annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const strokeColor = this.resolveAnnotationColor(annotationPtr);
+    const interiorColor = this.resolveAnnotationColor(
+      annotationPtr,
+      PdfAnnotationColorType.InteriorColor,
+      undefined,
+    );
     const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     return {
@@ -4278,8 +4290,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       type: PdfAnnotationSubtype.LINE,
       rect,
       contents,
-      ...webAlphaColor,
       strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
+      strokeColor: strokeColor.color,
+      color: interiorColor?.color ?? 'transparent',
+      opacity: interiorColor?.opacity ?? strokeColor.opacity,
       linePoints: linePoints || { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } },
       lineEndings: lineEndings || {
         start: PdfAnnotationLineEnding.None,
