@@ -10,6 +10,7 @@ import {
   isUnderline,
   TrackedAnnotation,
   isSquare,
+  isLine,
 } from '@embedpdf/plugin-annotation';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
@@ -27,6 +28,7 @@ import { Square } from './annotations/square';
 import { SelectionMenu } from '../types';
 import { Circle } from './annotations/circle';
 import { resizeInkAnnotation } from '../resize-ink';
+import { Line } from './annotations/line';
 
 interface AnnotationsProps {
   pageIndex: number;
@@ -286,6 +288,37 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                   rects={obj.segmentRects}
                   scale={scale}
                   rect={obj.rect}
+                  onClick={(e) => handleClick(e, annotation)}
+                />
+              )}
+            </AnnotationContainer>
+          );
+        }
+
+        if (isLine(annotation)) {
+          return (
+            <AnnotationContainer
+              key={annotation.localId}
+              trackedAnnotation={annotation}
+              isSelected={isSelected}
+              isDraggable={true}
+              isResizable={false}
+              selectionMenu={selectionMenu}
+              style={{
+                mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+              }}
+              {...annotationsProps}
+            >
+              {(obj) => (
+                <Line
+                  cursor={isSelected ? 'move' : 'pointer'}
+                  rect={obj.rect}
+                  color={obj.color}
+                  opacity={obj.opacity}
+                  linePoints={obj.linePoints}
+                  lineEndings={obj.lineEndings}
+                  strokeWidth={obj.strokeWidth}
+                  scale={scale}
                   onClick={(e) => handleClick(e, annotation)}
                 />
               )}

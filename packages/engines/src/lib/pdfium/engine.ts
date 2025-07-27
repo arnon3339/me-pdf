@@ -4279,7 +4279,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       rect,
       contents,
       ...webAlphaColor,
-      strokeWidth,
+      strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
       linePoints: linePoints || { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } },
       lineEndings: lineEndings || {
         start: PdfAnnotationLineEnding.None,
