@@ -55,6 +55,14 @@ const buildButt = (len: number): string => {
   return `M ${-l} 0 L ${l} 0`;
 };
 
+/** Circle outline centred on the tip – len is *diameter*. */
+const buildCircle = (diameter: number): string => {
+  const r = diameter / 2;
+  // Path: move right to (r,0), full circle back to start
+  // SVG arc flags: large-arc-flag=1, sweep-flag=1 for first half, then again
+  return `M ${r} 0 A ${r} ${r} 0 1 1 ${-r} 0 A ${r} ${r} 0 1 1 ${r} 0`;
+};
+
 /**
  * Renders a PDF Line annotation as SVG (with arrow/butt endings).
  */
@@ -108,6 +116,12 @@ export function Line({
             d: buildOpenArrow(strokeWidth * 9),
             transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
             filled: false as const,
+          };
+        case PdfAnnotationLineEnding.Circle:
+          return {
+            d: buildCircle(strokeWidth * 5),
+            transform: `translate(${px} ${py}) rotate(${(rad * 180) / Math.PI})`,
+            filled: true as const,
           };
         case PdfAnnotationLineEnding.Butt:
           return {
@@ -167,11 +181,13 @@ export function Line({
         <path
           d={endings.start.d}
           transform={endings.start.transform}
+          onMouseDown={onClick}
           stroke={strokeColor}
           style={{
+            cursor,
             strokeWidth,
             strokeLinecap: 'butt',
-            pointerEvents: 'visibleStroke',
+            pointerEvents: endings.start.filled ? 'visible' : 'visibleStroke',
           }}
           fill={endings.start.filled ? color : 'none'}
         />
@@ -181,10 +197,12 @@ export function Line({
           d={endings.end.d}
           transform={endings.end.transform}
           stroke={strokeColor}
+          onMouseDown={onClick}
           style={{
+            cursor,
             strokeWidth,
             strokeLinecap: 'butt',
-            pointerEvents: 'visibleStroke',
+            pointerEvents: endings.end.filled ? 'visible' : 'visibleStroke',
           }}
           fill={endings.end.filled ? color : 'none'}
         />

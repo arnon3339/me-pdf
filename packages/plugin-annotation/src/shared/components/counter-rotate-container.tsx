@@ -69,7 +69,7 @@ export function CounterRotate({ children, ...props }: CounterRotateComponentProp
     transformOrigin: '0 0',
     width: width,
     height: height,
-    pointerEvents: 'auto',
+    pointerEvents: 'none',
   };
 
   return (
