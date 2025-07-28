@@ -1282,6 +1282,16 @@ export interface PdfPolygonAnnoObject extends PdfAnnotationObjectBase {
    * stroke color of polygon annotation
    */
   strokeColor: string;
+
+  /**
+   * stroke style of polygon annotation
+   */
+  strokeStyle: PdfAnnotationBorderStyle;
+
+  /**
+   * stroke dash array of polygon annotation
+   */
+  strokeDashArray?: number[];
 }
 
 /**
@@ -1327,6 +1337,16 @@ export interface PdfPolylineAnnoObject extends PdfAnnotationObjectBase {
    * stroke color of line annotation
    */
   strokeColor: string;
+
+  /**
+   * stroke style of polyline annotation
+   */
+  strokeStyle: PdfAnnotationBorderStyle;
+
+  /**
+   * stroke dash array of polyline annotation
+   */
+  strokeDashArray?: number[];
 }
 
 /**
@@ -1372,6 +1392,16 @@ export interface PdfLineAnnoObject extends PdfAnnotationObjectBase {
    * stroke color of line annotation
    */
   strokeColor: string;
+
+  /**
+   * stroke style of line annotation
+   */
+  strokeStyle: PdfAnnotationBorderStyle;
+
+  /**
+   * stroke dash array of line annotation
+   */
+  strokeDashArray?: number[];
 }
 
 /**

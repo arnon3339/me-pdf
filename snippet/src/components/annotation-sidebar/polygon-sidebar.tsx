@@ -1,18 +1,17 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
+import { PdfAnnotationBorderStyle, PdfPolygonAnnoObject } from '@embedpdf/models';
 import { SidebarPropsBase } from './common';
-import { Slider, ColorSwatch, StrokeStyleSelect } from './ui';
-import { useDebounce } from '../../hooks/use-debounce';
-import { PdfCircleAnnoObject, PdfSquareAnnoObject } from '@embedpdf/models';
-import { PdfAnnotationBorderStyle } from '@embedpdf/models';
+import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
+import { useEffect, useState } from 'preact/hooks';
+import { useDebounce } from '@/hooks/use-debounce';
+import { ColorSwatch, Slider, StrokeStyleSelect } from './ui';
 
-export const ShapeSidebar = ({
+export const PolygonSidebar = ({
   selected,
   subtype,
   activeVariant,
   colorPresets,
-}: SidebarPropsBase<PdfCircleAnnoObject | PdfSquareAnnoObject>) => {
+}: SidebarPropsBase<PdfPolygonAnnoObject>) => {
   const { provides: annotation } = useAnnotationCapability();
   if (!annotation) return null;
 
@@ -52,10 +51,12 @@ export const ShapeSidebar = ({
     setFill(c);
     applyPatch({ color: c });
   };
+
   const changeStroke = (c: string) => {
     setStroke(c);
     applyPatch({ strokeColor: c });
   };
+
   const changeStyle = (s: { id: PdfAnnotationBorderStyle; dash?: number[] }) => {
     setStyle(s);
     applyPatch({ strokeStyle: s.id, strokeDashArray: s.dash });
@@ -72,7 +73,7 @@ export const ShapeSidebar = ({
 
   return (
     <div class="p-4">
-      <h2 class="text-md mb-4 font-medium">Shape styles</h2>
+      <h2 class="text-md mb-4 font-medium">Polygon styles</h2>
 
       {/* fill color */}
       <section class="mb-6">
@@ -99,6 +100,11 @@ export const ShapeSidebar = ({
           {colorPresets.map((c) => (
             <ColorSwatch key={c} color={c} active={c === stroke} onSelect={changeStroke} />
           ))}
+          <ColorSwatch
+            color="transparent"
+            active={stroke === 'transparent'}
+            onSelect={changeStroke}
+          />
         </div>
       </section>
 
@@ -108,11 +114,11 @@ export const ShapeSidebar = ({
         <StrokeStyleSelect value={style} onChange={changeStyle} />
       </section>
 
-      {/* stroke-width */}
+      {/* stroke width */}
       <section class="mb-6">
         <label class="mb-1 block text-sm font-medium text-gray-900">Stroke width</label>
-        <Slider value={strokeW} min={1} max={30} step={1} onChange={setWidth} />
-        <span class="text-xs text-gray-500">{strokeW}px</span>
+        <Slider value={strokeW} min={1} max={10} step={1} onChange={setWidth} />
+        <span class="text-xs text-gray-500">{strokeW}</span>
       </section>
     </div>
   );

@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { ActiveTool } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationSubtype, PdfPolylineAnnoObject } from '@embedpdf/models';
+import {
+  PdfAnnotationBorderStyle,
+  PdfAnnotationSubtype,
+  PdfPolylineAnnoObject,
+} from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
 import { lineRectWithEndings } from '../../patch-utils';
 import { Polyline } from './polyline';
@@ -45,6 +49,8 @@ export const PolylinePaint = ({
   const toolStrokeWidth = activeTool.defaults.strokeWidth ?? 2;
   const toolStrokeColor = activeTool.defaults.strokeColor ?? '#000000';
   const toolLineEndings = activeTool.defaults.lineEndings;
+  const toolStrokeStyle = activeTool.defaults.strokeStyle ?? PdfAnnotationBorderStyle.SOLID;
+  const toolStrokeDashArray = activeTool.defaults.strokeDashArray;
 
   /* ------------------------------------------------------------------ */
   /* integration with interaction-manager                               */
@@ -82,6 +88,8 @@ export const PolylinePaint = ({
       opacity: toolOpacity,
       strokeWidth: toolStrokeWidth,
       strokeColor: toolStrokeColor,
+      strokeStyle: toolStrokeStyle,
+      strokeDashArray: toolStrokeDashArray,
       lineEndings: toolLineEndings,
       pageIndex,
       id: Date.now() + Math.random(),

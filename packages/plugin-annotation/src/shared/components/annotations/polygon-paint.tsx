@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { ActiveTool } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationSubtype, PdfPolygonAnnoObject, Rect } from '@embedpdf/models';
+import {
+  PdfAnnotationBorderStyle,
+  PdfAnnotationSubtype,
+  PdfPolygonAnnoObject,
+  Rect,
+} from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
 
 interface PolygonPaintProps {
@@ -34,6 +39,8 @@ export const PolygonPaint = ({
   const toolOpacity = activeTool.defaults.opacity ?? 1;
   const toolStrokeWidth = activeTool.defaults.strokeWidth ?? 2;
   const toolStrokeColor = activeTool.defaults.strokeColor ?? '#000000';
+  const toolStrokeStyle = activeTool.defaults.strokeStyle ?? PdfAnnotationBorderStyle.SOLID;
+  const toolStrokeDashArray = activeTool.defaults.strokeDashArray;
 
   const { register } = usePointerHandlers({ modeId: 'polygon', pageIndex });
 
@@ -67,6 +74,8 @@ export const PolygonPaint = ({
       opacity: toolOpacity,
       strokeWidth: toolStrokeWidth,
       strokeColor: toolStrokeColor,
+      strokeStyle: toolStrokeStyle,
+      strokeDashArray: toolStrokeDashArray,
       pageIndex,
       id: Date.now() + Math.random(),
     };
@@ -194,7 +203,14 @@ export const PolygonPaint = ({
         d={mainPath}
         fill={toolColor}
         opacity={toolOpacity}
-        style={{ cursor, stroke: toolStrokeColor, strokeWidth: toolStrokeWidth }}
+        style={{
+          cursor,
+          stroke: toolStrokeColor,
+          strokeWidth: toolStrokeWidth,
+          ...(toolStrokeStyle === PdfAnnotationBorderStyle.DASHED && {
+            strokeDasharray: toolStrokeDashArray?.join(','),
+          }),
+        }}
       />
 
       {/* dotted closing helper */}

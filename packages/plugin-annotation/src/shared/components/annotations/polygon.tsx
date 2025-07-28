@@ -1,5 +1,5 @@
 import { MouseEvent, useMemo } from '@framework';
-import { Rect, Position } from '@embedpdf/models';
+import { Rect, Position, PdfAnnotationBorderStyle } from '@embedpdf/models';
 
 interface PolygonProps {
   rect: Rect;
@@ -8,6 +8,8 @@ interface PolygonProps {
   strokeColor?: string;
   opacity?: number;
   strokeWidth: number;
+  strokeStyle?: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
   scale: number;
   isSelected: boolean;
   onClick?: (e: MouseEvent<SVGElement>) => void;
@@ -20,6 +22,8 @@ export function Polygon({
   strokeColor = '#000000',
   opacity = 1,
   strokeWidth,
+  strokeStyle = PdfAnnotationBorderStyle.SOLID,
+  strokeDashArray,
   scale,
   isSelected,
   onClick,
@@ -65,6 +69,9 @@ export function Polygon({
           pointerEvents: color === 'transparent' ? 'visibleStroke' : 'visible',
           strokeLinecap: 'butt',
           strokeLinejoin: 'miter',
+          ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {
+            strokeDasharray: strokeDashArray?.join(','),
+          }),
         }}
       />
     </svg>

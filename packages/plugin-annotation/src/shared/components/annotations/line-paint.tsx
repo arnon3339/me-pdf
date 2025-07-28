@@ -2,7 +2,12 @@ import { useEffect, useState, useMemo } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { ActiveTool } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationSubtype, PdfLineAnnoObject, LineEndings } from '@embedpdf/models';
+import {
+  PdfAnnotationSubtype,
+  PdfLineAnnoObject,
+  LineEndings,
+  PdfAnnotationBorderStyle,
+} from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
 import { lineRectWithEndings } from '../../patch-utils';
 import { Line } from './line';
@@ -38,6 +43,8 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
   const toolOpacity = activeTool.defaults.opacity ?? 1;
   const toolStrokeWidth = activeTool.defaults.strokeWidth ?? 2;
   const toolStrokeColor = activeTool.defaults.strokeColor ?? '#000000';
+  const toolStrokeStyle = activeTool.defaults.strokeStyle ?? PdfAnnotationBorderStyle.SOLID;
+  const toolStrokeDashArray = activeTool.defaults.strokeDashArray;
   const toolLineEndings = activeTool.defaults.lineEndings;
   const intent = activeTool.defaults.intent;
 
@@ -76,6 +83,8 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
       opacity: toolOpacity,
       strokeWidth: toolStrokeWidth,
       strokeColor: toolStrokeColor,
+      strokeStyle: toolStrokeStyle,
+      strokeDashArray: toolStrokeDashArray,
       lineEndings: toolLineEndings,
       intent,
       pageIndex,

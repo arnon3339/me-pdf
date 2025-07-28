@@ -4192,7 +4192,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       PdfAnnotationColorType.InteriorColor,
       undefined,
     );
-    const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
+    let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
+
+    let strokeDashArray: number[] | undefined;
+    if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
+      const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
+      if (ok) {
+        strokeDashArray = pattern;
+      }
+    }
 
     // ▼––– Remove redundant closing vertex for polygons ––––––––––––––––––––––
     if (vertices.length > 1) {
@@ -4212,6 +4220,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       color: interiorColor?.color ?? 'transparent',
       opacity: interiorColor?.opacity ?? strokeColor.opacity,
       strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
+      strokeStyle,
+      strokeDashArray,
       rect,
       vertices,
       author,
@@ -4248,7 +4258,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       PdfAnnotationColorType.InteriorColor,
       undefined,
     );
-    const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
+    let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
+
+    let strokeDashArray: number[] | undefined;
+    if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
+      const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
+      if (ok) {
+        strokeDashArray = pattern;
+      }
+    }
     const lineEndings = this.getLineEndings(annotationPtr);
 
     return {
@@ -4260,6 +4278,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       color: interiorColor?.color ?? 'transparent',
       opacity: interiorColor?.opacity ?? strokeColor.opacity,
       strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
+      strokeStyle,
+      strokeDashArray,
       lineEndings,
       rect,
       vertices,
@@ -4298,7 +4318,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       PdfAnnotationColorType.InteriorColor,
       undefined,
     );
-    const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
+    let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
+
+    let strokeDashArray: number[] | undefined;
+    if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
+      const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
+      if (ok) {
+        strokeDashArray = pattern;
+      }
+    }
 
     return {
       pageIndex: page.index,
@@ -4307,6 +4335,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       rect,
       contents,
       strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
+      strokeStyle,
+      strokeDashArray,
       strokeColor: strokeColor.color,
       color: interiorColor?.color ?? 'transparent',
       opacity: interiorColor?.opacity ?? strokeColor.opacity,
