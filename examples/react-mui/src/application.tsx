@@ -1,6 +1,7 @@
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
+import { ConsoleLogger } from '@embedpdf/models';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
@@ -35,6 +36,7 @@ import { SelectionLayer } from '@embedpdf/plugin-selection/react';
 
 import { CircularProgress, Box, Alert } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import { useMemo } from 'react';
 
 import { PageControls } from './components/page-controls';
 import { Search } from './components/search';
@@ -99,8 +101,15 @@ const drawerComponents: DrawerComponent[] = [
   },
 ];
 
+const consoleLogger = new ConsoleLogger();
+
 function App() {
-  const { engine, isLoading, error } = usePdfiumEngine();
+  const isDev = useMemo(
+    () => new URLSearchParams(window.location.search).get('dev') === 'true',
+    [],
+  );
+
+  const { engine, isLoading, error } = usePdfiumEngine(isDev ? { logger: consoleLogger } : {});
 
   if (error) {
     return (
