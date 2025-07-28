@@ -10,7 +10,7 @@ interface PolylineProps {
   opacity?: number;
   strokeWidth: number;
   scale: number;
-  cursor?: string;
+  isSelected: boolean;
   onClick?: (e: MouseEvent<SVGElement>) => void;
   /** Optional start & end endings */
   lineEndings?: LineEndings;
@@ -24,7 +24,7 @@ export function Polyline({
   opacity = 1,
   strokeWidth,
   scale,
-  cursor,
+  isSelected,
   onClick,
   lineEndings,
 }: PolylineProps): JSX.Element {
@@ -96,7 +96,7 @@ export function Polyline({
           fill: 'none',
           stroke: strokeColor ?? color,
           strokeWidth,
-          cursor,
+          cursor: isSelected ? 'move' : 'pointer',
           pointerEvents: 'visibleStroke',
           strokeLinecap: 'butt',
           strokeLinejoin: 'miter',
@@ -110,7 +110,7 @@ export function Polyline({
           fill={endings.start.filled ? color : 'none'}
           onMouseDown={onClick}
           style={{
-            cursor,
+            cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
             pointerEvents: endings.start.filled ? 'visible' : 'visibleStroke',
             strokeLinecap: 'butt',
@@ -125,7 +125,7 @@ export function Polyline({
           fill={endings.end.filled ? color : 'none'}
           onMouseDown={onClick}
           style={{
-            cursor,
+            cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
             pointerEvents: endings.end.filled ? 'visible' : 'visibleStroke',
             strokeLinecap: 'butt',

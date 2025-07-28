@@ -17,7 +17,7 @@ import {
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/@framework';
-import { useMemo, useState, useEffect, useCallback, MouseEvent } from '@framework';
+import { useMemo, useState, useEffect, useCallback, MouseEvent, Fragment } from '@framework';
 
 import { useAnnotationCapability } from '../hooks';
 import { AnnotationContainer } from './annotation-container';
@@ -29,10 +29,12 @@ import { Ink } from './annotations/ink';
 import { Square } from './annotations/square';
 import { SelectionMenu } from '../types';
 import { Circle } from './annotations/circle';
-import { resizeInkAnnotation } from '../resize-ink';
+import { patchInk } from '../patch-ink';
 import { Line } from './annotations/line';
 import { Polyline } from './annotations/polyline';
 import { Polygon } from './annotations/polygon';
+import { VertexEditor } from './vertex-editor';
+import { patchLine, patchPolygon, patchPolyline } from '../vertex-patchers';
 
 interface AnnotationsProps {
   pageIndex: number;
@@ -101,7 +103,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               isDraggable={true}
               isResizable={true}
               selectionMenu={selectionMenu}
-              computeResizePatch={resizeInkAnnotation}
+              computePatch={patchInk}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
@@ -308,24 +310,31 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               isDraggable={true}
               isResizable={false}
               selectionMenu={selectionMenu}
+              computePatch={patchLine}
+              computeVertices={(annotation) => [
+                annotation.linePoints.start,
+                annotation.linePoints.end,
+              ]}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
               {...annotationsProps}
             >
               {(obj) => (
-                <Line
-                  cursor={isSelected ? 'move' : 'pointer'}
-                  rect={obj.rect}
-                  color={obj.color}
-                  opacity={obj.opacity}
-                  linePoints={obj.linePoints}
-                  lineEndings={obj.lineEndings}
-                  strokeWidth={obj.strokeWidth}
-                  strokeColor={obj.strokeColor}
-                  scale={scale}
-                  onClick={(e) => handleClick(e, annotation)}
-                />
+                <Fragment>
+                  <Line
+                    isSelected={isSelected}
+                    rect={obj.rect}
+                    color={obj.color}
+                    opacity={obj.opacity}
+                    linePoints={obj.linePoints}
+                    lineEndings={obj.lineEndings}
+                    strokeWidth={obj.strokeWidth}
+                    strokeColor={obj.strokeColor}
+                    scale={scale}
+                    onClick={(e) => handleClick(e, annotation)}
+                  />
+                </Fragment>
               )}
             </AnnotationContainer>
           );
@@ -340,24 +349,28 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               isDraggable={true}
               isResizable={false}
               selectionMenu={selectionMenu}
+              computePatch={patchPolyline}
+              computeVertices={(annotation) => annotation.vertices}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
               {...annotationsProps}
             >
               {(obj) => (
-                <Polyline
-                  cursor={isSelected ? 'move' : 'pointer'}
-                  rect={obj.rect}
-                  color={obj.color}
-                  opacity={obj.opacity}
-                  vertices={obj.vertices}
-                  lineEndings={obj.lineEndings}
-                  strokeWidth={obj.strokeWidth}
-                  strokeColor={obj.strokeColor}
-                  scale={scale}
-                  onClick={(e) => handleClick(e, annotation)}
-                />
+                <Fragment>
+                  <Polyline
+                    isSelected={isSelected}
+                    rect={obj.rect}
+                    color={obj.color}
+                    opacity={obj.opacity}
+                    vertices={obj.vertices}
+                    lineEndings={obj.lineEndings}
+                    strokeWidth={obj.strokeWidth}
+                    strokeColor={obj.strokeColor}
+                    scale={scale}
+                    onClick={(e) => handleClick(e, annotation)}
+                  />
+                </Fragment>
               )}
             </AnnotationContainer>
           );
@@ -372,23 +385,27 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               isDraggable={true}
               isResizable={false}
               selectionMenu={selectionMenu}
+              computeVertices={(annotation) => annotation.vertices}
+              computePatch={patchPolygon}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
               {...annotationsProps}
             >
               {(obj) => (
-                <Polygon
-                  cursor={isSelected ? 'move' : 'pointer'}
-                  rect={obj.rect}
-                  color={obj.color}
-                  opacity={obj.opacity}
-                  vertices={obj.vertices}
-                  strokeWidth={obj.strokeWidth}
-                  strokeColor={obj.strokeColor}
-                  scale={scale}
-                  onClick={(e) => handleClick(e, annotation)}
-                />
+                <Fragment>
+                  <Polygon
+                    isSelected={isSelected}
+                    rect={obj.rect}
+                    color={obj.color}
+                    opacity={obj.opacity}
+                    vertices={obj.vertices}
+                    strokeWidth={obj.strokeWidth}
+                    strokeColor={obj.strokeColor}
+                    scale={scale}
+                    onClick={(e) => handleClick(e, annotation)}
+                  />
+                </Fragment>
               )}
             </AnnotationContainer>
           );

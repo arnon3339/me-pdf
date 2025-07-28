@@ -9,7 +9,7 @@ interface PolygonProps {
   opacity?: number;
   strokeWidth: number;
   scale: number;
-  cursor?: string;
+  isSelected: boolean;
   onClick?: (e: MouseEvent<SVGElement>) => void;
 }
 
@@ -21,7 +21,7 @@ export function Polygon({
   opacity = 1,
   strokeWidth,
   scale,
-  cursor,
+  isSelected,
   onClick,
 }: PolygonProps): JSX.Element {
   // Translate vertices into local coords
@@ -54,7 +54,7 @@ export function Polygon({
           fill: color,
           stroke: strokeColor ?? color,
           strokeWidth,
-          cursor,
+          cursor: isSelected ? 'move' : 'pointer',
           pointerEvents: color === 'transparent' ? 'visibleStroke' : 'visible',
           strokeLinecap: 'butt',
           strokeLinejoin: 'miter',

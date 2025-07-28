@@ -1,6 +1,7 @@
 import { useMemo, MouseEvent } from '@framework';
 import { Rect, LinePoints, LineEndings } from '@embedpdf/models';
 import { createEnding } from './line-endings';
+import { VertexEditor } from '../vertex-editor';
 
 /* ---------------------------------------------------------------- *\
 |* Types                                                            *|
@@ -25,8 +26,8 @@ interface LineProps {
   scale: number;
   /** Click handler (used for selection) */
   onClick?: (e: MouseEvent<SVGElement>) => void;
-  /** Cursor shown over the annotation */
-  cursor?: string;
+  /** Whether the annotation is selected */
+  isSelected: boolean;
 }
 
 /**
@@ -42,7 +43,7 @@ export function Line({
   lineEndings,
   scale,
   onClick,
-  cursor,
+  isSelected,
 }: LineProps): JSX.Element {
   /* -------------------------------------------------------------- */
   /*  Localise the line within its own bounding box                 */
@@ -95,7 +96,7 @@ export function Line({
         opacity={opacity}
         onMouseDown={onClick}
         style={{
-          cursor,
+          cursor: isSelected ? 'move' : 'pointer',
           pointerEvents: 'visibleStroke',
           stroke: strokeColor,
           strokeWidth,
@@ -111,7 +112,7 @@ export function Line({
           onMouseDown={onClick}
           stroke={strokeColor}
           style={{
-            cursor,
+            cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
             strokeLinecap: 'butt',
             pointerEvents: endings.start.filled ? 'visible' : 'visibleStroke',
@@ -126,7 +127,7 @@ export function Line({
           stroke={strokeColor}
           onMouseDown={onClick}
           style={{
-            cursor,
+            cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
             strokeLinecap: 'butt',
             pointerEvents: endings.end.filled ? 'visible' : 'visibleStroke',

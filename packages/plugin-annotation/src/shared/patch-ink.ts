@@ -1,10 +1,5 @@
-import {
-  PdfAnnotationObject,
-  PdfAnnotationSubtype,
-  PdfInkAnnoObject,
-  Rect,
-} from '@embedpdf/models';
-import { ResizeDirection } from './types';
+import { PdfAnnotationSubtype, PdfInkAnnoObject } from '@embedpdf/models';
+import { ComputePatch } from './patchers';
 
 /**
  * Computes a patch for resizing an ink annotation.
@@ -19,28 +14,23 @@ import { ResizeDirection } from './types';
  * @param uniform If true, constrains to uniform scaling (uses min scale factor).
  * @returns Partial patch { rect, inkList, strokeWidth } to apply.
  */
-export function resizeInkAnnotation(
-  original: PdfAnnotationObject, // Assumes type=INK
-  newRect: Rect,
-  direction: ResizeDirection,
-  uniform: boolean = false,
-): Partial<PdfInkAnnoObject> {
+export const patchInk: ComputePatch<PdfInkAnnoObject> = (original, ctx) => {
   if (original.type !== PdfAnnotationSubtype.INK) {
     throw new Error('resizeInkAnnotation: original is not an ink annotation');
   }
 
   const oldRect = original.rect;
-  let scaleX = newRect.size.width / oldRect.size.width;
-  let scaleY = newRect.size.height / oldRect.size.height;
+  let scaleX = ctx.rect.size.width / oldRect.size.width;
+  let scaleY = ctx.rect.size.height / oldRect.size.height;
 
   // Enforce minimum size to avoid collapse
   const minSize = 10; // Arbitrary PDF units; adjust as needed
-  if (newRect.size.width < minSize || newRect.size.height < minSize) {
+  if (ctx.rect.size.width < minSize || ctx.rect.size.height < minSize) {
     // Return empty patch or throw; for now, clamp
     scaleX = Math.max(scaleX, minSize / oldRect.size.width);
     scaleY = Math.max(scaleY, minSize / oldRect.size.height);
-    newRect = {
-      origin: newRect.origin,
+    ctx.rect = {
+      origin: ctx.rect.origin,
       size: {
         width: oldRect.size.width * scaleX,
         height: oldRect.size.height * scaleY,
@@ -49,12 +39,12 @@ export function resizeInkAnnotation(
   }
 
   // Optional: Uniform scaling (preserve aspect ratio)
-  if (uniform) {
+  if (ctx.uniform) {
     const minScale = Math.min(scaleX, scaleY);
     scaleX = minScale;
     scaleY = minScale;
     // Adjust newRect size accordingly (keep origin the same)
-    newRect.size = {
+    ctx.rect.size = {
       width: oldRect.size.width * minScale,
       height: oldRect.size.height * minScale,
     };
@@ -63,8 +53,8 @@ export function resizeInkAnnotation(
   // Scale points: Normalize relative to old origin, scale, then add new origin
   const newInkList = original.inkList.map((stroke) => ({
     points: stroke.points.map((p) => ({
-      x: newRect.origin.x + (p.x - oldRect.origin.x) * scaleX,
-      y: newRect.origin.y + (p.y - oldRect.origin.y) * scaleY,
+      x: ctx.rect.origin.x + (p.x - oldRect.origin.x) * scaleX,
+      y: ctx.rect.origin.y + (p.y - oldRect.origin.y) * scaleY,
     })),
   }));
 
@@ -76,8 +66,8 @@ export function resizeInkAnnotation(
   // Optional: Adjust based on direction (e.g., if resizing from top-left, points might need flip/recalc, but usually not needed as scaling handles it)
 
   return {
-    rect: newRect,
+    rect: ctx.rect,
     inkList: newInkList,
     strokeWidth: newStrokeWidth,
   };
-}
+};

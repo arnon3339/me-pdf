@@ -9,10 +9,12 @@ import {
   Fragment,
 } from '@framework';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationObject, Rect, restoreOffset } from '@embedpdf/models';
+import { PdfAnnotationObject, Position, Rect, restoreOffset } from '@embedpdf/models';
 import { useAnnotationCapability } from '../hooks';
 import { ResizeDirection, SelectionMenuProps } from '../../shared/types';
 import { CounterRotate } from './counter-rotate-container';
+import { VertexEditor } from './vertex-editor';
+import { ComputePatch, PatchContext } from '../patchers';
 
 type AnnotationContainerProps<T extends PdfAnnotationObject> = Omit<
   HTMLAttributes<HTMLDivElement>,
@@ -31,7 +33,8 @@ type AnnotationContainerProps<T extends PdfAnnotationObject> = Omit<
   isResizable?: boolean;
   outlineOffset?: number;
   selectionMenu?: (props: SelectionMenuProps) => JSX.Element;
-  computeResizePatch?: (original: T, newRect: Rect, direction: ResizeDirection) => Partial<T>;
+  computeVertices?: (annotation: T) => Position[];
+  computePatch?: ComputePatch<T>;
 };
 
 type Point = { x: number; y: number };
@@ -49,7 +52,8 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   isSelected = false,
   isDraggable = true,
   isResizable = true,
-  computeResizePatch,
+  computeVertices,
+  computePatch,
   selectionMenu,
   ...props
 }: AnnotationContainerProps<T>): JSX.Element {
@@ -60,6 +64,9 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   const [startPos, setStartPos] = useState<Point | null>(null);
   const [startRect, setStartRect] = useState<Rect | null>(null);
   const [currentRect, setCurrentRect] = useState<Rect>(trackedAnnotation.object.rect);
+  const [currentVertices, setCurrentVertices] = useState<Position[]>(
+    computeVertices?.(trackedAnnotation.object) ?? [],
+  );
   const [previewObject, setPreviewObject] = useState<Partial<T> | null>(null);
 
   // Helper function to clamp values within bounds
@@ -71,6 +78,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
 
   useEffect(() => {
     setCurrentRect(trackedAnnotation.object.rect);
+    setCurrentVertices(computeVertices?.(trackedAnnotation.object) ?? []);
     setPreviewObject(null);
   }, [trackedAnnotation]);
 
@@ -144,14 +152,15 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
       size: { width: newWidth, height: newHeight },
     };
 
-    let previewPatch: Partial<T> = {};
-    previewPatch.rect = tentativeRect;
+    let previewPatch: Partial<T> = { rect: tentativeRect } as Partial<T>;
 
-    if (computeResizePatch) {
+    if (computePatch) {
       const dir = dragState === 'resizing' ? resizeDirection : 'bottom-right';
-      if (dir) {
-        previewPatch = computeResizePatch(trackedAnnotation.object, tentativeRect, dir);
-      }
+      previewPatch = computePatch(trackedAnnotation.object, {
+        rect: tentativeRect,
+        direction: dir || undefined,
+      });
+      setCurrentVertices(computeVertices?.({ ...trackedAnnotation.object, ...previewPatch }) ?? []);
     }
 
     setCurrentRect(previewPatch.rect || tentativeRect);
@@ -169,11 +178,12 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
 
     // Commit the changes
     if (annotationProvides && trackedAnnotation) {
-      let patch: Partial<T> = {};
-      patch.rect = currentRect;
-      if (computeResizePatch && usedDirection) {
-        patch = computeResizePatch(trackedAnnotation.object, currentRect, usedDirection);
-      }
+      const patch: Partial<T> = computePatch
+        ? computePatch(trackedAnnotation.object, {
+            rect: currentRect,
+            direction: usedDirection,
+          })
+        : ({ rect: currentRect } as Partial<T>);
       annotationProvides.updateAnnotation(pageIndex, trackedAnnotation.localId, patch);
     }
 
@@ -208,6 +218,34 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
         {...props}
       >
         {typeof children === 'function' ? children(currentObject) : children}
+        {isSelected && currentVertices.length > 0 && (
+          <VertexEditor
+            rect={currentRect}
+            rotation={rotation}
+            scale={scale}
+            vertices={currentVertices}
+            onEdit={(v) => {
+              setCurrentVertices(v);
+              if (computePatch) {
+                const patch = computePatch(trackedAnnotation.object, {
+                  rect: currentRect,
+                  vertices: v,
+                });
+                setPreviewObject(patch);
+                setCurrentRect(patch.rect || currentRect);
+              }
+            }}
+            onCommit={(v) => {
+              if (annotationProvides && computePatch) {
+                const patch = computePatch(trackedAnnotation.object, {
+                  rect: currentRect,
+                  vertices: v,
+                });
+                annotationProvides.updateAnnotation(pageIndex, trackedAnnotation.localId, patch);
+              }
+            }}
+          />
+        )}
         {isSelected && isResizable && (
           <>
             <div
