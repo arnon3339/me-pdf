@@ -1,4 +1,4 @@
-import { JSX, Fragment, PointerEvent, useState, useRef, useEffect } from '@framework';
+import { JSX, Fragment, PointerEvent, useState, useRef } from '@framework';
 import { Position, Rect, restoreOffset } from '@embedpdf/models';
 
 export interface VertexEditorProps {

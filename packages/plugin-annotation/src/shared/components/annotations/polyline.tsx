@@ -1,6 +1,6 @@
 import { MouseEvent, useMemo } from '@framework';
 import { Rect, Position, LineEndings } from '@embedpdf/models';
-import { createEnding } from './line-endings';
+import { createEnding } from '../../line-endings';
 
 interface PolylineProps {
   rect: Rect;
@@ -83,6 +83,7 @@ export function Polyline({
         height,
         pointerEvents: 'none',
         zIndex: 2,
+        overflow: 'visible',
       }}
       width={width}
       height={height}

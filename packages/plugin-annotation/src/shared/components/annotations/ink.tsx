@@ -63,6 +63,7 @@ export function Ink({
         height,
         pointerEvents: 'none',
         zIndex: 2,
+        overflow: 'visible',
       }}
       width={width}
       height={height}

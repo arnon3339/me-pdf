@@ -41,7 +41,14 @@ export function Polygon({
 
   return (
     <svg
-      style={{ position: 'absolute', width, height, pointerEvents: 'none', zIndex: 2 }}
+      style={{
+        position: 'absolute',
+        width,
+        height,
+        pointerEvents: 'none',
+        zIndex: 2,
+        overflow: 'visible',
+      }}
       width={width}
       height={height}
       viewBox={`0 0 ${rect.size.width} ${rect.size.height}`}

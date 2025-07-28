@@ -4194,6 +4194,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     );
     const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
+    // ▼––– Remove redundant closing vertex for polygons ––––––––––––––––––––––
+    if (vertices.length > 1) {
+      const first = vertices[0];
+      const last = vertices[vertices.length - 1];
+      if (first.x === last.x && first.y === last.y) {
+        vertices.pop();
+      }
+    }
+
     return {
       pageIndex: page.index,
       id: index,
@@ -5052,10 +5061,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         x: pointX,
         y: pointY,
       });
-      vertices.push({
-        x,
-        y,
-      });
+      const last = vertices[vertices.length - 1];
+      if (!last || last.x !== x || last.y !== y) {
+        vertices.push({ x, y });
+      }
     }
     this.free(pointsPtr);
 

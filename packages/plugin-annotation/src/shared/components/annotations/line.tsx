@@ -1,7 +1,6 @@
 import { useMemo, MouseEvent } from '@framework';
 import { Rect, LinePoints, LineEndings } from '@embedpdf/models';
-import { createEnding } from './line-endings';
-import { VertexEditor } from '../vertex-editor';
+import { createEnding } from '../../line-endings';
 
 /* ---------------------------------------------------------------- *\
 |* Types                                                            *|
@@ -82,6 +81,7 @@ export function Line({
         height,
         pointerEvents: 'none',
         zIndex: 2,
+        overflow: 'visible',
       }}
       width={width}
       height={height}

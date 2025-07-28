@@ -9,7 +9,11 @@ import {
   LineEndings,
   PdfAnnotationLineEnding,
 } from '@embedpdf/models';
-import { rectFromPoints, expandRect, endingPadding } from './patch-utils';
+import {
+  rectFromPoints,
+  expandRect,
+  lineRectWithEndings, // ← new
+} from './patch-utils';
 
 export interface PatchContext {
   rect: Rect;
@@ -21,8 +25,7 @@ export type PatchFn<T extends PdfAnnotationObject> = (original: T, ctx: PatchCon
 export const patchLine: PatchFn<PdfLineAnnoObject> = (orig, ctx) => {
   /* ---------- vertex edit ------------------------------------------------ */
   if (ctx.vertices && ctx.vertices.length >= 2) {
-    const pad = endingPadding(orig.lineEndings, orig.strokeWidth);
-    const rect = expandRect(rectFromPoints(ctx.vertices), pad);
+    const rect = lineRectWithEndings(ctx.vertices, orig.strokeWidth, orig.lineEndings);
     return {
       rect,
       linePoints: { start: ctx.vertices[0], end: ctx.vertices[1] },
@@ -44,9 +47,8 @@ export const patchLine: PatchFn<PdfLineAnnoObject> = (orig, ctx) => {
 export const patchPolyline: PatchFn<PdfPolylineAnnoObject> = (orig, ctx) => {
   /* vertex update */
   if (ctx.vertices && ctx.vertices.length) {
-    const pad = endingPadding(orig.lineEndings, orig.strokeWidth);
     return {
-      rect: expandRect(rectFromPoints(ctx.vertices), pad),
+      rect: lineRectWithEndings(ctx.vertices, orig.strokeWidth, orig.lineEndings),
       vertices: ctx.vertices,
     };
   }
