@@ -1,18 +1,18 @@
 import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
-import { PdfAnnotationBorderStyle, PdfPolygonAnnoObject } from '@embedpdf/models';
+import { PdfAnnotationBorderStyle, PdfLineAnnoObject } from '@embedpdf/models';
 
 import { useDebounce } from '@/hooks/use-debounce';
 import { SidebarPropsBase } from './common';
 import { ColorSwatch, Slider, StrokeStyleSelect } from './ui';
 
-export const PolygonSidebar = ({
+export const LineSidebar = ({
   selected,
   subtype,
   activeVariant,
   colorPresets,
-}: SidebarPropsBase<PdfPolygonAnnoObject>) => {
+}: SidebarPropsBase<PdfLineAnnoObject>) => {
   const { provides: annotation } = useAnnotationCapability();
   if (!annotation) return null;
 
@@ -74,7 +74,7 @@ export const PolygonSidebar = ({
 
   return (
     <div class="p-4">
-      <h2 class="text-md mb-4 font-medium">Polygon styles</h2>
+      <h2 class="text-md mb-4 font-medium">Line styles</h2>
 
       {/* stroke color */}
       <section class="mb-6">

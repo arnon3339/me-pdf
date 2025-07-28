@@ -165,6 +165,8 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
         strokeColor={toolStrokeColor}
         opacity={toolOpacity}
         lineEndings={toolLineEndings}
+        strokeStyle={toolStrokeStyle}
+        strokeDashArray={toolStrokeDashArray}
       />
     </div>
   );

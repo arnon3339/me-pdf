@@ -1,5 +1,5 @@
 import { useMemo, MouseEvent } from '@framework';
-import { Rect, LinePoints, LineEndings } from '@embedpdf/models';
+import { Rect, LinePoints, LineEndings, PdfAnnotationBorderStyle } from '@embedpdf/models';
 import { createEnding } from '../../line-endings';
 
 /* ---------------------------------------------------------------- *\
@@ -15,6 +15,10 @@ interface LineProps {
   strokeWidth: number;
   /** Stroke colour (falls back to PDFium default black) */
   strokeColor?: string;
+  /** Stroke style */
+  strokeStyle?: PdfAnnotationBorderStyle;
+  /** Stroke dash array */
+  strokeDashArray?: number[];
   /** Bounding box of the annotation */
   rect: Rect;
   /** Line start / end points (page units) */
@@ -37,6 +41,8 @@ export function Line({
   opacity = 1,
   strokeWidth,
   strokeColor = '#000000',
+  strokeStyle = PdfAnnotationBorderStyle.SOLID,
+  strokeDashArray,
   rect,
   linePoints,
   lineEndings,
@@ -101,6 +107,9 @@ export function Line({
           stroke: strokeColor,
           strokeWidth,
           strokeLinecap: 'butt',
+          ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {
+            strokeDasharray: strokeDashArray?.join(','),
+          }),
         }}
       />
 
@@ -116,6 +125,9 @@ export function Line({
             strokeWidth,
             strokeLinecap: 'butt',
             pointerEvents: endings.start.filled ? 'visible' : 'visibleStroke',
+            ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {
+              strokeDasharray: strokeDashArray?.join(','),
+            }),
           }}
           fill={endings.start.filled ? color : 'none'}
         />
@@ -131,6 +143,9 @@ export function Line({
             strokeWidth,
             strokeLinecap: 'butt',
             pointerEvents: endings.end.filled ? 'visible' : 'visibleStroke',
+            ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {
+              strokeDasharray: strokeDashArray?.join(','),
+            }),
           }}
           fill={endings.end.filled ? color : 'none'}
         />

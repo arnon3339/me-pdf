@@ -4,6 +4,7 @@ import { InkSidebar } from './ink-sidebar';
 import { TextMarkupSidebar } from './text-markup-sidebar';
 import { ShapeSidebar } from './shape-sidebar';
 import { PolygonSidebar } from './polygon-sidebar';
+import { LineSidebar } from './line-sidebar';
 
 /* 1.  Component type that matches the subtype it is registered for */
 type SidebarComponent<S extends PdfAnnotationSubtype> = (
@@ -20,6 +21,7 @@ export const SIDEbars: SidebarRegistry = {
   /* Ink */
   [PdfAnnotationSubtype.INK]: InkSidebar,
   [PdfAnnotationSubtype.POLYGON]: PolygonSidebar,
+  [PdfAnnotationSubtype.LINE]: LineSidebar,
 
   /* text-markup */
   [PdfAnnotationSubtype.HIGHLIGHT]: TextMarkupSidebar,
