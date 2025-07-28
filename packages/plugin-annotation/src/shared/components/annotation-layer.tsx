@@ -5,6 +5,7 @@ import { InkPaint } from './annotations/ink-paint';
 import { SelectionMenu } from '../types';
 import { CirclePaint } from './annotations/circle-paint';
 import { SquarePaint } from './annotations/square-paint';
+import { PolygonPaint } from './annotations/polygon-paint';
 
 type AnnotationLayerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
@@ -50,6 +51,12 @@ export function AnnotationLayer({
         pageHeight={pageHeight}
       />
       <SquarePaint
+        pageIndex={pageIndex}
+        scale={scale}
+        pageWidth={pageWidth}
+        pageHeight={pageHeight}
+      />
+      <PolygonPaint
         pageIndex={pageIndex}
         scale={scale}
         pageWidth={pageWidth}

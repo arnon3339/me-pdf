@@ -40,6 +40,8 @@ export interface PointerEventHandlers<T = EmbedPdfPointerEvent> {
   onPointerEnter?(pos: Position, evt: T, modeId: string): void;
   onPointerLeave?(pos: Position, evt: T, modeId: string): void;
   onPointerCancel?(pos: Position, evt: T, modeId: string): void;
+  onClick?(pos: Position, evt: T, modeId: string): void;
+  onDoubleClick?(pos: Position, evt: T, modeId: string): void;
 }
 
 export interface PointerEventHandlersWithLifecycle<T = EmbedPdfPointerEvent>

@@ -13,6 +13,7 @@ import {
   PdfDocumentObject,
   PdfBlendMode,
   PdfAnnotationBorderStyle,
+  LineEndings,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -100,10 +101,28 @@ export interface SquareDefaults extends BaseAnnotationDefaults {
 
 export interface LineDefaults extends BaseAnnotationDefaults {
   subtype: PdfAnnotationSubtype.LINE;
+  strokeWidth: number;
+  strokeColor: string;
+  strokeStyle: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
+  lineEndings?: LineEndings;
+}
+
+export interface PolylineDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.POLYLINE;
+  strokeWidth: number;
+  strokeColor: string;
+  strokeStyle: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
+  lineEndings?: LineEndings;
 }
 
 export interface PolygonDefaults extends BaseAnnotationDefaults {
   subtype: PdfAnnotationSubtype.POLYGON;
+  strokeWidth: number;
+  strokeColor: string;
+  strokeStyle: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
 }
 
 export type AnnotationDefaults =
@@ -113,6 +132,7 @@ export type AnnotationDefaults =
   | CircleDefaults
   | SquareDefaults
   | LineDefaults
+  | PolylineDefaults
   | PolygonDefaults;
 
 export type ToolDefaultsByMode = {
