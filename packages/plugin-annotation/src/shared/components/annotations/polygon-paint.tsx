@@ -104,9 +104,11 @@ export const PolygonPaint = ({
         setCurrent({ x, y });
       },
       onDoubleClick: () => {
-        if (vertices.length >= 2 && annotationProvides) {
-          const pts = current ? [...vertices, current] : vertices;
-          commitPolygon(pts);
+        if (vertices.length >= 3 && annotationProvides) {
+          commitPolygon(vertices);
+          setVertices([]);
+          setCurrent(null);
+        } else {
           setVertices([]);
           setCurrent(null);
         }

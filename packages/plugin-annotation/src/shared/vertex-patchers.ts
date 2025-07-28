@@ -6,14 +6,8 @@ import {
   PdfPolygonAnnoObject,
   Rect,
   Position,
-  LineEndings,
-  PdfAnnotationLineEnding,
 } from '@embedpdf/models';
-import {
-  rectFromPoints,
-  expandRect,
-  lineRectWithEndings, // ← new
-} from './patch-utils';
+import { rectFromPoints, expandRect, lineRectWithEndings } from './patch-utils';
 
 export interface PatchContext {
   rect: Rect;

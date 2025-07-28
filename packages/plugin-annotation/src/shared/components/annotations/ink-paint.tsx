@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState, JSX } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { ActiveTool } from '@embedpdf/plugin-annotation';
-import { PdfInkListObject, Rect, PdfAnnotationSubtype, PdfInkAnnoObject } from '@embedpdf/models';
+import {
+  PdfInkListObject,
+  Rect,
+  PdfAnnotationSubtype,
+  PdfInkAnnoObject,
+  PdfBlendMode,
+} from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
 
 interface InkPaintProps {
@@ -47,6 +53,8 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
   const toolColor = activeTool.defaults?.color ?? '#000000';
   const toolOpacity = activeTool.defaults?.opacity ?? 1;
   const toolStrokeWidth = activeTool.defaults?.strokeWidth ?? 2;
+  const toolBlendMode = activeTool.defaults?.blendMode ?? PdfBlendMode.Normal;
+  const intent = activeTool.defaults?.intent;
 
   /* ------------------------------------------------------------------ */
   /* integration with interaction-manager                               */
@@ -139,6 +147,8 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
 
             const anno: PdfInkAnnoObject = {
               type: PdfAnnotationSubtype.INK,
+              intent,
+              blendMode: toolBlendMode,
               rect,
               inkList: currentStrokes,
               color: toolColor,

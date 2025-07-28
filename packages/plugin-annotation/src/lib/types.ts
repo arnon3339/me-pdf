@@ -101,6 +101,7 @@ export interface SquareDefaults extends BaseAnnotationDefaults {
 
 export interface LineDefaults extends BaseAnnotationDefaults {
   subtype: PdfAnnotationSubtype.LINE;
+  intent?: string;
   strokeWidth: number;
   strokeColor: string;
   strokeStyle: PdfAnnotationBorderStyle;
