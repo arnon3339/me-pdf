@@ -185,6 +185,11 @@ export interface AnnotationCapability {
   getToolDefaultsBySubtype: <Sub extends AnnotationDefaults['subtype']>(
     subtype: Sub,
   ) => Extract<AnnotationDefaults, { subtype: Sub }>;
+  /** Return the subtype and intent for a given variant key */
+  getSubtypeAndIntentByVariant: (variantKey: string) => {
+    subtype: PdfAnnotationSubtype;
+    intent?: string;
+  };
   /** Partially patch a single tool’s defaults */
   setToolDefaults: (variantKey: string, patch: Partial<AnnotationDefaults>) => void;
   /** current palette – UI just reads this */

@@ -6,4 +6,5 @@ export interface SidebarPropsBase<T extends PdfAnnotationObject = PdfAnnotationO
   subtype: T['type']; // variant key of current tool
   activeVariant: string | null;
   colorPresets: string[];
+  intent?: string;
 }

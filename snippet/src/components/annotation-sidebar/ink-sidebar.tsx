@@ -1,7 +1,7 @@
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
-import { PdfAnnotationSubtype, PdfInkAnnoObject } from '@embedpdf/models';
+import { PdfInkAnnoObject } from '@embedpdf/models';
 import { SidebarPropsBase } from './common';
 import { Slider, ColorSwatch } from './ui';
 import { useDebounce } from '../../hooks/use-debounce';
@@ -9,6 +9,7 @@ import { useDebounce } from '../../hooks/use-debounce';
 export const InkSidebar = ({
   selected,
   subtype,
+  intent,
   activeVariant,
   colorPresets,
 }: SidebarPropsBase<PdfInkAnnoObject>) => {
@@ -16,7 +17,7 @@ export const InkSidebar = ({
   if (!annotation) return null;
 
   const anno = selected?.annotation;
-  const defaults = annotation.getToolDefaultsBySubtype(subtype);
+  const defaults = annotation.getToolDefaultsBySubtypeAndIntent(subtype, intent);
 
   /* base values */
   const baseColor = anno?.color ?? defaults?.color ?? '#000000';
@@ -51,9 +52,7 @@ export const InkSidebar = ({
   }
 
   return (
-    <div class="p-4">
-      <h2 class="text-md mb-4 font-medium">Ink styles</h2>
-
+    <Fragment>
       {/* color */}
       <section class="mb-6">
         <label class="mb-3 block text-sm font-medium text-gray-900">Color</label>
@@ -77,6 +76,6 @@ export const InkSidebar = ({
         <Slider value={stroke} min={1} max={30} step={1} onChange={setStroke} />
         <span class="text-xs text-gray-500">{stroke}px</span>
       </section>
-    </div>
+    </Fragment>
   );
 };

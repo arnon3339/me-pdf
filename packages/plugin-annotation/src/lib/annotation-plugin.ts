@@ -57,7 +57,7 @@ import { SelectionPlugin, SelectionCapability } from '@embedpdf/plugin-selection
 import { HistoryPlugin, HistoryCapability, Command } from '@embedpdf/plugin-history';
 import { getSelectedAnnotation, getToolDefaultsBySubtypeAndIntent } from './selectors';
 import { makeUid, parseUid } from './utils';
-import { makeVariantKey } from './variant-key';
+import { makeVariantKey, parseVariantKey } from './variant-key';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -220,6 +220,9 @@ export class AnnotationPlugin extends BasePlugin<
         } else {
           this.interactionManager?.activate('default');
         }
+      },
+      getSubtypeAndIntentByVariant: (variantKey) => {
+        return parseVariantKey(variantKey);
       },
       getToolDefaults: (variantKey) => {
         const defaults = this.state.toolDefaults[variantKey];

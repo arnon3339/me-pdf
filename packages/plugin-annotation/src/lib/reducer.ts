@@ -120,6 +120,7 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
     [makeVariantKey(PdfAnnotationSubtype.INK, 'InkHighlight')]: {
       name: 'Ink Highlight',
       subtype: PdfAnnotationSubtype.INK,
+      intent: 'InkHighlight',
       interaction: { mode: 'inkHighlight', exclusive: true, cursor: 'crosshair' },
       color: '#E44234',
       opacity: 1,
@@ -161,6 +162,7 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
       subtype: PdfAnnotationSubtype.LINE,
       interaction: { mode: 'lineArrow', exclusive: true, cursor: 'crosshair' },
       color: 'transparent',
+      intent: 'LineArrow',
       opacity: 1,
       strokeWidth: 4,
       strokeColor: '#E44234',

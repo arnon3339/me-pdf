@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 import { SidebarPropsBase } from './common';
@@ -10,6 +10,7 @@ import { PdfAnnotationBorderStyle } from '@embedpdf/models';
 export const ShapeSidebar = ({
   selected,
   subtype,
+  intent,
   activeVariant,
   colorPresets,
 }: SidebarPropsBase<PdfCircleAnnoObject | PdfSquareAnnoObject>) => {
@@ -17,7 +18,7 @@ export const ShapeSidebar = ({
   if (!annotation) return null;
 
   const anno = selected?.annotation;
-  const defaults = annotation.getToolDefaultsBySubtype(subtype);
+  const defaults = annotation.getToolDefaultsBySubtypeAndIntent(subtype, intent);
   const editing = !!anno;
 
   const baseFill = editing ? anno.color : (defaults?.color ?? '#000000');
@@ -71,9 +72,7 @@ export const ShapeSidebar = ({
   }
 
   return (
-    <div class="p-4">
-      <h2 class="text-md mb-4 font-medium">Shape styles</h2>
-
+    <Fragment>
       {/* fill color */}
       <section class="mb-6">
         <label class="mb-3 block text-sm font-medium text-gray-900">Fill color</label>
@@ -114,6 +113,6 @@ export const ShapeSidebar = ({
         <Slider value={strokeW} min={1} max={30} step={1} onChange={setWidth} />
         <span class="text-xs text-gray-500">{strokeW}px</span>
       </section>
-    </div>
+    </Fragment>
   );
 };

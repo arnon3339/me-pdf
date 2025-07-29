@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 import {
@@ -17,6 +17,7 @@ export const TextMarkupSidebar = ({
   selected,
   subtype,
   activeVariant,
+  intent,
   colorPresets,
 }: SidebarPropsBase<
   PdfHighlightAnnoObject | PdfUnderlineAnnoObject | PdfStrikeOutAnnoObject | PdfSquigglyAnnoObject
@@ -25,7 +26,7 @@ export const TextMarkupSidebar = ({
   if (!annotation) return null;
 
   const anno = selected?.annotation;
-  const defaults = annotation.getToolDefaultsBySubtype(subtype);
+  const defaults = annotation.getToolDefaultsBySubtypeAndIntent(subtype, intent);
   const editing = !!anno;
 
   const baseColor = editing ? anno.color : (defaults?.color ?? '#FFFF00');
@@ -66,9 +67,7 @@ export const TextMarkupSidebar = ({
   }
 
   return (
-    <div class="p-4">
-      <h2 class="text-md mb-4 font-medium">Text styles</h2>
-
+    <Fragment>
       {/* color */}
       <section class="mb-6">
         <label class="mb-3 block text-sm font-medium text-gray-900">Color</label>
@@ -101,6 +100,6 @@ export const TextMarkupSidebar = ({
           ))}
         </select>
       </section>
-    </div>
+    </Fragment>
   );
 };

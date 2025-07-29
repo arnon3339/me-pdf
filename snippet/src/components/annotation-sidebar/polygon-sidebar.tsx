@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 import { PdfAnnotationBorderStyle, PdfPolygonAnnoObject } from '@embedpdf/models';
@@ -10,6 +10,7 @@ import { ColorSwatch, Slider, StrokeStyleSelect } from './ui';
 export const PolygonSidebar = ({
   selected,
   subtype,
+  intent,
   activeVariant,
   colorPresets,
 }: SidebarPropsBase<PdfPolygonAnnoObject>) => {
@@ -17,7 +18,7 @@ export const PolygonSidebar = ({
   if (!annotation) return null;
 
   const anno = selected?.annotation;
-  const defaults = annotation.getToolDefaultsBySubtype(subtype);
+  const defaults = annotation.getToolDefaultsBySubtypeAndIntent(subtype, intent);
   const editing = !!anno;
 
   const baseFill = editing ? anno.color : (defaults?.color ?? '#000000');
@@ -73,9 +74,7 @@ export const PolygonSidebar = ({
   }
 
   return (
-    <div class="p-4">
-      <h2 class="text-md mb-4 font-medium">Polygon styles</h2>
-
+    <Fragment>
       {/* stroke color */}
       <section class="mb-6">
         <label class="mb-3 block text-sm font-medium text-gray-900">Stroke color</label>
@@ -121,6 +120,6 @@ export const PolygonSidebar = ({
           <ColorSwatch color="transparent" active={fill === 'transparent'} onSelect={changeFill} />
         </div>
       </section>
-    </div>
+    </Fragment>
   );
 };
