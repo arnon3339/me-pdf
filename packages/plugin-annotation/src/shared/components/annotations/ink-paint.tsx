@@ -8,6 +8,8 @@ import {
   PdfAnnotationSubtype,
   PdfInkAnnoObject,
   PdfBlendMode,
+  rectFromPoints,
+  expandRect,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
 
@@ -21,8 +23,6 @@ interface InkPaintProps {
   /** Height of the page */
   pageHeight: number;
 }
-
-const MAX_STROKE_WIDTH = 30;
 
 /**
  * Allows the user to draw freehand ink annotations.
@@ -125,25 +125,10 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
             const allPoints = currentStrokes.flatMap((s) => s.points);
             if (!allPoints.length) return;
 
-            const minX = Math.min(...allPoints.map((p) => p.x));
-            const minY = Math.min(...allPoints.map((p) => p.y));
-            const maxX = Math.max(...allPoints.map((p) => p.x));
-            const maxY = Math.max(...allPoints.map((p) => p.y));
-
-            // Account for stroke width - expand rect by half stroke width on all sides
-            const halfStroke = MAX_STROKE_WIDTH / 2;
-            const rectMinX = minX - halfStroke;
-            const rectMinY = minY - halfStroke;
-            const rectMaxX = maxX + halfStroke;
-            const rectMaxY = maxY + halfStroke;
+            const rect = expandRect(rectFromPoints(allPoints), toolStrokeWidth / 2);
 
             // Ignore tiny drawings
-            if (rectMaxX - rectMinX < 1 || rectMaxY - rectMinY < 1) return;
-
-            const rect: Rect = {
-              origin: { x: rectMinX, y: rectMinY },
-              size: { width: rectMaxX - rectMinX, height: rectMaxY - rectMinY },
-            };
+            if (rect.size.width < 1 || rect.size.height < 1) return;
 
             const anno: PdfInkAnnoObject = {
               type: PdfAnnotationSubtype.INK,
@@ -213,27 +198,14 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
   const allPoints = currentStrokes.flatMap((s) => s.points);
   if (!allPoints.length) return null;
 
-  const minX = Math.min(...allPoints.map((p) => p.x));
-  const minY = Math.min(...allPoints.map((p) => p.y));
-  const maxX = Math.max(...allPoints.map((p) => p.x));
-  const maxY = Math.max(...allPoints.map((p) => p.y));
-
-  // Account for stroke width - expand bounds by half stroke width on all sides
-  const halfStroke = MAX_STROKE_WIDTH / 2;
-  const svgMinX = minX - halfStroke;
-  const svgMinY = minY - halfStroke;
-  const svgMaxX = maxX + halfStroke;
-  const svgMaxY = maxY + halfStroke;
-
-  const dw = svgMaxX - svgMinX;
-  const dh = svgMaxY - svgMinY;
+  const rect = expandRect(rectFromPoints(allPoints), toolStrokeWidth / 2);
 
   const paths = currentStrokes.map(({ points }) => {
     let d = '';
     points.forEach(({ x, y }, i) => {
       // Adjust coordinates relative to the expanded SVG bounds
-      const lx = x - svgMinX;
-      const ly = y - svgMinY;
+      const lx = x - rect.origin.x;
+      const ly = y - rect.origin.y;
       d += (i === 0 ? 'M' : 'L') + lx + ' ' + ly + ' ';
     });
     return d.trim();
@@ -243,16 +215,16 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
     <svg
       style={{
         position: 'absolute',
-        left: svgMinX * scale,
-        top: svgMinY * scale,
-        width: dw * scale,
-        height: dh * scale,
+        left: rect.origin.x * scale,
+        top: rect.origin.y * scale,
+        width: rect.size.width * scale,
+        height: rect.size.height * scale,
         pointerEvents: 'none',
         zIndex: 2,
       }}
-      width={dw * scale}
-      height={dh * scale}
-      viewBox={`0 0 ${dw} ${dh}`}
+      width={rect.size.width * scale}
+      height={rect.size.height * scale}
+      viewBox={`0 0 ${rect.size.width} ${rect.size.height}`}
     >
       {paths.map((d, i) => (
         <path
