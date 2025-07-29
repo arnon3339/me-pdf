@@ -1147,6 +1147,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.contents,
         );
         break;
+      case PdfAnnotationSubtype.POLYGON:
+        isSucceed = this.addPolyContent(page, pageCtx.pagePtr, annotationPtr, annotation);
+        break;
       case PdfAnnotationSubtype.CIRCLE:
       case PdfAnnotationSubtype.SQUARE:
         isSucceed = this.addShapeContent(page, pageCtx.pagePtr, annotationPtr, annotation);
@@ -1305,6 +1308,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       case PdfAnnotationSubtype.CIRCLE:
       case PdfAnnotationSubtype.SQUARE: {
         ok = this.addShapeContent(page, pageCtx.pagePtr, annotPtr, annotation);
+        break;
+      }
+
+      /* ── Polygon / Polyline ───────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.POLYGON: {
+        ok = this.addPolyContent(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -2300,6 +2309,81 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         annotationPtr,
         {
           color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.Color,
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Add polygon or polyline content to annotation
+   * @param page - page info
+   * @param pagePtr - pointer to page object
+   * @param annotationPtr - pointer to polygon or polyline annotation
+   * @param annotation - polygon or polyline annotation
+   * @returns whether polygon or polyline content is added to annotation
+   *
+   * @private
+   */
+  private addPolyContent(
+    page: PdfPageObject,
+    pagePtr: number,
+    annotationPtr: number,
+    annotation: PdfPolygonAnnoObject | PdfPolylineAnnoObject,
+  ) {
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (!this.setPdfAnnoVertices(page, annotationPtr, annotation.vertices)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
+      return false;
+    }
+    if (!this.setBorderStyle(annotationPtr, annotation.strokeStyle, annotation.strokeWidth)) {
+      return false;
+    }
+    if (!this.setBorderDashPattern(annotationPtr, annotation.strokeDashArray ?? [])) {
+      return false;
+    }
+    if (annotation.intent && !this.setAnnotIntent(annotationPtr, annotation.intent)) {
+      return false;
+    }
+    if (!annotation.color || annotation.color === 'transparent') {
+      if (
+        !this.pdfiumModule.EPDFAnnot_ClearColor(annotationPtr, PdfAnnotationColorType.InteriorColor)
+      ) {
+        return false;
+      }
+    } else if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.InteriorColor,
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.strokeColor ?? '#FFFF00',
           opacity: annotation.opacity ?? 1,
         },
         PdfAnnotationColorType.Color,
@@ -5022,6 +5106,20 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * Write the `/IT` (Intent) name into an annotation dictionary.
+   *
+   * Mirrors EPDFAnnot_SetIntent in PDFium (expects a UTF‑8 FPDF_BYTESTRING).
+   *
+   * @param annotationPtr Pointer returned by FPDFPage_GetAnnot
+   * @param intent        Name without leading slash, e.g. `"PolygonCloud"`
+   *                      A leading “/” will be stripped for convenience.
+   * @returns             true on success, false otherwise
+   */
+  private setAnnotIntent(annotationPtr: number, intent: string): boolean {
+    return this.pdfiumModule.EPDFAnnot_SetIntent(annotationPtr, intent);
+  }
+
+  /**
    * Returns the rich‑content string stored in the annotation’s `/RC` entry.
    *
    * Works like `getAnnotIntent()`: first probe for length, then copy.
@@ -5099,6 +5197,32 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.free(pointsPtr);
 
     return vertices;
+  }
+
+  /**
+   * Sync the vertices of a polygon or polyline annotation.
+   *
+   * @param page  - pdf page infor
+   * @param annotPtr - pointer to pdf annotation
+   * @param vertices - the vertices to be set
+   * @returns true on success
+   *
+   * @private
+   */
+  private setPdfAnnoVertices(page: PdfPageObject, annotPtr: number, vertices: Position[]): boolean {
+    const pdf = this.pdfiumModule.pdfium;
+    const FS_POINTF_SIZE = 8;
+
+    const buf = this.malloc(FS_POINTF_SIZE * vertices.length);
+    vertices.forEach((v, i) => {
+      const pagePt = this.convertDevicePointToPagePoint(page, v);
+      pdf.setValue(buf + i * FS_POINTF_SIZE + 0, pagePt.x, 'float');
+      pdf.setValue(buf + i * FS_POINTF_SIZE + 4, pagePt.y, 'float');
+    });
+
+    const ok = this.pdfiumModule.EPDFAnnot_SetVertices(annotPtr, buf, vertices.length);
+    this.free(buf);
+    return ok;
   }
 
   /**
