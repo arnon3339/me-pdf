@@ -1,6 +1,6 @@
 import { useMemo, MouseEvent } from '@framework';
 import { Rect, LinePoints, LineEndings, PdfAnnotationBorderStyle } from '@embedpdf/models';
-import { createEnding } from '../../line-endings';
+import { patching } from '@embedpdf/plugin-annotation';
 
 /* ---------------------------------------------------------------- *\
 |* Types                                                            *|
@@ -68,8 +68,8 @@ export function Line({
   const endings = useMemo(() => {
     const angle = Math.atan2(y2 - y1, x2 - x1);
     return {
-      start: createEnding(lineEndings?.start, strokeWidth, angle + Math.PI, x1, y1),
-      end: createEnding(lineEndings?.end, strokeWidth, angle, x2, y2),
+      start: patching.createEnding(lineEndings?.start, strokeWidth, angle + Math.PI, x1, y1),
+      end: patching.createEnding(lineEndings?.end, strokeWidth, angle, x2, y2),
     };
   }, [lineEndings, strokeWidth, x1, y1, x2, y2]);
 

@@ -1,42 +1,13 @@
-import { Rect, Position, LineEndings, PdfAnnotationLineEnding } from '@embedpdf/models';
+import {
+  Rect,
+  Position,
+  LineEndings,
+  PdfAnnotationLineEnding,
+  rotateAndTranslatePoint,
+  rectFromPoints,
+  expandRect,
+} from '@embedpdf/models';
 import { LINE_ENDING_HANDLERS } from './line-ending-handlers';
-
-/** Minimum-sized rect that encloses the given points */
-export function rectFromPoints(pts: readonly Position[]): Rect {
-  if (pts.length === 0) {
-    return { origin: { x: 0, y: 0 }, size: { width: 0, height: 0 } };
-  }
-  const xs = pts.map((p) => p.x);
-  const ys = pts.map((p) => p.y);
-  const minX = Math.min(...xs);
-  const minY = Math.min(...ys);
-  return {
-    origin: { x: minX, y: minY },
-    size: {
-      width: Math.max(...xs) - minX,
-      height: Math.max(...ys) - minY,
-    },
-  };
-}
-
-/** Grow a rect by *pad* on all four sides */
-export function expandRect(r: Rect, pad: number): Rect {
-  return {
-    origin: { x: r.origin.x - pad, y: r.origin.y - pad },
-    size: { width: r.size.width + pad * 2, height: r.size.height + pad * 2 },
-  };
-}
-
-function transformPoint(p: Position, angleRad: number, translate: Position): Position {
-  const cos = Math.cos(angleRad);
-  const sin = Math.sin(angleRad);
-  const newX = p.x * cos - p.y * sin;
-  const newY = p.x * sin + p.y * cos;
-  return {
-    x: newX + translate.x,
-    y: newY + translate.y,
-  };
-}
 
 /**
  * Computes the exact bounding box for a line or polyline, including its endings and stroke width.
@@ -68,7 +39,7 @@ export function lineRectWithEndings(
     const localPts = handler.getLocalPoints(strokeWidth);
     const rotationAngle = handler.getRotation(segmentAngle);
 
-    const transformedPts = localPts.map((p) => transformPoint(p, rotationAngle, tipPos));
+    const transformedPts = localPts.map((p) => rotateAndTranslatePoint(p, rotationAngle, tipPos));
     allPoints.push(...transformedPts);
   };
 

@@ -1,6 +1,6 @@
-import { JSX, HTMLAttributes, CSSProperties, useRef, useState, Fragment } from '@framework';
+import { JSX, HTMLAttributes, CSSProperties, useState, Fragment, useEffect } from '@framework';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationObject, Position, Rect } from '@embedpdf/models';
+import { PdfAnnotationObject, Position, Rect, rectEquals } from '@embedpdf/models';
 import { useAnnotationCapability } from '../hooks';
 import { SelectionMenuProps } from '../../shared/types';
 import { CounterRotate } from './counter-rotate-container';
@@ -30,8 +30,6 @@ type AnnotationContainerProps<T extends PdfAnnotationObject> = Omit<
   computePatch?: ComputePatch<T>;
 };
 
-type Point = { x: number; y: number };
-
 export function AnnotationContainer<T extends PdfAnnotationObject>({
   scale,
   pageIndex,
@@ -51,7 +49,6 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   ...props
 }: AnnotationContainerProps<T>): JSX.Element {
   const { provides: annotationProvides } = useAnnotationCapability();
-  const ref = useRef<HTMLDivElement>(null);
   const [currentRect, setCurrentRect] = useState<Rect>(trackedAnnotation.object.rect);
   const [currentVertices, setCurrentVertices] = useState<Position[]>(
     computeVertices?.(trackedAnnotation.object) ?? [],
@@ -77,6 +74,13 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
     commit: (patch) =>
       annotationProvides?.updateAnnotation(pageIndex, trackedAnnotation.localId, patch),
   });
+
+  useEffect(() => {
+    if (!rectEquals(trackedAnnotation.object.rect, currentRect)) {
+      setCurrentRect(trackedAnnotation.object.rect);
+      setCurrentVertices(computeVertices?.(trackedAnnotation.object) ?? []);
+    }
+  }, [trackedAnnotation]);
 
   const currentObject = previewObject
     ? { ...trackedAnnotation.object, ...previewObject }

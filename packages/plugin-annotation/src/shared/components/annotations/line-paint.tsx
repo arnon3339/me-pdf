@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
-import { ActiveTool } from '@embedpdf/plugin-annotation';
+import { ActiveTool, patching } from '@embedpdf/plugin-annotation';
 import {
   PdfAnnotationSubtype,
   PdfLineAnnoObject,
@@ -9,7 +9,6 @@ import {
   PdfAnnotationBorderStyle,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
-import { lineRectWithEndings } from '../../patch-utils';
 import { Line } from './line';
 
 interface LinePaintProps {
@@ -73,7 +72,7 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
     // ignore tiny lines
     if (Math.abs(p2.x - p1.x) < 1 && Math.abs(p2.y - p1.y) < 1) return;
 
-    const rect = lineRectWithEndings([p1, p2], toolStrokeWidth, toolLineEndings);
+    const rect = patching.lineRectWithEndings([p1, p2], toolStrokeWidth, toolLineEndings);
 
     const anno: PdfLineAnnoObject = {
       type: PdfAnnotationSubtype.LINE,
@@ -139,7 +138,7 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
   /* ------------------------------------------------------------------ */
   if (!start || !current) return null;
 
-  const rect = lineRectWithEndings([start, current], toolStrokeWidth, toolLineEndings);
+  const rect = patching.lineRectWithEndings([start, current], toolStrokeWidth, toolLineEndings);
 
   return (
     <div

@@ -1,6 +1,6 @@
 import { MouseEvent, useMemo } from '@framework';
 import { Rect, Position, LineEndings } from '@embedpdf/models';
-import { createEnding } from '../../line-endings';
+import { patching } from '@embedpdf/plugin-annotation';
 
 interface PolylineProps {
   rect: Rect;
@@ -55,14 +55,14 @@ export function Polyline({
     const startRad = toAngle(localPts[1], localPts[0]); // direction INTO first segment
     const endRad = toAngle(localPts[localPts.length - 2], localPts[localPts.length - 1]);
 
-    const start = createEnding(
+    const start = patching.createEnding(
       lineEndings?.start,
       strokeWidth,
       startRad + Math.PI, // tip points outward from first segment start
       localPts[0].x,
       localPts[0].y,
     );
-    const end = createEnding(
+    const end = patching.createEnding(
       lineEndings?.end,
       strokeWidth,
       endRad,

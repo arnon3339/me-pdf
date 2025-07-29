@@ -6,8 +6,10 @@ import {
   PdfPolygonAnnoObject,
   Rect,
   Position,
+  expandRect,
+  rectFromPoints,
 } from '@embedpdf/models';
-import { rectFromPoints, expandRect, lineRectWithEndings } from './patch-utils';
+import { patching } from '@embedpdf/plugin-annotation';
 
 export interface PatchContext {
   rect: Rect;
@@ -19,7 +21,7 @@ export type PatchFn<T extends PdfAnnotationObject> = (original: T, ctx: PatchCon
 export const patchLine: PatchFn<PdfLineAnnoObject> = (orig, ctx) => {
   /* ---------- vertex edit ------------------------------------------------ */
   if (ctx.vertices && ctx.vertices.length >= 2) {
-    const rect = lineRectWithEndings(ctx.vertices, orig.strokeWidth, orig.lineEndings);
+    const rect = patching.lineRectWithEndings(ctx.vertices, orig.strokeWidth, orig.lineEndings);
     return {
       rect,
       linePoints: { start: ctx.vertices[0], end: ctx.vertices[1] },
@@ -42,7 +44,7 @@ export const patchPolyline: PatchFn<PdfPolylineAnnoObject> = (orig, ctx) => {
   /* vertex update */
   if (ctx.vertices && ctx.vertices.length) {
     return {
-      rect: lineRectWithEndings(ctx.vertices, orig.strokeWidth, orig.lineEndings),
+      rect: patching.lineRectWithEndings(ctx.vertices, orig.strokeWidth, orig.lineEndings),
       vertices: ctx.vertices,
     };
   }

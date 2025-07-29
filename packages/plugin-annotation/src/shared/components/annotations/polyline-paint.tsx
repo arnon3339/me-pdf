@@ -8,7 +8,7 @@ import {
   PdfPolylineAnnoObject,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
-import { lineRectWithEndings } from '../../patch-utils';
+import { patching } from '@embedpdf/plugin-annotation';
 import { Polyline } from './polyline';
 
 interface PolylinePaintProps {
@@ -78,7 +78,7 @@ export const PolylinePaint = ({
   const commitPolyline = (pts: { x: number; y: number }[]) => {
     if (pts.length < 2) return; // need at least a line
 
-    const rect = lineRectWithEndings(pts, toolStrokeWidth, toolLineEndings);
+    const rect = patching.lineRectWithEndings(pts, toolStrokeWidth, toolLineEndings);
 
     const anno: PdfPolylineAnnoObject = {
       type: PdfAnnotationSubtype.POLYLINE,
@@ -141,7 +141,7 @@ export const PolylinePaint = ({
   if (!vertices.length || !current) return null;
 
   const allPts = [...vertices, current];
-  const rect = lineRectWithEndings(allPts, toolStrokeWidth, toolLineEndings);
+  const rect = patching.lineRectWithEndings(allPts, toolStrokeWidth, toolLineEndings);
 
   return (
     <div

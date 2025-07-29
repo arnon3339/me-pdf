@@ -318,6 +318,86 @@ export interface Rect {
 }
 
 /**
+ * Check if two rectangles are equal
+ * @param a - first rectangle
+ * @param b - second rectangle
+ * @returns true if the rectangles are equal, false otherwise
+ *
+ * @public
+ */
+export function rectEquals(a: Rect, b: Rect): boolean {
+  return (
+    a.origin.x === b.origin.x &&
+    a.origin.y === b.origin.y &&
+    a.size.width === b.size.width &&
+    a.size.height === b.size.height
+  );
+}
+
+/**
+ * Calculate the rect from the given points
+ * @param pts - points
+ * @returns rect
+ *
+ * @public
+ */
+export function rectFromPoints(positions: Position[]): Rect {
+  if (positions.length === 0) {
+    return { origin: { x: 0, y: 0 }, size: { width: 0, height: 0 } };
+  }
+  const xs = positions.map((p) => p.x);
+  const ys = positions.map((p) => p.y);
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  return {
+    origin: { x: minX, y: minY },
+    size: {
+      width: Math.max(...xs) - minX,
+      height: Math.max(...ys) - minY,
+    },
+  };
+}
+
+/**
+ * Transform the point by the given angle and translation
+ * @param pos - point
+ * @param angleRad - angle in radians
+ * @param translate - translation
+ * @returns transformed point
+ *
+ * @public
+ */
+export function rotateAndTranslatePoint(
+  pos: Position,
+  angleRad: number,
+  translate: Position,
+): Position {
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  const newX = pos.x * cos - pos.y * sin;
+  const newY = pos.x * sin + pos.y * cos;
+  return {
+    x: newX + translate.x,
+    y: newY + translate.y,
+  };
+}
+
+/**
+ * Expand the rect by the given padding
+ * @param rect - rectangle
+ * @param padding - padding
+ * @returns expanded rect
+ *
+ * @public
+ */
+export function expandRect(rect: Rect, padding: number): Rect {
+  return {
+    origin: { x: rect.origin.x - padding, y: rect.origin.y - padding },
+    size: { width: rect.size.width + padding * 2, height: rect.size.height + padding * 2 },
+  };
+}
+
+/**
  * Calculate the rect after rotated the container
  * @param containerSize - size of container
  * @param rect - target rect
