@@ -45,6 +45,7 @@ var createPdfium = (() => {
       '_EPDFAnnot_SetBorderStyle',
       '_EPDFAnnot_SetColor',
       '_EPDFAnnot_SetIntent',
+      '_EPDFAnnot_SetLine',
       '_EPDFAnnot_SetLineEndings',
       '_EPDFAnnot_SetVertices',
       '_FORM_CanRedo',
@@ -6005,6 +6006,10 @@ var createPdfium = (() => {
     ));
     var _EPDFAnnot_SetVertices = (Module['_EPDFAnnot_SetVertices'] = createExportWrapper(
       'EPDFAnnot_SetVertices',
+      3,
+    ));
+    var _EPDFAnnot_SetLine = (Module['_EPDFAnnot_SetLine'] = createExportWrapper(
+      'EPDFAnnot_SetLine',
       3,
     ));
     var _FPDFDoc_GetAttachmentCount = (Module['_FPDFDoc_GetAttachmentCount'] = createExportWrapper(

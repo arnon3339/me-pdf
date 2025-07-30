@@ -1147,6 +1147,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.contents,
         );
         break;
+      case PdfAnnotationSubtype.LINE:
+        isSucceed = this.addLineContent(page, pageCtx.pagePtr, annotationPtr, annotation);
+        break;
       case PdfAnnotationSubtype.POLYGON:
         isSucceed = this.addPolyContent(page, pageCtx.pagePtr, annotationPtr, annotation);
         break;
@@ -1308,6 +1311,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       case PdfAnnotationSubtype.CIRCLE:
       case PdfAnnotationSubtype.SQUARE: {
         ok = this.addShapeContent(page, pageCtx.pagePtr, annotPtr, annotation);
+        break;
+      }
+
+      /* ── Line ─────────────────────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.LINE: {
+        ok = this.addLineContent(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -2317,6 +2326,95 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
 
+    return true;
+  }
+
+  /**
+   * Add line content to annotation
+   * @param page - page info
+   * @param pagePtr - pointer to page object
+   * @param annotationPtr - pointer to line annotation
+   * @param annotation - line annotation
+   * @returns whether line content is added to annotation
+   *
+   * @private
+   */
+  private addLineContent(
+    page: PdfPageObject,
+    pagePtr: number,
+    annotationPtr: number,
+    annotation: PdfLineAnnoObject,
+  ) {
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (
+      !this.setLinePoints(
+        page,
+        annotationPtr,
+        annotation.linePoints.start,
+        annotation.linePoints.end,
+      )
+    ) {
+      return false;
+    }
+    if (
+      !this.setLineEndings(
+        annotationPtr,
+        annotation.lineEndings?.start ?? PdfAnnotationLineEnding.None,
+        annotation.lineEndings?.end ?? PdfAnnotationLineEnding.None,
+      )
+    ) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
+      return false;
+    }
+    if (!this.setBorderStyle(annotationPtr, annotation.strokeStyle, annotation.strokeWidth)) {
+      return false;
+    }
+    if (!this.setBorderDashPattern(annotationPtr, annotation.strokeDashArray ?? [])) {
+      return false;
+    }
+    if (annotation.intent && !this.setAnnotIntent(annotationPtr, annotation.intent)) {
+      return false;
+    }
+    if (!annotation.color || annotation.color === 'transparent') {
+      if (
+        !this.pdfiumModule.EPDFAnnot_ClearColor(annotationPtr, PdfAnnotationColorType.InteriorColor)
+      ) {
+        return false;
+      }
+    } else if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.InteriorColor,
+      )
+    ) {
+      return false;
+    }
+    if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.strokeColor ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.Color,
+      )
+    ) {
+      return false;
+    }
     return true;
   }
 
@@ -3791,6 +3889,40 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.free(endPointPtr);
 
     return { start, end };
+  }
+
+  /**
+   * Set the two end‑points of a **Line** annotation
+   * by writing a new /L array `[ x1 y1 x2 y2 ]`.
+   * @param page - logical page info object (`PdfPageObject`)
+   * @param annotPtr - pointer to the annotation whose line points are needed
+   * @param start - start point
+   * @param end - end point
+   * @returns true on success
+   */
+  private setLinePoints(
+    page: PdfPageObject,
+    annotPtr: number,
+    start: Position,
+    end: Position,
+  ): boolean {
+    const buf = this.malloc(16); // 2 × (float x, float y)
+
+    // --- convert to page coordinates -----------------------------------------
+    const p1 = this.convertDevicePointToPagePoint(page, start);
+    const p2 = this.convertDevicePointToPagePoint(page, end);
+
+    // --- pack into WASM memory -----------------------------------------------
+    this.pdfiumModule.pdfium.setValue(buf + 0, p1.x, 'float');
+    this.pdfiumModule.pdfium.setValue(buf + 4, p1.y, 'float');
+    this.pdfiumModule.pdfium.setValue(buf + 8, p2.x, 'float');
+    this.pdfiumModule.pdfium.setValue(buf + 12, p2.y, 'float');
+
+    // --- call the native API --------------------------------------------------
+    const ok = this.pdfiumModule.EPDFAnnot_SetLine(annotPtr, buf, buf + 8);
+
+    this.free(buf);
+    return ok;
   }
 
   /**
