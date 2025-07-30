@@ -29,6 +29,10 @@ import {
   EyeOff,
   Type,
   MessageCircle,
+  FileText,
+  Badge,
+  FileSignature,
+  Paperclip,
 } from 'lucide-react'
 import Link from 'next/link'
 import PDFViewer from './pdf-viewer'
@@ -64,11 +68,11 @@ const FeatureCard = ({
   gradient: string
 }) => {
   return (
-    <div className="group relative">
+    <div className="group relative h-full">
       <div
         className={`absolute -inset-0.5 rounded-2xl bg-gradient-to-r ${gradient} opacity-20 blur transition duration-300 group-hover:opacity-40`}
       ></div>
-      <div className="relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-transform group-hover:scale-105">
+      <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-transform group-hover:scale-105">
         <div className="mb-4 flex items-center justify-between">
           <div
             className={`h-12 w-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}
@@ -86,7 +90,7 @@ const FeatureCard = ({
           </div>
         </div>
         <h3 className="mb-2 text-xl font-bold text-gray-900">{title}</h3>
-        <p className="text-gray-600">{description}</p>
+        <p className="flex-grow text-gray-600">{description}</p>
       </div>
     </div>
   )
@@ -119,7 +123,7 @@ const StatsSection = () => {
               <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                 <div className="text-center">
                   <div className="mb-2 text-4xl font-black text-cyan-400">
-                    5+
+                    8+
                   </div>
                   <div className="text-slate-300">Annotation Types</div>
                 </div>
@@ -186,15 +190,12 @@ export default function Editor() {
       status: 'available' as const,
       gradient: 'from-green-500 to-teal-500',
     },
-  ]
-
-  const upcomingFeatures = [
     {
       icon: <Circle className="h-6 w-6 text-white" />,
       title: 'Circle Annotations',
       description:
         'Draw circles to highlight specific areas or call attention to content.',
-      status: 'coming-soon' as const,
+      status: 'available' as const,
       gradient: 'from-indigo-500 to-purple-500',
     },
     {
@@ -202,7 +203,7 @@ export default function Editor() {
       title: 'Rectangle Annotations',
       description:
         'Create rectangular shapes for structured highlighting and emphasis.',
-      status: 'coming-soon' as const,
+      status: 'available' as const,
       gradient: 'from-teal-500 to-green-500',
     },
     {
@@ -210,8 +211,43 @@ export default function Editor() {
       title: 'Line Annotations',
       description:
         'Draw straight lines for connecting ideas and creating visual relationships.',
-      status: 'coming-soon' as const,
+      status: 'available' as const,
       gradient: 'from-orange-500 to-red-500',
+    },
+  ]
+
+  const upcomingFeatures = [
+    {
+      icon: <FileText className="h-6 w-6 text-white" />,
+      title: 'Free Text Annotation',
+      description:
+        'Add floating text boxes anywhere on the document with custom fonts and styling.',
+      status: 'coming-soon' as const,
+      gradient: 'from-blue-500 to-indigo-500',
+    },
+    {
+      icon: <Badge className="h-6 w-6 text-white" />,
+      title: 'Stamp Annotation',
+      description:
+        'Apply pre-designed stamps like "Approved", "Confidential", or create custom stamps.',
+      status: 'coming-soon' as const,
+      gradient: 'from-purple-500 to-violet-500',
+    },
+    {
+      icon: <FileSignature className="h-6 w-6 text-white" />,
+      title: 'Signature Annotation',
+      description:
+        'Add digital signatures with drawing, typing, or uploading signature images.',
+      status: 'coming-soon' as const,
+      gradient: 'from-green-500 to-emerald-500',
+    },
+    {
+      icon: <Paperclip className="h-6 w-6 text-white" />,
+      title: 'File Attachment',
+      description:
+        'Attach files, images, or documents directly to specific locations in the PDF.',
+      status: 'coming-soon' as const,
+      gradient: 'from-orange-500 to-amber-500',
     },
     {
       icon: <EyeOff className="h-6 w-6 text-white" />,
@@ -366,6 +402,9 @@ export default function Editor() {
                 'Strikeout',
                 'Squiggly',
                 'Ink Drawing',
+                'Circle',
+                'Rectangle',
+                'Line',
               ].map((feature, index) => (
                 <div key={feature} className="group relative">
                   <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 opacity-30 blur transition duration-300 group-hover:opacity-60"></div>
