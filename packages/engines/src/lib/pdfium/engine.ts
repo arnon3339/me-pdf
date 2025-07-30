@@ -1150,6 +1150,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       case PdfAnnotationSubtype.LINE:
         isSucceed = this.addLineContent(page, pageCtx.pagePtr, annotationPtr, annotation);
         break;
+      case PdfAnnotationSubtype.POLYLINE:
       case PdfAnnotationSubtype.POLYGON:
         isSucceed = this.addPolyContent(page, pageCtx.pagePtr, annotationPtr, annotation);
         break;
@@ -1321,7 +1322,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       }
 
       /* ── Polygon / Polyline ───────────────────────────────────────────────── */
-      case PdfAnnotationSubtype.POLYGON: {
+      case PdfAnnotationSubtype.POLYGON:
+      case PdfAnnotationSubtype.POLYLINE: {
         ok = this.addPolyContent(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
@@ -2435,6 +2437,16 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotation: PdfPolygonAnnoObject | PdfPolylineAnnoObject,
   ) {
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (
+      annotation.type === PdfAnnotationSubtype.POLYLINE &&
+      !this.setLineEndings(
+        annotationPtr,
+        annotation.lineEndings?.start ?? PdfAnnotationLineEnding.None,
+        annotation.lineEndings?.end ?? PdfAnnotationLineEnding.None,
+      )
+    ) {
       return false;
     }
     if (!this.setPdfAnnoVertices(page, annotationPtr, annotation.vertices)) {

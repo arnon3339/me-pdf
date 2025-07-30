@@ -9,6 +9,8 @@ import {
 } from '@embedpdf/models';
 import { LINE_ENDING_HANDLERS } from './line-ending-handlers';
 
+const EXTRA_PADDING = 1.2;
+
 /**
  * Computes the exact bounding box for a line or polyline, including its endings and stroke width.
  * This function uses the central `LINE_ENDING_HANDLERS` to ensure calculations are
@@ -64,6 +66,6 @@ export function lineRectWithEndings(
   }
 
   const baseRect = rectFromPoints(allPoints);
-  const pad = strokeWidth / 2;
+  const pad = strokeWidth / 2 + EXTRA_PADDING * strokeWidth;
   return expandRect(baseRect, pad);
 }

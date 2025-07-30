@@ -1,4 +1,11 @@
-import { JSX, HTMLAttributes, CSSProperties, useState, Fragment, useEffect } from '@framework';
+import {
+  JSX,
+  HTMLAttributes,
+  CSSProperties,
+  useState,
+  Fragment,
+  useLayoutEffect,
+} from '@framework';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 import { PdfAnnotationObject, Position, Rect, rectEquals } from '@embedpdf/models';
 import { useAnnotationCapability } from '../hooks';
@@ -75,9 +82,10 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
       annotationProvides?.updateAnnotation(pageIndex, trackedAnnotation.localId, patch),
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!rectEquals(trackedAnnotation.object.rect, currentRect)) {
       setCurrentRect(trackedAnnotation.object.rect);
+      setPreviewObject((prev) => (prev ? { ...prev, rect: trackedAnnotation.object.rect } : null));
       setCurrentVertices(computeVertices?.(trackedAnnotation.object) ?? []);
     }
   }, [trackedAnnotation]);

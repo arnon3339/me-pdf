@@ -116,11 +116,13 @@ export const LINE_ENDING_HANDLERS: Partial<Record<PdfAnnotationLineEnding, LineE
     getLocalPoints: (sw) => {
       const h = (sw * 6) / 2;
       return [
-        { x: -h, y: -h },
-        { x: h, y: h },
+        { x: -h, y: -h }, // TL
+        { x: h, y: -h }, // TR
+        { x: h, y: h }, // BR
+        { x: -h, y: h }, // BL
       ];
     },
-    getRotation: () => 0,
+    getRotation: (segmentAngle) => segmentAngle, // keep your new orientation
     filled: true,
   },
   [PdfAnnotationLineEnding.Diamond]: {
@@ -137,7 +139,7 @@ export const LINE_ENDING_HANDLERS: Partial<Record<PdfAnnotationLineEnding, LineE
         { x: -h, y: 0 },
       ];
     },
-    getRotation: () => 0,
+    getRotation: (segmentAngle) => segmentAngle,
     filled: true,
   },
   [PdfAnnotationLineEnding.Butt]: createLineHandler(6, (angle) => angle + Math.PI / 2),

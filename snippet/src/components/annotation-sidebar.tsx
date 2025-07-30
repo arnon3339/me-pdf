@@ -59,7 +59,7 @@ export function leftPanelAnnotationStyleRenderer({
   const computedTitle = typeof title === 'function' ? title(commonProps as any) : title;
 
   return (
-    <div class="p-4">
+    <div class="h-full overflow-y-auto p-4">
       {computedTitle && (
         <h2 class="text-md mb-4 font-medium">
           {computedTitle} {selectedAnnotation ? 'styles' : 'defaults'}

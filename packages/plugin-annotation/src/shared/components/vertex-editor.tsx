@@ -37,6 +37,18 @@ export function VertexEditor({
   const startScreen = useRef<{ x: number; y: number } | null>(null);
   const startVerts = useRef<Position[]>([]);
 
+  const applyDelta = (deltaScreen: { x: number; y: number }): Position[] => {
+    const deltaPdf = restoreOffset(deltaScreen, rotation, scale);
+    const next = [...startVerts.current];
+    if (dragIdx !== null) {
+      next[dragIdx] = {
+        x: next[dragIdx].x + deltaPdf.x,
+        y: next[dragIdx].y + deltaPdf.y,
+      };
+    }
+    return next;
+  };
+
   // ─── pointer handlers ───────────────────────────────────────
   const handleDown = (idx: number) => (e: PointerEvent<HTMLDivElement>) => {
     e.stopPropagation();
@@ -53,19 +65,17 @@ export function VertexEditor({
       x: e.clientX - startScreen.current.x,
       y: e.clientY - startScreen.current.y,
     };
-    const deltaPdf = restoreOffset(deltaRaw, rotation, scale); // PDF units
-    const next = [...startVerts.current];
-    next[dragIdx] = {
-      x: next[dragIdx].x + deltaPdf.x,
-      y: next[dragIdx].y + deltaPdf.y,
-    };
-    onEdit(next);
+    onEdit(applyDelta(deltaRaw));
   };
 
   const handleUp = (e: PointerEvent<HTMLDivElement>) => {
-    if (dragIdx === null) return;
+    if (dragIdx === null || !startScreen.current) return;
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    onCommit(vertices);
+    const deltaRaw = {
+      x: e.clientX - startScreen.current.x,
+      y: e.clientY - startScreen.current.y,
+    };
+    onCommit(applyDelta(deltaRaw));
     setDragIdx(null);
   };
 
