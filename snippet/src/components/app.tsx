@@ -72,7 +72,6 @@ import {
   zoomRenderer,
   ZoomRendererProps,
   printModalRenderer,
-  annotationSelectionMenuRenderer,
 } from './renderers';
 import { leftPanelAnnotationStyleRenderer } from './annotation-sidebar';
 import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
@@ -111,6 +110,7 @@ import {
   AnnotationPluginPackage,
   AnnotationState,
   getSelectedAnnotationWithPageIndex,
+  getToolDefaultsBySubtypeAndIntent,
   makeVariantKey,
 } from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
@@ -150,6 +150,7 @@ import {
 } from '@embedpdf/plugin-history';
 import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
+import { AnnotationMenu } from './annotation-menu';
 
 export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
@@ -422,6 +423,30 @@ export const icons: IconRegistry = {
   pencilMarker: {
     id: 'pencilMarker',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24" class="icon icon-tabler icons-tabler-outline icon-tabler-writing-draw" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none"><g transform="rotate(47.565 12.1875 10.75)"><path stroke="#000000" d="m14.18752,16.75l0,-12c0,-1.1 -0.9,-2 -2,-2s-2,0.9 -2,2l0,12l2,2l2,-2z"/><path stroke="#000000" d="m10.18752,6.75l4,0"/></g><path stroke="currentColor" d="m19.37499,20.125c0.56874,0.0625 -4.04999,-0.5625 -6.41249,-0.4375c-2.3625,0.125 -4.75833,1.22916 -6.85624,1.625c-1.76458,0.6875 -3.40416,-0.9375 -1.98125,-2.49999"/></svg>',
+  },
+  circle: {
+    id: 'circle',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%" viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /></svg>',
+  },
+  square: {
+    id: 'square',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%" viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-square"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /></svg>',
+  },
+  line: {
+    id: 'line',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2.2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-slash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20 4l-16 16" /></svg>',
+  },
+  lineArrow: {
+    id: 'lineArrow',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2.2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-slash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20 4l-16 16" /><path d="M16 3h5v5" /></svg>',
+  },
+  polygon: {
+    id: 'polygon',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-pentagon-number-7"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z" /></svg>',
+  },
+  zigzag: {
+    id: 'zigzag',
+    svg: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.4L21.36 11.76L2.64 12.24L12 21.6" /></svg>',
   },
 };
 
@@ -1269,6 +1294,126 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) =>
       storeState.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.INK),
   },
+  circle: {
+    id: 'circle',
+    label: 'Circle',
+    type: 'action',
+    icon: 'circle',
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (
+          state.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.CIRCLE)
+        ) {
+          annotation.setActiveVariant(null);
+        } else {
+          annotation.setActiveVariant(makeVariantKey(PdfAnnotationSubtype.CIRCLE));
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.CIRCLE),
+  },
+  square: {
+    id: 'square',
+    label: 'Square',
+    type: 'action',
+    icon: 'square',
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (
+          state.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.SQUARE)
+        ) {
+          annotation.setActiveVariant(null);
+        } else {
+          annotation.setActiveVariant(makeVariantKey(PdfAnnotationSubtype.SQUARE));
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.SQUARE),
+  },
+  line: {
+    id: 'line',
+    label: 'Line',
+    type: 'action',
+    icon: 'line',
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (state.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.LINE)) {
+          annotation.setActiveVariant(null);
+        } else {
+          annotation.setActiveVariant(makeVariantKey(PdfAnnotationSubtype.LINE));
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.LINE),
+  },
+  lineArrow: {
+    id: 'lineArrow',
+    label: 'Line Arrow',
+    type: 'action',
+    icon: 'lineArrow',
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (
+          state.plugins.annotation.activeVariant ===
+          makeVariantKey(PdfAnnotationSubtype.LINE, 'LineArrow')
+        ) {
+          annotation.setActiveVariant(null);
+        } else {
+          annotation.setActiveVariant(makeVariantKey(PdfAnnotationSubtype.LINE, 'LineArrow'));
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.activeVariant ===
+      makeVariantKey(PdfAnnotationSubtype.LINE, 'LineArrow'),
+  },
+  polyline: {
+    id: 'polyline',
+    label: 'Polyline',
+    type: 'action',
+    icon: 'zigzag',
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (
+          state.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.POLYLINE)
+        ) {
+          annotation.setActiveVariant(null);
+        } else {
+          annotation.setActiveVariant(makeVariantKey(PdfAnnotationSubtype.POLYLINE));
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.POLYLINE),
+  },
+  polygon: {
+    id: 'polygon',
+    label: 'Polygon',
+    type: 'action',
+    icon: 'polygon',
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (
+          state.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.POLYGON)
+        ) {
+          annotation.setActiveVariant(null);
+        } else {
+          annotation.setActiveVariant(makeVariantKey(PdfAnnotationSubtype.POLYGON));
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.POLYGON),
+  },
   squigglySelection: {
     id: 'squigglySelection',
     label: 'Squiggly Selection',
@@ -1586,6 +1731,109 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.panMode, storeState),
+    }),
+  },
+  circleButton: {
+    type: 'iconButton',
+    id: 'circleButton',
+    props: {
+      commandId: 'circle',
+      active: false,
+      label: 'Circle',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.circle, storeState),
+      color: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.CIRCLE,
+      ).strokeColor,
+    }),
+  },
+  squareButton: {
+    type: 'iconButton',
+    id: 'squareButton',
+    props: {
+      commandId: 'square',
+      active: false,
+      label: 'Square',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.square, storeState),
+      color: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.SQUARE,
+      ).strokeColor,
+    }),
+  },
+  polygonButton: {
+    type: 'iconButton',
+    id: 'polygonButton',
+    props: {
+      commandId: 'polygon',
+      active: false,
+      label: 'Polygon',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.polygon, storeState),
+      color: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.POLYGON,
+      ).strokeColor,
+    }),
+  },
+  lineButton: {
+    type: 'iconButton',
+    id: 'lineButton',
+    props: {
+      commandId: 'line',
+      active: false,
+      label: 'Line',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.line, storeState),
+      color: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.LINE,
+      ).strokeColor,
+    }),
+  },
+  lineArrowButton: {
+    type: 'iconButton',
+    id: 'lineArrowButton',
+    props: {
+      commandId: 'lineArrow',
+      active: false,
+      label: 'Line Arrow',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.lineArrow, storeState),
+      color: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.LINE,
+        'LineArrow',
+      ).strokeColor,
+    }),
+  },
+  polylineButton: {
+    type: 'iconButton',
+    id: 'polylineButton',
+    props: {
+      commandId: 'polyline',
+      active: false,
+      label: 'Polyline',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.polyline, storeState),
+      color: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.POLYLINE,
+      ).strokeColor,
     }),
   },
   underlineButton: {
@@ -1932,7 +2180,7 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'selectButton',
     props: {
       menuCommandId: 'tabOverflow',
-      commandIds: ['view', 'annotate'],
+      commandIds: ['view', 'annotate', 'shapes'],
       activeCommandId: 'view',
       active: false,
     },
@@ -1951,6 +2199,7 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'selectButton', priority: 0, className: 'block @min-[500px]:hidden' },
       { componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
       { componentId: 'annotateTab', priority: 2, className: 'hidden @min-[500px]:block' },
+      { componentId: 'shapesTab', priority: 3, className: 'hidden @min-[500px]:block' },
     ],
     props: {
       gap: 10,
@@ -2053,38 +2302,6 @@ export const components: Record<string, UIComponentType<State>> = {
       direction: 'horizontal',
     },
   },
-  annotationSelectionMenuButtons: {
-    id: 'annotationSelectionMenuButtons',
-    type: 'groupedItems',
-    slots: [
-      { componentId: 'deleteAnnotationButton', priority: 0 },
-      { componentId: 'styleButton', priority: 1 },
-    ],
-    props: {
-      gap: 10,
-    },
-  },
-  annotationSelectionMenu: {
-    id: 'annotationSelectionMenu',
-    type: 'floating',
-    render: 'annotationSelectionMenu',
-    props: {
-      open: false,
-      scrollerPosition: 'inside',
-    },
-    mapStateToProps: (storeState, ownProps) => ({
-      ...ownProps,
-      isScolling: storeState.plugins.viewport.isScrolling,
-      scale: storeState.core.scale,
-      rotation: storeState.core.rotation,
-      selectedUid: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedUid,
-      open: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedUid !== null,
-    }),
-    slots: [{ componentId: 'annotationSelectionMenuButtons', priority: 0 }],
-    getChildContext: {
-      direction: 'horizontal',
-    },
-  },
   topHeader: {
     type: 'header',
     id: 'topHeader',
@@ -2105,6 +2322,26 @@ export const components: Record<string, UIComponentType<State>> = {
       },
     },
   },
+  shapeTools: {
+    id: 'shapeTools',
+    type: 'groupedItems',
+    slots: [
+      { componentId: 'circleButton', priority: 6 },
+      { componentId: 'squareButton', priority: 7 },
+      { componentId: 'polygonButton', priority: 8 },
+      { componentId: 'polylineButton', priority: 9 },
+      { componentId: 'lineButton', priority: 10 },
+      { componentId: 'lineArrowButton', priority: 11 },
+      { componentId: 'divider1', priority: 12 },
+      { componentId: 'styleButton', priority: 13 },
+      { componentId: 'divider1', priority: 14 },
+      { componentId: 'undoButton', priority: 15 },
+      { componentId: 'redoButton', priority: 16 },
+    ],
+    props: {
+      gap: 10,
+    },
+  },
   annotationTools: {
     id: 'annotationTools',
     type: 'groupedItems',
@@ -2114,11 +2351,11 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'strikethroughButton', priority: 3 },
       { componentId: 'squigglyButton', priority: 4 },
       { componentId: 'freehandButton', priority: 5 },
-      { componentId: 'divider1', priority: 7 },
-      { componentId: 'styleButton', priority: 8 },
-      { componentId: 'divider1', priority: 9 },
-      { componentId: 'undoButton', priority: 10 },
-      { componentId: 'redoButton', priority: 11 },
+      { componentId: 'divider1', priority: 6 },
+      { componentId: 'styleButton', priority: 7 },
+      { componentId: 'divider1', priority: 8 },
+      { componentId: 'undoButton', priority: 9 },
+      { componentId: 'redoButton', priority: 10 },
     ],
     props: {
       gap: 10,
@@ -2145,7 +2382,10 @@ export const components: Record<string, UIComponentType<State>> = {
       visible: storeState.plugins.ui.header.toolsHeader.visible,
       visibleChild: storeState.plugins.ui.header.toolsHeader.visibleChild,
     }),
-    slots: [{ componentId: 'annotationTools', priority: 0 }],
+    slots: [
+      { componentId: 'annotationTools', priority: 0 },
+      { componentId: 'shapeTools', priority: 1 },
+    ],
     getChildContext: (props) => ({
       direction:
         props.placement === 'top' || props.placement === 'bottom' ? 'horizontal' : 'vertical',
@@ -2384,10 +2624,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
             uiCapability.registerComponentRenderer('attachments', attachmentsRenderer);
             uiCapability.registerComponentRenderer('selectButton', selectButtonRenderer);
             uiCapability.registerComponentRenderer('textSelectionMenu', textSelectionMenuRenderer);
-            uiCapability.registerComponentRenderer(
-              'annotationSelectionMenu',
-              annotationSelectionMenuRenderer,
-            );
             uiCapability.registerComponentRenderer('leftPanelMain', leftPanelMainRenderer);
             uiCapability.registerComponentRenderer('printModal', printModalRenderer);
             uiCapability.registerComponentRenderer(
@@ -2508,6 +2744,25 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                             pageWidth={width}
                                             pageHeight={height}
                                             rotation={rotation}
+                                            selectionMenu={({
+                                              selected,
+                                              rect,
+                                              annotation,
+                                              menuWrapperProps,
+                                            }) => (
+                                              <div {...menuWrapperProps}>
+                                                {selected ? (
+                                                  <AnnotationMenu
+                                                    trackedAnnotation={annotation}
+                                                    style={{
+                                                      pointerEvents: 'auto',
+                                                      position: 'absolute',
+                                                      top: rect.size.height + 10,
+                                                    }}
+                                                  />
+                                                ) : null}
+                                              </div>
+                                            )}
                                           />
                                           <MarqueeZoom
                                             pageIndex={pageIndex}

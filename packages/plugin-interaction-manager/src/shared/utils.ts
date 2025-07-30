@@ -73,6 +73,8 @@ export function createPointerProvider(
     onPointerEnter: 'pointerenter',
     onPointerLeave: 'pointerleave',
     onPointerCancel: 'pointercancel',
+    onClick: 'click',
+    onDoubleClick: 'dblclick',
   };
 
   /* one stable EventListener per key -> needed for removeEventListener */

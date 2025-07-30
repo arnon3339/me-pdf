@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 import { SidebarPropsBase } from './common';
@@ -10,6 +10,7 @@ import { PdfAnnotationBorderStyle } from '@embedpdf/models';
 export const ShapeSidebar = ({
   selected,
   subtype,
+  intent,
   activeVariant,
   colorPresets,
 }: SidebarPropsBase<PdfCircleAnnoObject | PdfSquareAnnoObject>) => {
@@ -17,23 +18,31 @@ export const ShapeSidebar = ({
   if (!annotation) return null;
 
   const anno = selected?.annotation;
-  const defaults = annotation.getToolDefaultsBySubtype(subtype);
+  const defaults = annotation.getToolDefaultsBySubtypeAndIntent(subtype, intent);
   const editing = !!anno;
 
   const baseFill = editing ? anno.color : (defaults?.color ?? '#000000');
   const baseStroke = editing ? anno.strokeColor : (defaults?.strokeColor ?? '#000000');
   const baseOpac = editing ? anno.opacity : (defaults?.opacity ?? 1);
   const baseWidth = editing ? anno.strokeWidth : (defaults?.strokeWidth ?? 2);
+  const baseStyle = editing
+    ? { id: anno.strokeStyle, dash: anno.strokeDashArray }
+    : {
+        id: defaults?.strokeStyle ?? PdfAnnotationBorderStyle.SOLID,
+        dash: defaults?.strokeDashArray,
+      };
 
   const [fill, setFill] = useState(baseFill);
   const [stroke, setStroke] = useState(baseStroke);
   const [opacity, setOpac] = useState(baseOpac);
   const [strokeW, setWidth] = useState(baseWidth);
+  const [style, setStyle] = useState<{ id: PdfAnnotationBorderStyle; dash?: number[] }>(baseStyle);
 
   useEffect(() => setFill(baseFill), [baseFill]);
   useEffect(() => setStroke(baseStroke), [baseStroke]);
   useEffect(() => setOpac(baseOpac), [baseOpac]);
   useEffect(() => setWidth(baseWidth), [baseWidth]);
+  useEffect(() => setStyle(baseStyle), [baseStyle]);
 
   const debOpacity = useDebounce(opacity, 300);
   const debWidth = useDebounce(strokeW, 300);
@@ -48,6 +57,10 @@ export const ShapeSidebar = ({
     setStroke(c);
     applyPatch({ strokeColor: c });
   };
+  const changeStyle = (s: { id: PdfAnnotationBorderStyle; dash?: number[] }) => {
+    setStyle(s);
+    applyPatch({ strokeStyle: s.id, strokeDashArray: s.dash });
+  };
 
   function applyPatch(patch: Partial<any>) {
     if (!annotation) return;
@@ -58,29 +71,8 @@ export const ShapeSidebar = ({
     }
   }
 
-  // base values ─ add style
-  const baseStyle = editing
-    ? { id: anno.strokeStyle, dash: anno.strokeDashArray }
-    : {
-        id: defaults?.strokeStyle ?? PdfAnnotationBorderStyle.SOLID,
-        dash: defaults?.strokeDashArray,
-      };
-
-  const [style, setStyle] = useState<{ id: PdfAnnotationBorderStyle; dash?: number[] }>(baseStyle);
-
-  // keep style in sync
-  useEffect(() => setStyle(baseStyle), [baseStyle]);
-
-  // helper
-  const changeStyle = (s: { id: PdfAnnotationBorderStyle; dash?: number[] }) => {
-    setStyle(s);
-    applyPatch({ strokeStyle: s.id, strokeDashArray: s.dash });
-  };
-
   return (
-    <div class="p-4">
-      <h2 class="text-md mb-4 font-medium">Shape styles</h2>
-
+    <Fragment>
       {/* fill color */}
       <section class="mb-6">
         <label class="mb-3 block text-sm font-medium text-gray-900">Fill color</label>
@@ -121,6 +113,6 @@ export const ShapeSidebar = ({
         <Slider value={strokeW} min={1} max={30} step={1} onChange={setWidth} />
         <span class="text-xs text-gray-500">{strokeW}px</span>
       </section>
-    </div>
+    </Fragment>
   );
 };

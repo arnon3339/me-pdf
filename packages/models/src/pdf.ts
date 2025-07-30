@@ -733,6 +733,58 @@ export enum PdfAnnotationStateModel {
 }
 
 /**
+ * Line ending of annotation
+ *
+ * @public
+ */
+export enum PdfAnnotationLineEnding {
+  /**
+   * No line ending
+   */
+  None = 0,
+  /**
+   * Square line ending
+   */
+  Square = 1,
+  /**
+   * Circle line ending
+   */
+  Circle = 2,
+  /**
+   * Diamond line ending
+   */
+  Diamond = 3,
+  /**
+   * Open arrow line ending
+   */
+  OpenArrow = 4,
+  /**
+   * Closed arrow line ending
+   */
+  ClosedArrow = 5,
+  /**
+   * Butt line ending
+   */
+  Butt = 6,
+  /**
+   * Right open arrow line ending
+   */
+  ROpenArrow = 7,
+  /**
+   * Right closed arrow line ending
+   */
+  RClosedArrow = 8,
+  /**
+   * Slash line ending
+   */
+  Slash = 9,
+  /**
+   * Unknown line ending
+   */
+  Unknown = 10,
+}
+
+/**
  * Basic information of pdf annotation
  *
  * @public
@@ -1002,6 +1054,26 @@ export enum PdfPageObjectType {
 }
 
 /**
+ * Line points
+ *
+ * @public
+ */
+export interface LinePoints {
+  start: Position;
+  end: Position;
+}
+
+/**
+ * Line endings
+ *
+ * @public
+ */
+export interface LineEndings {
+  start: PdfAnnotationLineEnding;
+  end: PdfAnnotationLineEnding;
+}
+
+/**
  * Options of pdf widget annotation
  *
  * @public
@@ -1180,10 +1252,46 @@ export interface PdfInkAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfPolygonAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.POLYGON;
+
+  /**
+   * contents of polygon annotation
+   */
+  contents?: string;
+
   /**
    * vertices of annotation
    */
   vertices: Position[];
+
+  /**
+   * color of ink annotation
+   */
+  color: string;
+
+  /**
+   * opacity of ink annotation
+   */
+  opacity: number;
+
+  /**
+   * stroke-width of ink annotation
+   */
+  strokeWidth: number;
+
+  /**
+   * stroke color of polygon annotation
+   */
+  strokeColor: string;
+
+  /**
+   * stroke style of polygon annotation
+   */
+  strokeStyle: PdfAnnotationBorderStyle;
+
+  /**
+   * stroke dash array of polygon annotation
+   */
+  strokeDashArray?: number[];
 }
 
 /**
@@ -1194,10 +1302,51 @@ export interface PdfPolygonAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfPolylineAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.POLYLINE;
+
+  /**
+   * contents of polyline annotation
+   */
+  contents?: string;
+
+  /**
+   * start and end line endings of polyline
+   */
+  lineEndings?: LineEndings;
+
   /**
    * vertices of annotation
    */
   vertices: Position[];
+
+  /**
+   * interior color of line annotation
+   */
+  color: string;
+
+  /**
+   * opacity of ink annotation
+   */
+  opacity: number;
+
+  /**
+   * stroke-width of ink annotation
+   */
+  strokeWidth: number;
+
+  /**
+   * stroke color of line annotation
+   */
+  strokeColor: string;
+
+  /**
+   * stroke style of polyline annotation
+   */
+  strokeStyle: PdfAnnotationBorderStyle;
+
+  /**
+   * stroke dash array of polyline annotation
+   */
+  strokeDashArray?: number[];
 }
 
 /**
@@ -1208,14 +1357,51 @@ export interface PdfPolylineAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfLineAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.LINE;
+
   /**
-   * start point of line
+   * contents of line annotation
    */
-  startPoint: Position;
+  contents?: string;
+
   /**
-   * end point of line
+   * start and end points of line
    */
-  endPoint: Position;
+  linePoints: LinePoints;
+
+  /**
+   * start and end line endings of line
+   */
+  lineEndings?: LineEndings;
+
+  /**
+   * interior color of line annotation
+   */
+  color: string;
+
+  /**
+   * opacity of ink annotation
+   */
+  opacity: number;
+
+  /**
+   * stroke-width of ink annotation
+   */
+  strokeWidth: number;
+
+  /**
+   * stroke color of line annotation
+   */
+  strokeColor: string;
+
+  /**
+   * stroke style of line annotation
+   */
+  strokeStyle: PdfAnnotationBorderStyle;
+
+  /**
+   * stroke dash array of line annotation
+   */
+  strokeDashArray?: number[];
 }
 
 /**

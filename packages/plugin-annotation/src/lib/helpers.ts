@@ -43,6 +43,12 @@ export function isLine(
   return a.object.type === PdfAnnotationSubtype.LINE;
 }
 
+export function isPolyline(
+  a: TrackedAnnotation,
+): a is TrackedAnnotation<AnnoOf<PdfAnnotationSubtype.POLYLINE>> {
+  return a.object.type === PdfAnnotationSubtype.POLYLINE;
+}
+
 export function isTextMarkup(
   a: TrackedAnnotation,
 ): a is TrackedAnnotation<

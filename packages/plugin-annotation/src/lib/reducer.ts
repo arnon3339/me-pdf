@@ -1,5 +1,10 @@
 import { Reducer } from '@embedpdf/core';
-import { PdfAnnotationBorderStyle, PdfAnnotationSubtype, PdfBlendMode } from '@embedpdf/models';
+import {
+  PdfAnnotationBorderStyle,
+  PdfAnnotationLineEnding,
+  PdfAnnotationSubtype,
+  PdfBlendMode,
+} from '@embedpdf/models';
 import {
   ADD_COLOR_PRESET,
   COMMIT_PENDING_CHANGES,
@@ -115,6 +120,7 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
     [makeVariantKey(PdfAnnotationSubtype.INK, 'InkHighlight')]: {
       name: 'Ink Highlight',
       subtype: PdfAnnotationSubtype.INK,
+      intent: 'InkHighlight',
       interaction: { mode: 'inkHighlight', exclusive: true, cursor: 'crosshair' },
       color: '#E44234',
       opacity: 1,
@@ -145,15 +151,46 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
       name: 'Line',
       subtype: PdfAnnotationSubtype.LINE,
       interaction: { mode: 'line', exclusive: true, cursor: 'crosshair' },
-      color: '#E44234',
+      color: 'transparent',
       opacity: 1,
+      strokeWidth: 4,
+      strokeColor: '#E44234',
+      strokeStyle: PdfAnnotationBorderStyle.SOLID,
+    },
+    [makeVariantKey(PdfAnnotationSubtype.LINE, 'LineArrow')]: {
+      name: 'Line Arrow',
+      subtype: PdfAnnotationSubtype.LINE,
+      interaction: { mode: 'lineArrow', exclusive: true, cursor: 'crosshair' },
+      color: 'transparent',
+      intent: 'LineArrow',
+      opacity: 1,
+      strokeWidth: 4,
+      strokeColor: '#E44234',
+      strokeStyle: PdfAnnotationBorderStyle.SOLID,
+      lineEndings: {
+        start: PdfAnnotationLineEnding.None,
+        end: PdfAnnotationLineEnding.OpenArrow,
+      },
+    },
+    [makeVariantKey(PdfAnnotationSubtype.POLYLINE)]: {
+      name: 'Polyline',
+      subtype: PdfAnnotationSubtype.POLYLINE,
+      interaction: { mode: 'polyline', exclusive: true, cursor: 'crosshair' },
+      color: 'transparent',
+      opacity: 1,
+      strokeWidth: 4,
+      strokeColor: '#E44234',
+      strokeStyle: PdfAnnotationBorderStyle.SOLID,
     },
     [makeVariantKey(PdfAnnotationSubtype.POLYGON)]: {
       name: 'Polygon',
       subtype: PdfAnnotationSubtype.POLYGON,
       interaction: { mode: 'polygon', exclusive: true, cursor: 'crosshair' },
-      color: '#E44234',
+      color: 'transparent',
       opacity: 1,
+      strokeWidth: 4,
+      strokeColor: '#E44234',
+      strokeStyle: PdfAnnotationBorderStyle.SOLID,
     },
     ...cfg.toolDefaults,
   },

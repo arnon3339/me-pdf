@@ -97,6 +97,9 @@ import {
   PdfAnnotationFlagName,
   makeMatrix,
   namesToFlags,
+  PdfAnnotationLineEnding,
+  LinePoints,
+  LineEndings,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1144,6 +1147,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.contents,
         );
         break;
+      case PdfAnnotationSubtype.LINE:
+        isSucceed = this.addLineContent(page, pageCtx.pagePtr, annotationPtr, annotation);
+        break;
+      case PdfAnnotationSubtype.POLYLINE:
+      case PdfAnnotationSubtype.POLYGON:
+        isSucceed = this.addPolyContent(page, pageCtx.pagePtr, annotationPtr, annotation);
+        break;
       case PdfAnnotationSubtype.CIRCLE:
       case PdfAnnotationSubtype.SQUARE:
         isSucceed = this.addShapeContent(page, pageCtx.pagePtr, annotationPtr, annotation);
@@ -1302,6 +1312,19 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       case PdfAnnotationSubtype.CIRCLE:
       case PdfAnnotationSubtype.SQUARE: {
         ok = this.addShapeContent(page, pageCtx.pagePtr, annotPtr, annotation);
+        break;
+      }
+
+      /* ── Line ─────────────────────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.LINE: {
+        ok = this.addLineContent(page, pageCtx.pagePtr, annotPtr, annotation);
+        break;
+      }
+
+      /* ── Polygon / Polyline ───────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.POLYGON:
+      case PdfAnnotationSubtype.POLYLINE: {
+        ok = this.addPolyContent(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -2297,6 +2320,180 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         annotationPtr,
         {
           color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.Color,
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Add line content to annotation
+   * @param page - page info
+   * @param pagePtr - pointer to page object
+   * @param annotationPtr - pointer to line annotation
+   * @param annotation - line annotation
+   * @returns whether line content is added to annotation
+   *
+   * @private
+   */
+  private addLineContent(
+    page: PdfPageObject,
+    pagePtr: number,
+    annotationPtr: number,
+    annotation: PdfLineAnnoObject,
+  ) {
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (
+      !this.setLinePoints(
+        page,
+        annotationPtr,
+        annotation.linePoints.start,
+        annotation.linePoints.end,
+      )
+    ) {
+      return false;
+    }
+    if (
+      !this.setLineEndings(
+        annotationPtr,
+        annotation.lineEndings?.start ?? PdfAnnotationLineEnding.None,
+        annotation.lineEndings?.end ?? PdfAnnotationLineEnding.None,
+      )
+    ) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
+      return false;
+    }
+    if (!this.setBorderStyle(annotationPtr, annotation.strokeStyle, annotation.strokeWidth)) {
+      return false;
+    }
+    if (!this.setBorderDashPattern(annotationPtr, annotation.strokeDashArray ?? [])) {
+      return false;
+    }
+    if (annotation.intent && !this.setAnnotIntent(annotationPtr, annotation.intent)) {
+      return false;
+    }
+    if (!annotation.color || annotation.color === 'transparent') {
+      if (
+        !this.pdfiumModule.EPDFAnnot_ClearColor(annotationPtr, PdfAnnotationColorType.InteriorColor)
+      ) {
+        return false;
+      }
+    } else if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.InteriorColor,
+      )
+    ) {
+      return false;
+    }
+    if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.strokeColor ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.Color,
+      )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Add polygon or polyline content to annotation
+   * @param page - page info
+   * @param pagePtr - pointer to page object
+   * @param annotationPtr - pointer to polygon or polyline annotation
+   * @param annotation - polygon or polyline annotation
+   * @returns whether polygon or polyline content is added to annotation
+   *
+   * @private
+   */
+  private addPolyContent(
+    page: PdfPageObject,
+    pagePtr: number,
+    annotationPtr: number,
+    annotation: PdfPolygonAnnoObject | PdfPolylineAnnoObject,
+  ) {
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (
+      annotation.type === PdfAnnotationSubtype.POLYLINE &&
+      !this.setLineEndings(
+        annotationPtr,
+        annotation.lineEndings?.start ?? PdfAnnotationLineEnding.None,
+        annotation.lineEndings?.end ?? PdfAnnotationLineEnding.None,
+      )
+    ) {
+      return false;
+    }
+    if (!this.setPdfAnnoVertices(page, annotationPtr, annotation.vertices)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
+      return false;
+    }
+    if (!this.setBorderStyle(annotationPtr, annotation.strokeStyle, annotation.strokeWidth)) {
+      return false;
+    }
+    if (!this.setBorderDashPattern(annotationPtr, annotation.strokeDashArray ?? [])) {
+      return false;
+    }
+    if (annotation.intent && !this.setAnnotIntent(annotationPtr, annotation.intent)) {
+      return false;
+    }
+    if (!annotation.color || annotation.color === 'transparent') {
+      if (
+        !this.pdfiumModule.EPDFAnnot_ClearColor(annotationPtr, PdfAnnotationColorType.InteriorColor)
+      ) {
+        return false;
+      }
+    } else if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.color ?? '#FFFF00',
+          opacity: annotation.opacity ?? 1,
+        },
+        PdfAnnotationColorType.InteriorColor,
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        {
+          color: annotation.strokeColor ?? '#FFFF00',
           opacity: annotation.opacity ?? 1,
         },
         PdfAnnotationColorType.Color,
@@ -3386,12 +3583,36 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private resolveAnnotationColor(
     annotationPtr: number,
-    colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
-    fallback: PdfAlphaColor = { red: 255, green: 245, blue: 155, alpha: 255 },
-  ): WebAlphaColor {
-    const pdfColor = this.readAnnotationColor(annotationPtr, colorType) ?? fallback;
+    colorType?: PdfAnnotationColorType,
+  ): WebAlphaColor;
+  private resolveAnnotationColor(
+    annotationPtr: number,
+    colorType: PdfAnnotationColorType,
+    fallback: PdfAlphaColor,
+  ): WebAlphaColor;
+  private resolveAnnotationColor(
+    annotationPtr: number,
+    colorType: PdfAnnotationColorType,
+    fallback: undefined,
+  ): WebAlphaColor | undefined;
 
-    return pdfAlphaColorToWebAlphaColor(pdfColor);
+  // 2) Implementation
+  private resolveAnnotationColor(
+    annotationPtr: number,
+    colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
+    fallback?: PdfAlphaColor,
+  ): WebAlphaColor | undefined {
+    const annotationColor = this.readAnnotationColor(annotationPtr, colorType);
+
+    if (annotationColor) {
+      return pdfAlphaColorToWebAlphaColor(annotationColor);
+    }
+
+    if (fallback !== undefined) {
+      return pdfAlphaColorToWebAlphaColor(fallback);
+    }
+
+    return undefined;
   }
 
   /**
@@ -3604,6 +3825,115 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     );
 
     this.free(bufPtr);
+    return ok;
+  }
+
+  /**
+   * Return the `/LE` array (start/end line-ending styles) for a LINE / POLYLINE annot.
+   *
+   * @param annotationPtr - pointer to an `FPDF_ANNOTATION`
+   * @returns `{ start, end }` or `undefined` when PDFium can't read them
+   *
+   * @private
+   */
+  private getLineEndings(annotationPtr: number): LineEndings | undefined {
+    const startPtr = this.malloc(4);
+    const endPtr = this.malloc(4);
+
+    const ok = !!this.pdfiumModule.EPDFAnnot_GetLineEndings(annotationPtr, startPtr, endPtr);
+    if (!ok) {
+      this.free(startPtr);
+      this.free(endPtr);
+      return undefined;
+    }
+
+    const start = this.pdfiumModule.pdfium.getValue(startPtr, 'i32');
+    const end = this.pdfiumModule.pdfium.getValue(endPtr, 'i32');
+
+    this.free(startPtr);
+    this.free(endPtr);
+
+    return { start, end };
+  }
+
+  /**
+   * Write the `/LE` array (start/end line-ending styles) for a LINE / POLYLINE annot.
+   * @param annotationPtr - pointer to an `FPDF_ANNOTATION`
+   * @param start - start line ending style
+   * @param end - end line ending style
+   * @returns `true` on success
+   */
+  private setLineEndings(
+    annotationPtr: number,
+    start: PdfAnnotationLineEnding,
+    end: PdfAnnotationLineEnding,
+  ): boolean {
+    return !!this.pdfiumModule.EPDFAnnot_SetLineEndings(annotationPtr, start, end);
+  }
+
+  /**
+   * Get the start and end points of a LINE / POLYLINE annot.
+   * @param annotationPtr - pointer to an `FPDF_ANNOTATION`
+   * @param page - logical page info object (`PdfPageObject`)
+   * @returns `{ start, end }` or `undefined` when PDFium can't read them
+   */
+  private getLinePoints(annotationPtr: number, page: PdfPageObject): LinePoints | undefined {
+    const startPointPtr = this.malloc(8);
+    const endPointPtr = this.malloc(8);
+
+    this.pdfiumModule.FPDFAnnot_GetLine(annotationPtr, startPointPtr, endPointPtr);
+
+    const startPointX = this.pdfiumModule.pdfium.getValue(startPointPtr, 'float');
+    const startPointY = this.pdfiumModule.pdfium.getValue(startPointPtr + 4, 'float');
+    const start = this.convertPagePointToDevicePoint(page, {
+      x: startPointX,
+      y: startPointY,
+    });
+
+    const endPointX = this.pdfiumModule.pdfium.getValue(endPointPtr, 'float');
+    const endPointY = this.pdfiumModule.pdfium.getValue(endPointPtr + 4, 'float');
+    const end = this.convertPagePointToDevicePoint(page, {
+      x: endPointX,
+      y: endPointY,
+    });
+
+    this.free(startPointPtr);
+    this.free(endPointPtr);
+
+    return { start, end };
+  }
+
+  /**
+   * Set the two end‑points of a **Line** annotation
+   * by writing a new /L array `[ x1 y1 x2 y2 ]`.
+   * @param page - logical page info object (`PdfPageObject`)
+   * @param annotPtr - pointer to the annotation whose line points are needed
+   * @param start - start point
+   * @param end - end point
+   * @returns true on success
+   */
+  private setLinePoints(
+    page: PdfPageObject,
+    annotPtr: number,
+    start: Position,
+    end: Position,
+  ): boolean {
+    const buf = this.malloc(16); // 2 × (float x, float y)
+
+    // --- convert to page coordinates -----------------------------------------
+    const p1 = this.convertDevicePointToPagePoint(page, start);
+    const p2 = this.convertDevicePointToPagePoint(page, end);
+
+    // --- pack into WASM memory -----------------------------------------------
+    this.pdfiumModule.pdfium.setValue(buf + 0, p1.x, 'float');
+    this.pdfiumModule.pdfium.setValue(buf + 4, p1.y, 'float');
+    this.pdfiumModule.pdfium.setValue(buf + 8, p2.x, 'float');
+    this.pdfiumModule.pdfium.setValue(buf + 12, p2.y, 'float');
+
+    // --- call the native API --------------------------------------------------
+    const ok = this.pdfiumModule.EPDFAnnot_SetLine(annotPtr, buf, buf + 8);
+
+    this.free(buf);
     return ok;
   }
 
@@ -4083,11 +4413,43 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
     const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
+    const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
+    const strokeColor = this.resolveAnnotationColor(annotationPtr);
+    const interiorColor = this.resolveAnnotationColor(
+      annotationPtr,
+      PdfAnnotationColorType.InteriorColor,
+      undefined,
+    );
+    let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
+
+    let strokeDashArray: number[] | undefined;
+    if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
+      const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
+      if (ok) {
+        strokeDashArray = pattern;
+      }
+    }
+
+    // ▼––– Remove redundant closing vertex for polygons ––––––––––––––––––––––
+    if (vertices.length > 1) {
+      const first = vertices[0];
+      const last = vertices[vertices.length - 1];
+      if (first.x === last.x && first.y === last.y) {
+        vertices.pop();
+      }
+    }
 
     return {
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.POLYGON,
+      contents,
+      strokeColor: strokeColor.color,
+      color: interiorColor?.color ?? 'transparent',
+      opacity: interiorColor?.opacity ?? strokeColor.opacity,
+      strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
+      strokeStyle,
+      strokeDashArray,
       rect,
       vertices,
       author,
@@ -4117,11 +4479,36 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
     const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
+    const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
+    const strokeColor = this.resolveAnnotationColor(annotationPtr);
+    const interiorColor = this.resolveAnnotationColor(
+      annotationPtr,
+      PdfAnnotationColorType.InteriorColor,
+      undefined,
+    );
+    let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
+
+    let strokeDashArray: number[] | undefined;
+    if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
+      const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
+      if (ok) {
+        strokeDashArray = pattern;
+      }
+    }
+    const lineEndings = this.getLineEndings(annotationPtr);
 
     return {
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.POLYLINE,
+      contents,
+      strokeColor: strokeColor.color,
+      color: interiorColor?.color ?? 'transparent',
+      opacity: interiorColor?.opacity ?? strokeColor.opacity,
+      strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
+      strokeStyle,
+      strokeDashArray,
+      lineEndings,
       rect,
       vertices,
       author,
@@ -4150,35 +4537,42 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-    const startPointPtr = this.malloc(8);
-    const endPointPtr = this.malloc(8);
+    const linePoints = this.getLinePoints(annotationPtr, page);
+    const lineEndings = this.getLineEndings(annotationPtr);
+    const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
+    const strokeColor = this.resolveAnnotationColor(annotationPtr);
+    const interiorColor = this.resolveAnnotationColor(
+      annotationPtr,
+      PdfAnnotationColorType.InteriorColor,
+      undefined,
+    );
+    let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
-    this.pdfiumModule.FPDFAnnot_GetLine(annotationPtr, startPointPtr, endPointPtr);
-
-    const startPointX = this.pdfiumModule.pdfium.getValue(startPointPtr, 'float');
-    const startPointY = this.pdfiumModule.pdfium.getValue(startPointPtr + 4, 'float');
-    const startPoint = this.convertPagePointToDevicePoint(page, {
-      x: startPointX,
-      y: startPointY,
-    });
-
-    const endPointX = this.pdfiumModule.pdfium.getValue(endPointPtr, 'float');
-    const endPointY = this.pdfiumModule.pdfium.getValue(endPointPtr + 4, 'float');
-    const endPoint = this.convertPagePointToDevicePoint(page, {
-      x: endPointX,
-      y: endPointY,
-    });
-
-    this.free(startPointPtr);
-    this.free(endPointPtr);
+    let strokeDashArray: number[] | undefined;
+    if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
+      const { ok, pattern } = this.getBorderDashPattern(annotationPtr);
+      if (ok) {
+        strokeDashArray = pattern;
+      }
+    }
 
     return {
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.LINE,
       rect,
-      startPoint,
-      endPoint,
+      contents,
+      strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
+      strokeStyle,
+      strokeDashArray,
+      strokeColor: strokeColor.color,
+      color: interiorColor?.color ?? 'transparent',
+      opacity: interiorColor?.opacity ?? strokeColor.opacity,
+      linePoints: linePoints || { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } },
+      lineEndings: lineEndings || {
+        start: PdfAnnotationLineEnding.None,
+        end: PdfAnnotationLineEnding.None,
+      },
       author,
       modified,
     };
@@ -4670,11 +5064,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-    const { color, opacity } = this.resolveAnnotationColor(
+    const interiorColor = this.resolveAnnotationColor(
       annotationPtr,
       PdfAnnotationColorType.InteriorColor,
+      undefined,
     );
-    const { color: strokeColor } = this.resolveAnnotationColor(annotationPtr);
+    const { color: strokeColor, opacity: strokeOpacity } =
+      this.resolveAnnotationColor(annotationPtr);
     let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     let strokeDashArray: number[] | undefined;
@@ -4690,8 +5086,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.CIRCLE,
       flags,
-      color,
-      opacity,
+      color: interiorColor?.color ?? 'transparent',
+      opacity: interiorColor?.opacity ?? strokeOpacity,
       strokeWidth,
       strokeColor,
       strokeStyle,
@@ -4724,34 +5120,14 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-    const { color, opacity } = this.resolveAnnotationColor(
+    const interiorColor = this.resolveAnnotationColor(
       annotationPtr,
       PdfAnnotationColorType.InteriorColor,
+      undefined,
     );
-    const { color: strokeColor } = this.resolveAnnotationColor(annotationPtr);
+    const { color: strokeColor, opacity: strokeOpacity } =
+      this.resolveAnnotationColor(annotationPtr);
     let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
-
-    let cloudyBorderIntensity: number | undefined;
-    let cloudyBorderInset: number[] | undefined;
-    if (
-      strokeStyle === PdfAnnotationBorderStyle.CLOUDY ||
-      strokeStyle === PdfAnnotationBorderStyle.UNKNOWN
-    ) {
-      const { ok: hasEffect, intensity } = this.getBorderEffect(annotationPtr);
-
-      if (hasEffect) {
-        cloudyBorderIntensity = intensity;
-        strokeStyle = PdfAnnotationBorderStyle.CLOUDY;
-        const {
-          ok: hasInset,
-          left,
-          top,
-          right,
-          bottom,
-        } = this.getRectangleDifferences(annotationPtr);
-        if (hasInset) cloudyBorderInset = [left, top, right, bottom];
-      }
-    }
 
     let strokeDashArray: number[] | undefined;
     if (strokeStyle === PdfAnnotationBorderStyle.DASHED) {
@@ -4766,16 +5142,14 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.SQUARE,
       flags,
-      color,
-      opacity,
+      color: interiorColor?.color ?? 'transparent',
+      opacity: interiorColor?.opacity ?? strokeOpacity,
       strokeColor,
       strokeWidth,
       strokeStyle,
       rect,
       author,
       modified,
-      ...(cloudyBorderIntensity !== undefined && { cloudyBorderIntensity }),
-      ...(cloudyBorderInset !== undefined && { cloudyBorderInset }),
       ...(strokeDashArray !== undefined && { strokeDashArray }),
     };
   }
@@ -4876,6 +5250,20 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * Write the `/IT` (Intent) name into an annotation dictionary.
+   *
+   * Mirrors EPDFAnnot_SetIntent in PDFium (expects a UTF‑8 FPDF_BYTESTRING).
+   *
+   * @param annotationPtr Pointer returned by FPDFPage_GetAnnot
+   * @param intent        Name without leading slash, e.g. `"PolygonCloud"`
+   *                      A leading “/” will be stripped for convenience.
+   * @returns             true on success, false otherwise
+   */
+  private setAnnotIntent(annotationPtr: number, intent: string): boolean {
+    return this.pdfiumModule.EPDFAnnot_SetIntent(annotationPtr, intent);
+  }
+
+  /**
    * Returns the rich‑content string stored in the annotation’s `/RC` entry.
    *
    * Works like `getAnnotIntent()`: first probe for length, then copy.
@@ -4945,14 +5333,40 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         x: pointX,
         y: pointY,
       });
-      vertices.push({
-        x,
-        y,
-      });
+      const last = vertices[vertices.length - 1];
+      if (!last || last.x !== x || last.y !== y) {
+        vertices.push({ x, y });
+      }
     }
     this.free(pointsPtr);
 
     return vertices;
+  }
+
+  /**
+   * Sync the vertices of a polygon or polyline annotation.
+   *
+   * @param page  - pdf page infor
+   * @param annotPtr - pointer to pdf annotation
+   * @param vertices - the vertices to be set
+   * @returns true on success
+   *
+   * @private
+   */
+  private setPdfAnnoVertices(page: PdfPageObject, annotPtr: number, vertices: Position[]): boolean {
+    const pdf = this.pdfiumModule.pdfium;
+    const FS_POINTF_SIZE = 8;
+
+    const buf = this.malloc(FS_POINTF_SIZE * vertices.length);
+    vertices.forEach((v, i) => {
+      const pagePt = this.convertDevicePointToPagePoint(page, v);
+      pdf.setValue(buf + i * FS_POINTF_SIZE + 0, pagePt.x, 'float');
+      pdf.setValue(buf + i * FS_POINTF_SIZE + 4, pagePt.y, 'float');
+    });
+
+    const ok = this.pdfiumModule.EPDFAnnot_SetVertices(annotPtr, buf, vertices.length);
+    this.free(buf);
+    return ok;
   }
 
   /**

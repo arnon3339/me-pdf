@@ -8,6 +8,8 @@ export function mergeHandlers(list: PointerEventHandlers[]): PointerEventHandler
     'onPointerEnter',
     'onPointerLeave',
     'onPointerCancel',
+    'onClick',
+    'onDoubleClick',
   ];
   const out: Partial<PointerEventHandlers> = {};
   for (const k of keys) {

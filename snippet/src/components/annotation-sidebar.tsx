@@ -23,6 +23,7 @@ export function leftPanelAnnotationStyleRenderer({
   const { provides: annotation } = useAnnotationCapability();
   if (!annotation) return null;
 
+  let intent: string | undefined = undefined;
   /* ------------------------------------------------------------
    * 1. Work out which subtype we’re editing (selected note > tool)
    * ------------------------------------------------------------ */
@@ -30,8 +31,11 @@ export function leftPanelAnnotationStyleRenderer({
 
   if (selectedAnnotation) {
     subtype = selectedAnnotation.annotation.type;
+    intent = selectedAnnotation.annotation.intent;
   } else if (activeVariant) {
-    subtype = annotation.getToolDefaults(activeVariant)?.subtype ?? null;
+    const { subtype: s, intent: i } = annotation.getSubtypeAndIntentByVariant(activeVariant);
+    subtype = s;
+    intent = i;
   }
 
   /* ------------------------------------------------------------
@@ -39,15 +43,29 @@ export function leftPanelAnnotationStyleRenderer({
    * ------------------------------------------------------------ */
   if (subtype == null) return <EmptyState />;
 
-  const Sidebar = SIDEbars[subtype];
-  if (!Sidebar) return <EmptyState />;
+  const entry = SIDEbars[subtype];
+  if (!entry) return <EmptyState />;
+
+  const { component: Sidebar, title } = entry;
 
   const commonProps: SidebarPropsBase = {
     selected: selectedAnnotation,
     subtype,
     activeVariant,
     colorPresets,
+    intent,
   };
 
-  return <Sidebar {...(commonProps as any)} />;
+  const computedTitle = typeof title === 'function' ? title(commonProps as any) : title;
+
+  return (
+    <div class="h-full overflow-y-auto p-4">
+      {computedTitle && (
+        <h2 class="text-md mb-4 font-medium">
+          {computedTitle} {selectedAnnotation ? 'styles' : 'defaults'}
+        </h2>
+      )}
+      <Sidebar {...(commonProps as any)} />
+    </div>
+  );
 }

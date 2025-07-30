@@ -24,3 +24,4 @@ export * from './manifest';
 export * from './selectors';
 export * from './variant-key';
 export * from './helpers';
+export * as patching from './patching';

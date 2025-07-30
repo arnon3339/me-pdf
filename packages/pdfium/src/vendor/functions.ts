@@ -17,6 +17,7 @@ export const functions = {
     'boolean',
   ] as const,
   EPDFAnnot_GetIntent: [['number', 'number', 'number'] as const, 'number'] as const,
+  EPDFAnnot_GetLineEndings: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_GetRectangleDifferences: [
     ['number', 'number', 'number', 'number', 'number'] as const,
     'boolean',
@@ -29,6 +30,9 @@ export const functions = {
     'boolean',
   ] as const,
   EPDFAnnot_SetIntent: [['number', 'string'] as const, 'boolean'] as const,
+  EPDFAnnot_SetLine: [['number', 'number', 'number'] as const, 'boolean'] as const,
+  EPDFAnnot_SetLineEndings: [['number', 'number', 'number'] as const, 'boolean'] as const,
+  EPDFAnnot_SetVertices: [['number', 'number', 'number'] as const, 'boolean'] as const,
   FORM_CanRedo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_CanUndo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_DoDocumentAAction: [['number', 'number'] as const, null] as const,

@@ -1,0 +1,187 @@
+import { PointerEvent, useState, useRef, useEffect } from '@framework';
+import { PdfAnnotationObject, Position, Rect, restoreOffset } from '@embedpdf/models';
+import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
+import { ResizeDirection } from '../types';
+import { ComputePatch } from '../patchers';
+
+interface UseDragResizeOpts<T extends PdfAnnotationObject> {
+  /* invariants */
+  scale: number;
+  pageWidth: number;
+  pageHeight: number;
+  rotation: number;
+
+  /* annotation info */
+  tracked: TrackedAnnotation<T>;
+
+  /* config */
+  isSelected: boolean;
+  isDraggable: boolean;
+  isResizable: boolean;
+  computePatch?: ComputePatch<T>;
+  computeVertices?: (a: T) => Position[];
+
+  /* state held by caller */
+  currentRect: Rect;
+  setCurrentRect: (r: Rect) => void;
+  setCurrentVertices: (v: Position[]) => void;
+  setPreviewObject: (p: Partial<T> | null) => void;
+
+  /* commit */
+  commit: (patch: Partial<T>) => void;
+}
+
+type Point = { x: number; y: number };
+type DragState = 'idle' | 'dragging' | 'resizing';
+
+export function useDragResize<T extends PdfAnnotationObject>({
+  scale,
+  pageWidth,
+  pageHeight,
+  rotation,
+  tracked,
+  isSelected,
+  isDraggable,
+  isResizable,
+  computePatch,
+  computeVertices,
+  currentRect,
+  setCurrentRect,
+  setCurrentVertices,
+  setPreviewObject,
+  commit,
+}: UseDragResizeOpts<T>) {
+  /* ── local refs ─────────────────────────────────────────── */
+  const drag = useRef<DragState>('idle');
+  const dir = useRef<ResizeDirection>('none');
+  const startPos = useRef<Point | null>(null);
+  const startRect = useRef<Rect | null>(null);
+
+  /* ── helpers ────────────────────────────────────────────── */
+  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+  const pageW = pageWidth / scale;
+  const pageH = pageHeight / scale;
+
+  /* ── core maths shared by drag + resize ─────────────────── */
+  const applyDelta = (dx: number, dy: number) => {
+    if (!startRect.current) return currentRect;
+
+    let { origin, size } = startRect.current;
+
+    let ox = origin.x;
+    let oy = origin.y;
+    let w = size.width;
+    let h = size.height;
+
+    if (drag.current === 'dragging') {
+      ox += dx;
+      oy += dy;
+    } else if (drag.current === 'resizing') {
+      if (dir.current.includes('right')) w += dx;
+      else if (dir.current.includes('left')) {
+        ox += dx;
+        w -= dx;
+      }
+      if (dir.current.includes('bottom')) h += dy;
+      else if (dir.current.includes('top')) {
+        oy += dy;
+        h -= dy;
+      }
+    }
+    /* prevent negative dimensions */
+    if (w < 1 || h < 1) return currentRect;
+
+    /* clamp to page */
+    w = clamp(w, 1, pageW);
+    h = clamp(h, 1, pageH);
+    ox = clamp(ox, 0, pageW - w);
+    oy = clamp(oy, 0, pageH - h);
+
+    return { origin: { x: ox, y: oy }, size: { width: w, height: h } };
+  };
+
+  /* ── pointer handlers for the container ─────────────────── */
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (!isSelected || !isDraggable) return;
+    e.stopPropagation();
+    e.preventDefault();
+    drag.current = 'dragging';
+    startPos.current = { x: e.clientX, y: e.clientY };
+    startRect.current = currentRect;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (drag.current === 'idle' || !startPos.current) return;
+    const disp = {
+      x: e.clientX - startPos.current.x,
+      y: e.clientY - startPos.current.y,
+    };
+    const { x, y } = restoreOffset(disp, rotation, scale);
+    const nextRect = applyDelta(x, y);
+
+    /* build preview patch */
+    let patch: Partial<T> = { rect: nextRect } as Partial<T>;
+    if (computePatch) {
+      patch = computePatch(tracked.object, {
+        rect: nextRect,
+        direction: drag.current === 'resizing' ? dir.current : 'bottom-right',
+      });
+      if (computeVertices) setCurrentVertices(computeVertices({ ...tracked.object, ...patch }));
+    }
+    setCurrentRect(patch.rect ?? nextRect);
+    setPreviewObject(patch);
+  };
+
+  const onPointerUp = () => {
+    if (drag.current === 'idle') return;
+    const usedDir = dir.current || 'bottom-right';
+    drag.current = 'idle';
+
+    /* final patch */
+    let patch: Partial<T> = { rect: currentRect } as Partial<T>;
+    if (computePatch) {
+      patch = computePatch(tracked.object, {
+        rect: currentRect,
+        direction: usedDir,
+      });
+    }
+    commit(patch);
+
+    /* cleanup */
+    startPos.current = null;
+    startRect.current = null;
+    dir.current = 'none';
+    setPreviewObject(null);
+  };
+
+  /* ── handle pointer-down from resize handles ─────────────── */
+  const startResize = (direction: ResizeDirection) => (e: PointerEvent<HTMLDivElement>) => {
+    if (!isSelected || !isResizable) return;
+    e.stopPropagation();
+    e.preventDefault();
+    drag.current = 'resizing';
+    dir.current = direction;
+    startPos.current = { x: e.clientX, y: e.clientY };
+    startRect.current = currentRect;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  /* reset when annotation changes */
+  useEffect(() => {
+    drag.current = 'idle';
+    dir.current = 'none';
+    startPos.current = null;
+    startRect.current = null;
+  }, [tracked]);
+
+  /* ── public surface ─────────────────────────────────────── */
+  return {
+    rootHandlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp,
+    },
+    startResize,
+  };
+}

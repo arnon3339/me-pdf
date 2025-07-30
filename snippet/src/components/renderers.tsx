@@ -50,9 +50,6 @@ import { Dialog } from './ui/dialog';
 import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
-import { useStoreState } from '@embedpdf/core/preact';
-import { SelectedAnnotation, TrackedAnnotation } from '@embedpdf/plugin-annotation';
-import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
   { commandId, onClick, active, color, disabled = false, ...props },
@@ -682,43 +679,6 @@ export const zoomRenderer: ComponentRenderFunction<ZoomRendererProps> = (
           {commandZoomIn?.icon && <Icon icon={commandZoomIn.icon} className="h-5 w-5" />}
         </Button>
       </Tooltip>
-    </div>
-  );
-};
-
-interface AnnotationSelectionMenuProps extends FloatingComponentProps {
-  open: boolean;
-}
-
-export const annotationSelectionMenuRenderer: ComponentRenderFunction<
-  AnnotationSelectionMenuProps
-> = (props, children) => {
-  const { provides: annotation } = useAnnotationCapability();
-  const { provides: scroll } = useScrollCapability();
-  const { provides: viewport } = useViewportCapability();
-
-  if (!props.open || !annotation || !scroll || !viewport) return null;
-
-  const selectedAnnotation = annotation.getSelectedAnnotation();
-  if (!selectedAnnotation) return null;
-
-  const bounding = [
-    { page: selectedAnnotation.object.pageIndex, rect: selectedAnnotation.object.rect },
-  ];
-  const coords = menuPositionForSelection(bounding, scroll, viewport, 10, 42);
-  if (!coords) return null; // nothing visible yet
-
-  return (
-    <div
-      style={{
-        left: `${coords.left}px`,
-        top: `${coords.top}px`,
-        transform: 'translate(-50%, 0%)',
-        zIndex: 2000,
-      }}
-      className="absolute rounded-md border border-[#cfd4da] bg-[#f8f9fa] p-1"
-    >
-      {children()}
     </div>
   );
 };

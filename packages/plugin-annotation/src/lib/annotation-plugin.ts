@@ -57,7 +57,8 @@ import { SelectionPlugin, SelectionCapability } from '@embedpdf/plugin-selection
 import { HistoryPlugin, HistoryCapability, Command } from '@embedpdf/plugin-history';
 import { getSelectedAnnotation, getToolDefaultsBySubtypeAndIntent } from './selectors';
 import { makeUid, parseUid } from './utils';
-import { makeVariantKey } from './variant-key';
+import { makeVariantKey, parseVariantKey } from './variant-key';
+import { deriveRect } from './patching';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -221,6 +222,9 @@ export class AnnotationPlugin extends BasePlugin<
           this.interactionManager?.activate('default');
         }
       },
+      getSubtypeAndIntentByVariant: (variantKey) => {
+        return parseVariantKey(variantKey);
+      },
       getToolDefaults: (variantKey) => {
         const defaults = this.state.toolDefaults[variantKey];
         if (!defaults) {
@@ -356,24 +360,33 @@ export class AnnotationPlugin extends BasePlugin<
     this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
   }
 
+  private buildPatch(original: PdfAnnotationObject, patch: Partial<PdfAnnotationObject>) {
+    if ('rect' in patch) return patch;
+
+    const merged = { ...original, ...patch } as PdfAnnotationObject;
+    return { ...patch, rect: deriveRect(merged) };
+  }
+
   private updateAnnotation(
     pageIndex: number,
     localId: number,
     patch: Partial<PdfAnnotationObject>,
   ) {
+    const originalObject = this.state.byUid[makeUid(pageIndex, localId)].object;
+    const finalPatch = this.buildPatch(originalObject, patch);
+
     if (!this.history) {
-      this.dispatch(patchAnnotation(pageIndex, localId, patch));
+      this.dispatch(patchAnnotation(pageIndex, localId, finalPatch));
       if (this.config.autoCommit !== false) {
         this.commit();
       }
       return;
     }
-    const originalObject = this.state.byUid[makeUid(pageIndex, localId)].object;
     const originalPatch = Object.fromEntries(
       Object.keys(patch).map((key) => [key, originalObject[key as keyof PdfAnnotationObject]]),
     );
     const command: Command = {
-      execute: () => this.dispatch(patchAnnotation(pageIndex, localId, patch)),
+      execute: () => this.dispatch(patchAnnotation(pageIndex, localId, finalPatch)),
       undo: () => this.dispatch(patchAnnotation(pageIndex, localId, originalPatch)),
     };
     this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
