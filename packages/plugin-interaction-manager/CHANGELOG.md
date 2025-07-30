@@ -1,5 +1,11 @@
 # @embedpdf/plugin-interaction-manager
 
+## 1.0.13
+
+### Patch Changes
+
+- [#51](https://github.com/embedpdf/embed-pdf-viewer/pull/51) by [@bobsingor](https://github.com/bobsingor) – Add onClick and onDoubleClick options to the interaction manager
+
 ## 1.0.12
 
 ### Patch Changes
