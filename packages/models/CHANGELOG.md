@@ -1,5 +1,11 @@
 # @embedpdf/models
 
+## 1.0.14
+
+### Patch Changes
+
+- [#52](https://github.com/embedpdf/embed-pdf-viewer/pull/52) by [@bobsingor](https://github.com/bobsingor) – Add support for (basic) free text annotation
+
 ## 1.0.13
 
 ### Patch Changes
