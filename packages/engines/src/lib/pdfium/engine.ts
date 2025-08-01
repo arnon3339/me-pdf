@@ -1155,6 +1155,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.contents,
         );
         break;
+      case PdfAnnotationSubtype.FREETEXT:
+        isSucceed = this.addFreeTextContent(page, pageCtx.pagePtr, annotationPtr, annotation);
+        break;
       case PdfAnnotationSubtype.LINE:
         isSucceed = this.addLineContent(page, pageCtx.pagePtr, annotationPtr, annotation);
         break;
@@ -1313,6 +1316,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.rect,
           annotation.contents,
         );
+        break;
+      }
+
+      /* ── Free text ────────────────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.FREETEXT: {
+        ok = this.addFreeTextContent(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -2288,6 +2297,62 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   free(ptr: number) {
     this.pdfiumModule.pdfium.wasmExports.free(ptr);
+  }
+
+  addFreeTextContent(
+    page: PdfPageObject,
+    pagePtr: number,
+    annotationPtr: number,
+    annotation: PdfFreeTextAnnoObject,
+  ) {
+    if (!this.setBorderStyle(annotationPtr, PdfAnnotationBorderStyle.SOLID, 0)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
+      return false;
+    }
+    if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
+      return false;
+    }
+    if (!this.setAnnotationTextAlignment(annotationPtr, annotation.textAlign)) {
+      return false;
+    }
+    if (
+      !this.setAnnotationDefaultAppearance(
+        annotationPtr,
+        annotation.fontFamily,
+        annotation.fontSize,
+        annotation.fontColor,
+      )
+    ) {
+      return false;
+    }
+    if (annotation.intent && !this.setAnnotIntent(annotationPtr, annotation.intent)) {
+      return false;
+    }
+    if (!annotation.backgroundColor || annotation.backgroundColor === 'transparent') {
+      if (!this.pdfiumModule.EPDFAnnot_ClearColor(annotationPtr, PdfAnnotationColorType.Color)) {
+        return false;
+      }
+    } else if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        annotation.backgroundColor ?? '#FFFFFF',
+        PdfAnnotationColorType.Color,
+      )
+    ) {
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -3714,6 +3779,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     color: WebColor,
   ): boolean {
     const { red, green, blue } = webColorToPdfColor(color); // 0-255 ints
+
     return !!this.pdfiumModule.EPDFAnnot_SetDefaultAppearance(
       annotationPtr,
       font,
