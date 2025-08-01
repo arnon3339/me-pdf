@@ -14,6 +14,9 @@ import {
   PdfBlendMode,
   PdfAnnotationBorderStyle,
   LineEndings,
+  PdfStandardFont,
+  PdfTextAlignment,
+  PdfVerticalAlignment,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -49,7 +52,7 @@ export interface RenderAnnotationOptions {
   imageType?: ImageConversionTypes;
 }
 
-export interface BaseAnnotationDefaults extends WebAlphaColor {
+export interface BaseAnnotationDefaults {
   name: string;
   subtype: PdfAnnotationSubtype;
   interaction: {
@@ -61,26 +64,52 @@ export interface BaseAnnotationDefaults extends WebAlphaColor {
   blendMode?: PdfBlendMode;
 }
 
-export type TextMarkupSubtype =
-  | PdfAnnotationSubtype.HIGHLIGHT
-  | PdfAnnotationSubtype.UNDERLINE
-  | PdfAnnotationSubtype.STRIKEOUT
-  | PdfAnnotationSubtype.SQUIGGLY;
-
-export interface TextMarkupDefaults extends BaseAnnotationDefaults {
-  subtype: TextMarkupSubtype;
+export interface HighlightDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.HIGHLIGHT;
   blendMode: PdfBlendMode;
+  color: string;
+  opacity: number;
+}
+
+export interface UnderlineDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.UNDERLINE;
+  blendMode: PdfBlendMode;
+  color: string;
+  opacity: number;
+}
+
+export interface StrikeoutDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.STRIKEOUT;
+  blendMode: PdfBlendMode;
+  color: string;
+  opacity: number;
+}
+
+export interface SquigglyDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.SQUIGGLY;
+  blendMode: PdfBlendMode;
+  color: string;
+  opacity: number;
 }
 
 export interface InkDefaults extends BaseAnnotationDefaults {
   subtype: PdfAnnotationSubtype.INK;
   strokeWidth: number;
   intent?: string;
+  color: string;
+  opacity: number;
 }
 
 export interface TextDefaults extends BaseAnnotationDefaults {
   subtype: PdfAnnotationSubtype.FREETEXT;
   fontSize: number;
+  fontColor: string;
+  fontFamily: PdfStandardFont;
+  textAlign: PdfTextAlignment;
+  verticalAlign: PdfVerticalAlignment;
+  content: string;
+  backgroundColor: string;
+  opacity: number;
 }
 
 export interface CircleDefaults extends BaseAnnotationDefaults {
@@ -89,6 +118,8 @@ export interface CircleDefaults extends BaseAnnotationDefaults {
   strokeColor: string;
   strokeStyle: PdfAnnotationBorderStyle;
   strokeDashArray?: number[];
+  color: string;
+  opacity: number;
 }
 
 export interface SquareDefaults extends BaseAnnotationDefaults {
@@ -97,6 +128,8 @@ export interface SquareDefaults extends BaseAnnotationDefaults {
   strokeColor: string;
   strokeStyle: PdfAnnotationBorderStyle;
   strokeDashArray?: number[];
+  color: string;
+  opacity: number;
 }
 
 export interface LineDefaults extends BaseAnnotationDefaults {
@@ -107,6 +140,8 @@ export interface LineDefaults extends BaseAnnotationDefaults {
   strokeStyle: PdfAnnotationBorderStyle;
   strokeDashArray?: number[];
   lineEndings?: LineEndings;
+  color: string;
+  opacity: number;
 }
 
 export interface PolylineDefaults extends BaseAnnotationDefaults {
@@ -116,6 +151,8 @@ export interface PolylineDefaults extends BaseAnnotationDefaults {
   strokeStyle: PdfAnnotationBorderStyle;
   strokeDashArray?: number[];
   lineEndings?: LineEndings;
+  color: string;
+  opacity: number;
 }
 
 export interface PolygonDefaults extends BaseAnnotationDefaults {
@@ -124,10 +161,15 @@ export interface PolygonDefaults extends BaseAnnotationDefaults {
   strokeColor: string;
   strokeStyle: PdfAnnotationBorderStyle;
   strokeDashArray?: number[];
+  color: string;
+  opacity: number;
 }
 
 export type AnnotationDefaults =
-  | TextMarkupDefaults
+  | HighlightDefaults
+  | UnderlineDefaults
+  | StrikeoutDefaults
+  | SquigglyDefaults
   | InkDefaults
   | TextDefaults
   | CircleDefaults

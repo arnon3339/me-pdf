@@ -88,15 +88,6 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       const signatures: PdfSignatureObject[] = [];
       return PdfTaskHelper.resolve(signatures);
     },
-    updateAnnotationColor: (
-      doc: PdfDocumentObject,
-      page: PdfPageObject,
-      annotation: PdfAnnotationObjectBase,
-      color: WebAlphaColor,
-      which: number = 0,
-    ) => {
-      return PdfTaskHelper.resolve(true);
-    },
     getBookmarks: (doc: PdfDocumentObject) => {
       const bookmarks: PdfBookmarkObject[] = [];
       bookmarks.push(

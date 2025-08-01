@@ -312,30 +312,6 @@ export class WebWorkerEngine implements PdfEngine {
     return task;
   }
 
-  updateAnnotationColor(
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    annotation: PdfAnnotationObjectBase,
-    color: WebAlphaColor,
-    which: number = 0,
-  ) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', doc, page, annotation, color);
-    const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<boolean>(this.worker, requestId);
-
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'updateAnnotationColor',
-        args: [doc, page, annotation, color, which],
-      },
-    };
-    this.proxy(task, request);
-
-    return task;
-  }
-
   /**
    * {@inheritDoc @embedpdf/models!PdfEngine.getDocPermissions}
    *

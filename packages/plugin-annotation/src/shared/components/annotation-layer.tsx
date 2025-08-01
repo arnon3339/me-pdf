@@ -8,6 +8,7 @@ import { SquarePaint } from './annotations/square-paint';
 import { PolylinePaint } from './annotations/polyline-paint';
 import { LinePaint } from './annotations/line-paint';
 import { PolygonPaint } from './annotations/polygon-paint';
+import { FreeTextPaint } from './annotations/free-text-paint';
 
 type AnnotationLayerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
@@ -71,6 +72,12 @@ export function AnnotationLayer({
         pageHeight={pageHeight}
       />
       <LinePaint
+        pageIndex={pageIndex}
+        scale={scale}
+        pageWidth={pageWidth}
+        pageHeight={pageHeight}
+      />
+      <FreeTextPaint
         pageIndex={pageIndex}
         scale={scale}
         pageWidth={pageWidth}

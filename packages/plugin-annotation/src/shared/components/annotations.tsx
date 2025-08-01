@@ -13,6 +13,8 @@ import {
   isLine,
   isPolyline,
   isPolygon,
+  isTextMarkup,
+  isFreeText,
 } from '@embedpdf/plugin-annotation';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
@@ -35,6 +37,8 @@ import { Polyline } from './annotations/polyline';
 import { Polygon } from './annotations/polygon';
 import { VertexEditor } from './vertex-editor';
 import { patchLine, patchPolygon, patchPolyline } from '../vertex-patchers';
+import { TextMarkup } from './text-markup';
+import { FreeText } from './annotations/free-text';
 
 interface AnnotationsProps {
   pageIndex: number;
@@ -52,6 +56,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
   const [annotations, setAnnotations] = useState<TrackedAnnotation[]>([]);
   const { register } = usePointerHandlers({ pageIndex });
   const [selectionState, setSelectionState] = useState<TrackedAnnotation | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (annotationProvides) {
@@ -68,6 +73,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         // Only deselect if clicking directly on the layer (not on an annotation)
         if (pe.target === pe.currentTarget && annotationProvides) {
           annotationProvides.deselectAnnotation();
+          setEditingId(null);
         }
       },
     }),
@@ -80,6 +86,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
       if (annotationProvides && selectionProvides) {
         annotationProvides.selectAnnotation(pageIndex, annotation.localId);
         selectionProvides.clear();
+        setEditingId(null);
       }
     },
     [annotationProvides, selectionProvides, pageIndex],
@@ -93,6 +100,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
     <>
       {annotations.map((annotation) => {
         const isSelected = selectionState?.localId === annotation.localId;
+        const isEditing = editingId === annotation.localId;
 
         if (isInk(annotation)) {
           return (
@@ -410,6 +418,42 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                     onClick={(e) => handleClick(e, annotation)}
                   />
                 </Fragment>
+              )}
+            </AnnotationContainer>
+          );
+        }
+
+        if (isFreeText(annotation)) {
+          return (
+            <AnnotationContainer
+              key={annotation.localId}
+              trackedAnnotation={annotation}
+              isSelected={isSelected}
+              isDraggable={true}
+              isResizable={true}
+              selectionMenu={selectionMenu}
+              outlineOffset={6}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                setEditingId(annotation.localId);
+              }}
+              style={{
+                mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+              }}
+              {...annotationsProps}
+            >
+              {(object) => (
+                <FreeText
+                  isSelected={isSelected}
+                  isEditing={isEditing}
+                  annotation={{
+                    ...annotation,
+                    object,
+                  }}
+                  pageIndex={pageIndex}
+                  scale={scale}
+                  onClick={(e) => handleClick(e, annotation)}
+                />
               )}
             </AnnotationContainer>
           );

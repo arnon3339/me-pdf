@@ -275,9 +275,6 @@ export class EngineRunner {
       case 'removePageAnnotation':
         task = this.engine[name]!(...args);
         break;
-      case 'updateAnnotationColor':
-        task = this.engine[name]!(...args);
-        break;
       case 'getPageTextRects':
         task = this.engine[name]!(...args);
         break;

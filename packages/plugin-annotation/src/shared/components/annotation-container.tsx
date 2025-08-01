@@ -5,6 +5,8 @@ import {
   useState,
   Fragment,
   useLayoutEffect,
+  mapDoubleClick,
+  MouseEvent,
 } from '@framework';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 import { PdfAnnotationObject, Position, Rect, rectEquals } from '@embedpdf/models';
@@ -32,6 +34,7 @@ type AnnotationContainerProps<T extends PdfAnnotationObject> = Omit<
   isDraggable?: boolean;
   isResizable?: boolean;
   outlineOffset?: number;
+  onDoubleClick?: (event: MouseEvent<HTMLDivElement>) => void;
   selectionMenu?: (props: SelectionMenuProps) => JSX.Element;
   computeVertices?: (annotation: T) => Position[];
   computePatch?: ComputePatch<T>;
@@ -53,6 +56,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   computeVertices,
   computePatch,
   selectionMenu,
+  onDoubleClick,
   ...props
 }: AnnotationContainerProps<T>): JSX.Element {
   const { provides: annotationProvides } = useAnnotationCapability();
@@ -99,6 +103,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
       <div
         /* attach handlers */
         {...rootHandlers}
+        {...mapDoubleClick(onDoubleClick)}
         style={{
           position: 'absolute',
           outline: isSelected ? '1px solid #007ACC' : 'none',
@@ -109,6 +114,9 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
           height: `${currentRect.size.height * scale}px`,
           pointerEvents: isSelected ? 'auto' : 'none',
           cursor: isSelected && isDraggable ? 'move' : 'default',
+          ...(isSelected && {
+            zIndex: 3,
+          }),
           ...style,
         }}
         {...props}

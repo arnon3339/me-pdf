@@ -13,6 +13,7 @@ export * from './pdf';
 export * from './task';
 export * from './color';
 export * from './date';
+export * from './helpers';
 
 /**
  * ignore will do nothing when called.

@@ -100,6 +100,15 @@ import {
   PdfAnnotationLineEnding,
   LinePoints,
   LineEndings,
+  WebColor,
+  webColorToPdfColor,
+  PdfColor,
+  pdfColorToWebColor,
+  pdfAlphaToWebOpacity,
+  webOpacityToPdfAlpha,
+  PdfStandardFont,
+  PdfTextAlignment,
+  PdfVerticalAlignment,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1147,6 +1156,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.contents,
         );
         break;
+      case PdfAnnotationSubtype.FREETEXT:
+        isSucceed = this.addFreeTextContent(page, pageCtx.pagePtr, annotationPtr, annotation);
+        break;
       case PdfAnnotationSubtype.LINE:
         isSucceed = this.addLineContent(page, pageCtx.pagePtr, annotationPtr, annotation);
         break;
@@ -1305,6 +1317,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           annotation.rect,
           annotation.contents,
         );
+        break;
+      }
+
+      /* ── Free text ────────────────────────────────────────────────────────── */
+      case PdfAnnotationSubtype.FREETEXT: {
+        ok = this.addFreeTextContent(page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -2282,6 +2300,65 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.pdfiumModule.pdfium.wasmExports.free(ptr);
   }
 
+  addFreeTextContent(
+    page: PdfPageObject,
+    pagePtr: number,
+    annotationPtr: number,
+    annotation: PdfFreeTextAnnoObject,
+  ) {
+    if (!this.setBorderStyle(annotationPtr, PdfAnnotationBorderStyle.SOLID, 0)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
+    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
+      return false;
+    }
+    if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
+      return false;
+    }
+    if (!this.setAnnotationTextAlignment(annotationPtr, annotation.textAlign)) {
+      return false;
+    }
+    if (!this.setAnnotationVerticalAlignment(annotationPtr, annotation.verticalAlign)) {
+      return false;
+    }
+    if (
+      !this.setAnnotationDefaultAppearance(
+        annotationPtr,
+        annotation.fontFamily,
+        annotation.fontSize,
+        annotation.fontColor,
+      )
+    ) {
+      return false;
+    }
+    if (annotation.intent && !this.setAnnotIntent(annotationPtr, annotation.intent)) {
+      return false;
+    }
+    if (!annotation.backgroundColor || annotation.backgroundColor === 'transparent') {
+      if (!this.pdfiumModule.EPDFAnnot_ClearColor(annotationPtr, PdfAnnotationColorType.Color)) {
+        return false;
+      }
+    } else if (
+      !this.setAnnotationColor(
+        annotationPtr,
+        annotation.backgroundColor ?? '#FFFFFF',
+        PdfAnnotationColorType.Color,
+      )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Set the rect of specified annotation
    * @param page - page info that the annotation is belonged to
@@ -2315,13 +2392,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
       return false;
     }
+    if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
+      return false;
+    }
     if (
       !this.setAnnotationColor(
         annotationPtr,
-        {
-          color: annotation.color ?? '#FFFF00',
-          opacity: annotation.opacity ?? 1,
-        },
+        annotation.color ?? '#FFFF00',
         PdfAnnotationColorType.Color,
       )
     ) {
@@ -2396,22 +2473,19 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     } else if (
       !this.setAnnotationColor(
         annotationPtr,
-        {
-          color: annotation.color ?? '#FFFF00',
-          opacity: annotation.opacity ?? 1,
-        },
+        annotation.color ?? '#FFFF00',
         PdfAnnotationColorType.InteriorColor,
       )
     ) {
       return false;
     }
+    if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
+      return false;
+    }
     if (
       !this.setAnnotationColor(
         annotationPtr,
-        {
-          color: annotation.strokeColor ?? '#FFFF00',
-          opacity: annotation.opacity ?? 1,
-        },
+        annotation.strokeColor ?? '#FFFF00',
         PdfAnnotationColorType.Color,
       )
     ) {
@@ -2479,23 +2553,19 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     } else if (
       !this.setAnnotationColor(
         annotationPtr,
-        {
-          color: annotation.color ?? '#FFFF00',
-          opacity: annotation.opacity ?? 1,
-        },
+        annotation.color ?? '#FFFF00',
         PdfAnnotationColorType.InteriorColor,
       )
     ) {
       return false;
     }
-
+    if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
+      return false;
+    }
     if (
       !this.setAnnotationColor(
         annotationPtr,
-        {
-          color: annotation.strokeColor ?? '#FFFF00',
-          opacity: annotation.opacity ?? 1,
-        },
+        annotation.strokeColor ?? '#FFFF00',
         PdfAnnotationColorType.Color,
       )
     ) {
@@ -2551,23 +2621,19 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     } else if (
       !this.setAnnotationColor(
         annotationPtr,
-        {
-          color: annotation.color ?? '#FFFF00',
-          opacity: annotation.opacity ?? 1,
-        },
+        annotation.color ?? '#FFFF00',
         PdfAnnotationColorType.InteriorColor,
       )
     ) {
       return false;
     }
-
+    if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
+      return false;
+    }
     if (
       !this.setAnnotationColor(
         annotationPtr,
-        {
-          color: annotation.strokeColor ?? '#FFFF00',
-          opacity: annotation.opacity ?? 1,
-        },
+        annotation.strokeColor ?? '#FFFF00',
         PdfAnnotationColorType.Color,
       )
     ) {
@@ -2611,13 +2677,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
       return false;
     }
+    if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
+      return false;
+    }
     if (
       !this.setAnnotationColor(
         annotationPtr,
-        {
-          color: annotation.color ?? '#FFFF00',
-          opacity: annotation.opacity ?? 1,
-        },
+        annotation.color ?? '#FFFF00',
         PdfAnnotationColorType.Color,
       )
     ) {
@@ -3530,89 +3596,47 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private readAnnotationColor(
     annotationPtr: number,
     colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
-  ): PdfAlphaColor | undefined {
+  ): PdfColor | undefined {
     const rPtr = this.malloc(4);
     const gPtr = this.malloc(4);
     const bPtr = this.malloc(4);
-    const aPtr = this.malloc(4);
 
     // colourType 0 = "colour" (stroke/fill); other types are interior/border
-    const ok = this.pdfiumModule.EPDFAnnot_GetColor(
-      annotationPtr,
-      colorType,
-      rPtr,
-      gPtr,
-      bPtr,
-      aPtr,
-    );
+    const ok = this.pdfiumModule.EPDFAnnot_GetColor(annotationPtr, colorType, rPtr, gPtr, bPtr);
 
-    let colour: PdfAlphaColor | undefined;
+    let colour: PdfColor | undefined;
 
     if (ok) {
       colour = {
         red: this.pdfiumModule.pdfium.getValue(rPtr, 'i32') & 0xff,
         green: this.pdfiumModule.pdfium.getValue(gPtr, 'i32') & 0xff,
         blue: this.pdfiumModule.pdfium.getValue(bPtr, 'i32') & 0xff,
-        alpha: this.pdfiumModule.pdfium.getValue(aPtr, 'i32') & 0xff, // 0 = transparent, 255 = opaque
       };
     }
 
     this.free(rPtr);
     this.free(gPtr);
     this.free(bPtr);
-    this.free(aPtr);
 
     return colour;
   }
 
-  /* --------------------------------------------------------------------------- */
   /**
-   * Resolve the visible fill colour for **Highlight / Underline / StrikeOut /
-   * Squiggly** markup annotations.
+   * Get the fill/stroke colour annotation.
    *
-   * Resolution order (first non-`undefined` wins):
-   *  1. `/C` dictionary entry – fast, present in Acrobat / Office PDFs
-   *  2. Appearance-stream objects – drills into paths & nested forms
-   *  3. Hard-coded fallback (Acrobat-style opaque yellow)
-   *
-   * @param annotationPtr - pointer to an `FPDF_ANNOTATION`
-   * @param fallback      - colour to use when the PDF stores no tint at all
-   * @returns WebAlphaColor with hex color and opacity (0-1)
+   * @param annotationPtr - pointer to the annotation whose colour is being set
+   * @param colorType - which colour to get (0 = fill, 1 = stroke)
+   * @returns WebColor with hex color
    *
    * @private
    */
-  private resolveAnnotationColor(
-    annotationPtr: number,
-    colorType?: PdfAnnotationColorType,
-  ): WebAlphaColor;
-  private resolveAnnotationColor(
-    annotationPtr: number,
-    colorType: PdfAnnotationColorType,
-    fallback: PdfAlphaColor,
-  ): WebAlphaColor;
-  private resolveAnnotationColor(
-    annotationPtr: number,
-    colorType: PdfAnnotationColorType,
-    fallback: undefined,
-  ): WebAlphaColor | undefined;
-
-  // 2) Implementation
-  private resolveAnnotationColor(
+  private getAnnotationColor(
     annotationPtr: number,
     colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
-    fallback?: PdfAlphaColor,
-  ): WebAlphaColor | undefined {
+  ): WebColor | undefined {
     const annotationColor = this.readAnnotationColor(annotationPtr, colorType);
 
-    if (annotationColor) {
-      return pdfAlphaColorToWebAlphaColor(annotationColor);
-    }
-
-    if (fallback !== undefined) {
-      return pdfAlphaColorToWebAlphaColor(fallback);
-    }
-
-    return undefined;
+    return annotationColor ? pdfColorToWebColor(annotationColor) : undefined;
   }
 
   /**
@@ -3628,18 +3652,170 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private setAnnotationColor(
     annotationPtr: number,
-    webAlphaColor: WebAlphaColor,
+    webColor: WebColor,
     colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
   ): boolean {
-    const pdfAlphaColor = webAlphaColorToPdfAlphaColor(webAlphaColor);
+    const pdfColor = webColorToPdfColor(webColor);
 
     return this.pdfiumModule.EPDFAnnot_SetColor(
       annotationPtr,
       colorType,
-      pdfAlphaColor.red & 0xff,
-      pdfAlphaColor.green & 0xff,
-      pdfAlphaColor.blue & 0xff,
-      (pdfAlphaColor.alpha ?? 255) & 0xff,
+      pdfColor.red & 0xff,
+      pdfColor.green & 0xff,
+      pdfColor.blue & 0xff,
+    );
+  }
+
+  /**
+   * Get the opacity of the annotation.
+   *
+   * @param annotationPtr - pointer to the annotation whose opacity is being set
+   * @returns opacity (0-1)
+   *
+   * @private
+   */
+  private getAnnotationOpacity(annotationPtr: number): number {
+    const opacityPtr = this.malloc(4);
+    const ok = this.pdfiumModule.EPDFAnnot_GetOpacity(annotationPtr, opacityPtr);
+    const opacity = ok ? this.pdfiumModule.pdfium.getValue(opacityPtr, 'i32') : 255;
+    this.free(opacityPtr);
+    return pdfAlphaToWebOpacity(opacity);
+  }
+
+  /**
+   * Set the opacity of the annotation.
+   *
+   * @param annotationPtr - pointer to the annotation whose opacity is being set
+   * @param opacity - opacity (0-1)
+   * @returns true on success
+   *
+   * @private
+   */
+  private setAnnotationOpacity(annotationPtr: number, opacity: number): boolean {
+    const pdfOpacity = webOpacityToPdfAlpha(opacity);
+    return this.pdfiumModule.EPDFAnnot_SetOpacity(annotationPtr, pdfOpacity & 0xff);
+  }
+
+  /**
+   * Fetch the `/Q` text-alignment value from a **FreeText** annotation.
+   *
+   * @param annotationPtr pointer returned by `FPDFPage_GetAnnot`
+   * @returns `PdfTextAlignment`
+   */
+  private getAnnotationTextAlignment(annotationPtr: number): PdfTextAlignment {
+    return this.pdfiumModule.EPDFAnnot_GetTextAlignment(annotationPtr);
+  }
+
+  /**
+   * Write the `/Q` text-alignment value into a **FreeText** annotation
+   * and clear the existing appearance stream so it can be regenerated.
+   *
+   * @param annotationPtr pointer returned by `FPDFPage_GetAnnot`
+   * @param alignment     `PdfTextAlignment`
+   * @returns `true` on success
+   */
+  private setAnnotationTextAlignment(annotationPtr: number, alignment: PdfTextAlignment): boolean {
+    return !!this.pdfiumModule.EPDFAnnot_SetTextAlignment(annotationPtr, alignment);
+  }
+
+  /**
+   * Fetch the `/EPDF:VerticalAlignment` vertical-alignment value from a **FreeText** annotation.
+   *
+   * @param annotationPtr pointer returned by `FPDFPage_GetAnnot`
+   * @returns `PdfVerticalAlignment`
+   */
+  private getAnnotationVerticalAlignment(annotationPtr: number): PdfVerticalAlignment {
+    return this.pdfiumModule.EPDFAnnot_GetVerticalAlignment(annotationPtr);
+  }
+
+  /**
+   * Write the `/EPDF:VerticalAlignment` vertical-alignment value into a **FreeText** annotation
+   * and clear the existing appearance stream so it can be regenerated.
+   *
+   * @param annotationPtr pointer returned by `FPDFPage_GetAnnot`
+   * @param alignment     `PdfVerticalAlignment`
+   * @returns `true` on success
+   */
+  private setAnnotationVerticalAlignment(
+    annotationPtr: number,
+    alignment: PdfVerticalAlignment,
+  ): boolean {
+    return !!this.pdfiumModule.EPDFAnnot_SetVerticalAlignment(annotationPtr, alignment);
+  }
+
+  /**
+   * Return the **default appearance** (font, size, colour) declared in the
+   * `/DA` string of a **FreeText** annotation.
+   *
+   * @param annotationPtr  pointer to `FPDF_ANNOTATION`
+   * @returns `{ font, fontSize, color }` or `undefined` when PDFium returns false
+   *
+   * NOTE – `font` is the raw `FPDF_STANDARD_FONT` enum value that PDFium uses
+   *        (same range as the C API: 0 = Courier, 12 = ZapfDingbats, …).
+   */
+  private getAnnotationDefaultAppearance(
+    annotationPtr: number,
+  ): { fontFamily: PdfStandardFont; fontSize: number; fontColor: WebColor } | undefined {
+    const fontPtr = this.malloc(4);
+    const sizePtr = this.malloc(4);
+    const rPtr = this.malloc(4);
+    const gPtr = this.malloc(4);
+    const bPtr = this.malloc(4);
+
+    const ok = !!this.pdfiumModule.EPDFAnnot_GetDefaultAppearance(
+      annotationPtr,
+      fontPtr,
+      sizePtr,
+      rPtr,
+      gPtr,
+      bPtr,
+    );
+
+    if (!ok) {
+      [fontPtr, sizePtr, rPtr, gPtr, bPtr].forEach((p) => this.free(p));
+      return; // undefined – caller decides what to do
+    }
+
+    const pdf = this.pdfiumModule.pdfium;
+    const font = pdf.getValue(fontPtr, 'i32');
+    const fontSize = pdf.getValue(sizePtr, 'float');
+    const red = pdf.getValue(rPtr, 'i32') & 0xff;
+    const green = pdf.getValue(gPtr, 'i32') & 0xff;
+    const blue = pdf.getValue(bPtr, 'i32') & 0xff;
+
+    [fontPtr, sizePtr, rPtr, gPtr, bPtr].forEach((p) => this.free(p));
+
+    return {
+      fontFamily: font,
+      fontSize,
+      fontColor: pdfColorToWebColor({ red, green, blue }),
+    };
+  }
+
+  /**
+   * Write a **default appearance** (`/DA`) into a FreeText annotation.
+   *
+   * @param annotationPtr pointer to `FPDF_ANNOTATION`
+   * @param font          `FPDF_STANDARD_FONT` enum value
+   * @param fontSize      size in points (≥ 0)
+   * @param color         CSS-style `#rrggbb` string (alpha ignored)
+   * @returns `true` on success
+   */
+  private setAnnotationDefaultAppearance(
+    annotationPtr: number,
+    font: PdfStandardFont,
+    fontSize: number,
+    color: WebColor,
+  ): boolean {
+    const { red, green, blue } = webColorToPdfColor(color); // 0-255 ints
+
+    return !!this.pdfiumModule.EPDFAnnot_SetDefaultAppearance(
+      annotationPtr,
+      font,
+      fontSize,
+      red & 0xff,
+      green & 0xff,
+      blue & 0xff,
     );
   }
 
@@ -4149,7 +4325,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
     const state = this.getAnnotString(annotationPtr, 'State') as PdfAnnotationState;
     const stateModel = this.getAnnotString(annotationPtr, 'StateModel') as PdfAnnotationStateModel;
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const color = this.getAnnotationColor(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     const inReplyToId = this.getInReplyToId(pagePtr, annotationPtr);
 
     return {
@@ -4157,7 +4334,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.TEXT,
       contents,
-      ...webAlphaColor,
+      color: color ?? '#FFFF00',
+      opacity,
       rect,
       inReplyToId,
       author,
@@ -4188,6 +4366,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
+    const defaultStyle = this.getAnnotString(annotationPtr, 'DS');
+    const da = this.getAnnotationDefaultAppearance(annotationPtr);
+    const backgroundColor = this.getAnnotationColor(annotationPtr);
+    const textAlign = this.getAnnotationTextAlignment(annotationPtr);
+    const verticalAlign = this.getAnnotationVerticalAlignment(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     const modified = pdfDateToDate(modifiedRaw);
     const richContent = this.getAnnotRichContent(annotationPtr);
 
@@ -4195,6 +4379,14 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       pageIndex: page.index,
       id: index,
       type: PdfAnnotationSubtype.FREETEXT,
+      fontFamily: da?.fontFamily ?? PdfStandardFont.Unknown,
+      fontSize: da?.fontSize ?? 12,
+      fontColor: da?.fontColor ?? '#000000',
+      verticalAlign,
+      backgroundColor,
+      opacity,
+      textAlign,
+      defaultStyle,
       richContent,
       contents,
       author,
@@ -4370,7 +4562,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const color = this.getAnnotationColor(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
     const inkList = this.getInkList(page, annotationPtr);
     const blendMode = this.pdfiumModule.EPDFAnnot_GetBlendMode(annotationPtr);
@@ -4382,8 +4575,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       type: PdfAnnotationSubtype.INK,
       ...(intent && { intent }),
       blendMode,
-      ...webAlphaColor,
-      strokeWidth,
+      color: color ?? '#FF0000',
+      opacity,
+      strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
       rect,
       inkList,
       author,
@@ -4414,12 +4608,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
     const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const strokeColor = this.resolveAnnotationColor(annotationPtr);
-    const interiorColor = this.resolveAnnotationColor(
+    const strokeColor = this.getAnnotationColor(annotationPtr);
+    const interiorColor = this.getAnnotationColor(
       annotationPtr,
       PdfAnnotationColorType.InteriorColor,
-      undefined,
     );
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     let strokeDashArray: number[] | undefined;
@@ -4444,9 +4638,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.POLYGON,
       contents,
-      strokeColor: strokeColor.color,
-      color: interiorColor?.color ?? 'transparent',
-      opacity: interiorColor?.opacity ?? strokeColor.opacity,
+      strokeColor: strokeColor ?? '#FF0000',
+      color: interiorColor ?? 'transparent',
+      opacity,
       strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
       strokeStyle,
       strokeDashArray,
@@ -4480,12 +4674,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
     const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const strokeColor = this.resolveAnnotationColor(annotationPtr);
-    const interiorColor = this.resolveAnnotationColor(
+    const strokeColor = this.getAnnotationColor(annotationPtr);
+    const interiorColor = this.getAnnotationColor(
       annotationPtr,
       PdfAnnotationColorType.InteriorColor,
-      undefined,
     );
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     let strokeDashArray: number[] | undefined;
@@ -4502,9 +4696,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.POLYLINE,
       contents,
-      strokeColor: strokeColor.color,
-      color: interiorColor?.color ?? 'transparent',
-      opacity: interiorColor?.opacity ?? strokeColor.opacity,
+      strokeColor: strokeColor ?? '#FF0000',
+      color: interiorColor ?? 'transparent',
+      opacity,
       strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
       strokeStyle,
       strokeDashArray,
@@ -4540,12 +4734,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const linePoints = this.getLinePoints(annotationPtr, page);
     const lineEndings = this.getLineEndings(annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const strokeColor = this.resolveAnnotationColor(annotationPtr);
-    const interiorColor = this.resolveAnnotationColor(
+    const strokeColor = this.getAnnotationColor(annotationPtr);
+    const interiorColor = this.getAnnotationColor(
       annotationPtr,
       PdfAnnotationColorType.InteriorColor,
-      undefined,
     );
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     let strokeDashArray: number[] | undefined;
@@ -4565,9 +4759,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       strokeWidth: strokeWidth === 0 ? 1 : strokeWidth,
       strokeStyle,
       strokeDashArray,
-      strokeColor: strokeColor.color,
-      color: interiorColor?.color ?? 'transparent',
-      opacity: interiorColor?.opacity ?? strokeColor.opacity,
+      strokeColor: strokeColor ?? '#FF0000',
+      color: interiorColor ?? 'transparent',
+      opacity,
       linePoints: linePoints || { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } },
       lineEndings: lineEndings || {
         start: PdfAnnotationLineEnding.None,
@@ -4597,7 +4791,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const pageRect = this.readPageAnnoRect(annotationPtr);
     const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
     const segmentRects = this.getQuadPointsAnno(page, annotationPtr);
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const color = this.getAnnotationColor(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     const blendMode = this.pdfiumModule.EPDFAnnot_GetBlendMode(annotationPtr);
 
     const author = this.getAnnotString(annotationPtr, 'T');
@@ -4613,7 +4808,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       rect,
       contents,
       segmentRects,
-      ...webAlphaColor,
+      color: color ?? '#FFFF00',
+      opacity,
       author,
       modified,
     };
@@ -4642,7 +4838,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
     const segmentRects = this.getQuadPointsAnno(page, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const color = this.getAnnotationColor(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     const blendMode = this.pdfiumModule.EPDFAnnot_GetBlendMode(annotationPtr);
 
     return {
@@ -4653,7 +4850,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       rect,
       contents,
       segmentRects,
-      ...webAlphaColor,
+      color: color ?? '#FF0000',
+      opacity,
       author,
       modified,
     };
@@ -4682,7 +4880,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
     const segmentRects = this.getQuadPointsAnno(page, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const color = this.getAnnotationColor(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     const blendMode = this.pdfiumModule.EPDFAnnot_GetBlendMode(annotationPtr);
 
     return {
@@ -4693,7 +4892,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       rect,
       contents,
       segmentRects,
-      ...webAlphaColor,
+      color: color ?? '#FF0000',
+      opacity,
       author,
       modified,
     };
@@ -4722,7 +4922,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const modified = pdfDateToDate(modifiedRaw);
     const segmentRects = this.getQuadPointsAnno(page, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
-    const webAlphaColor = this.resolveAnnotationColor(annotationPtr);
+    const color = this.getAnnotationColor(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     const blendMode = this.pdfiumModule.EPDFAnnot_GetBlendMode(annotationPtr);
 
     return {
@@ -4733,7 +4934,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       rect,
       contents,
       segmentRects,
-      ...webAlphaColor,
+      color: color ?? '#FF0000',
+      opacity,
       author,
       modified,
     };
@@ -5064,13 +5266,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-    const interiorColor = this.resolveAnnotationColor(
+    const interiorColor = this.getAnnotationColor(
       annotationPtr,
       PdfAnnotationColorType.InteriorColor,
-      undefined,
     );
-    const { color: strokeColor, opacity: strokeOpacity } =
-      this.resolveAnnotationColor(annotationPtr);
+    const strokeColor = this.getAnnotationColor(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     let strokeDashArray: number[] | undefined;
@@ -5086,10 +5287,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.CIRCLE,
       flags,
-      color: interiorColor?.color ?? 'transparent',
-      opacity: interiorColor?.opacity ?? strokeOpacity,
+      color: interiorColor ?? 'transparent',
+      opacity,
       strokeWidth,
-      strokeColor,
+      strokeColor: strokeColor ?? '#FF0000',
       strokeStyle,
       rect,
       author,
@@ -5120,13 +5321,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-    const interiorColor = this.resolveAnnotationColor(
+    const interiorColor = this.getAnnotationColor(
       annotationPtr,
       PdfAnnotationColorType.InteriorColor,
-      undefined,
     );
-    const { color: strokeColor, opacity: strokeOpacity } =
-      this.resolveAnnotationColor(annotationPtr);
+    const strokeColor = this.getAnnotationColor(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     let { style: strokeStyle, width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     let strokeDashArray: number[] | undefined;
@@ -5142,9 +5342,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.SQUARE,
       flags,
-      color: interiorColor?.color ?? 'transparent',
-      opacity: interiorColor?.opacity ?? strokeOpacity,
-      strokeColor,
+      color: interiorColor ?? 'transparent',
+      opacity,
+      strokeColor: strokeColor ?? '#FF0000',
       strokeWidth,
       strokeStyle,
       rect,
@@ -6131,86 +6331,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.free(bufferPtr);
 
     return ap;
-  }
-
-  /**
-   * Change the visible colour (and opacity) of an existing annotation.
-   *
-   * For markup annotations (highlight / underline / strikeout / squiggly) we
-   * first clear the AP dictionary entry, otherwise the stored appearance stream
-   * will override the new tint.  For all other sub-types we keep the existing
-   * AP so custom artwork isn't lost.
-   *
-   * @param doc         logical document object
-   * @param page        logical page object
-   * @param annotation  the annotation we want to recolour
-   * @param colour      RGBA tuple (0-255 per channel)
-   * @param which       0 = stroke/fill colour  (PDFium's "colourType" param)
-   *
-   * @returns `true` when the operation succeeded
-   */
-  public updateAnnotationColor(
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    annotation: PdfAnnotationObjectBase,
-    color: WebAlphaColor,
-    which: number = 0, // 0 → "colour" (fill/stroke)
-  ): PdfTask<boolean> {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'setAnnotationColor',
-      doc,
-      page,
-      annotation,
-      color,
-      which,
-    );
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'Begin', doc.id);
-    const task = PdfTaskHelper.create<boolean>();
-
-    try {
-      /* 1 ── sanity & native handles ────────────────────────────────────────── */
-      const ctx = this.cache.getContext(doc.id);
-      if (!ctx) {
-        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'End', doc.id);
-        this.logger.warn(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor: doc closed');
-        task.resolve(false);
-        return task;
-      }
-
-      const pageCtx = ctx.acquirePage(page.index);
-      const annotPtr = this.pdfiumModule.FPDFPage_GetAnnot(pageCtx.pagePtr, annotation.id);
-      if (!annotPtr) {
-        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'End', doc.id);
-        this.logger.warn(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor: annot not found');
-        pageCtx.release();
-        task.resolve(false);
-        return task;
-      }
-
-      const ok = this.setAnnotationColor(annotPtr, color, which);
-
-      /* 4 ── regenerate appearance & clean-up ───────────────────────────────── */
-      if (ok) {
-        this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
-      }
-
-      this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
-      pageCtx.release();
-
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'End', doc.id);
-      task.resolve(!!ok);
-    } catch (error) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor', 'End', doc.id);
-      this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'setAnnotationColor: error', error);
-      task.reject({
-        code: PdfErrorCode.Unknown,
-        message: `Failed to set annotation color: ${error instanceof Error ? error.message : String(error)}`,
-      });
-    }
-
-    return task;
   }
 
   /**
