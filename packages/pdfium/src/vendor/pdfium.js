@@ -44,6 +44,7 @@ var createPdfium = (() => {
       '_EPDFAnnot_GetRectangleDifferences',
       '_EPDFAnnot_GetRichContent',
       '_EPDFAnnot_GetTextAlignment',
+      '_EPDFAnnot_GetVerticalAlignment',
       '_EPDFAnnot_SetBorderDashPattern',
       '_EPDFAnnot_SetBorderStyle',
       '_EPDFAnnot_SetColor',
@@ -53,6 +54,7 @@ var createPdfium = (() => {
       '_EPDFAnnot_SetLineEndings',
       '_EPDFAnnot_SetOpacity',
       '_EPDFAnnot_SetTextAlignment',
+      '_EPDFAnnot_SetVerticalAlignment',
       '_EPDFAnnot_SetVertices',
       '_FORM_CanRedo',
       '_FORM_CanUndo',
@@ -6038,6 +6040,10 @@ var createPdfium = (() => {
       'EPDFAnnot_GetTextAlignment',
       1,
     ));
+    var _EPDFAnnot_SetVerticalAlignment = (Module['_EPDFAnnot_SetVerticalAlignment'] =
+      createExportWrapper('EPDFAnnot_SetVerticalAlignment', 2));
+    var _EPDFAnnot_GetVerticalAlignment = (Module['_EPDFAnnot_GetVerticalAlignment'] =
+      createExportWrapper('EPDFAnnot_GetVerticalAlignment', 1));
     var _FPDFDoc_GetAttachmentCount = (Module['_FPDFDoc_GetAttachmentCount'] = createExportWrapper(
       'FPDFDoc_GetAttachmentCount',
       1,

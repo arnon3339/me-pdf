@@ -2,6 +2,7 @@ import { MouseEvent, useEffect, useRef } from '@framework';
 import {
   PdfFreeTextAnnoObject,
   PdfStandardFont,
+  PdfVerticalAlignment,
   Rect,
   standardFontCss,
   textAlignmentToCss,
@@ -75,12 +76,18 @@ export function FreeText({
           fontFamily: standardFontCss(annotation.object.fontFamily),
           textAlign: textAlignmentToCss(annotation.object.textAlign),
           flexDirection: 'column',
-          justifyContent: 'center',
+          justifyContent:
+            annotation.object.verticalAlign === PdfVerticalAlignment.Top
+              ? 'flex-start'
+              : annotation.object.verticalAlign === PdfVerticalAlignment.Middle
+                ? 'center'
+                : 'flex-end',
           display: 'flex',
           backgroundColor: annotation.object.backgroundColor,
           opacity: annotation.object.opacity,
           width: '100%',
           height: '100%',
+          lineHeight: '1.18',
           overflow: 'hidden',
           cursor: isEditing ? 'text' : 'pointer',
         }}

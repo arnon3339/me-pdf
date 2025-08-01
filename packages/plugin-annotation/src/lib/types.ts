@@ -16,6 +16,7 @@ import {
   LineEndings,
   PdfStandardFont,
   PdfTextAlignment,
+  PdfVerticalAlignment,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -105,6 +106,7 @@ export interface TextDefaults extends BaseAnnotationDefaults {
   fontColor: string;
   fontFamily: PdfStandardFont;
   textAlign: PdfTextAlignment;
+  verticalAlign: PdfVerticalAlignment;
   content: string;
   backgroundColor: string;
   opacity: number;

@@ -108,6 +108,7 @@ import {
   webOpacityToPdfAlpha,
   PdfStandardFont,
   PdfTextAlignment,
+  PdfVerticalAlignment,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -2326,6 +2327,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (!this.setAnnotationTextAlignment(annotationPtr, annotation.textAlign)) {
       return false;
     }
+    if (!this.setAnnotationVerticalAlignment(annotationPtr, annotation.verticalAlign)) {
+      return false;
+    }
     if (
       !this.setAnnotationDefaultAppearance(
         annotationPtr,
@@ -3715,6 +3719,31 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * Fetch the `/EPDF:VerticalAlignment` vertical-alignment value from a **FreeText** annotation.
+   *
+   * @param annotationPtr pointer returned by `FPDFPage_GetAnnot`
+   * @returns `PdfVerticalAlignment`
+   */
+  private getAnnotationVerticalAlignment(annotationPtr: number): PdfVerticalAlignment {
+    return this.pdfiumModule.EPDFAnnot_GetVerticalAlignment(annotationPtr);
+  }
+
+  /**
+   * Write the `/EPDF:VerticalAlignment` vertical-alignment value into a **FreeText** annotation
+   * and clear the existing appearance stream so it can be regenerated.
+   *
+   * @param annotationPtr pointer returned by `FPDFPage_GetAnnot`
+   * @param alignment     `PdfVerticalAlignment`
+   * @returns `true` on success
+   */
+  private setAnnotationVerticalAlignment(
+    annotationPtr: number,
+    alignment: PdfVerticalAlignment,
+  ): boolean {
+    return !!this.pdfiumModule.EPDFAnnot_SetVerticalAlignment(annotationPtr, alignment);
+  }
+
+  /**
    * Return the **default appearance** (font, size, colour) declared in the
    * `/DA` string of a **FreeText** annotation.
    *
@@ -4341,6 +4370,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const da = this.getAnnotationDefaultAppearance(annotationPtr);
     const backgroundColor = this.getAnnotationColor(annotationPtr);
     const textAlign = this.getAnnotationTextAlignment(annotationPtr);
+    const verticalAlign = this.getAnnotationVerticalAlignment(annotationPtr);
     const opacity = this.getAnnotationOpacity(annotationPtr);
     const modified = pdfDateToDate(modifiedRaw);
     const richContent = this.getAnnotRichContent(annotationPtr);
@@ -4352,6 +4382,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       fontFamily: da?.fontFamily ?? PdfStandardFont.Unknown,
       fontSize: da?.fontSize ?? 12,
       fontColor: da?.fontColor ?? '#000000',
+      verticalAlign,
       backgroundColor,
       opacity,
       textAlign,

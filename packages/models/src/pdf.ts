@@ -229,6 +229,15 @@ export enum PdfTextAlignment {
 }
 
 /**
+ * Vertical alignment
+ */
+export enum PdfVerticalAlignment {
+  Top = 0,
+  Middle = 1,
+  Bottom = 2,
+}
+
+/**
  * Blend mode
  *
  * @public
@@ -1692,6 +1701,10 @@ export interface PdfFreeTextAnnoObject extends PdfAnnotationObjectBase {
    * Text alignment of the free text annotation
    */
   textAlign: PdfTextAlignment;
+  /**
+   * Vertical alignment of the free text annotation
+   */
+  verticalAlign: PdfVerticalAlignment;
   /**
    * Opacity of the free text annotation
    */

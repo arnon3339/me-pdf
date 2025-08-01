@@ -29,6 +29,7 @@ export const functions = {
   ] as const,
   EPDFAnnot_GetRichContent: [['number', 'number', 'number'] as const, 'number'] as const,
   EPDFAnnot_GetTextAlignment: [['number'] as const, 'number'] as const,
+  EPDFAnnot_GetVerticalAlignment: [['number'] as const, 'number'] as const,
   EPDFAnnot_SetBorderDashPattern: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetBorderStyle: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetColor: [
@@ -44,6 +45,7 @@ export const functions = {
   EPDFAnnot_SetLineEndings: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetOpacity: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetTextAlignment: [['number', 'number'] as const, 'boolean'] as const,
+  EPDFAnnot_SetVerticalAlignment: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetVertices: [['number', 'number', 'number'] as const, 'boolean'] as const,
   FORM_CanRedo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_CanUndo: [['number', 'number'] as const, 'boolean'] as const,

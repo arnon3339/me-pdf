@@ -6,6 +6,7 @@ import {
   PdfBlendMode,
   PdfStandardFont,
   PdfTextAlignment,
+  PdfVerticalAlignment,
 } from '@embedpdf/models';
 import {
   ADD_COLOR_PRESET,
@@ -207,6 +208,7 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
       content: 'Insert text here',
       fontFamily: PdfStandardFont.Helvetica,
       textAlign: PdfTextAlignment.Left,
+      verticalAlign: PdfVerticalAlignment.Top,
     },
     ...cfg.toolDefaults,
   },

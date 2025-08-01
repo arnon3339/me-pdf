@@ -42,6 +42,7 @@ export const FreeTextPaint = ({
   const toolFontFamily = activeTool.defaults.fontFamily;
   const toolBackgroundColor = activeTool.defaults.backgroundColor ?? 'transparent';
   const toolTextAlign = activeTool.defaults.textAlign;
+  const toolVerticalAlign = activeTool.defaults.verticalAlign;
   const toolContent = activeTool.defaults.content ?? 'Insert text here';
 
   /* ------------------------------------------------------------------ */
@@ -84,6 +85,7 @@ export const FreeTextPaint = ({
       opacity: toolOpacity,
       backgroundColor: toolBackgroundColor,
       textAlign: toolTextAlign,
+      verticalAlign: toolVerticalAlign,
       pageIndex,
       id: Date.now() + Math.random(),
     };

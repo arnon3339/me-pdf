@@ -10,6 +10,7 @@ import {
   standardFontIsItalic,
   makeStandardFont,
   PdfTextAlignment,
+  PdfVerticalAlignment,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 
@@ -44,6 +45,7 @@ export const FreeTextSidebar = ({
   const baseBackgroundColor = editing ? anno.backgroundColor : defaults.backgroundColor;
   const baseFontSize = editing ? anno.fontSize : defaults.fontSize;
   const baseTextAlign = editing ? anno.textAlign : defaults.textAlign;
+  const baseVerticalAlign = editing ? anno.verticalAlign : defaults.verticalAlign;
 
   /* ────────────────────────  UI state  ───────────────────────────────── */
   const [fontFamily, setFontFamily] = useState(baseFamily);
@@ -51,6 +53,7 @@ export const FreeTextSidebar = ({
   const [bold, setBold] = useState(baseBold);
   const [italic, setItalic] = useState(baseItalic);
   const [textAlign, setTextAlign] = useState(baseTextAlign);
+  const [verticalAlign, setVerticalAlign] = useState(baseVerticalAlign);
 
   const [fontColor, setFontColor] = useState(baseFontColor);
   const [opacity, setOpacity] = useState(baseOpacity);
@@ -68,6 +71,7 @@ export const FreeTextSidebar = ({
   useEffect(() => setBackgroundColor(baseBackgroundColor), [baseBackgroundColor]);
   useEffect(() => setFontSize(baseFontSize), [baseFontSize]);
   useEffect(() => setTextAlign(baseTextAlign), [baseTextAlign]);
+  useEffect(() => setVerticalAlign(baseVerticalAlign), [baseVerticalAlign]);
 
   /* ────────────────────────  Patch helper  ───────────────────────────── */
   function applyPatch(patch: Partial<PdfFreeTextAnnoObject>) {
@@ -148,6 +152,11 @@ export const FreeTextSidebar = ({
   const changeTextAlign = (align: PdfTextAlignment) => {
     setTextAlign(align);
     applyPatch({ textAlign: align });
+  };
+
+  const changeVerticalAlign = (align: PdfVerticalAlignment) => {
+    setVerticalAlign(align);
+    applyPatch({ verticalAlign: align });
   };
 
   /* ────────────────────────  Render  ─────────────────────────────────── */
@@ -236,6 +245,49 @@ export const FreeTextSidebar = ({
             } disabled:opacity-40`}
           >
             <Icon icon="alignRight" />
+          </button>
+        </div>
+      </section>
+
+      {/* vertical alignment */}
+      <section class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-gray-900">Vertical alignment</label>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            title="Align top"
+            onClick={() => changeVerticalAlign(PdfVerticalAlignment.Top)}
+            class={`h-9 w-9 rounded border border-gray-300 px-2 py-1 text-sm ${
+              verticalAlign === PdfVerticalAlignment.Top
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-900'
+            } disabled:opacity-40`}
+          >
+            <Icon icon="alignTop" />
+          </button>
+          <button
+            type="button"
+            title="Align middle"
+            onClick={() => changeVerticalAlign(PdfVerticalAlignment.Middle)}
+            class={`h-9 w-9 rounded border border-gray-300 px-2 py-1 text-sm ${
+              verticalAlign === PdfVerticalAlignment.Middle
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-900'
+            } disabled:opacity-40`}
+          >
+            <Icon icon="alignMiddle" />
+          </button>
+          <button
+            type="button"
+            title="Align bottom"
+            onClick={() => changeVerticalAlign(PdfVerticalAlignment.Bottom)}
+            class={`h-9 w-9 rounded border border-gray-300 px-2 py-1 text-sm ${
+              verticalAlign === PdfVerticalAlignment.Bottom
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-900'
+            } disabled:opacity-40`}
+          >
+            <Icon icon="alignBottom" />
           </button>
         </div>
       </section>
