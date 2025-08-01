@@ -1,5 +1,13 @@
 import { PdfAnnotationSubtype, PdfAnnotationObject } from '@embedpdf/models';
-import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
+import {
+  TrackedAnnotation,
+  AnnotationDefaults,
+  ToolDefaultsByMode,
+  HighlightDefaults,
+  UnderlineDefaults,
+  StrikeoutDefaults,
+  SquigglyDefaults,
+} from './types';
 
 /* ------------------------------------------------------------------ */
 /* 1. Generic “subtype‑to‑object” mapper                              */
@@ -49,24 +57,6 @@ export function isPolyline(
   return a.object.type === PdfAnnotationSubtype.POLYLINE;
 }
 
-export function isTextMarkup(
-  a: TrackedAnnotation,
-): a is TrackedAnnotation<
-  AnnoOf<
-    | PdfAnnotationSubtype.HIGHLIGHT
-    | PdfAnnotationSubtype.UNDERLINE
-    | PdfAnnotationSubtype.STRIKEOUT
-    | PdfAnnotationSubtype.SQUIGGLY
-  >
-> {
-  return (
-    a.object.type === PdfAnnotationSubtype.HIGHLIGHT ||
-    a.object.type === PdfAnnotationSubtype.UNDERLINE ||
-    a.object.type === PdfAnnotationSubtype.STRIKEOUT ||
-    a.object.type === PdfAnnotationSubtype.SQUIGGLY
-  );
-}
-
 export function isHighlight(
   a: TrackedAnnotation,
 ): a is TrackedAnnotation<AnnoOf<PdfAnnotationSubtype.HIGHLIGHT>> {
@@ -89,4 +79,54 @@ export function isSquiggly(
   a: TrackedAnnotation,
 ): a is TrackedAnnotation<AnnoOf<PdfAnnotationSubtype.SQUIGGLY>> {
   return a.object.type === PdfAnnotationSubtype.SQUIGGLY;
+}
+
+export function isTextMarkup(
+  a: TrackedAnnotation,
+): a is TrackedAnnotation<
+  AnnoOf<
+    | PdfAnnotationSubtype.HIGHLIGHT
+    | PdfAnnotationSubtype.UNDERLINE
+    | PdfAnnotationSubtype.STRIKEOUT
+    | PdfAnnotationSubtype.SQUIGGLY
+  >
+> {
+  return isHighlight(a) || isUnderline(a) || isStrikeout(a) || isSquiggly(a);
+}
+
+export function isFreeText(
+  a: TrackedAnnotation,
+): a is TrackedAnnotation<AnnoOf<PdfAnnotationSubtype.FREETEXT>> {
+  return a.object.type === PdfAnnotationSubtype.FREETEXT;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Helpers for defaults and tool defaults                           */
+/* ------------------------------------------------------------------ */
+
+export function isHighlightDefaults(defaults: AnnotationDefaults): defaults is HighlightDefaults {
+  return defaults.subtype === PdfAnnotationSubtype.HIGHLIGHT;
+}
+
+export function isUnderlineDefaults(defaults: AnnotationDefaults): defaults is UnderlineDefaults {
+  return defaults.subtype === PdfAnnotationSubtype.UNDERLINE;
+}
+
+export function isStrikeoutDefaults(defaults: AnnotationDefaults): defaults is StrikeoutDefaults {
+  return defaults.subtype === PdfAnnotationSubtype.STRIKEOUT;
+}
+
+export function isSquigglyDefaults(defaults: AnnotationDefaults): defaults is SquigglyDefaults {
+  return defaults.subtype === PdfAnnotationSubtype.SQUIGGLY;
+}
+
+export function isTextMarkupDefaults(
+  defaults: AnnotationDefaults,
+): defaults is HighlightDefaults | UnderlineDefaults | StrikeoutDefaults | SquigglyDefaults {
+  return (
+    isHighlightDefaults(defaults) ||
+    isUnderlineDefaults(defaults) ||
+    isStrikeoutDefaults(defaults) ||
+    isSquigglyDefaults(defaults)
+  );
 }

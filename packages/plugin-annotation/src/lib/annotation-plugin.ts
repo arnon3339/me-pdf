@@ -28,7 +28,6 @@ import {
   BaseAnnotationDefaults,
   GetPageAnnotationsOptions,
   RenderAnnotationOptions,
-  TextMarkupSubtype,
   ToolDefaultsByMode,
   TrackedAnnotation,
 } from './types';
@@ -59,6 +58,7 @@ import { getSelectedAnnotation, getToolDefaultsBySubtypeAndIntent } from './sele
 import { makeUid, parseUid } from './utils';
 import { makeVariantKey, parseVariantKey } from './variant-key';
 import { deriveRect } from './patching';
+import { isTextMarkupDefaults } from './helpers';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -136,17 +136,8 @@ export class AnnotationPlugin extends BasePlugin<
 
     this.selection?.onEndSelection(() => {
       if (!this.state.activeVariant) return;
-
-      if (
-        !(
-          this.state.activeVariant === makeVariantKey(PdfAnnotationSubtype.HIGHLIGHT) ||
-          this.state.activeVariant === makeVariantKey(PdfAnnotationSubtype.UNDERLINE) ||
-          this.state.activeVariant === makeVariantKey(PdfAnnotationSubtype.STRIKEOUT) ||
-          this.state.activeVariant === makeVariantKey(PdfAnnotationSubtype.SQUIGGLY)
-        )
-      ) {
-        return;
-      }
+      const defaults = this.state.toolDefaults[this.state.activeVariant];
+      if (!defaults || !isTextMarkupDefaults(defaults)) return;
 
       const formattedSelection = this.selection?.getFormattedSelection();
       if (!formattedSelection) return;
@@ -154,14 +145,13 @@ export class AnnotationPlugin extends BasePlugin<
       for (const selection of formattedSelection) {
         const rect = selection.rect;
         const segmentRects = selection.segmentRects;
-        const type = this.state.activeVariant;
-        const subtype = this.state.toolDefaults[type].subtype;
-        const color = this.state.toolDefaults[type].color;
-        const opacity = this.state.toolDefaults[type].opacity;
-        const blendMode = this.state.toolDefaults[type].blendMode ?? PdfBlendMode.Normal;
+        const subtype = defaults.subtype;
+        const color = defaults.color;
+        const opacity = defaults.opacity;
+        const blendMode = defaults.blendMode ?? PdfBlendMode.Normal;
 
         this.createAnnotation(selection.pageIndex, {
-          type: subtype as TextMarkupSubtype,
+          type: subtype,
           rect,
           segmentRects,
           color,

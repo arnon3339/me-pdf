@@ -4,6 +4,8 @@ import {
   PdfAnnotationLineEnding,
   PdfAnnotationSubtype,
   PdfBlendMode,
+  PdfStandardFont,
+  PdfTextAlignment,
 } from '@embedpdf/models';
 import {
   ADD_COLOR_PRESET,
@@ -191,6 +193,17 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
       strokeWidth: 4,
       strokeColor: '#E44234',
       strokeStyle: PdfAnnotationBorderStyle.SOLID,
+    },
+    [makeVariantKey(PdfAnnotationSubtype.FREETEXT)]: {
+      name: 'Free Text',
+      subtype: PdfAnnotationSubtype.FREETEXT,
+      interaction: { mode: 'freetext', exclusive: true, cursor: 'crosshair' },
+      backgroundColor: 'transparent',
+      opacity: 1,
+      fontSize: 12,
+      fontColor: '#E44234',
+      fontName: PdfStandardFont.Helvetica,
+      textAlign: PdfTextAlignment.Left,
     },
     ...cfg.toolDefaults,
   },

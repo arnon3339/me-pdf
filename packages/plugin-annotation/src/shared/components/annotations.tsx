@@ -13,6 +13,8 @@ import {
   isLine,
   isPolyline,
   isPolygon,
+  isTextMarkup,
+  isFreeText,
 } from '@embedpdf/plugin-annotation';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
@@ -35,6 +37,8 @@ import { Polyline } from './annotations/polyline';
 import { Polygon } from './annotations/polygon';
 import { VertexEditor } from './vertex-editor';
 import { patchLine, patchPolygon, patchPolyline } from '../vertex-patchers';
+import { TextMarkup } from './text-markup';
+import { FreeText } from './annotations/free-text';
 
 interface AnnotationsProps {
   pageIndex: number;
@@ -410,6 +414,37 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                     onClick={(e) => handleClick(e, annotation)}
                   />
                 </Fragment>
+              )}
+            </AnnotationContainer>
+          );
+        }
+
+        if (isFreeText(annotation)) {
+          return (
+            <AnnotationContainer
+              key={annotation.localId}
+              trackedAnnotation={annotation}
+              isSelected={isSelected}
+              isDraggable={true}
+              isResizable={true}
+              selectionMenu={selectionMenu}
+              style={{
+                mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+              }}
+              {...annotationsProps}
+            >
+              {(obj) => (
+                <FreeText
+                  isSelected={isSelected}
+                  rect={obj.rect}
+                  backgroundColor={obj.backgroundColor ?? 'transparent'}
+                  fontColor={obj.fontColor}
+                  fontSize={obj.fontSize}
+                  fontFamily={obj.fontFamily}
+                  scale={scale}
+                  contents={obj.contents}
+                  onClick={(e) => handleClick(e, annotation)}
+                />
               )}
             </AnnotationContainer>
           );

@@ -1,5 +1,5 @@
 import { blendModeToCss, PdfAnnotationSubtype, PdfBlendMode, Rect } from '@embedpdf/models';
-import { ActiveTool, makeVariantKey } from '@embedpdf/plugin-annotation';
+import { ActiveTool } from '@embedpdf/plugin-annotation';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/@framework';
 
 import { useEffect, useState } from '@framework';
@@ -39,9 +39,10 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
   }, [annotationProvides]);
 
   if (!boundingRect) return null;
+  if (!activeTool.defaults) return null;
 
-  switch (activeTool.variantKey) {
-    case makeVariantKey(PdfAnnotationSubtype.UNDERLINE):
+  switch (activeTool.defaults.subtype) {
+    case PdfAnnotationSubtype.UNDERLINE:
       return (
         <div
           style={{
@@ -59,7 +60,7 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
           />
         </div>
       );
-    case makeVariantKey(PdfAnnotationSubtype.HIGHLIGHT):
+    case PdfAnnotationSubtype.HIGHLIGHT:
       return (
         <div
           style={{
@@ -77,7 +78,7 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
           />
         </div>
       );
-    case makeVariantKey(PdfAnnotationSubtype.STRIKEOUT):
+    case PdfAnnotationSubtype.STRIKEOUT:
       return (
         <div
           style={{
@@ -95,7 +96,7 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
           />
         </div>
       );
-    case makeVariantKey(PdfAnnotationSubtype.SQUIGGLY):
+    case PdfAnnotationSubtype.SQUIGGLY:
       return (
         <div
           style={{

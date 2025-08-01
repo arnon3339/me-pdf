@@ -37,16 +37,22 @@ var createPdfium = (() => {
       '_EPDFAnnot_GetBorderEffect',
       '_EPDFAnnot_GetBorderStyle',
       '_EPDFAnnot_GetColor',
+      '_EPDFAnnot_GetDefaultAppearance',
       '_EPDFAnnot_GetIntent',
       '_EPDFAnnot_GetLineEndings',
+      '_EPDFAnnot_GetOpacity',
       '_EPDFAnnot_GetRectangleDifferences',
       '_EPDFAnnot_GetRichContent',
+      '_EPDFAnnot_GetTextAlignment',
       '_EPDFAnnot_SetBorderDashPattern',
       '_EPDFAnnot_SetBorderStyle',
       '_EPDFAnnot_SetColor',
+      '_EPDFAnnot_SetDefaultAppearance',
       '_EPDFAnnot_SetIntent',
       '_EPDFAnnot_SetLine',
       '_EPDFAnnot_SetLineEndings',
+      '_EPDFAnnot_SetOpacity',
+      '_EPDFAnnot_SetTextAlignment',
       '_EPDFAnnot_SetVertices',
       '_FORM_CanRedo',
       '_FORM_CanUndo',
@@ -5946,14 +5952,22 @@ var createPdfium = (() => {
       createExportWrapper('FPDFAnnot_AddFileAttachment', 2));
     var _EPDFAnnot_SetColor = (Module['_EPDFAnnot_SetColor'] = createExportWrapper(
       'EPDFAnnot_SetColor',
-      6,
+      5,
     ));
     var _EPDFAnnot_GetColor = (Module['_EPDFAnnot_GetColor'] = createExportWrapper(
       'EPDFAnnot_GetColor',
-      6,
+      5,
     ));
     var _EPDFAnnot_ClearColor = (Module['_EPDFAnnot_ClearColor'] = createExportWrapper(
       'EPDFAnnot_ClearColor',
+      2,
+    ));
+    var _EPDFAnnot_SetOpacity = (Module['_EPDFAnnot_SetOpacity'] = createExportWrapper(
+      'EPDFAnnot_SetOpacity',
+      2,
+    ));
+    var _EPDFAnnot_GetOpacity = (Module['_EPDFAnnot_GetOpacity'] = createExportWrapper(
+      'EPDFAnnot_GetOpacity',
       2,
     ));
     var _EPDFAnnot_GetBorderEffect = (Module['_EPDFAnnot_GetBorderEffect'] = createExportWrapper(
@@ -6011,6 +6025,18 @@ var createPdfium = (() => {
     var _EPDFAnnot_SetLine = (Module['_EPDFAnnot_SetLine'] = createExportWrapper(
       'EPDFAnnot_SetLine',
       3,
+    ));
+    var _EPDFAnnot_SetDefaultAppearance = (Module['_EPDFAnnot_SetDefaultAppearance'] =
+      createExportWrapper('EPDFAnnot_SetDefaultAppearance', 6));
+    var _EPDFAnnot_GetDefaultAppearance = (Module['_EPDFAnnot_GetDefaultAppearance'] =
+      createExportWrapper('EPDFAnnot_GetDefaultAppearance', 6));
+    var _EPDFAnnot_SetTextAlignment = (Module['_EPDFAnnot_SetTextAlignment'] = createExportWrapper(
+      'EPDFAnnot_SetTextAlignment',
+      2,
+    ));
+    var _EPDFAnnot_GetTextAlignment = (Module['_EPDFAnnot_GetTextAlignment'] = createExportWrapper(
+      'EPDFAnnot_GetTextAlignment',
+      1,
     ));
     var _FPDFDoc_GetAttachmentCount = (Module['_FPDFDoc_GetAttachmentCount'] = createExportWrapper(
       'FPDFDoc_GetAttachmentCount',
