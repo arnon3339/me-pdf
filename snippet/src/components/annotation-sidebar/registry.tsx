@@ -5,6 +5,7 @@ import { TextMarkupSidebar } from './text-markup-sidebar';
 import { ShapeSidebar } from './shape-sidebar';
 import { PolygonSidebar } from './polygon-sidebar';
 import { LineSidebar } from './line-sidebar';
+import { FreeTextSidebar } from './free-text-sidebar';
 
 /* 1.  Component type (unchanged) */
 type SidebarComponent<S extends PdfAnnotationSubtype> = (
@@ -43,4 +44,5 @@ export const SIDEbars: SidebarRegistry = {
   [PdfAnnotationSubtype.UNDERLINE]: { component: TextMarkupSidebar, title: 'Underline' },
   [PdfAnnotationSubtype.STRIKEOUT]: { component: TextMarkupSidebar, title: 'Strike-out' },
   [PdfAnnotationSubtype.SQUIGGLY]: { component: TextMarkupSidebar, title: 'Squiggly' },
+  [PdfAnnotationSubtype.FREETEXT]: { component: FreeTextSidebar, title: 'Free text' },
 };

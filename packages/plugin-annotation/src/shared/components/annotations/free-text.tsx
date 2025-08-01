@@ -1,56 +1,91 @@
-import { MouseEvent } from '@framework';
-import { PdfStandardFont, Rect, standardFontCss } from '@embedpdf/models';
+import { MouseEvent, useEffect, useRef } from '@framework';
+import {
+  PdfFreeTextAnnoObject,
+  PdfStandardFont,
+  Rect,
+  standardFontCss,
+  textAlignmentToCss,
+} from '@embedpdf/models';
+import { useAnnotationCapability } from '../..';
+import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 
 interface FreeTextProps {
   isSelected: boolean;
-  rect: Rect;
-  backgroundColor: string;
-  fontColor: string;
-  fontSize: number;
-  fontFamily: PdfStandardFont;
+  isEditing: boolean;
+  annotation: TrackedAnnotation<PdfFreeTextAnnoObject>;
+  pageIndex: number;
   scale: number;
-  contents: string;
   onClick?: (e: MouseEvent<HTMLDivElement>) => void;
-  onDoubleClick?: (e: MouseEvent<HTMLDivElement>) => void;
 }
 
 export function FreeText({
   isSelected,
-  rect,
-  backgroundColor,
-  fontColor,
-  fontSize,
-  fontFamily,
+  isEditing,
+  annotation,
+  pageIndex,
   scale,
-  contents,
   onClick,
-  onDoubleClick,
 }: FreeTextProps) {
+  const editorRef = useRef<HTMLSpanElement>(null);
+  const { provides: annotationProvides } = useAnnotationCapability();
+
+  useEffect(() => {
+    if (isEditing && editorRef.current) {
+      const editor = editorRef.current;
+      editor.focus();
+
+      const selection = window.getSelection();
+      if (selection) {
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
+  }, [isEditing]);
+
+  const handleBlur = () => {
+    if (!annotationProvides) return;
+    if (!editorRef.current) return;
+
+    annotationProvides.updateAnnotation(pageIndex, annotation.localId, {
+      contents: editorRef.current.innerText,
+    });
+  };
+
   return (
     <div
       style={{
         position: 'absolute',
-        width: rect.size.width * scale,
-        height: rect.size.height * scale,
-        cursor: isSelected ? 'move' : 'pointer',
-        pointerEvents: isSelected ? 'none' : 'auto',
+        width: annotation.object.rect.size.width * scale,
+        height: annotation.object.rect.size.height * scale,
+        cursor: isSelected && !isEditing ? 'move' : 'default',
+        pointerEvents: isSelected && !isEditing ? 'none' : 'auto',
         zIndex: 2,
       }}
       onPointerDown={onClick}
     >
       <span
+        ref={editorRef}
+        onBlur={handleBlur}
         style={{
-          color: fontColor,
-          fontSize: fontSize * scale,
-          fontFamily: standardFontCss(fontFamily),
-          backgroundColor: backgroundColor,
+          color: annotation.object.fontColor,
+          fontSize: annotation.object.fontSize * scale,
+          fontFamily: standardFontCss(annotation.object.fontFamily),
+          textAlign: textAlignmentToCss(annotation.object.textAlign),
+          backgroundColor: annotation.object.backgroundColor,
+          opacity: annotation.object.opacity,
           width: '100%',
           height: '100%',
           display: 'block',
           overflow: 'hidden',
+          cursor: isEditing ? 'text' : 'pointer',
         }}
+        contentEditable={isEditing}
+        suppressContentEditableWarning={true}
       >
-        {contents}
+        {annotation.object.contents}
       </span>
     </div>
   );

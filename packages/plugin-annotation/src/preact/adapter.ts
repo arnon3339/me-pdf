@@ -9,3 +9,5 @@ export type HTMLAttributes<T = any> = import('preact').JSX.HTMLAttributes<
 >;
 export type MouseEvent<T = Element> = JSX.TargetedMouseEvent<T extends EventTarget ? T : never>;
 export type PointerEvent<T = Element> = JSX.TargetedPointerEvent<T extends EventTarget ? T : never>;
+
+export const mapDoubleClick = (handler: any) => (handler ? { onDblClick: handler } : {});

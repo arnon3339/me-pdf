@@ -56,6 +56,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
   const [annotations, setAnnotations] = useState<TrackedAnnotation[]>([]);
   const { register } = usePointerHandlers({ pageIndex });
   const [selectionState, setSelectionState] = useState<TrackedAnnotation | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (annotationProvides) {
@@ -72,6 +73,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         // Only deselect if clicking directly on the layer (not on an annotation)
         if (pe.target === pe.currentTarget && annotationProvides) {
           annotationProvides.deselectAnnotation();
+          setEditingId(null);
         }
       },
     }),
@@ -84,6 +86,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
       if (annotationProvides && selectionProvides) {
         annotationProvides.selectAnnotation(pageIndex, annotation.localId);
         selectionProvides.clear();
+        setEditingId(null);
       }
     },
     [annotationProvides, selectionProvides, pageIndex],
@@ -97,6 +100,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
     <>
       {annotations.map((annotation) => {
         const isSelected = selectionState?.localId === annotation.localId;
+        const isEditing = editingId === annotation.localId;
 
         if (isInk(annotation)) {
           return (
@@ -428,21 +432,26 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               isDraggable={true}
               isResizable={true}
               selectionMenu={selectionMenu}
+              outlineOffset={6}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                setEditingId(annotation.localId);
+              }}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
               {...annotationsProps}
             >
-              {(obj) => (
+              {(object) => (
                 <FreeText
                   isSelected={isSelected}
-                  rect={obj.rect}
-                  backgroundColor={obj.backgroundColor ?? 'transparent'}
-                  fontColor={obj.fontColor}
-                  fontSize={obj.fontSize}
-                  fontFamily={obj.fontFamily}
+                  isEditing={isEditing}
+                  annotation={{
+                    ...annotation,
+                    object,
+                  }}
+                  pageIndex={pageIndex}
                   scale={scale}
-                  contents={obj.contents}
                   onClick={(e) => handleClick(e, annotation)}
                 />
               )}

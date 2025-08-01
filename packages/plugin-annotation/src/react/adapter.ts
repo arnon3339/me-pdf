@@ -9,3 +9,5 @@ export {
   JSX,
 } from 'react';
 export type { ReactNode, HTMLAttributes, CSSProperties, MouseEvent, PointerEvent } from 'react';
+
+export const mapDoubleClick = (handler: any) => (handler ? { onDoubleClick: handler } : {});

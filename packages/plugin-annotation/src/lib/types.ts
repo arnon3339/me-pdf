@@ -103,8 +103,9 @@ export interface TextDefaults extends BaseAnnotationDefaults {
   subtype: PdfAnnotationSubtype.FREETEXT;
   fontSize: number;
   fontColor: string;
-  fontName: PdfStandardFont;
+  fontFamily: PdfStandardFont;
   textAlign: PdfTextAlignment;
+  content: string;
   backgroundColor: string;
   opacity: number;
 }

@@ -231,3 +231,27 @@ export function reduceStandardFonts(fonts: readonly PdfStandardFont[]): UiStanda
   const first = fonts[0];
   return fonts.every((f) => f === first) ? first : MixedStandardFont;
 }
+
+/* UNIQUE families in canonical order, driven by STANDARD_FONT_DESCRIPTORS */
+export const STANDARD_FONT_FAMILIES: readonly PdfStandardFontFamily[] = [
+  ...new Set(STANDARD_FONT_DESCRIPTORS.map((d) => d.family)),
+];
+
+/** Friendly label for each family (could also live in the descriptor list) */
+export function standardFontFamilyLabel(fam: PdfStandardFontFamily): string {
+  switch (fam) {
+    case PdfStandardFontFamily.Courier:
+      return 'Courier';
+    case PdfStandardFontFamily.Helvetica:
+      return 'Helvetica';
+    case PdfStandardFontFamily.Times:
+      return 'Times';
+    case PdfStandardFontFamily.Symbol:
+      return 'Symbol';
+    case PdfStandardFontFamily.ZapfDingbats:
+      return 'ZapfDingbats';
+    /* fallback */
+    default:
+      return 'Helvetica';
+  }
+}

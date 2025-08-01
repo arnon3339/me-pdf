@@ -1672,13 +1672,41 @@ export interface PdfCaretAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfFreeTextAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.FREETEXT;
+  /**
+   * Text contents of the free text annotation
+   */
   contents: string;
+  /**
+   * Font family of the free text annotation
+   */
   fontFamily: PdfStandardFont;
+  /**
+   * Font size of the free text annotation
+   */
   fontSize: number;
+  /**
+   * Font color of the free text annotation
+   */
   fontColor: string;
+  /**
+   * Text alignment of the free text annotation
+   */
   textAlign: PdfTextAlignment;
+  /**
+   * Opacity of the free text annotation
+   */
+  opacity: number;
+  /**
+   * Background color of the free text annotation
+   */
   backgroundColor?: string;
+  /**
+   * Default style of the free text annotation
+   */
   defaultStyle?: string;
+  /**
+   * Rich content of the free text annotation
+   */
   richContent?: string;
 }
 

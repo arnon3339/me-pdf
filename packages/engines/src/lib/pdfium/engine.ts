@@ -4275,6 +4275,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const da = this.getAnnotationDefaultAppearance(annotationPtr);
     const backgroundColor = this.getAnnotationColor(annotationPtr);
     const textAlign = this.getAnnotationTextAlignment(annotationPtr);
+    const opacity = this.getAnnotationOpacity(annotationPtr);
     const modified = pdfDateToDate(modifiedRaw);
     const richContent = this.getAnnotRichContent(annotationPtr);
 
@@ -4286,6 +4287,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       fontSize: da?.fontSize ?? 12,
       fontColor: da?.fontColor ?? '#000000',
       backgroundColor,
+      opacity,
       textAlign,
       defaultStyle,
       richContent,
