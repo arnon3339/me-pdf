@@ -42,7 +42,7 @@ export const useDropdown = () => {
   useEffect(() => {
     if (open && selectedItemRef.current) {
       selectedItemRef.current.scrollIntoView({
-        block: 'nearest',
+        block: 'center',
         inline: 'start',
       });
     }

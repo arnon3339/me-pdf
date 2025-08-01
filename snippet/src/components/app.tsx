@@ -7,6 +7,7 @@ import {
   AllLogger,
   ConsoleLogger,
   PdfAnnotationSubtype,
+  PdfBlendMode,
   PerfLogger,
   Rotation,
 } from '@embedpdf/models';
@@ -1474,6 +1475,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
         annotation.createAnnotation(selection.pageIndex, {
           id: Date.now() + Math.random(),
           type: PdfAnnotationSubtype.SQUIGGLY,
+          blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
           opacity: defaultSettings.opacity,
           pageIndex: selection.pageIndex,
@@ -1502,6 +1504,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
         annotation.createAnnotation(selection.pageIndex, {
           id: Date.now() + Math.random(),
           type: PdfAnnotationSubtype.UNDERLINE,
+          blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
           opacity: defaultSettings.opacity,
           pageIndex: selection.pageIndex,
@@ -1529,6 +1532,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
         annotation.createAnnotation(selection.pageIndex, {
           id: Date.now() + Math.random(),
           type: PdfAnnotationSubtype.STRIKEOUT,
+          blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
           opacity: defaultSettings.opacity,
           pageIndex: selection.pageIndex,
@@ -1556,6 +1560,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
         annotation.createAnnotation(selection.pageIndex, {
           id: Date.now() + Math.random(),
           type: PdfAnnotationSubtype.HIGHLIGHT,
+          blendMode: PdfBlendMode.Multiply,
           color: defaultSettings.color,
           opacity: defaultSettings.opacity,
           pageIndex: selection.pageIndex,
