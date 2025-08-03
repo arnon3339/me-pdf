@@ -38,6 +38,7 @@ type AnnotationContainerProps<T extends PdfAnnotationObject> = Omit<
   selectionMenu?: (props: SelectionMenuProps) => JSX.Element;
   computeVertices?: (annotation: T) => Position[];
   computePatch?: ComputePatch<T>;
+  lockAspectRatio?: boolean;
 };
 
 export function AnnotationContainer<T extends PdfAnnotationObject>({
@@ -53,6 +54,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   isSelected = false,
   isDraggable = true,
   isResizable = true,
+  lockAspectRatio = false,
   computeVertices,
   computePatch,
   selectionMenu,
@@ -76,6 +78,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
     isSelected,
     isDraggable,
     isResizable,
+    lockAspectRatio,
     computePatch,
     computeVertices,
     currentRect,

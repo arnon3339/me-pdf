@@ -485,6 +485,10 @@ export const icons: IconRegistry = {
     id: 'alignBottom',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-align-box-center-bottom"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M11 17h2" /><path d="M9 14h6" /><path d="M10 11h4" /></svg>',
   },
+  photo: {
+    id: 'photo',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-photo"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 8h.01" /><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z" /><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5" /><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3" /></svg>',
+  },
 };
 
 export const menuItems: Record<string, MenuItem<State>> = {
@@ -1471,6 +1475,24 @@ export const menuItems: Record<string, MenuItem<State>> = {
     active: (storeState) =>
       storeState.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.FREETEXT),
   },
+  photo: {
+    id: 'photo',
+    label: 'Photo',
+    type: 'action',
+    icon: 'photo',
+    action: (registry, state) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      if (annotation) {
+        if (state.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.STAMP)) {
+          annotation.setActiveVariant(null);
+        } else {
+          annotation.setActiveVariant(makeVariantKey(PdfAnnotationSubtype.STAMP));
+        }
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.STAMP),
+  },
   squigglySelection: {
     id: 'squigglySelection',
     label: 'Squiggly Selection',
@@ -1997,6 +2019,20 @@ export const components: Record<string, UIComponentType<State>> = {
       ).color,
     }),
   },
+  photoButton: {
+    type: 'iconButton',
+    id: 'photoButton',
+    props: {
+      commandId: 'photo',
+      active: false,
+      label: 'Photo',
+      color: '#000000',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.photo, storeState),
+    }),
+  },
   highlightSelectionButton: {
     type: 'iconButton',
     id: 'highlightSelectionButton',
@@ -2433,11 +2469,12 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'squigglyButton', priority: 4 },
       { componentId: 'freehandButton', priority: 5 },
       { componentId: 'freeTextButton', priority: 6 },
-      { componentId: 'divider1', priority: 7 },
-      { componentId: 'styleButton', priority: 8 },
-      { componentId: 'divider1', priority: 9 },
-      { componentId: 'undoButton', priority: 10 },
-      { componentId: 'redoButton', priority: 11 },
+      { componentId: 'photoButton', priority: 7 },
+      { componentId: 'divider1', priority: 8 },
+      { componentId: 'styleButton', priority: 9 },
+      { componentId: 'divider1', priority: 10 },
+      { componentId: 'undoButton', priority: 11 },
+      { componentId: 'redoButton', priority: 12 },
     ],
     props: {
       gap: 10,

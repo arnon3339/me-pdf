@@ -100,6 +100,12 @@ export function isFreeText(
   return a.object.type === PdfAnnotationSubtype.FREETEXT;
 }
 
+export function isStamp(
+  a: TrackedAnnotation,
+): a is TrackedAnnotation<AnnoOf<PdfAnnotationSubtype.STAMP>> {
+  return a.object.type === PdfAnnotationSubtype.STAMP;
+}
+
 /* ------------------------------------------------------------------ */
 /* 3. Helpers for defaults and tool defaults                           */
 /* ------------------------------------------------------------------ */

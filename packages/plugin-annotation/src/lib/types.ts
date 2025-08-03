@@ -165,6 +165,10 @@ export interface PolygonDefaults extends BaseAnnotationDefaults {
   opacity: number;
 }
 
+export interface PhotoDefaults extends BaseAnnotationDefaults {
+  subtype: PdfAnnotationSubtype.STAMP;
+}
+
 export type AnnotationDefaults =
   | HighlightDefaults
   | UnderlineDefaults
@@ -176,7 +180,8 @@ export type AnnotationDefaults =
   | SquareDefaults
   | LineDefaults
   | PolylineDefaults
-  | PolygonDefaults;
+  | PolygonDefaults
+  | PhotoDefaults;
 
 export type ToolDefaultsByMode = {
   [K in string]: AnnotationDefaults;

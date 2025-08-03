@@ -1152,8 +1152,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           page,
           pageCtx.pagePtr,
           annotationPtr,
-          annotation.rect,
-          annotation.contents,
+          annotation,
         );
         break;
       case PdfAnnotationSubtype.FREETEXT:
@@ -1305,18 +1304,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
       /* ── Stamp ───────────────────────────────────────────────────────────── */
       case PdfAnnotationSubtype.STAMP: {
-        /* drop every page-object inside the annot */
-        for (let i = this.pdfiumModule.FPDFAnnot_GetObjectCount(annotPtr) - 1; i >= 0; i--) {
-          this.pdfiumModule.FPDFAnnot_RemoveObject(annotPtr, i);
-        }
-        ok = this.addStampContent(
-          ctx.docPtr,
-          page,
-          pageCtx.pagePtr,
-          annotPtr,
-          annotation.rect,
-          annotation.contents,
-        );
+        ok = this.addStampContent(ctx.docPtr, page, pageCtx.pagePtr, annotPtr, annotation);
         break;
       }
 
@@ -2710,9 +2698,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     page: PdfPageObject,
     pagePtr: number,
     annotationPtr: number,
-    rect: Rect,
-    contents: PdfStampAnnoObjectContents,
+    annotation: PdfStampAnnoObject,
   ) {
+    /*
     for (const content of contents) {
       switch (content.type) {
         case PdfPageObjectType.IMAGE:
@@ -2725,9 +2713,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
             content.imageData,
           );
       }
-    }
+    }*/
 
-    return false;
+    return true;
   }
 
   /**

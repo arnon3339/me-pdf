@@ -20,6 +20,7 @@ interface UseDragResizeOpts<T extends PdfAnnotationObject> {
   isResizable: boolean;
   computePatch?: ComputePatch<T>;
   computeVertices?: (a: T) => Position[];
+  lockAspectRatio?: boolean;
 
   /* state held by caller */
   currentRect: Rect;
@@ -45,6 +46,7 @@ export function useDragResize<T extends PdfAnnotationObject>({
   isResizable,
   computePatch,
   computeVertices,
+  lockAspectRatio = false,
   currentRect,
   setCurrentRect,
   setCurrentVertices,
@@ -86,6 +88,33 @@ export function useDragResize<T extends PdfAnnotationObject>({
       else if (dir.current.includes('top')) {
         oy += dy;
         h -= dy;
+      }
+
+      /* maintain aspect ratio if requested */
+      if (lockAspectRatio && startRect.current) {
+        const ratio = startRect.current.size.width / startRect.current.size.height;
+
+        /* store anchors before adjusting (so we can restore them later) */
+        const anchorRight = ox + w;
+        const anchorBottom = oy + h;
+
+        /* decide the primary axis once, based on the resize handle */
+        const horizontalPrimary = dir.current.includes('left') || dir.current.includes('right');
+        if (horizontalPrimary) {
+          // width is changing → derive height from width
+          h = w / ratio;
+        } else {
+          // height is changing → derive width from height
+          w = h * ratio;
+        }
+
+        /* adjust origin to preserve anchors for left/top sides */
+        if (dir.current.includes('left')) {
+          ox = anchorRight - w;
+        }
+        if (dir.current.includes('top')) {
+          oy = anchorBottom - h;
+        }
       }
     }
     /* prevent negative dimensions */
@@ -133,8 +162,17 @@ export function useDragResize<T extends PdfAnnotationObject>({
     setPreviewObject(patch);
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (e?: PointerEvent<HTMLDivElement>) => {
     if (drag.current === 'idle') return;
+
+    if (e?.currentTarget && e.pointerId !== undefined) {
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {
+        /* ignore – we might have already lost capture */
+      }
+    }
+
     const usedDir = dir.current || 'bottom-right';
     drag.current = 'idle';
 
@@ -181,6 +219,8 @@ export function useDragResize<T extends PdfAnnotationObject>({
       onPointerDown,
       onPointerMove,
       onPointerUp,
+      onPointerCancel: () => onPointerUp(),
+      onLostPointerCapture: () => onPointerUp(),
     },
     startResize,
   };

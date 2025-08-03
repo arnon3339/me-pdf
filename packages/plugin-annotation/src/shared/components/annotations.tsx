@@ -15,6 +15,7 @@ import {
   isPolygon,
   isTextMarkup,
   isFreeText,
+  isStamp,
 } from '@embedpdf/plugin-annotation';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
@@ -39,6 +40,7 @@ import { VertexEditor } from './vertex-editor';
 import { patchLine, patchPolygon, patchPolyline } from '../vertex-patchers';
 import { TextMarkup } from './text-markup';
 import { FreeText } from './annotations/free-text';
+import { Stamp } from './annotations/stamp';
 
 interface AnnotationsProps {
   pageIndex: number;
@@ -450,6 +452,34 @@ export function Annotations(annotationsProps: AnnotationsProps) {
                     ...annotation,
                     object,
                   }}
+                  pageIndex={pageIndex}
+                  scale={scale}
+                  onClick={(e) => handleClick(e, annotation)}
+                />
+              )}
+            </AnnotationContainer>
+          );
+        }
+
+        if (isStamp(annotation)) {
+          return (
+            <AnnotationContainer
+              key={annotation.localId}
+              trackedAnnotation={annotation}
+              isSelected={isSelected}
+              isDraggable={true}
+              isResizable={true}
+              selectionMenu={selectionMenu}
+              lockAspectRatio={true}
+              style={{
+                mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
+              }}
+              {...annotationsProps}
+            >
+              {(_object) => (
+                <Stamp
+                  isSelected={isSelected}
+                  annotation={annotation}
                   pageIndex={pageIndex}
                   scale={scale}
                   onClick={(e) => handleClick(e, annotation)}
