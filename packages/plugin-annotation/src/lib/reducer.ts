@@ -213,7 +213,7 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
     [makeVariantKey(PdfAnnotationSubtype.STAMP)]: {
       name: 'Photo',
       subtype: PdfAnnotationSubtype.STAMP,
-      interaction: { mode: 'photo', exclusive: true, cursor: 'crosshair' },
+      interaction: { mode: 'stamp', exclusive: true, cursor: 'crosshair' },
     },
     ...cfg.toolDefaults,
   },

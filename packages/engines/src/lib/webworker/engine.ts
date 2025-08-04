@@ -38,11 +38,36 @@ import {
   PageTextSlice,
   WebAlphaColor,
   AppearanceMode,
+  AnnotationCreateContext,
+  PdfEngineMethodArgs,
+  PdfEngineMethodName,
 } from '@embedpdf/models';
-import { ExecuteRequest, Response } from './runner';
+import { ExecuteRequest, Response, SpecificExecuteRequest } from './runner';
 
 const LOG_SOURCE = 'WebWorkerEngine';
 const LOG_CATEGORY = 'Engine';
+
+/**
+ * Create a request for the webworker
+ * @param id - id of the request
+ * @param name - name of the method
+ * @param args - arguments of the method
+ * @returns request
+ */
+function createRequest<M extends PdfEngineMethodName>(
+  id: string,
+  name: M,
+  args: PdfEngineMethodArgs<M>,
+): SpecificExecuteRequest<M> {
+  return {
+    id,
+    type: 'ExecuteRequest',
+    data: {
+      name,
+      args,
+    },
+  };
+}
 
 /**
  * Task that executed by webworker
@@ -177,14 +202,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId('General');
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'initialize',
-        args: [],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'initialize', []);
     this.proxy(task, request);
 
     return task;
@@ -207,14 +225,7 @@ export class WebWorkerEngine implements PdfEngine {
 
     task.wait(finish, finish);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'destroy',
-        args: [],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'destroy', []);
     this.proxy(task, request);
 
     return task;
@@ -230,14 +241,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(file.id);
     const task = new WorkerTask<PdfDocumentObject>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'openDocumentUrl',
-        args: [file, options],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'openDocumentUrl', [file, options]);
     this.proxy(task, request);
 
     return task;
@@ -253,14 +257,10 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(file.id);
     const task = new WorkerTask<PdfDocumentObject>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'openDocumentFromBuffer',
-        args: [file, password],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'openDocumentFromBuffer', [
+      file,
+      password,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -276,14 +276,10 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(file.id);
     const task = new WorkerTask<PdfDocumentObject>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'openDocumentFromLoader',
-        args: [file, password],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'openDocumentFromLoader', [
+      file,
+      password,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -299,14 +295,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfMetadataObject>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getMetadata',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getMetadata', [doc]);
     this.proxy(task, request);
 
     return task;
@@ -322,14 +311,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<number>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getDocPermissions',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getDocPermissions', [doc]);
     this.proxy(task, request);
 
     return task;
@@ -345,14 +327,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<number>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getDocUserPermissions',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getDocUserPermissions', [doc]);
     this.proxy(task, request);
 
     return task;
@@ -368,14 +343,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfBookmarksObject>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getBookmarks',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getBookmarks', [doc]);
     this.proxy(task, request);
 
     return task;
@@ -391,14 +359,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfSignatureObject[]>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getSignatures',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getSignatures', [doc]);
     this.proxy(task, request);
 
     return task;
@@ -432,14 +393,15 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<Blob>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'renderPage',
-        args: [doc, page, scaleFactor, rotation, dpr, options, imageType],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'renderPage', [
+      doc,
+      page,
+      scaleFactor,
+      rotation,
+      dpr,
+      options,
+      imageType,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -475,14 +437,16 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<Blob>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'renderPageRect',
-        args: [doc, page, scaleFactor, rotation, dpr, rect, options, imageType],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'renderPageRect', [
+      doc,
+      page,
+      scaleFactor,
+      rotation,
+      dpr,
+      rect,
+      options,
+      imageType,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -519,14 +483,16 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<Blob>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'renderAnnotation',
-        args: [doc, page, annotation, scaleFactor, rotation, dpr, mode, imageType],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'renderAnnotation', [
+      doc,
+      page,
+      annotation,
+      scaleFactor,
+      rotation,
+      dpr,
+      mode,
+      imageType,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -542,14 +508,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<Record<number, PdfAnnotationObject[]>>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getAllAnnotations',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getAllAnnotations', [doc]);
     this.proxy(task, request);
 
     return task;
@@ -565,14 +524,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfAnnotationObject[]>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getPageAnnotations',
-        args: [doc, page],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getPageAnnotations', [doc, page]);
     this.proxy(task, request);
 
     return task;
@@ -583,23 +535,30 @@ export class WebWorkerEngine implements PdfEngine {
    *
    * @public
    */
-  createPageAnnotation(
+  createPageAnnotation<A extends PdfAnnotationObject>(
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    annotation: PdfAnnotationObject,
+    annotation: A,
+    context?: AnnotationCreateContext<A>,
   ) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'createPageAnnotations', doc, page, annotation);
+    this.logger.debug(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'createPageAnnotations',
+      doc,
+      page,
+      annotation,
+      context,
+    );
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<number>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'createPageAnnotation',
-        args: [doc, page, annotation],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'createPageAnnotation', [
+      doc,
+      page,
+      annotation,
+      context,
+    ] as PdfEngineMethodArgs<'createPageAnnotation'>);
     this.proxy(task, request);
 
     return task;
@@ -614,14 +573,11 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'updatePageAnnotation',
-        args: [doc, page, annotation],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'updatePageAnnotation', [
+      doc,
+      page,
+      annotation,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -641,14 +597,11 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'removePageAnnotation',
-        args: [doc, page, annotation],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'removePageAnnotation', [
+      doc,
+      page,
+      annotation,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -677,14 +630,12 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfTextRectObject[]>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getPageTextRects',
-        args: [doc, page, scaleFactor, rotation],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getPageTextRects', [
+      doc,
+      page,
+      scaleFactor,
+      rotation,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -715,14 +666,13 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<Blob>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'renderThumbnail',
-        args: [doc, page, scaleFactor, rotation, dpr],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'renderThumbnail', [
+      doc,
+      page,
+      scaleFactor,
+      rotation,
+      dpr,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -738,14 +688,11 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<SearchAllPagesResult>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'searchAllPages',
-        args: [doc, keyword, flags],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'searchAllPages', [
+      doc,
+      keyword,
+      flags,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -761,14 +708,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<ArrayBuffer>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'saveAsCopy',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'saveAsCopy', [doc]);
     this.proxy(task, request);
 
     return task;
@@ -784,14 +724,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfAttachmentObject[]>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getAttachments',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getAttachments', [doc]);
     this.proxy(task, request);
 
     return task;
@@ -807,14 +740,10 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<ArrayBuffer>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'readAttachmentContent',
-        args: [doc, attachment],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'readAttachmentContent', [
+      doc,
+      attachment,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -835,14 +764,12 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'setFormFieldValue',
-        args: [doc, page, annotation, value],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'setFormFieldValue', [
+      doc,
+      page,
+      annotation,
+      value,
+    ]);
     this.proxy(task, request);
 
     return task;
@@ -858,14 +785,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfPageFlattenResult>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'flattenPage',
-        args: [doc, page, flag],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'flattenPage', [doc, page, flag]);
     this.proxy(task, request);
 
     return task;
@@ -881,14 +801,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<ArrayBuffer>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'extractPages',
-        args: [doc, pageIndexes],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'extractPages', [doc, pageIndexes]);
     this.proxy(task, request);
 
     return task;
@@ -904,14 +817,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<string>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'extractText',
-        args: [doc, pageIndexes],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'extractText', [doc, pageIndexes]);
     this.proxy(task, request);
 
     return task;
@@ -927,14 +833,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<string[]>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getTextSlices',
-        args: [doc, slices],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getTextSlices', [doc, slices]);
     this.proxy(task, request);
 
     return task;
@@ -950,14 +849,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfGlyphObject[]>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getPageGlyphs',
-        args: [doc, page],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getPageGlyphs', [doc, page]);
     this.proxy(task, request);
 
     return task;
@@ -973,14 +865,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<PdfPageGeometry>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'getPageGeometry',
-        args: [doc, page],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'getPageGeometry', [doc, page]);
     this.proxy(task, request);
 
     return task;
@@ -997,14 +882,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(fileIds);
     const task = new WorkerTask<PdfFile>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'merge',
-        args: [files],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'merge', [files]);
     this.proxy(task, request);
 
     return task;
@@ -1020,14 +898,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(mergeConfigs.map((config) => config.docId).join('.'));
     const task = new WorkerTask<PdfFile>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'mergePages',
-        args: [mergeConfigs],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'mergePages', [mergeConfigs]);
     this.proxy(task, request);
 
     return task;
@@ -1043,14 +914,7 @@ export class WebWorkerEngine implements PdfEngine {
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<boolean>(this.worker, requestId);
 
-    const request: ExecuteRequest = {
-      id: requestId,
-      type: 'ExecuteRequest',
-      data: {
-        name: 'closeDocument',
-        args: [doc],
-      },
-    };
+    const request: ExecuteRequest = createRequest(requestId, 'closeDocument', [doc]);
     this.proxy(task, request);
 
     return task;

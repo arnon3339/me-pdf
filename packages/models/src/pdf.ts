@@ -576,6 +576,24 @@ export const PdfAnnotationSubtypeName: Record<PdfAnnotationSubtype, string> = {
 };
 
 /**
+ * Context map for annotation subtypes
+ *
+ * @public
+ */
+export interface AnnotationContextMap {
+  [PdfAnnotationSubtype.STAMP]: { imageData: ImageData };
+  // add more sub-types here if they ever need extra data
+}
+
+/**
+ * Context type for annotation subtypes
+ *
+ * @public
+ */
+export type AnnotationCreateContext<A extends PdfAnnotationObject> =
+  A['type'] extends keyof AnnotationContextMap ? AnnotationContextMap[A['type']] : undefined;
+
+/**
  * Status of pdf annotation
  *
  * @public
@@ -736,6 +754,11 @@ export interface PdfAnnotationObjectBase {
    * Sub type of annotation
    */
   type: PdfAnnotationSubtype;
+
+  /**
+   * flags of the annotation
+   */
+  flags?: PdfAnnotationFlagName[];
 
   /**
    * The index of page that this annotation belong to
@@ -1474,10 +1497,6 @@ export type PdfStampAnnoObjectContents = Array<PdfPathObject | PdfImageObject | 
 export interface PdfStampAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.STAMP;
-  /**
-   * contents in this stamp annotation
-   */
-  contents: PdfStampAnnoObjectContents;
 }
 
 /**
@@ -2374,10 +2393,11 @@ export interface PdfEngine<T = Blob> {
    * @param annotation - new annotations
    * @returns task whether the annotations is created successfully
    */
-  createPageAnnotation: (
+  createPageAnnotation: <A extends PdfAnnotationObject>(
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    annotation: PdfAnnotationObject,
+    annotation: A,
+    context?: AnnotationCreateContext<A>,
   ) => PdfTask<number>;
   /**
    * Update a annotation on specified page

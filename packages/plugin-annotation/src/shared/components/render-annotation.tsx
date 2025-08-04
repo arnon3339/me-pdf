@@ -22,6 +22,8 @@ export function RenderAnnotation({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
 
+  const { width, height } = annotation.rect.size;
+
   useEffect(() => {
     if (annotationProvides) {
       const task = annotationProvides.renderAnnotation({
@@ -48,7 +50,7 @@ export function RenderAnnotation({
         }
       };
     }
-  }, [pageIndex, scaleFactor, annotationProvides, annotation]);
+  }, [pageIndex, scaleFactor, annotationProvides, annotation.id, width, height]);
 
   const handleImageLoad = () => {
     if (urlRef.current) {

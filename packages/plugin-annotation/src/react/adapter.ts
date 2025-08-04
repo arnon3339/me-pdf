@@ -7,6 +7,7 @@ export {
   useMemo,
   useLayoutEffect,
   JSX,
+  ChangeEvent,
 } from 'react';
 export type { ReactNode, HTMLAttributes, CSSProperties, MouseEvent, PointerEvent } from 'react';
 

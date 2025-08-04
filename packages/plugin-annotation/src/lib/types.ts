@@ -5,18 +5,16 @@ import {
   Task,
   PdfAnnotationSubtype,
   WebAlphaColor,
-  PdfTask,
   Rotation,
   ImageConversionTypes,
   AppearanceMode,
-  PdfPageObject,
-  PdfDocumentObject,
   PdfBlendMode,
   PdfAnnotationBorderStyle,
   LineEndings,
   PdfStandardFont,
   PdfTextAlignment,
   PdfVerticalAlignment,
+  AnnotationCreateContext,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -243,7 +241,11 @@ export interface AnnotationCapability {
   getColorPresets: () => string[];
   /** append a swatch (deduped by RGBA) */
   addColorPreset: (color: string) => void;
-  createAnnotation: (pageIndex: number, annotation: PdfAnnotationObject) => void;
+  createAnnotation: <A extends PdfAnnotationObject>(
+    pageIndex: number,
+    annotation: A,
+    ctx?: AnnotationCreateContext<A>,
+  ) => void;
   updateAnnotation: (
     pageIndex: number,
     annotationId: number,

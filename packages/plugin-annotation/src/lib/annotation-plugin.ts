@@ -19,6 +19,7 @@ import {
   Rotation,
   AppearanceMode,
   PdfBlendMode,
+  AnnotationCreateContext,
 } from '@embedpdf/models';
 import {
   ActiveTool,
@@ -80,6 +81,7 @@ export class AnnotationPlugin extends BasePlugin<
 
   private readonly modeByVariant = new Map<string, string>();
   private readonly variantByMode = new Map<string, string>();
+  private pendingContexts = new Map<number, unknown>();
 
   private readonly activeVariantChange$ = createBehaviorEmitter<string | null>();
   private readonly activeTool$ = createBehaviorEmitter<ActiveTool>({
@@ -127,7 +129,6 @@ export class AnnotationPlugin extends BasePlugin<
 
     this.interactionManager?.onModeChange((s) => {
       const newVariant = this.variantByMode.get(s.activeMode) ?? null;
-      console.log(newVariant, this.state.activeVariant);
       if (newVariant !== this.state.activeVariant) {
         this.dispatch(setActiveVariant(newVariant));
         this.activeVariantChange$.emit(newVariant);
@@ -233,8 +234,11 @@ export class AnnotationPlugin extends BasePlugin<
       },
       getColorPresets: () => [...this.state.colorPresets],
       addColorPreset: (color) => this.dispatch(addColorPreset(color)),
-      createAnnotation: (pageIndex: number, annotation: PdfAnnotationObject) =>
-        this.createAnnotation(pageIndex, annotation),
+      createAnnotation: <A extends PdfAnnotationObject>(
+        pageIndex: number,
+        annotation: A,
+        ctx?: AnnotationCreateContext<A>,
+      ) => this.createAnnotation(pageIndex, annotation, ctx),
       updateAnnotation: (pageIndex: number, localId: number, patch: Partial<PdfAnnotationObject>) =>
         this.updateAnnotation(pageIndex, localId, patch),
       deleteAnnotation: (pageIndex: number, localId: number) =>
@@ -331,9 +335,16 @@ export class AnnotationPlugin extends BasePlugin<
     this.dispatch(selectAnnotation(pageIndex, annotationId));
   }
 
-  private createAnnotation(pageIndex: number, annotation: PdfAnnotationObject) {
+  private createAnnotation<A extends PdfAnnotationObject>(
+    pageIndex: number,
+    annotation: A,
+    ctx?: AnnotationCreateContext<A>,
+  ) {
     const localId = annotation.id;
-    const execute = () => this.dispatch(createAnnotation(pageIndex, localId, annotation));
+    const execute = () => {
+      this.dispatch(createAnnotation(pageIndex, localId, annotation));
+      if (ctx) this.pendingContexts.set(localId, ctx);
+    };
 
     if (!this.history) {
       execute();
@@ -343,6 +354,7 @@ export class AnnotationPlugin extends BasePlugin<
     const command: Command = {
       execute,
       undo: () => {
+        this.pendingContexts.delete(localId);
         this.dispatch(deselectAnnotation());
         this.dispatch(deleteAnnotation(pageIndex, localId));
       },
@@ -428,8 +440,14 @@ export class AnnotationPlugin extends BasePlugin<
 
       switch (ta.commitState) {
         case 'new':
-          const task = this.engine.createPageAnnotation!(doc, page, ta.object);
-          task.wait((annoId) => this.dispatch(storePdfId(uid, annoId)), ignore);
+          const ctx = this.pendingContexts.get(ta.localId) as AnnotationCreateContext<
+            typeof ta.object
+          >;
+          const task = this.engine.createPageAnnotation!(doc, page, ta.object, ctx);
+          task.wait((annoId) => {
+            this.dispatch(storePdfId(uid, annoId));
+            this.pendingContexts.delete(ta.localId);
+          }, ignore);
           creations.push(task);
           break;
         case 'dirty':
