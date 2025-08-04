@@ -1,5 +1,7 @@
 # @embedpdf/pdfium
 
+## 1.0.15
+
 ## 1.0.14
 
 ### Patch Changes

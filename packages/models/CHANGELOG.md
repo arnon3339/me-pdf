@@ -1,5 +1,11 @@
 # @embedpdf/models
 
+## 1.0.15
+
+### Patch Changes
+
+- [#54](https://github.com/embedpdf/embed-pdf-viewer/pull/54) by [@bobsingor](https://github.com/bobsingor) – Add support for image stamp
+
 ## 1.0.14
 
 ### Patch Changes
