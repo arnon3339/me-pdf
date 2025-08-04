@@ -18,6 +18,7 @@ export function Stamp({ isSelected, annotation, pageIndex, scale, onClick }: Sta
         position: 'absolute',
         width: '100%',
         height: '100%',
+        zIndex: 2,
         pointerEvents: isSelected ? 'none' : 'auto',
       }}
       onPointerDown={onClick}
