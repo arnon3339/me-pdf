@@ -210,6 +210,11 @@ export const initialState = (cfg: AnnotationPluginConfig): AnnotationState => ({
       textAlign: PdfTextAlignment.Left,
       verticalAlign: PdfVerticalAlignment.Top,
     },
+    [makeVariantKey(PdfAnnotationSubtype.STAMP)]: {
+      name: 'Photo',
+      subtype: PdfAnnotationSubtype.STAMP,
+      interaction: { mode: 'stamp', exclusive: true, cursor: 'crosshair' },
+    },
     ...cfg.toolDefaults,
   },
   colorPresets: cfg.colorPresets ?? DEFAULT_COLORS,

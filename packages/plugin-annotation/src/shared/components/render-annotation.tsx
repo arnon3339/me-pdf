@@ -15,7 +15,6 @@ export function RenderAnnotation({
   pageIndex,
   annotation,
   scaleFactor = 1,
-  dpr = 1,
   style,
   ...props
 }: RenderAnnotationProps) {
@@ -23,9 +22,16 @@ export function RenderAnnotation({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
 
+  const { width, height } = annotation.rect.size;
+
   useEffect(() => {
     if (annotationProvides) {
-      const task = annotationProvides.renderAnnotation({ pageIndex, annotation, scaleFactor, dpr });
+      const task = annotationProvides.renderAnnotation({
+        pageIndex,
+        annotation,
+        scaleFactor,
+        dpr: window.devicePixelRatio,
+      });
       task.wait((blob) => {
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
@@ -44,7 +50,7 @@ export function RenderAnnotation({
         }
       };
     }
-  }, [pageIndex, scaleFactor, dpr, annotationProvides, annotation]);
+  }, [pageIndex, scaleFactor, annotationProvides, annotation.id, width, height]);
 
   const handleImageLoad = () => {
     if (urlRef.current) {

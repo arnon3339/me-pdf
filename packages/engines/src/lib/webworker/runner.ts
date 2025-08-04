@@ -22,6 +22,19 @@ export type PdfEngineMethodRequestBody = {
 }[PdfEngineMethodName];
 
 /**
+ * Request body that represent method calls of PdfEngine, it contains the
+ * method name and arguments
+ */
+export type SpecificExecuteRequest<M extends PdfEngineMethodName> = {
+  id: string;
+  type: 'ExecuteRequest';
+  data: {
+    name: M;
+    args: PdfEngineMethodArgs<M>;
+  };
+};
+
+/**
  * Response body that represent return value of PdfEngine
  */
 export type PdfEngineMethodResponseBody = {
