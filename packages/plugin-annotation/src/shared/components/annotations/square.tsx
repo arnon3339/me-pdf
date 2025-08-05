@@ -1,4 +1,4 @@
-import { useMemo, MouseEvent } from '@framework';
+import { useMemo, MouseEvent, TouchEvent } from '@framework';
 import { PdfAnnotationBorderStyle, Rect } from '@embedpdf/models';
 
 /* ---------------------------------------------------------------- *\
@@ -25,7 +25,7 @@ interface SquareProps {
   /** Current page zoom factor */
   scale: number;
   /** Click handler (used for selection) */
-  onClick?: (e: MouseEvent<SVGElement>) => void;
+  onClick?: (e: MouseEvent<SVGElement> | TouchEvent<SVGElement>) => void;
 }
 
 /**
@@ -87,6 +87,7 @@ export function Square({
         fill={color}
         opacity={opacity}
         onPointerDown={onClick}
+        onTouchStart={onClick}
         style={{
           cursor: isSelected ? 'move' : 'pointer',
           pointerEvents: isSelected

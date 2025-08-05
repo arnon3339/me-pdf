@@ -1,4 +1,4 @@
-import { MouseEvent } from '@framework';
+import { MouseEvent, TouchEvent } from '@framework';
 import { PdfStampAnnoObject } from '@embedpdf/models';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 import { RenderAnnotation } from '../render-annotation';
@@ -8,7 +8,7 @@ interface StampProps {
   annotation: TrackedAnnotation<PdfStampAnnoObject>;
   pageIndex: number;
   scale: number;
-  onClick: (e: MouseEvent<HTMLDivElement>) => void;
+  onClick: (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => void;
 }
 
 export function Stamp({ isSelected, annotation, pageIndex, scale, onClick }: StampProps) {
@@ -22,6 +22,7 @@ export function Stamp({ isSelected, annotation, pageIndex, scale, onClick }: Sta
         pointerEvents: isSelected ? 'none' : 'auto',
       }}
       onPointerDown={onClick}
+      onTouchStart={onClick}
     >
       {annotation.pdfId !== undefined && (
         <RenderAnnotation

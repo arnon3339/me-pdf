@@ -1,5 +1,5 @@
 import { Rect, Rotation, Size } from '@embedpdf/models';
-import { ReactNode, CSSProperties, PointerEvent, Fragment } from '@framework';
+import { ReactNode, CSSProperties, PointerEvent, Fragment, TouchEvent } from '@framework';
 
 interface CounterRotateProps {
   rect: Rect;
@@ -56,6 +56,7 @@ export function getCounterRotation(rect: Rect, rotation: Rotation): CounterTrans
 export interface MenuWrapperProps {
   style: CSSProperties;
   onPointerDown: (e: PointerEvent<HTMLDivElement>) => void;
+  onTouchStart: (e: TouchEvent<HTMLDivElement>) => void;
 }
 
 interface CounterRotateComponentProps extends CounterRotateProps {
@@ -85,6 +86,7 @@ export function CounterRotate({ children, ...props }: CounterRotateComponentProp
   const menuWrapperProps = {
     style: menuWrapperStyle,
     onPointerDown: (e: PointerEvent<HTMLDivElement>) => e.stopPropagation(),
+    onTouchStart: (e: TouchEvent<HTMLDivElement>) => e.stopPropagation(),
   };
 
   return (

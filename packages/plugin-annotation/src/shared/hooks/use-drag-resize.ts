@@ -1,4 +1,4 @@
-import { PointerEvent, useState, useRef, useEffect } from '@framework';
+import { PointerEvent, TouchEvent, useState, useRef, useEffect } from '@framework';
 import { PdfAnnotationObject, Position, Rect, restoreOffset } from '@embedpdf/models';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 import { ResizeDirection } from '../types';
@@ -129,22 +129,18 @@ export function useDragResize<T extends PdfAnnotationObject>({
     return { origin: { x: ox, y: oy }, size: { width: w, height: h } };
   };
 
-  /* ── pointer handlers for the container ─────────────────── */
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (!isSelected || !isDraggable) return;
-    e.stopPropagation();
-    e.preventDefault();
-    drag.current = 'dragging';
-    startPos.current = { x: e.clientX, y: e.clientY };
+  /* ── helpers inside the hook ────────────────────────────── */
+  const beginDrag = (kind: DragState, clientX: number, clientY: number) => {
+    drag.current = kind;
+    startPos.current = { x: clientX, y: clientY };
     startRect.current = currentRect;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+  const handleMove = (clientX: number, clientY: number) => {
     if (drag.current === 'idle' || !startPos.current) return;
     const disp = {
-      x: e.clientX - startPos.current.x,
-      y: e.clientY - startPos.current.y,
+      x: clientX - startPos.current.x,
+      y: clientY - startPos.current.y,
     };
     const { x, y } = restoreOffset(disp, rotation, scale);
     const nextRect = applyDelta(x, y);
@@ -162,16 +158,8 @@ export function useDragResize<T extends PdfAnnotationObject>({
     setPreviewObject(patch);
   };
 
-  const onPointerUp = (e?: PointerEvent<HTMLDivElement>) => {
+  const finishDragInternal = () => {
     if (drag.current === 'idle') return;
-
-    if (e?.currentTarget && e.pointerId !== undefined) {
-      try {
-        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch {
-        /* ignore – we might have already lost capture */
-      }
-    }
 
     const usedDir = dir.current || 'bottom-right';
     drag.current = 'idle';
@@ -193,17 +181,55 @@ export function useDragResize<T extends PdfAnnotationObject>({
     setPreviewObject(null);
   };
 
-  /* ── handle pointer-down from resize handles ─────────────── */
+  /* ── pointer handlers for the container ─────────────────── */
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (!isSelected || !isDraggable) return;
+    e.stopPropagation();
+    e.preventDefault();
+    beginDrag('dragging', e.clientX, e.clientY);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => handleMove(e.clientX, e.clientY);
+
+  const onPointerUp = (e?: PointerEvent<HTMLDivElement>) => {
+    finishDragInternal();
+    if (e?.currentTarget && e.pointerId !== undefined) {
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {
+        /* ignore – we might have already lost capture */
+      }
+    }
+  };
+
+  /* ── handle pointer-down from resize handles ────────────── */
   const startResize = (direction: ResizeDirection) => (e: PointerEvent<HTMLDivElement>) => {
     if (!isSelected || !isResizable) return;
     e.stopPropagation();
     e.preventDefault();
-    drag.current = 'resizing';
     dir.current = direction;
-    startPos.current = { x: e.clientX, y: e.clientY };
-    startRect.current = currentRect;
+    beginDrag('resizing', e.clientX, e.clientY);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
+
+  /* ── touch handlers (mobile fallback) ───────────────────── */
+  const onTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isSelected || !isDraggable) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const t = e.touches[0];
+    if (!t) return;
+    beginDrag('dragging', t.clientX, t.clientY);
+  };
+
+  const onTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0];
+    if (!t) return;
+    handleMove(t.clientX, t.clientY);
+  };
+
+  const onTouchEnd = () => finishDragInternal();
 
   /* reset when annotation changes */
   useEffect(() => {
@@ -221,6 +247,12 @@ export function useDragResize<T extends PdfAnnotationObject>({
       onPointerUp,
       onPointerCancel: () => onPointerUp(),
       onLostPointerCapture: () => onPointerUp(),
+
+      /* mobile touch fallback */
+      onTouchStart,
+      onTouchMove,
+      onTouchEnd,
+      onTouchCancel: onTouchEnd,
     },
     startResize,
   };

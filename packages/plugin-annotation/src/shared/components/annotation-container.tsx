@@ -116,6 +116,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
           width: `${currentRect.size.width * scale}px`,
           height: `${currentRect.size.height * scale}px`,
           pointerEvents: isSelected ? 'auto' : 'none',
+          touchAction: isSelected ? 'auto' : 'none',
           cursor: isSelected && isDraggable ? 'move' : 'default',
           ...(isSelected && {
             zIndex: 3,

@@ -1,4 +1,4 @@
-import { MouseEvent, useMemo } from '@framework';
+import { MouseEvent, TouchEvent, useMemo } from '@framework';
 import { Rect, Position, LineEndings } from '@embedpdf/models';
 import { patching } from '@embedpdf/plugin-annotation';
 
@@ -11,7 +11,7 @@ interface PolylineProps {
   strokeWidth: number;
   scale: number;
   isSelected: boolean;
-  onClick?: (e: MouseEvent<SVGElement>) => void;
+  onClick?: (e: MouseEvent<SVGElement> | TouchEvent<SVGElement>) => void;
   /** Optional start & end endings */
   lineEndings?: LineEndings;
 }
@@ -92,6 +92,7 @@ export function Polyline({
       <path
         d={pathData}
         onPointerDown={onClick}
+        onTouchStart={onClick}
         opacity={opacity}
         style={{
           fill: 'none',
@@ -110,6 +111,7 @@ export function Polyline({
           stroke={strokeColor}
           fill={endings.start.filled ? color : 'none'}
           onPointerDown={onClick}
+          onTouchStart={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
@@ -125,6 +127,7 @@ export function Polyline({
           stroke={strokeColor}
           fill={endings.end.filled ? color : 'none'}
           onPointerDown={onClick}
+          onTouchStart={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,

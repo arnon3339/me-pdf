@@ -1,4 +1,4 @@
-import { useMemo, MouseEvent } from '@framework';
+import { useMemo, MouseEvent, TouchEvent } from '@framework';
 import { PdfInkListObject, Rect } from '@embedpdf/models';
 
 /* ---------------------------------------------------------------- *\
@@ -21,7 +21,7 @@ interface InkProps {
   /** Page zoom factor */
   scale: number;
   /** Callback for when the annotation is clicked */
-  onClick?: (e: MouseEvent<SVGPathElement>) => void;
+  onClick?: (e: MouseEvent<SVGPathElement> | TouchEvent<SVGPathElement>) => void;
 }
 
 /**
@@ -76,6 +76,7 @@ export function Ink({
           fill="none"
           opacity={opacity}
           onPointerDown={onClick}
+          onTouchStart={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             pointerEvents: isSelected ? 'none' : 'visibleStroke',

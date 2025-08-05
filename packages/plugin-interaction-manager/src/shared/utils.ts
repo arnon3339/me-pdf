@@ -111,11 +111,19 @@ export function createPointerProvider(
     if (!handlerKey || !active?.[handlerKey]) return;
 
     let pos: Position;
-    let normalizedEvent: EmbedPdfPointerEvent;
+    let normalizedEvent: EmbedPdfPointerEvent & {
+      target: EventTarget | null;
+      currentTarget: EventTarget | null;
+    };
 
     if (evt instanceof TouchEvent) {
-      // For touch events, prevent the browser from firing compatibility mouse/pointer events.
-      evt.preventDefault();
+      /** prevent scrolling and accidental double-tap zoom while
+       *  the finger is MOVING (or the gesture gets cancelled)
+       *  but leave touchstart / touchend alone so the browser can
+       *  emit its synthetic click that React listens for. */
+      if (evt.type === 'touchmove' || evt.type === 'touchcancel') {
+        evt.preventDefault();
+      }
 
       // For `touchend`, we must use `changedTouches` as `touches` will be empty.
       const touchPoint =
@@ -133,6 +141,8 @@ export function createPointerProvider(
         shiftKey: evt.shiftKey,
         altKey: evt.altKey,
         metaKey: evt.metaKey,
+        target: evt.target,
+        currentTarget: evt.currentTarget,
       };
     } else {
       const pe = evt as PointerEvent;

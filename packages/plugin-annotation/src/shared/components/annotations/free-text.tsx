@@ -1,9 +1,7 @@
-import { MouseEvent, useEffect, useRef } from '@framework';
+import { MouseEvent, TouchEvent, useEffect, useRef } from '@framework';
 import {
   PdfFreeTextAnnoObject,
-  PdfStandardFont,
   PdfVerticalAlignment,
-  Rect,
   standardFontCss,
   textAlignmentToCss,
 } from '@embedpdf/models';
@@ -16,7 +14,7 @@ interface FreeTextProps {
   annotation: TrackedAnnotation<PdfFreeTextAnnoObject>;
   pageIndex: number;
   scale: number;
-  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  onClick?: (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => void;
 }
 
 export function FreeText({
@@ -66,6 +64,7 @@ export function FreeText({
         zIndex: 2,
       }}
       onPointerDown={onClick}
+      onTouchStart={onClick}
     >
       <span
         ref={editorRef}
