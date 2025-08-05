@@ -59,14 +59,18 @@ export function Polygon({
     >
       <path
         d={pathData}
-        onMouseDown={onClick}
+        onPointerDown={onClick}
         opacity={opacity}
         style={{
           fill: color,
           stroke: strokeColor ?? color,
           strokeWidth,
           cursor: isSelected ? 'move' : 'pointer',
-          pointerEvents: color === 'transparent' ? 'visibleStroke' : 'visible',
+          pointerEvents: isSelected
+            ? 'none'
+            : color === 'transparent'
+              ? 'visibleStroke'
+              : 'visible',
           strokeLinecap: 'butt',
           strokeLinejoin: 'miter',
           ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {

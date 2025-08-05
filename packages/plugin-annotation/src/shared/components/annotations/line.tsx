@@ -100,7 +100,7 @@ export function Line({
         x2={x2}
         y2={y2}
         opacity={opacity}
-        onMouseDown={onClick}
+        onPointerDown={onClick}
         style={{
           cursor: isSelected ? 'move' : 'pointer',
           pointerEvents: 'visibleStroke',
@@ -118,7 +118,7 @@ export function Line({
         <path
           d={endings.start.d}
           transform={endings.start.transform}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
           stroke={strokeColor}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
@@ -137,7 +137,7 @@ export function Line({
           d={endings.end.d}
           transform={endings.end.transform}
           stroke={strokeColor}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,

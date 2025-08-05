@@ -6,6 +6,8 @@ import { PdfInkListObject, Rect } from '@embedpdf/models';
 \* ---------------------------------------------------------------- */
 
 interface InkProps {
+  /** Whether the annotation is selected */
+  isSelected: boolean;
   /** Stroke colour (falls back to PDFium default black) */
   color?: string;
   /** 0 – 1 */
@@ -20,14 +22,13 @@ interface InkProps {
   scale: number;
   /** Callback for when the annotation is clicked */
   onClick?: (e: MouseEvent<SVGPathElement>) => void;
-  /** Cursor on the ink */
-  cursor?: string;
 }
 
 /**
  * Renders a PDF Ink annotation (free-hand drawing) as SVG.
  */
 export function Ink({
+  isSelected,
   color = '#000000',
   opacity = 1,
   strokeWidth,
@@ -35,7 +36,6 @@ export function Ink({
   rect,
   scale,
   onClick,
-  cursor,
 }: InkProps): JSX.Element {
   /* convert each stroke to an SVG <path d=""> string */
   const paths = useMemo(() => {
@@ -75,10 +75,10 @@ export function Ink({
           d={d}
           fill="none"
           opacity={opacity}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
           style={{
-            cursor,
-            pointerEvents: 'visibleStroke',
+            cursor: isSelected ? 'move' : 'pointer',
+            pointerEvents: isSelected ? 'none' : 'visibleStroke',
             stroke: color,
             strokeWidth: strokeWidth,
             strokeLinecap: 'round',

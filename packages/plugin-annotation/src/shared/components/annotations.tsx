@@ -121,7 +121,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
             >
               {(obj) => (
                 <Ink
-                  cursor={isSelected ? 'move' : 'pointer'}
+                  isSelected={isSelected}
                   color={obj.color}
                   opacity={obj.opacity}
                   strokeWidth={obj.strokeWidth}
@@ -151,7 +151,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
             >
               {(obj) => (
                 <Square
-                  cursor={isSelected ? 'move' : 'pointer'}
+                  isSelected={isSelected}
                   rect={obj.rect}
                   color={obj.color}
                   opacity={obj.opacity}

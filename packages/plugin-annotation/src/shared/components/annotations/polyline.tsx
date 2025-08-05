@@ -91,7 +91,7 @@ export function Polyline({
     >
       <path
         d={pathData}
-        onMouseDown={onClick}
+        onPointerDown={onClick}
         opacity={opacity}
         style={{
           fill: 'none',
@@ -109,7 +109,7 @@ export function Polyline({
           transform={endings.start.transform}
           stroke={strokeColor}
           fill={endings.start.filled ? color : 'none'}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
@@ -124,11 +124,11 @@ export function Polyline({
           transform={endings.end.transform}
           stroke={strokeColor}
           fill={endings.end.filled ? color : 'none'}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
-            pointerEvents: endings.end.filled ? 'visible' : 'visibleStroke',
+            pointerEvents: isSelected ? 'none' : endings.end.filled ? 'visible' : 'visibleStroke',
             strokeLinecap: 'butt',
           }}
         />
