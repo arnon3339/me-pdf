@@ -1,5 +1,13 @@
 # @embedpdf/plugin-pan
 
+## 1.0.16
+
+### Patch Changes
+
+- [#59](https://github.com/embedpdf/embed-pdf-viewer/pull/59) by [@bobsingor](https://github.com/bobsingor) – Change to activeDefaultMode instead of active('default')
+
+- [#59](https://github.com/embedpdf/embed-pdf-viewer/pull/59) by [@bobsingor](https://github.com/bobsingor) – Add different pan modes (always, mobile, never)
+
 ## 1.0.15
 
 ## 1.0.14

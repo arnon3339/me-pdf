@@ -1,5 +1,11 @@
 # @embedpdf/plugin-interaction-manager
 
+## 1.0.16
+
+### Patch Changes
+
+- [#59](https://github.com/embedpdf/embed-pdf-viewer/pull/59) by [@bobsingor](https://github.com/bobsingor) – Add default mode to interaction manager and support for touch
+
 ## 1.0.15
 
 ## 1.0.14

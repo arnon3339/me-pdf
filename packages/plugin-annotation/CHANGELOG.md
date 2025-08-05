@@ -1,5 +1,11 @@
 # @embedpdf/plugin-annotation
 
+## 1.0.16
+
+### Patch Changes
+
+- [#59](https://github.com/embedpdf/embed-pdf-viewer/pull/59) by [@bobsingor](https://github.com/bobsingor) – Add mobile support for annotations
+
 ## 1.0.15
 
 ### Patch Changes
