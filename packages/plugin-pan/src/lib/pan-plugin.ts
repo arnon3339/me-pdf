@@ -23,6 +23,7 @@ export class PanPlugin extends BasePlugin<PanPluginConfig, PanCapability> {
       scope: 'global',
       exclusive: false,
       cursor: 'grab',
+      wantsRawTouch: false,
     });
   }
 

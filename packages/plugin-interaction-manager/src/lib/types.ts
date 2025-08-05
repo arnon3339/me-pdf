@@ -22,6 +22,9 @@ export interface InteractionMode {
   exclusive: boolean;
   /** baseline cursor while the mode is active (before any handler overrides it). */
   cursor?: string;
+  /** Set to `false` when this tool wants to disable raw touch events.
+   *  Defaults to `true`. */
+  wantsRawTouch?: boolean;
 }
 
 export interface EmbedPdfPointerEvent {
@@ -40,6 +43,12 @@ export interface PointerEventHandlers<T = EmbedPdfPointerEvent> {
   onPointerEnter?(pos: Position, evt: T, modeId: string): void;
   onPointerLeave?(pos: Position, evt: T, modeId: string): void;
   onPointerCancel?(pos: Position, evt: T, modeId: string): void;
+  onMouseDown?(pos: Position, evt: T, modeId: string): void;
+  onMouseUp?(pos: Position, evt: T, modeId: string): void;
+  onMouseMove?(pos: Position, evt: T, modeId: string): void;
+  onMouseEnter?(pos: Position, evt: T, modeId: string): void;
+  onMouseLeave?(pos: Position, evt: T, modeId: string): void;
+  onMouseCancel?(pos: Position, evt: T, modeId: string): void;
   onClick?(pos: Position, evt: T, modeId: string): void;
   onDoubleClick?(pos: Position, evt: T, modeId: string): void;
 }

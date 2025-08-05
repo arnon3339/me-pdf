@@ -17,7 +17,7 @@ export const PanMode = () => {
 
   const handlers = useMemo(
     (): PointerEventHandlers => ({
-      onPointerDown: (_, pe) => {
+      onMouseDown: (_, pe) => {
         if (!viewport) return;
 
         const metrics = viewport.getMetrics();
@@ -31,7 +31,7 @@ export const PanMode = () => {
 
         setCursor('panMode', 'grabbing', 10);
       },
-      onPointerMove: (_, pe) => {
+      onMouseMove: (_, pe) => {
         const drag = dragRef.current;
         if (!drag || !viewport) return;
 
@@ -44,21 +44,21 @@ export const PanMode = () => {
           y: drag.startTop - dy,
         });
       },
-      onPointerUp: () => {
+      onMouseUp: () => {
         const drag = dragRef.current;
         if (!drag) return;
 
         dragRef.current = null;
         removeCursor('panMode');
       },
-      onPointerLeave: () => {
+      onMouseLeave: () => {
         const drag = dragRef.current;
         if (!drag) return;
 
         dragRef.current = null;
         removeCursor('panMode');
       },
-      onPointerCancel: () => {
+      onMouseCancel: () => {
         const drag = dragRef.current;
         if (!drag) return;
 
