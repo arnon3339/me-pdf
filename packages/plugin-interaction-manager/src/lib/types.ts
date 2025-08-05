@@ -10,6 +10,8 @@ export interface InteractionManagerState {
   cursor: string;
   /** Whether the interaction is paused */
   paused: boolean;
+  /** Mode-id that is treated as the resolver’s fall-back (“finish → …”). */
+  defaultMode: string;
 }
 
 export interface InteractionMode {
@@ -22,6 +24,9 @@ export interface InteractionMode {
   exclusive: boolean;
   /** baseline cursor while the mode is active (before any handler overrides it). */
   cursor?: string;
+  /** Set to `false` when this tool wants to disable raw touch events.
+   *  Defaults to `true`. */
+  wantsRawTouch?: boolean;
 }
 
 export interface EmbedPdfPointerEvent {
@@ -40,6 +45,12 @@ export interface PointerEventHandlers<T = EmbedPdfPointerEvent> {
   onPointerEnter?(pos: Position, evt: T, modeId: string): void;
   onPointerLeave?(pos: Position, evt: T, modeId: string): void;
   onPointerCancel?(pos: Position, evt: T, modeId: string): void;
+  onMouseDown?(pos: Position, evt: T, modeId: string): void;
+  onMouseUp?(pos: Position, evt: T, modeId: string): void;
+  onMouseMove?(pos: Position, evt: T, modeId: string): void;
+  onMouseEnter?(pos: Position, evt: T, modeId: string): void;
+  onMouseLeave?(pos: Position, evt: T, modeId: string): void;
+  onMouseCancel?(pos: Position, evt: T, modeId: string): void;
   onClick?(pos: Position, evt: T, modeId: string): void;
   onDoubleClick?(pos: Position, evt: T, modeId: string): void;
 }
@@ -82,8 +93,8 @@ export interface InteractionManagerCapability {
   getActiveInteractionMode(): InteractionMode | null;
   /** programmatically switch to a mode */
   activate(modeId: string): void;
-  /** finish current mode -> jumps back to `default` */
-  finish(): void;
+  /** set default mode */
+  activateDefaultMode(): void;
   /** register a mode (should be called at start‑up by each plugin/tool). */
   registerMode(mode: InteractionMode): void;
   /** register pointer handlers that run *only* while the given mode is active. */
@@ -116,4 +127,8 @@ export interface InteractionManagerCapability {
   resume(): void;
   /** Returns whether the interaction is paused */
   isPaused(): boolean;
+  /** Set the default mode */
+  setDefaultMode(id: string): void;
+  /** Get the default mode */
+  getDefaultMode(): string;
 }

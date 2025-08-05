@@ -1,4 +1,4 @@
-import { useMemo, MouseEvent } from '@framework';
+import { useMemo, MouseEvent, TouchEvent } from '@framework';
 import { PdfAnnotationBorderStyle, Rect } from '@embedpdf/models';
 
 /* ---------------------------------------------------------------- *\
@@ -6,6 +6,8 @@ import { PdfAnnotationBorderStyle, Rect } from '@embedpdf/models';
 \* ---------------------------------------------------------------- */
 
 interface CircleProps {
+  /** Whether the annotation is selected */
+  isSelected: boolean;
   /** Fill colour – defaults to PDFium’s black if omitted */
   color?: string;
   /** Stroke colour – defaults to same as fill when omitted */
@@ -23,9 +25,7 @@ interface CircleProps {
   /** Current page zoom factor */
   scale: number;
   /** Click handler (used for selection) */
-  onClick?: (e: MouseEvent<SVGElement>) => void;
-  /** Cursor shown over the annotation */
-  cursor?: string;
+  onClick?: (e: MouseEvent<SVGElement> | TouchEvent<SVGElement>) => void;
 }
 
 /**
@@ -41,7 +41,7 @@ export function Circle({
   rect,
   scale,
   onClick,
-  cursor,
+  isSelected,
 }: CircleProps): JSX.Element {
   /* ------------------------------------------------------------------ */
   /* geometry helpers                                                   */
@@ -89,10 +89,15 @@ export function Circle({
         ry={ry}
         fill={color}
         opacity={opacity}
-        onMouseDown={onClick}
+        onPointerDown={onClick}
+        onTouchStart={onClick}
         style={{
-          cursor,
-          pointerEvents: color === 'transparent' ? 'visibleStroke' : 'visible',
+          cursor: isSelected ? 'move' : 'pointer',
+          pointerEvents: isSelected
+            ? 'none'
+            : color === 'transparent'
+              ? 'visibleStroke'
+              : 'visible',
           stroke: strokeColor ?? color,
           strokeWidth,
           ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {

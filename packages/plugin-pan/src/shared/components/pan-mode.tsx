@@ -2,11 +2,14 @@ import { useEffect, useMemo, useRef } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { useCursor, usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { useViewportCapability } from '@embedpdf/plugin-viewport/@framework';
+import { usePanCapability, usePanPlugin } from '../hooks';
 
 export const PanMode = () => {
   const { register } = usePointerHandlers({ modeId: 'panMode' });
   const { setCursor, removeCursor } = useCursor();
   const { provides: viewport } = useViewportCapability();
+  const { provides: pan } = usePanCapability();
+  const { plugin: panPlugin } = usePanPlugin();
 
   const dragRef = useRef<{
     startX: number;
@@ -15,9 +18,21 @@ export const PanMode = () => {
     startTop: number;
   } | null>(null);
 
+  useEffect(() => {
+    if (!pan || !panPlugin) return;
+
+    const mode = panPlugin.config?.defaultMode ?? 'never';
+    const SUPPORT_TOUCH =
+      typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    if (mode === 'mobile' && SUPPORT_TOUCH) {
+      pan.makePanDefault();
+    }
+  }, [pan, panPlugin]);
+
   const handlers = useMemo(
     (): PointerEventHandlers => ({
-      onPointerDown: (_, pe) => {
+      onMouseDown: (_, pe) => {
         if (!viewport) return;
 
         const metrics = viewport.getMetrics();
@@ -31,7 +46,7 @@ export const PanMode = () => {
 
         setCursor('panMode', 'grabbing', 10);
       },
-      onPointerMove: (_, pe) => {
+      onMouseMove: (_, pe) => {
         const drag = dragRef.current;
         if (!drag || !viewport) return;
 
@@ -44,21 +59,21 @@ export const PanMode = () => {
           y: drag.startTop - dy,
         });
       },
-      onPointerUp: () => {
+      onMouseUp: () => {
         const drag = dragRef.current;
         if (!drag) return;
 
         dragRef.current = null;
         removeCursor('panMode');
       },
-      onPointerLeave: () => {
+      onMouseLeave: () => {
         const drag = dragRef.current;
         if (!drag) return;
 
         dragRef.current = null;
         removeCursor('panMode');
       },
-      onPointerCancel: () => {
+      onMouseCancel: () => {
         const drag = dragRef.current;
         if (!drag) return;
 

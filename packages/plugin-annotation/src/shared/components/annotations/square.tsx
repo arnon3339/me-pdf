@@ -1,4 +1,4 @@
-import { useMemo, MouseEvent } from '@framework';
+import { useMemo, MouseEvent, TouchEvent } from '@framework';
 import { PdfAnnotationBorderStyle, Rect } from '@embedpdf/models';
 
 /* ---------------------------------------------------------------- *\
@@ -6,6 +6,8 @@ import { PdfAnnotationBorderStyle, Rect } from '@embedpdf/models';
 \* ---------------------------------------------------------------- */
 
 interface SquareProps {
+  /** Whether the annotation is selected */
+  isSelected: boolean;
   /** Fill colour – defaults to PDFium’s black if omitted */
   color?: string;
   /** Stroke colour – defaults to same as fill when omitted */
@@ -23,15 +25,14 @@ interface SquareProps {
   /** Current page zoom factor */
   scale: number;
   /** Click handler (used for selection) */
-  onClick?: (e: MouseEvent<SVGElement>) => void;
-  /** Cursor shown over the annotation */
-  cursor?: string;
+  onClick?: (e: MouseEvent<SVGElement> | TouchEvent<SVGElement>) => void;
 }
 
 /**
  * Renders a PDF Square annotation (rectangle) as SVG.
  */
 export function Square({
+  isSelected,
   color = '#000000',
   strokeColor,
   opacity = 1,
@@ -41,7 +42,6 @@ export function Square({
   rect,
   scale,
   onClick,
-  cursor,
 }: SquareProps): JSX.Element {
   /* ------------------------------------------------------------------ */
   /* geometry helpers                                                   */
@@ -86,10 +86,15 @@ export function Square({
         height={height}
         fill={color}
         opacity={opacity}
-        onMouseDown={onClick}
+        onPointerDown={onClick}
+        onTouchStart={onClick}
         style={{
-          cursor,
-          pointerEvents: color === 'transparent' ? 'visibleStroke' : 'visible',
+          cursor: isSelected ? 'move' : 'pointer',
+          pointerEvents: isSelected
+            ? 'none'
+            : color === 'transparent'
+              ? 'visibleStroke'
+              : 'visible',
           stroke: strokeColor ?? color,
           strokeWidth,
           ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {

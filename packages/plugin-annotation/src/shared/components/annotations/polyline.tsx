@@ -1,4 +1,4 @@
-import { MouseEvent, useMemo } from '@framework';
+import { MouseEvent, TouchEvent, useMemo } from '@framework';
 import { Rect, Position, LineEndings } from '@embedpdf/models';
 import { patching } from '@embedpdf/plugin-annotation';
 
@@ -11,7 +11,7 @@ interface PolylineProps {
   strokeWidth: number;
   scale: number;
   isSelected: boolean;
-  onClick?: (e: MouseEvent<SVGElement>) => void;
+  onClick?: (e: MouseEvent<SVGElement> | TouchEvent<SVGElement>) => void;
   /** Optional start & end endings */
   lineEndings?: LineEndings;
 }
@@ -91,7 +91,8 @@ export function Polyline({
     >
       <path
         d={pathData}
-        onMouseDown={onClick}
+        onPointerDown={onClick}
+        onTouchStart={onClick}
         opacity={opacity}
         style={{
           fill: 'none',
@@ -109,7 +110,8 @@ export function Polyline({
           transform={endings.start.transform}
           stroke={strokeColor}
           fill={endings.start.filled ? color : 'none'}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
+          onTouchStart={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
@@ -124,11 +126,12 @@ export function Polyline({
           transform={endings.end.transform}
           stroke={strokeColor}
           fill={endings.end.filled ? color : 'none'}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
+          onTouchStart={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
-            pointerEvents: endings.end.filled ? 'visible' : 'visibleStroke',
+            pointerEvents: isSelected ? 'none' : endings.end.filled ? 'visible' : 'visibleStroke',
             strokeLinecap: 'butt',
           }}
         />

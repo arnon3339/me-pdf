@@ -8,6 +8,12 @@ export function mergeHandlers(list: PointerEventHandlers[]): PointerEventHandler
     'onPointerEnter',
     'onPointerLeave',
     'onPointerCancel',
+    'onMouseDown',
+    'onMouseUp',
+    'onMouseMove',
+    'onMouseEnter',
+    'onMouseLeave',
+    'onMouseCancel',
     'onClick',
     'onDoubleClick',
   ];

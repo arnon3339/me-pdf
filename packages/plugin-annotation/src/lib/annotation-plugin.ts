@@ -210,7 +210,7 @@ export class AnnotationPlugin extends BasePlugin<
           if (!mode) throw new Error(`Mode missing for variant ${variantKey}`);
           this.interactionManager?.activate(mode);
         } else {
-          this.interactionManager?.activate('default');
+          this.interactionManager?.activateDefaultMode();
         }
       },
       getSubtypeAndIntentByVariant: (variantKey) => {

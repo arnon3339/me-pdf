@@ -1,4 +1,4 @@
-import { useMemo, MouseEvent } from '@framework';
+import { useMemo, MouseEvent, TouchEvent } from '@framework';
 import { Rect, LinePoints, LineEndings, PdfAnnotationBorderStyle } from '@embedpdf/models';
 import { patching } from '@embedpdf/plugin-annotation';
 
@@ -28,7 +28,7 @@ interface LineProps {
   /** Current page zoom factor */
   scale: number;
   /** Click handler (used for selection) */
-  onClick?: (e: MouseEvent<SVGElement>) => void;
+  onClick?: (e: MouseEvent<SVGElement> | TouchEvent<SVGElement>) => void;
   /** Whether the annotation is selected */
   isSelected: boolean;
 }
@@ -100,7 +100,8 @@ export function Line({
         x2={x2}
         y2={y2}
         opacity={opacity}
-        onMouseDown={onClick}
+        onPointerDown={onClick}
+        onTouchStart={onClick}
         style={{
           cursor: isSelected ? 'move' : 'pointer',
           pointerEvents: 'visibleStroke',
@@ -118,7 +119,8 @@ export function Line({
         <path
           d={endings.start.d}
           transform={endings.start.transform}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
+          onTouchStart={onClick}
           stroke={strokeColor}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
@@ -137,7 +139,8 @@ export function Line({
           d={endings.end.d}
           transform={endings.end.transform}
           stroke={strokeColor}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
+          onTouchStart={onClick}
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,

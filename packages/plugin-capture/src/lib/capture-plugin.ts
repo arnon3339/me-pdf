@@ -79,12 +79,12 @@ export class CapturePlugin extends BasePlugin<CapturePluginConfig, CaptureCapabi
   }
 
   private disableMarqueeCapture() {
-    this.interactionManagerCapability?.activate('default');
+    this.interactionManagerCapability?.activateDefaultMode();
   }
 
   private toggleMarqueeCapture() {
     if (this.interactionManagerCapability?.getActiveMode() === 'marqueeCapture') {
-      this.interactionManagerCapability?.activate('default');
+      this.interactionManagerCapability?.activateDefaultMode();
     } else {
       this.interactionManagerCapability?.activate('marqueeCapture');
     }

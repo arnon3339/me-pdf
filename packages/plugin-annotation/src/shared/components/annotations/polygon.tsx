@@ -1,4 +1,4 @@
-import { MouseEvent, useMemo } from '@framework';
+import { MouseEvent, TouchEvent, useMemo } from '@framework';
 import { Rect, Position, PdfAnnotationBorderStyle } from '@embedpdf/models';
 
 interface PolygonProps {
@@ -12,7 +12,7 @@ interface PolygonProps {
   strokeDashArray?: number[];
   scale: number;
   isSelected: boolean;
-  onClick?: (e: MouseEvent<SVGElement>) => void;
+  onClick?: (e: MouseEvent<SVGElement> | TouchEvent<SVGElement>) => void;
 }
 
 export function Polygon({
@@ -59,14 +59,19 @@ export function Polygon({
     >
       <path
         d={pathData}
-        onMouseDown={onClick}
+        onPointerDown={onClick}
+        onTouchStart={onClick}
         opacity={opacity}
         style={{
           fill: color,
           stroke: strokeColor ?? color,
           strokeWidth,
           cursor: isSelected ? 'move' : 'pointer',
-          pointerEvents: color === 'transparent' ? 'visibleStroke' : 'visible',
+          pointerEvents: isSelected
+            ? 'none'
+            : color === 'transparent'
+              ? 'visibleStroke'
+              : 'visible',
           strokeLinecap: 'butt',
           strokeLinejoin: 'miter',
           ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {

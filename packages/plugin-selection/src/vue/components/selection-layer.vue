@@ -33,7 +33,7 @@ watchEffect((onCleanup) => {
   if (sel.value) {
     const unsubscribe = sel.value.onSelectionChange(() => {
       const mode = im.value?.getActiveMode();
-      if (mode === 'default') {
+      if (mode === 'pointerMode') {
         rects.value = sel.value!.getHighlightRectsForPage(props.pageIndex);
         boundingRect.value = sel.value!.getBoundingRectForPage(props.pageIndex);
       } else {

@@ -12,5 +12,6 @@ export const manifest: PluginManifest<PanPluginConfig> = {
   optional: [],
   defaultConfig: {
     enabled: true,
+    defaultMode: 'mobile',
   },
 };

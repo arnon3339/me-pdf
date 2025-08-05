@@ -1,4 +1,4 @@
-import { HTMLAttributes, CSSProperties, MouseEvent } from '@framework';
+import { HTMLAttributes, CSSProperties, MouseEvent, TouchEvent } from '@framework';
 import { Rect } from '@embedpdf/models';
 
 type SquigglyProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
@@ -7,7 +7,7 @@ type SquigglyProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   rects: Rect[];
   rect?: Rect;
   scale: number;
-  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  onClick?: (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => void;
   style?: CSSProperties;
 };
 
@@ -37,7 +37,8 @@ export function Squiggly({
       {rects.map((r, i) => (
         <div
           key={i}
-          onMouseDown={onClick}
+          onPointerDown={onClick}
+          onTouchStart={onClick}
           style={{
             position: 'absolute',
             left: (rect ? r.origin.x - rect.origin.x : r.origin.x) * scale,

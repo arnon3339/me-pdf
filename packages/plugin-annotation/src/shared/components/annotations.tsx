@@ -13,14 +13,21 @@ import {
   isLine,
   isPolyline,
   isPolygon,
-  isTextMarkup,
   isFreeText,
   isStamp,
 } from '@embedpdf/plugin-annotation';
 import { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/@framework';
-import { useMemo, useState, useEffect, useCallback, MouseEvent, Fragment } from '@framework';
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  MouseEvent,
+  Fragment,
+  TouchEvent,
+} from '@framework';
 
 import { useAnnotationCapability } from '../hooks';
 import { AnnotationContainer } from './annotation-container';
@@ -36,9 +43,7 @@ import { patchInk } from '../patch-ink';
 import { Line } from './annotations/line';
 import { Polyline } from './annotations/polyline';
 import { Polygon } from './annotations/polygon';
-import { VertexEditor } from './vertex-editor';
 import { patchLine, patchPolygon, patchPolyline } from '../vertex-patchers';
-import { TextMarkup } from './text-markup';
 import { FreeText } from './annotations/free-text';
 import { Stamp } from './annotations/stamp';
 
@@ -83,7 +88,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
   );
 
   const handleClick = useCallback(
-    (e: MouseEvent, annotation: TrackedAnnotation) => {
+    (e: MouseEvent | TouchEvent, annotation: TrackedAnnotation) => {
       e.stopPropagation();
       if (annotationProvides && selectionProvides) {
         annotationProvides.selectAnnotation(pageIndex, annotation.localId);
@@ -121,7 +126,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
             >
               {(obj) => (
                 <Ink
-                  cursor={isSelected ? 'move' : 'pointer'}
+                  isSelected={isSelected}
                   color={obj.color}
                   opacity={obj.opacity}
                   strokeWidth={obj.strokeWidth}
@@ -151,7 +156,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
             >
               {(obj) => (
                 <Square
-                  cursor={isSelected ? 'move' : 'pointer'}
+                  isSelected={isSelected}
                   rect={obj.rect}
                   color={obj.color}
                   opacity={obj.opacity}
@@ -183,7 +188,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
             >
               {(obj) => (
                 <Circle
-                  cursor={isSelected ? 'move' : 'pointer'}
+                  isSelected={isSelected}
                   rect={obj.rect}
                   color={obj.color}
                   opacity={obj.opacity}

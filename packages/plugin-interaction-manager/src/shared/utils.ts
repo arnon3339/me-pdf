@@ -3,109 +3,195 @@ import type {
   InteractionManagerCapability,
   InteractionScope,
   PointerEventHandlers,
+  EmbedPdfPointerEvent,
 } from '@embedpdf/plugin-interaction-manager';
 
-/**
- * Hook one DOM element into the interaction-manager.
- *  – keeps handlers & cursor in-sync with the current mode
- *  – returns a teardown fn for React/Preact effects
- */
+/* -------------------------------------------------- */
+/* event → handler key lookup                         */
+/* -------------------------------------------------- */
+type K = keyof PointerEventHandlers;
+const domEventMap: Record<string, K> = {
+  pointerdown: 'onPointerDown',
+  pointerup: 'onPointerUp',
+  pointermove: 'onPointerMove',
+  pointerenter: 'onPointerEnter',
+  pointerleave: 'onPointerLeave',
+  pointercancel: 'onPointerCancel',
+
+  mousedown: 'onMouseDown',
+  mouseup: 'onMouseUp',
+  mousemove: 'onMouseMove',
+  mouseenter: 'onMouseEnter',
+  mouseleave: 'onMouseLeave',
+  mousecancel: 'onMouseCancel',
+
+  click: 'onClick',
+  dblclick: 'onDoubleClick',
+
+  /* touch → pointer fallback for very old browsers */
+  touchstart: 'onPointerDown',
+  touchend: 'onPointerUp',
+  touchmove: 'onPointerMove',
+  touchcancel: 'onPointerCancel',
+};
+
+const pointerEventTypes = [
+  'pointerdown',
+  'pointerup',
+  'pointermove',
+  'pointerenter',
+  'pointerleave',
+  'pointercancel',
+  'mousedown',
+  'mouseup',
+  'mousemove',
+  'mouseenter',
+  'mouseleave',
+  'mousecancel',
+  'click',
+  'dblclick',
+];
+
+const touchEventTypes = ['touchstart', 'touchend', 'touchmove', 'touchcancel'];
+const allEventTypes = [...pointerEventTypes, ...touchEventTypes];
+
+/* -------------------------------------------------- */
+/* helper: decide listener options per event type     */
+/* -------------------------------------------------- */
+function listenerOpts(eventType: string, wantsRawTouch: boolean): AddEventListenerOptions {
+  // Only touch events are toggled; pointer/mouse stay non-passive
+  return eventType.startsWith('touch') ? { passive: !wantsRawTouch } : { passive: false };
+}
+
+/* -------------------------------------------------- */
+/* createPointerProvider                              */
+/* -------------------------------------------------- */
 export function createPointerProvider(
   cap: InteractionManagerCapability,
   scope: InteractionScope,
   element: HTMLElement,
   convertEventToPoint?: (evt: PointerEvent, host: HTMLElement) => Position,
 ) {
-  /* ------------------------------------------------------------------ */
-  /* active handler set – hot-swapped on every mode change              */
-  /* ------------------------------------------------------------------ */
+  /* ---------- live handler set --------------------------------------------------- */
   let active: PointerEventHandlers | null = cap.getHandlersForScope(scope);
 
+  /* ---------- helper to compute current wantsRawTouch (defaults to true) --------- */
+  const wantsRawTouchNow = () => cap.getActiveInteractionMode()?.wantsRawTouch !== false; // default → true
+
+  /* ---------- dynamic listener (re)attachment ------------------------------------ */
+  const listeners: Record<string, (evt: Event) => void> = {};
+  let attachedWithRawTouch = wantsRawTouchNow(); // remember current mode’s wish
+
+  const addListeners = (raw: boolean) => {
+    allEventTypes.forEach((type) => {
+      const fn = (listeners[type] ??= handleEvent);
+      element.addEventListener(type, fn, listenerOpts(type, raw));
+    });
+  };
+  const removeListeners = () => {
+    allEventTypes.forEach((type) => {
+      const fn = listeners[type];
+      if (fn) element.removeEventListener(type, fn);
+    });
+  };
+
+  /* attach for the first time */
+  addListeners(attachedWithRawTouch);
+
+  /* ---------- mode & handler change hooks --------------------------------------- */
   const stopMode = cap.onModeChange(() => {
+    /* cursor baseline update for global wrapper */
     if (scope.type === 'global') {
       const mode = cap.getActiveInteractionMode();
       element.style.cursor = mode?.scope === 'global' ? (mode.cursor ?? 'auto') : 'auto';
     }
+
     active = cap.getHandlersForScope(scope);
+
+    /* re-attach listeners if wantsRawTouch toggled */
+    const raw = wantsRawTouchNow();
+    if (raw !== attachedWithRawTouch) {
+      removeListeners();
+      addListeners(raw);
+      attachedWithRawTouch = raw;
+    }
   });
 
   const stopHandler = cap.onHandlerChange(() => {
     active = cap.getHandlersForScope(scope);
   });
 
-  /* ------------------------------------------------------------------ */
-  /* cursor                                                             */
-  /* ------------------------------------------------------------------ */
-  const modeNow = cap.getActiveInteractionMode();
-  const cursorNow = cap.getCurrentCursor();
-
-  /** initial cursor -------------------------------------------------- */
-  if (scope.type === 'global') {
-    // global wrapper only shows the cursor while a *global* mode is active
-    element.style.cursor = modeNow?.scope === 'global' ? cursorNow : 'auto';
-  } else {
-    // page wrappers always mirror the latest cursor
-    element.style.cursor = cursorNow;
-  }
+  /* ---------- cursor sync -------------------------------------------------------- */
+  const initialMode = cap.getActiveInteractionMode();
+  const initialCursor = cap.getCurrentCursor();
+  element.style.cursor =
+    scope.type === 'global' && initialMode?.scope !== 'global' ? 'auto' : initialCursor;
 
   const stopCursor = cap.onCursorChange((c) => {
-    /**  ❖  Propagation rule
-     *      ─────────────────
-     *   • global provider updates its cursor *only* while the active
-     *     mode itself is ‘global’.
-     *   • page providers always sync (so they show the cursor during
-     *     a global mode as well). */
-    if (scope.type === 'global') {
-      const isGlobalMode = cap.getActiveInteractionMode()?.scope === 'global';
-      if (!isGlobalMode) return; // active mode is page-scoped → ignore
-    }
+    if (scope.type === 'global' && cap.getActiveInteractionMode()?.scope !== 'global') return;
     element.style.cursor = c;
   });
 
-  /* ------------------------------------------------------------------ */
-  /* event wiring                                                       */
-  /* ------------------------------------------------------------------ */
-  type K = keyof PointerEventHandlers;
-  const domEvent: Record<K, keyof HTMLElementEventMap> = {
-    onPointerDown: 'pointerdown',
-    onPointerUp: 'pointerup',
-    onPointerMove: 'pointermove',
-    onPointerEnter: 'pointerenter',
-    onPointerLeave: 'pointerleave',
-    onPointerCancel: 'pointercancel',
-    onClick: 'click',
-    onDoubleClick: 'dblclick',
-  };
-
-  /* one stable EventListener per key -> needed for removeEventListener */
-  const listeners: Partial<Record<K, EventListener>> = {};
-
-  const toPos = (e: PointerEvent, host: HTMLElement): Position => {
-    if (convertEventToPoint) return convertEventToPoint(e, host);
+  /* ---------- point conversion --------------------------------------------------- */
+  const toPos = (e: { clientX: number; clientY: number }, host: HTMLElement): Position => {
+    if (convertEventToPoint) return convertEventToPoint(e as PointerEvent, host);
     const r = host.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
 
-  (Object.keys(domEvent) as K[]).forEach((k) => {
-    listeners[k] = (evt: Event) => {
-      if (cap.isPaused()) return;
+  /* ---------- central event handler --------------------------------------------- */
+  function handleEvent(evt: Event) {
+    if (cap.isPaused()) return;
 
-      const pe = evt as PointerEvent; // safe – we only attach to pointer*
-      const currentModeId = cap.getActiveMode();
-      active?.[k]?.(toPos(pe, element), pe, currentModeId);
-      /* if you need to stop default behaviour when no handler is active:
-       * if (!active?.[k]) pe.preventDefault(); */
+    const handlerKey = domEventMap[evt.type];
+    if (!handlerKey || !active?.[handlerKey]) return;
+
+    /* preventDefault only when mode really wants raw touch                        */
+    if (
+      evt instanceof TouchEvent &&
+      attachedWithRawTouch &&
+      (evt.type === 'touchmove' || evt.type === 'touchcancel')
+    ) {
+      evt.preventDefault();
+    }
+
+    // ----- normalise ----------------------------------------------------------------
+    let pos!: Position;
+    let normEvt!: EmbedPdfPointerEvent & {
+      target: EventTarget | null;
+      currentTarget: EventTarget | null;
     };
-    element.addEventListener(domEvent[k], listeners[k]!);
-  });
 
-  /* ------------------------------------------------------------------ */
-  /* teardown                                                           */
-  /* ------------------------------------------------------------------ */
+    if (evt instanceof TouchEvent) {
+      const tp =
+        evt.type === 'touchend' || evt.type === 'touchcancel'
+          ? evt.changedTouches[0]
+          : evt.touches[0];
+      if (!tp) return;
+
+      pos = toPos(tp, element);
+      normEvt = {
+        clientX: tp.clientX,
+        clientY: tp.clientY,
+        ctrlKey: evt.ctrlKey,
+        shiftKey: evt.shiftKey,
+        altKey: evt.altKey,
+        metaKey: evt.metaKey,
+        target: evt.target,
+        currentTarget: evt.currentTarget,
+      };
+    } else {
+      const pe = evt as PointerEvent;
+      pos = toPos(pe, element);
+      normEvt = pe;
+    }
+
+    active[handlerKey]?.(pos, normEvt, cap.getActiveMode());
+  }
+
+  /* ---------- teardown ----------------------------------------------------------- */
   return () => {
-    (Object.keys(domEvent) as K[]).forEach((k) =>
-      element.removeEventListener(domEvent[k], listeners[k]!),
-    );
+    removeListeners();
     stopMode();
     stopCursor();
     stopHandler();
