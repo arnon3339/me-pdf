@@ -30,7 +30,7 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
     if (!sel) return;
     return sel.onSelectionChange(() => {
       const mode = im?.getActiveMode();
-      if (mode === 'default') {
+      if (mode === 'pointerMode') {
         setRects(sel.getHighlightRectsForPage(pageIndex));
         setBoundingRect(sel.getBoundingRectForPage(pageIndex));
       } else {

@@ -45,7 +45,7 @@ export class SelectionPlugin extends BasePlugin<
   static readonly id = 'selection' as const;
 
   /** Modes that should trigger text-selection logic */
-  private enabledModes = new Set<string>(['default']);
+  private enabledModes = new Set<string>(['pointerMode']);
 
   /* interactive state */
   private selecting = false;

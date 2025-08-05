@@ -6,7 +6,7 @@ import { PanPluginConfig } from './types';
 
 export const PanPluginPackage: PluginPackage<PanPlugin, PanPluginConfig> = {
   manifest,
-  create: (registry) => new PanPlugin(PAN_PLUGIN_ID, registry),
+  create: (registry, _engine, config) => new PanPlugin(PAN_PLUGIN_ID, registry, config),
   reducer: () => {},
   initialState: {},
 };

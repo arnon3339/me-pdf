@@ -1,6 +1,7 @@
 import { Reducer } from '@embedpdf/core';
 import {
   ACTIVATE_MODE,
+  SET_DEFAULT_MODE,
   InteractionManagerAction,
   PAUSE_INTERACTION,
   RESUME_INTERACTION,
@@ -9,7 +10,8 @@ import {
 import { InteractionManagerState } from './types';
 
 export const initialState: InteractionManagerState = {
-  activeMode: 'default',
+  activeMode: 'pointerMode',
+  defaultMode: 'pointerMode',
   cursor: 'auto',
   paused: false,
 };
@@ -38,6 +40,11 @@ export const reducer: Reducer<InteractionManagerState, InteractionManagerAction>
       return {
         ...state,
         paused: false,
+      };
+    case SET_DEFAULT_MODE:
+      return {
+        ...state,
+        defaultMode: action.payload.mode,
       };
     default:
       return state;

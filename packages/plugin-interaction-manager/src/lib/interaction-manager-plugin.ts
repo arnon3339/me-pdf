@@ -11,7 +11,13 @@ import {
   RegisterAlwaysOptions,
   RegisterHandlersOptions,
 } from './types';
-import { activateMode, pauseInteraction, resumeInteraction, setCursor } from './actions';
+import {
+  activateMode,
+  pauseInteraction,
+  resumeInteraction,
+  setCursor,
+  setDefaultMode,
+} from './actions';
 import { mergeHandlers } from './helper';
 
 interface CursorClaim {
@@ -28,6 +34,8 @@ interface ModeBuckets {
   /** handlers that listen on a *specific* page wrapper */
   page: PageHandlerMap;
 }
+
+const INITIAL_MODE = 'pointerMode';
 
 export class InteractionManagerPlugin extends BasePlugin<
   InteractionManagerPluginConfig,
@@ -52,11 +60,14 @@ export class InteractionManagerPlugin extends BasePlugin<
     super(id, registry);
 
     this.registerMode({
-      id: 'default',
+      id: INITIAL_MODE,
       scope: 'page',
       exclusive: false,
       cursor: 'auto',
     });
+
+    this.setDefaultMode(INITIAL_MODE);
+    this.activate(INITIAL_MODE);
   }
 
   async initialize(_: InteractionManagerPluginConfig): Promise<void> {}
@@ -70,7 +81,7 @@ export class InteractionManagerPlugin extends BasePlugin<
       onStateChange: this.onStateChange$.on,
       getActiveMode: () => this.state.activeMode,
       getActiveInteractionMode: () => this.getActiveInteractionMode(),
-      finish: () => this.activate('default'),
+      activateDefaultMode: () => this.activate(this.state.defaultMode),
       registerMode: (mode: InteractionMode) => this.registerMode(mode),
       registerHandlers: (options: RegisterHandlersOptions) => this.registerHandlers(options),
       registerAlways: (options: RegisterAlwaysOptions) => this.registerAlways(options),
@@ -83,6 +94,8 @@ export class InteractionManagerPlugin extends BasePlugin<
       pause: () => this.dispatch(pauseInteraction()),
       resume: () => this.dispatch(resumeInteraction()),
       isPaused: () => this.state.paused,
+      setDefaultMode: (id: string) => this.setDefaultMode(id),
+      getDefaultMode: () => this.state.defaultMode,
     };
   }
 
@@ -104,6 +117,13 @@ export class InteractionManagerPlugin extends BasePlugin<
     this.notifyHandlersActive(mode);
 
     this.onModeChange$.emit({ ...this.state, activeMode: mode });
+  }
+
+  private setDefaultMode(modeId: string) {
+    if (!this.modes.has(modeId)) {
+      throw new Error(`[interaction] cannot set unknown mode '${modeId}' as default`);
+    }
+    this.dispatch(setDefaultMode(modeId));
   }
 
   private notifyHandlersActive(modeId: string) {

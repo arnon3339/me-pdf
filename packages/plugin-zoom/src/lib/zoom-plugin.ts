@@ -113,11 +113,11 @@ export class ZoomPlugin extends BasePlugin<
         this.interactionManager?.activate('marqueeZoom');
       },
       disableMarqueeZoom: () => {
-        this.interactionManager?.activate('default');
+        this.interactionManager?.activateDefaultMode();
       },
       toggleMarqueeZoom: () => {
         if (this.interactionManager?.getActiveMode() === 'marqueeZoom') {
-          this.interactionManager?.activate('default');
+          this.interactionManager?.activateDefaultMode();
         } else {
           this.interactionManager?.activate('marqueeZoom');
         }

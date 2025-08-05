@@ -489,6 +489,10 @@ export const icons: IconRegistry = {
     id: 'photo',
     svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-photo"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 8h.01" /><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z" /><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5" /><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3" /></svg>',
   },
+  pointer: {
+    id: 'pointer',
+    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-pointer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7.904 17.563a1.2 1.2 0 0 0 2.228 .308l2.09 -3.093l4.907 4.907a1.067 1.067 0 0 0 1.509 0l1.047 -1.047a1.067 1.067 0 0 0 0 -1.509l-4.907 -4.907l3.113 -2.09a1.2 1.2 0 0 0 -.309 -2.228l-13.582 -3.904l3.904 13.563z" /></svg>',
+  },
 };
 
 export const menuItems: Record<string, MenuItem<State>> = {
@@ -745,7 +749,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Left action',
     type: 'menu',
     icon: 'dots',
-    children: ['viewCtr', 'zoom', 'panMode'],
+    children: ['viewCtr', 'zoom', 'panMode', 'pointerMode'],
     active: (storeState) =>
       storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'leftAction' ||
       storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'zoom' ||
@@ -1683,13 +1687,33 @@ export const menuItems: Record<string, MenuItem<State>> = {
       if (!interactionManager) return;
 
       if (interactionManager.getActiveMode() === 'panMode') {
-        interactionManager.activate('default');
+        interactionManager.activateDefaultMode();
       } else {
         interactionManager.activate('panMode');
       }
     },
     active: (storeState) =>
       storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'panMode',
+  },
+  pointerMode: {
+    id: 'pointerMode',
+    label: 'Pointer',
+    type: 'action',
+    icon: 'pointer',
+    action: (registry) => {
+      const interactionManager = registry
+        .getPlugin<InteractionManagerPlugin>(INTERACTION_MANAGER_PLUGIN_ID)
+        ?.provides();
+      if (!interactionManager) return;
+
+      if (interactionManager.getActiveMode() === 'pointerMode') {
+        interactionManager.activateDefaultMode();
+      } else {
+        interactionManager.activate('pointerMode');
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'pointerMode',
   },
   undo: {
     id: 'undo',
@@ -1833,6 +1857,19 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.panMode, storeState),
+    }),
+  },
+  pointerModeButton: {
+    type: 'iconButton',
+    id: 'pointerModeButton',
+    props: {
+      commandId: 'pointerMode',
+      active: false,
+      label: 'Pointer',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.pointerMode, storeState),
     }),
   },
   circleButton: {
@@ -2235,6 +2272,7 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'zoom', priority: 8, className: 'hidden @min-[600px]:block' },
       { componentId: 'divider1', priority: 9, className: 'hidden @min-[600px]:flex' },
       { componentId: 'panModeButton', priority: 10, className: 'hidden @min-[600px]:block' },
+      { componentId: 'pointerModeButton', priority: 11, className: 'hidden @min-[600px]:block' },
     ],
     props: {
       gap: 10,
