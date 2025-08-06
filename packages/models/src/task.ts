@@ -48,6 +48,13 @@ export type ResolvedCallback<R> = (r: R) => void;
 export type RejectedCallback<D> = (e: TaskError<D>) => void;
 
 /**
+ * callback that will be called when task is progressing
+ *
+ * @public
+ */
+export type ProgressCallback<P> = (p: P) => void;
+
+/**
  * Task state in different stage
  *
  * @public
@@ -98,7 +105,7 @@ export class TaskRejectedError<D> extends Error {
  *
  * @public
  */
-export class Task<R, D> {
+export class Task<R, D, P = unknown> {
   state: TaskState<R, D> = {
     stage: TaskStage.Pending,
   };
@@ -115,6 +122,11 @@ export class Task<R, D> {
    * Promise that will be resolved when task is settled
    */
   private _promise: Promise<R> | null = null;
+
+  /**
+   * callbacks that will be executed when task is progressing
+   */
+  private progressCbs: ProgressCallback<P>[] = [];
 
   /**
    * Convert task to promise
@@ -251,6 +263,22 @@ export class Task<R, D> {
     } else {
       this.reject(error.reason);
     }
+  }
+
+  /**
+   * add a progress callback
+   * @param cb - progress callback
+   */
+  onProgress(cb: ProgressCallback<P>) {
+    this.progressCbs.push(cb);
+  }
+
+  /**
+   * call progress callback
+   * @param p - progress value
+   */
+  progress(p: P) {
+    for (const cb of this.progressCbs) cb(p);
   }
 
   /**

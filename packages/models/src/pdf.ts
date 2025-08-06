@@ -797,7 +797,7 @@ export interface PdfPopupAnnoObject extends PdfAnnotationObjectBase {
   /**
    * In reply to id
    */
-  inReplyToId?: number;
+  inReplyToId?: string;
 }
 
 /**
@@ -808,10 +808,6 @@ export interface PdfPopupAnnoObject extends PdfAnnotationObjectBase {
 export interface PdfLinkAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.LINK;
-  /**
-   * Text of the link
-   */
-  text: string;
   /**
    * target of the link
    */
@@ -844,7 +840,7 @@ export interface PdfTextAnnoObject extends PdfAnnotationObjectBase {
   /**
    * In reply to id
    */
-  inReplyToId?: number;
+  inReplyToId?: string;
 
   /**
    * State of the text annotation
@@ -2189,15 +2185,15 @@ export interface PdfErrorReason {
 
 export type PdfEngineError = TaskError<PdfErrorReason>;
 
-export type PdfTask<R> = Task<R, PdfErrorReason>;
+export type PdfTask<R, P = unknown> = Task<R, PdfErrorReason, P>;
 
 export class PdfTaskHelper {
   /**
    * Create a task
    * @returns new task
    */
-  static create<R>(): Task<R, PdfErrorReason> {
-    return new Task<R, PdfErrorReason>();
+  static create<R, P = unknown>(): Task<R, PdfErrorReason, P> {
+    return new Task<R, PdfErrorReason, P>();
   }
 
   /**
@@ -2205,8 +2201,8 @@ export class PdfTaskHelper {
    * @param result - resolved value
    * @returns resolved task
    */
-  static resolve<R>(result: R): Task<R, PdfErrorReason> {
-    const task = new Task<R, PdfErrorReason>();
+  static resolve<R, P = unknown>(result: R): Task<R, PdfErrorReason, P> {
+    const task = new Task<R, PdfErrorReason, P>();
     task.resolve(result);
 
     return task;
@@ -2217,8 +2213,8 @@ export class PdfTaskHelper {
    * @param reason - rejected error
    * @returns rejected task
    */
-  static reject<T = any>(reason: PdfErrorReason): Task<T, PdfErrorReason> {
-    const task = new Task<T, PdfErrorReason>();
+  static reject<T = any, P = unknown>(reason: PdfErrorReason): Task<T, PdfErrorReason, P> {
+    const task = new Task<T, PdfErrorReason, P>();
     task.reject(reason);
 
     return task;
@@ -2229,8 +2225,8 @@ export class PdfTaskHelper {
    * @param reason - aborted error
    * @returns aborted task
    */
-  static abort<T = any>(reason: PdfErrorReason): Task<T, PdfErrorReason> {
-    const task = new Task<T, PdfErrorReason>();
+  static abort<T = any, P = unknown>(reason: PdfErrorReason): Task<T, PdfErrorReason, P> {
+    const task = new Task<T, PdfErrorReason, P>();
     task.reject(reason);
 
     return task;
@@ -2471,7 +2467,13 @@ export interface PdfEngine<T = Blob> {
    * @param doc - pdf document
    * @returns task that contains the annotations or error
    */
-  getAllAnnotations: (doc: PdfDocumentObject) => PdfTask<Record<number, PdfAnnotationObject[]>>;
+  getAllAnnotations: (doc: PdfDocumentObject) => PdfTask<
+    Record<number, PdfAnnotationObject[]>,
+    {
+      page: number;
+      annotations: PdfAnnotationObject[];
+    }
+  >;
   /**
    * Get all attachments in this file
    * @param doc - pdf document

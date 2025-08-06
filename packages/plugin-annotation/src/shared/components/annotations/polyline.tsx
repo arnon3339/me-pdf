@@ -99,7 +99,7 @@ export function Polyline({
           stroke: strokeColor ?? color,
           strokeWidth,
           cursor: isSelected ? 'move' : 'pointer',
-          pointerEvents: 'visibleStroke',
+          pointerEvents: isSelected ? 'none' : 'visibleStroke',
           strokeLinecap: 'butt',
           strokeLinejoin: 'miter',
         }}
@@ -115,7 +115,7 @@ export function Polyline({
           style={{
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
-            pointerEvents: endings.start.filled ? 'visible' : 'visibleStroke',
+            pointerEvents: isSelected ? 'none' : endings.start.filled ? 'visible' : 'visibleStroke',
             strokeLinecap: 'butt',
           }}
         />

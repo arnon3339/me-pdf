@@ -110,6 +110,7 @@ import {
   PdfTextAlignment,
   PdfVerticalAlignment,
   AnnotationCreateContext,
+  ignore,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -986,25 +987,66 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  getAllAnnotations(doc: PdfDocumentObject) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getAllAnnotations', doc);
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `GetAllAnnotations`, 'Begin', doc.id);
+  getAllAnnotations(doc: PdfDocumentObject): PdfTask<
+    Record<number, PdfAnnotationObject[]>, // final result
+    { page: number; annotations: PdfAnnotationObject[] } // progress payload
+  > {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getAllAnnotations-with-progress', doc);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetAllAnnotations', 'Begin', doc.id);
 
+    /* 1 ── create an async task wrapper ─────────────────────────────── */
+    const task = PdfTaskHelper.create<
+      Record<number, PdfAnnotationObject[]>,
+      { page: number; annotations: PdfAnnotationObject[] }
+    >();
+
+    let cancelled = false;
+    task.wait(ignore, (err) => {
+      if (err.type === 'abort') cancelled = true;
+    });
+
+    /* 2 ── sanity-check: document must be open ──────────────────────── */
     const ctx = this.cache.getContext(doc.id);
-
     if (!ctx) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `GetAllAnnotations`, 'End', doc.id);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetAllAnnotations', 'End', doc.id);
+      task.reject({ code: PdfErrorCode.DocNotOpen, message: 'document does not open' });
+      return task;
     }
 
-    const annotations = this.readAllAnnotations(doc, ctx);
+    /* 3 ── chunked walk so we yield less often, but still breathe ───── */
+    const CHUNK_SIZE = 100; // ← tweak here
+    const out: Record<number, PdfAnnotationObject[]> = {};
 
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `GetAllAnnotations`, 'End', doc.id);
+    const processChunk = (startIdx: number): void => {
+      if (cancelled) return;
 
-    return PdfTaskHelper.resolve(annotations);
+      const endIdx = Math.min(startIdx + CHUNK_SIZE, doc.pageCount);
+      for (let pageIdx = startIdx; pageIdx < endIdx && !cancelled; ++pageIdx) {
+        this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'GetAllAnnotations', 'Begin', doc.id, pageIdx);
+
+        /* read this page’s annotations */
+        const annots = this.readPageAnnotationsRaw(ctx, doc.pages[pageIdx]);
+        out[pageIdx] = annots;
+
+        this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'GetAllAnnotations', 'End', doc.id, pageIdx);
+        task.progress({ page: pageIdx, annotations: annots });
+      }
+
+      /* all done? */
+      if (cancelled) return;
+      if (endIdx >= doc.pageCount) {
+        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetAllAnnotations', 'End', doc.id);
+        task.resolve(out);
+        return;
+      }
+
+      /* let the browser breathe, then continue with next chunk */
+      setTimeout(() => processChunk(endIdx), 0);
+    };
+
+    /* kick-off */
+    processChunk(0);
+    return task;
   }
 
   private readAllAnnotations(
@@ -3423,20 +3465,38 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private readPageAnnotations(ctx: DocumentContext, page: PdfPageObject) {
-    const pageCtx = ctx.acquirePage(page.index);
-    const annotationCount = this.pdfiumModule.FPDFPage_GetAnnotCount(pageCtx.pagePtr);
+    return ctx.borrowPage(page.index, (pageCtx) => {
+      const annotationCount = this.pdfiumModule.FPDFPage_GetAnnotCount(pageCtx.pagePtr);
 
-    const annotations: PdfAnnotationObject[] = [];
-    for (let i = 0; i < annotationCount; i++) {
-      pageCtx.withAnnotation(i, (annotPtr) => {
-        const annotation = this.readPageAnnotation(page, pageCtx, annotPtr, i);
-        if (annotation) {
-          annotations.push(annotation);
-        }
-      });
+      const annotations: PdfAnnotationObject[] = [];
+      for (let i = 0; i < annotationCount; i++) {
+        pageCtx.withAnnotation(i, (annotPtr) => {
+          const anno = this.readPageAnnotation(ctx.docPtr, page, annotPtr, i, pageCtx);
+          if (anno) annotations.push(anno);
+        });
+      }
+      return annotations;
+    });
+  }
+
+  private readPageAnnotationsRaw(ctx: DocumentContext, page: PdfPageObject): PdfAnnotationObject[] {
+    const count = this.pdfiumModule.EPDFPage_GetAnnotCountRaw(ctx.docPtr, page.index);
+    if (count <= 0) return [];
+
+    const out: PdfAnnotationObject[] = [];
+
+    for (let i = 0; i < count; ++i) {
+      const annotPtr = this.pdfiumModule.EPDFPage_GetAnnotRaw(ctx.docPtr, page.index, i);
+      if (!annotPtr) continue;
+
+      try {
+        const anno = this.readPageAnnotation(ctx.docPtr, page, annotPtr, i);
+        if (anno) out.push(anno);
+      } finally {
+        this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
+      }
     }
-
-    return annotations;
+    return out;
   }
 
   /**
@@ -3454,10 +3514,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private readPageAnnotation(
+    docPtr: number,
     page: PdfPageObject,
-    pageCtx: PageContext,
     annotationPtr: number,
     index: number,
+    pageCtx?: PageContext,
   ) {
     const subType = this.pdfiumModule.FPDFAnnot_GetSubtype(
       annotationPtr,
@@ -3466,109 +3527,89 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     switch (subType) {
       case PdfAnnotationSubtype.TEXT:
         {
-          annotation = this.readPdfTextAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfTextAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.FREETEXT:
         {
-          annotation = this.readPdfFreeTextAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfFreeTextAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.LINK:
         {
-          annotation = this.readPdfLinkAnno(
-            page,
-            pageCtx.docPtr,
-            pageCtx.pagePtr,
-            pageCtx.getTextPage(),
-            annotationPtr,
-            index,
-          );
+          annotation = this.readPdfLinkAnno(page, docPtr, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.WIDGET:
-        {
-          annotation = this.readPdfWidgetAnno(
-            page,
-            pageCtx.pagePtr,
-            annotationPtr,
-            pageCtx.getFormHandle(),
-            index,
-          );
+        if (pageCtx) {
+          return this.readPdfWidgetAnno(page, annotationPtr, pageCtx.getFormHandle(), index);
         }
-        break;
       case PdfAnnotationSubtype.FILEATTACHMENT:
         {
-          annotation = this.readPdfFileAttachmentAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfFileAttachmentAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.INK:
         {
-          annotation = this.readPdfInkAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfInkAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.POLYGON:
         {
-          annotation = this.readPdfPolygonAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfPolygonAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.POLYLINE:
         {
-          annotation = this.readPdfPolylineAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfPolylineAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.LINE:
         {
-          annotation = this.readPdfLineAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfLineAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.HIGHLIGHT:
-        annotation = this.readPdfHighlightAnno(page, pageCtx.pagePtr, annotationPtr, index);
+        annotation = this.readPdfHighlightAnno(page, annotationPtr, index);
         break;
       case PdfAnnotationSubtype.STAMP:
         {
-          annotation = this.readPdfStampAnno(
-            pageCtx.docPtr,
-            page,
-            pageCtx.pagePtr,
-            annotationPtr,
-            index,
-          );
+          annotation = this.readPdfStampAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.SQUARE:
         {
-          annotation = this.readPdfSquareAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfSquareAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.CIRCLE:
         {
-          annotation = this.readPdfCircleAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfCircleAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.UNDERLINE:
         {
-          annotation = this.readPdfUnderlineAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfUnderlineAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.SQUIGGLY:
         {
-          annotation = this.readPdfSquigglyAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfSquigglyAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.STRIKEOUT:
         {
-          annotation = this.readPdfStrikeOutAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfStrikeOutAnno(page, annotationPtr, index);
         }
         break;
       case PdfAnnotationSubtype.CARET:
         {
-          annotation = this.readPdfCaretAnno(page, pageCtx.pagePtr, annotationPtr, index);
+          annotation = this.readPdfCaretAnno(page, annotationPtr, index);
         }
         break;
       default:
         {
-          annotation = this.readPdfAnno(page, pageCtx.pagePtr, subType, annotationPtr, index);
+          annotation = this.readPdfAnno(page, subType, annotationPtr, index);
         }
         break;
     }
@@ -4307,12 +4348,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfTextAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfTextAnnoObject | undefined {
     const annoRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, annoRect);
+    const rect = this.convertPageRectToDeviceRect(page, annoRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -4322,7 +4362,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const stateModel = this.getAnnotString(annotationPtr, 'StateModel') as PdfAnnotationStateModel;
     const color = this.getAnnotationColor(annotationPtr);
     const opacity = this.getAnnotationOpacity(annotationPtr);
-    const inReplyToId = this.getInReplyToId(pagePtr, annotationPtr);
+    const inReplyToId = this.getInReplyToId(annotationPtr);
     const flags = this.getAnnotationFlags(annotationPtr);
 
     return {
@@ -4354,12 +4394,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfFreeTextAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfFreeTextAnnoObject | undefined {
     const annoRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, annoRect);
+    const rect = this.convertPageRectToDeviceRect(page, annoRect);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
@@ -4409,8 +4448,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private readPdfLinkAnno(
     page: PdfPageObject,
     docPtr: number,
-    pagePtr: number,
-    textPagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfLinkAnnoObject | undefined {
@@ -4420,35 +4457,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     const annoRect = this.readPageAnnoRect(annotationPtr);
-    const { left, top, right, bottom } = annoRect;
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, annoRect);
+    const rect = this.convertPageRectToDeviceRect(page, annoRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
     const flags = this.getAnnotationFlags(annotationPtr);
-
-    const utf16Length = this.pdfiumModule.FPDFText_GetBoundedText(
-      textPagePtr,
-      left,
-      top,
-      right,
-      bottom,
-      0,
-      0,
-    );
-    const bytesCount = (utf16Length + 1) * 2; // include NIL
-    const textBufferPtr = this.malloc(bytesCount);
-    this.pdfiumModule.FPDFText_GetBoundedText(
-      textPagePtr,
-      left,
-      top,
-      right,
-      bottom,
-      textBufferPtr,
-      utf16Length,
-    );
-    const text = this.pdfiumModule.pdfium.UTF16ToString(textBufferPtr);
-    this.free(textBufferPtr);
 
     const target = this.readPdfLinkAnnoTarget(
       docPtr,
@@ -4465,7 +4478,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       id: index,
       type: PdfAnnotationSubtype.LINK,
       flags,
-      text,
       target,
       rect,
       author,
@@ -4486,13 +4498,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfWidgetAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     formHandle: number,
     index: number,
   ): PdfWidgetAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -4523,12 +4534,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfFileAttachmentAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfFileAttachmentAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -4557,12 +4567,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfInkAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfInkAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -4603,16 +4612,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfPolygonAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfPolygonAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-    const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
+    const vertices = this.readPdfAnnoVertices(page, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
     const flags = this.getAnnotationFlags(annotationPtr);
     const strokeColor = this.getAnnotationColor(annotationPtr);
@@ -4671,16 +4679,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfPolylineAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfPolylineAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
-    const vertices = this.readPdfAnnoVertices(page, pagePtr, annotationPtr);
+    const vertices = this.readPdfAnnoVertices(page, annotationPtr);
     const contents = this.getAnnotString(annotationPtr, 'Contents') || '';
     const strokeColor = this.getAnnotationColor(annotationPtr);
     const flags = this.getAnnotationFlags(annotationPtr);
@@ -4732,12 +4739,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfLineAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfLineAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -4796,12 +4802,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfHighlightAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfHighlightAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const segmentRects = this.getQuadPointsAnno(page, annotationPtr);
     const color = this.getAnnotationColor(annotationPtr);
     const opacity = this.getAnnotationOpacity(annotationPtr);
@@ -4841,12 +4846,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfUnderlineAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfUnderlineAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -4885,12 +4889,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfStrikeOutAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfStrikeOutAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -4929,12 +4932,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfSquigglyAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfSquigglyAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -4973,12 +4975,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfCaretAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfCaretAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -5007,14 +5008,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private readPdfStampAnno(
-    docPtr: number,
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfStampAnnoObject | undefined {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -5291,13 +5290,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfCircleAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfCircleAnnoObject {
     const flags = this.getAnnotationFlags(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -5346,13 +5344,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfSquareAnno(
     page: PdfPageObject,
-    pagePtr: number,
     annotationPtr: number,
     index: number,
   ): PdfSquareAnnoObject {
     const flags = this.getAnnotationFlags(annotationPtr);
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -5402,13 +5399,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private readPdfAnno(
     page: PdfPageObject,
-    pagePtr: number,
     type: PdfUnsupportedAnnoObject['type'],
     annotationPtr: number,
     index: number,
   ): PdfUnsupportedAnnoObject {
     const pageRect = this.readPageAnnoRect(annotationPtr);
-    const rect = this.convertPageRectToDeviceRect(page, pagePtr, pageRect);
+    const rect = this.convertPageRectToDeviceRect(page, pageRect);
     const author = this.getAnnotString(annotationPtr, 'T');
     const modifiedRaw = this.getAnnotString(annotationPtr, 'M');
     const modified = pdfDateToDate(modifiedRaw);
@@ -5434,13 +5430,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @private
    */
-  private getInReplyToId(pagePtr: number, annotationPtr: number): number | undefined {
+  private getInReplyToId(annotationPtr: number): string | undefined {
     const parentPtr = this.pdfiumModule.FPDFAnnot_GetLinkedAnnot(annotationPtr, 'IRT');
     if (!parentPtr) return;
 
-    // PDFium ≥ 5100 – returns −1 when annot not found on page
-    const idx = this.pdfiumModule.FPDFPage_GetAnnotIndex(pagePtr, parentPtr);
-    return idx >= 0 ? idx : undefined;
+    return this.getAnnotString(parentPtr, 'NM');
   }
 
   /**
@@ -5549,11 +5543,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @private
    */
-  private readPdfAnnoVertices(
-    page: PdfPageObject,
-    pagePtr: number,
-    annotationPtr: number,
-  ): Position[] {
+  private readPdfAnnoVertices(page: PdfPageObject, annotationPtr: number): Position[] {
     const vertices: Position[] = [];
     const count = this.pdfiumModule.FPDFAnnot_GetVertices(annotationPtr, 0, 0);
     const pointMemorySize = 8;
@@ -6309,7 +6299,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private convertPageRectToDeviceRect(
     page: PdfPageObject,
-    pagePtr: number,
     pageRect: {
       left: number;
       top: number;
@@ -6702,58 +6691,53 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     keywordPtr: number,
     flag: number,
   ): SearchResult[] {
-    const pageIndex = page.index;
-    // Load the page and text page only once
-    const pageCtx = ctx.acquirePage(pageIndex);
-    const textPagePtr = pageCtx.getTextPage();
+    return ctx.borrowPage(page.index, (pageCtx) => {
+      const textPagePtr = pageCtx.getTextPage();
 
-    // Load the full text of the page once
-    const total = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
-    const bufPtr = this.malloc(2 * (total + 1));
-    this.pdfiumModule.FPDFText_GetText(textPagePtr, 0, total, bufPtr);
-    const fullText = this.pdfiumModule.pdfium.UTF16ToString(bufPtr);
-    this.free(bufPtr);
+      // Load the full text of the page once
+      const total = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
+      const bufPtr = this.malloc(2 * (total + 1));
+      this.pdfiumModule.FPDFText_GetText(textPagePtr, 0, total, bufPtr);
+      const fullText = this.pdfiumModule.pdfium.UTF16ToString(bufPtr);
+      this.free(bufPtr);
 
-    const pageResults: SearchResult[] = [];
+      const pageResults: SearchResult[] = [];
 
-    // Initialize search handle once for the page
-    const searchHandle = this.pdfiumModule.FPDFText_FindStart(
-      textPagePtr,
-      keywordPtr,
-      flag,
-      0, // Start from the beginning of the page
-    );
-
-    // Call FindNext repeatedly to get all matches on the page
-    while (this.pdfiumModule.FPDFText_FindNext(searchHandle)) {
-      const charIndex = this.pdfiumModule.FPDFText_GetSchResultIndex(searchHandle);
-      const charCount = this.pdfiumModule.FPDFText_GetSchCount(searchHandle);
-
-      const rects = this.getHighlightRects(
-        page,
-        pageCtx.pagePtr,
+      // Initialize search handle once for the page
+      const searchHandle = this.pdfiumModule.FPDFText_FindStart(
         textPagePtr,
-        charIndex,
-        charCount,
+        keywordPtr,
+        flag,
+        0, // Start from the beginning of the page
       );
 
-      const context = this.buildContext(fullText, charIndex, charCount);
+      // Call FindNext repeatedly to get all matches on the page
+      while (this.pdfiumModule.FPDFText_FindNext(searchHandle)) {
+        const charIndex = this.pdfiumModule.FPDFText_GetSchResultIndex(searchHandle);
+        const charCount = this.pdfiumModule.FPDFText_GetSchCount(searchHandle);
 
-      pageResults.push({
-        pageIndex,
-        charIndex,
-        charCount,
-        rects,
-        context,
-      });
-    }
+        const rects = this.getHighlightRects(
+          page,
+          pageCtx.pagePtr,
+          textPagePtr,
+          charIndex,
+          charCount,
+        );
 
-    // Close the search handle only once after finding all results
-    this.pdfiumModule.FPDFText_FindClose(searchHandle);
+        const context = this.buildContext(fullText, charIndex, charCount);
 
-    // Close the text page and page only once
-    pageCtx.release();
+        pageResults.push({
+          pageIndex: page.index,
+          charIndex,
+          charCount,
+          rects,
+          context,
+        });
+      }
 
-    return pageResults;
+      // Close the search handle only once after finding all results
+      this.pdfiumModule.FPDFText_FindClose(searchHandle);
+      return pageResults;
+    });
   }
 }
