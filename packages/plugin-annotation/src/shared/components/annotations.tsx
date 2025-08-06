@@ -63,7 +63,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
   const [annotations, setAnnotations] = useState<TrackedAnnotation[]>([]);
   const { register } = usePointerHandlers({ pageIndex });
   const [selectionState, setSelectionState] = useState<TrackedAnnotation | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (annotationProvides) {
@@ -91,7 +91,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
     (e: MouseEvent | TouchEvent, annotation: TrackedAnnotation) => {
       e.stopPropagation();
       if (annotationProvides && selectionProvides) {
-        annotationProvides.selectAnnotation(pageIndex, annotation.localId);
+        annotationProvides.selectAnnotation(pageIndex, annotation.object.id);
         selectionProvides.clear();
         setEditingId(null);
       }
@@ -106,13 +106,13 @@ export function Annotations(annotationsProps: AnnotationsProps) {
   return (
     <>
       {annotations.map((annotation) => {
-        const isSelected = selectionState?.localId === annotation.localId;
-        const isEditing = editingId === annotation.localId;
+        const isSelected = selectionState?.object.id === annotation.object.id;
+        const isEditing = editingId === annotation.object.id;
 
         if (isInk(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={true}
@@ -143,7 +143,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isSquare(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={true}
@@ -175,7 +175,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isCircle(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={true}
@@ -207,7 +207,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isUnderline(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={false}
@@ -235,7 +235,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isStrikeout(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={false}
@@ -263,7 +263,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isSquiggly(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={false}
@@ -291,7 +291,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isHighlight(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={false}
@@ -319,7 +319,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isLine(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={true}
@@ -360,7 +360,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isPolyline(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={true}
@@ -396,7 +396,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isPolygon(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={true}
@@ -433,7 +433,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isFreeText(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={true}
@@ -442,7 +442,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               outlineOffset={6}
               onDoubleClick={(e) => {
                 e.stopPropagation();
-                setEditingId(annotation.localId);
+                setEditingId(annotation.object.id);
               }}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
@@ -469,7 +469,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
         if (isStamp(annotation)) {
           return (
             <AnnotationContainer
-              key={annotation.localId}
+              key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
               isDraggable={true}

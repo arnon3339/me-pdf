@@ -17,7 +17,7 @@ export const AnnotationMenu = ({ trackedAnnotation, ...props }: AnnotationMenuPr
   const handleDeleteClick = () => {
     annotationCapability?.deleteAnnotation(
       trackedAnnotation.object.pageIndex,
-      trackedAnnotation.localId,
+      trackedAnnotation.object.id,
     );
   };
 

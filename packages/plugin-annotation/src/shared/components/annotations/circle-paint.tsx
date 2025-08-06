@@ -7,8 +7,9 @@ import {
   PdfAnnotationBorderStyle,
   PdfCircleAnnoObject,
   Rect,
+  uuidV4,
 } from '@embedpdf/models';
-import { useAnnotationCapability } from '../../hooks';
+import { useAnnotationCapability, useAnnotationPlugin } from '../../hooks';
 
 interface CirclePaintProps {
   pageIndex: number;
@@ -115,7 +116,7 @@ export const CirclePaint = ({
               strokeStyle: toolStrokeStyle,
               strokeDashArray: toolStrokeDashArray,
               pageIndex,
-              id: Date.now() + Math.random(),
+              id: uuidV4(),
             };
 
             annotationProvides.createAnnotation(pageIndex, anno);

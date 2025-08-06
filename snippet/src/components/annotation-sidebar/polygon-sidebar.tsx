@@ -67,7 +67,7 @@ export const PolygonSidebar = ({
   function applyPatch(patch: Partial<any>) {
     if (!annotation) return;
     if (editing) {
-      annotation.updateAnnotation(selected!.pageIndex, selected!.localId, patch);
+      annotation.updateAnnotation(selected!.pageIndex, selected!.annotation.id, patch);
     } else if (activeVariant) {
       annotation.setToolDefaults(activeVariant, patch);
     }

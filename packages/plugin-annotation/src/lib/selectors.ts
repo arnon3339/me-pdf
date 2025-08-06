@@ -1,9 +1,6 @@
 import { AnnotationDefaults, AnnotationState, SelectedAnnotation } from './types';
-import { parseUid } from './utils';
+import { parseUid, makeUid } from './utils';
 import { makeVariantKey } from './variant-key';
-
-/* helper – mirrors the one in reducer */
-const makeUid = (page: number, id: number) => `p${page}#${id}`;
 
 /* ─────────── public selectors ─────────── */
 
@@ -26,8 +23,8 @@ export const getSelectedAnnotationWithPageIndex = (
   s: AnnotationState,
 ): SelectedAnnotation | null => {
   if (!s.selectedUid) return null;
-  const { pageIndex, localId } = parseUid(s.selectedUid);
-  return { pageIndex, localId, annotation: s.byUid[s.selectedUid].object };
+  const { pageIndex, id } = parseUid(s.selectedUid);
+  return { pageIndex, id, annotation: s.byUid[s.selectedUid].object };
 };
 
 export const getSelectedAnnotationByPageIndex = (s: AnnotationState, pageIndex: number) => {
@@ -47,7 +44,7 @@ export const isInAnnotationVariant = (s: AnnotationState) => s.activeVariant !==
 export const getSelectedAnnotationVariant = (s: AnnotationState) => s.activeVariant;
 
 /** Check if a given anno on a page is the current selection. */
-export const isAnnotationSelected = (s: AnnotationState, page: number, id: number) =>
+export const isAnnotationSelected = (s: AnnotationState, page: number, id: string) =>
   s.selectedUid === makeUid(page, id);
 
 /**

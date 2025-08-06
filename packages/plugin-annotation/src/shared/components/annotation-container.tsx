@@ -86,7 +86,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
     setCurrentVertices,
     setPreviewObject,
     commit: (patch) =>
-      annotationProvides?.updateAnnotation(pageIndex, trackedAnnotation.localId, patch),
+      annotationProvides?.updateAnnotation(pageIndex, trackedAnnotation.object.id, patch),
   });
 
   useLayoutEffect(() => {
@@ -152,7 +152,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
                   rect: currentRect,
                   vertices: v,
                 });
-                annotationProvides.updateAnnotation(pageIndex, trackedAnnotation.localId, patch);
+                annotationProvides.updateAnnotation(pageIndex, trackedAnnotation.object.id, patch);
               }
             }}
           />

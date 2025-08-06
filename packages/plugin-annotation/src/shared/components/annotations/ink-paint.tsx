@@ -10,8 +10,9 @@ import {
   PdfBlendMode,
   rectFromPoints,
   expandRect,
+  uuidV4,
 } from '@embedpdf/models';
-import { useAnnotationCapability } from '../../hooks';
+import { useAnnotationCapability, useAnnotationPlugin } from '../../hooks';
 
 interface InkPaintProps {
   /** Index of the page this layer lives on */
@@ -34,7 +35,6 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
   /* annotation capability                                              */
   /* ------------------------------------------------------------------ */
   const { provides: annotationProvides } = useAnnotationCapability();
-
   /* ------------------------------------------------------------------ */
   /* active tool state                                                  */
   /* ------------------------------------------------------------------ */
@@ -55,7 +55,6 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
   const toolStrokeWidth = activeTool.defaults?.strokeWidth ?? 2;
   const toolBlendMode = activeTool.defaults?.blendMode ?? PdfBlendMode.Normal;
   const intent = activeTool.defaults?.intent;
-
   /* ------------------------------------------------------------------ */
   /* integration with interaction-manager                               */
   /* ------------------------------------------------------------------ */
@@ -140,7 +139,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
               opacity: toolOpacity,
               strokeWidth: toolStrokeWidth,
               pageIndex,
-              id: Date.now() + Math.random(),
+              id: uuidV4(),
             };
 
             annotationProvides.createAnnotation(pageIndex, anno);

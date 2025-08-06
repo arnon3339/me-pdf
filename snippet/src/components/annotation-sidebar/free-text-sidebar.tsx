@@ -77,7 +77,7 @@ export const FreeTextSidebar = ({
   function applyPatch(patch: Partial<PdfFreeTextAnnoObject>) {
     if (!annotation) return;
     if (editing) {
-      annotation.updateAnnotation(selected!.pageIndex, selected!.localId, patch);
+      annotation.updateAnnotation(selected!.pageIndex, selected!.annotation.id, patch);
     } else if (activeVariant) {
       annotation.setToolDefaults(activeVariant, patch);
     }

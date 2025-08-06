@@ -13,5 +13,6 @@ export const manifest: PluginManifest<AnnotationPluginConfig> = {
   defaultConfig: {
     enabled: true,
     autoCommit: true,
+    annotationAuthor: 'Guest',
   },
 };

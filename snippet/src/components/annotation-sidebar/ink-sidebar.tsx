@@ -45,7 +45,7 @@ export const InkSidebar = ({
   function applyPatch(patch: Partial<PdfInkAnnoObject>) {
     if (!annotation) return;
     if (anno) {
-      annotation.updateAnnotation(selected!.pageIndex, selected!.localId, patch);
+      annotation.updateAnnotation(selected!.pageIndex, selected!.annotation.id, patch);
     } else if (activeVariant) {
       annotation.setToolDefaults(activeVariant, patch);
     }

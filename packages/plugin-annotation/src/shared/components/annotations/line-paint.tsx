@@ -7,6 +7,7 @@ import {
   PdfLineAnnoObject,
   LineEndings,
   PdfAnnotationBorderStyle,
+  uuidV4,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
 import { Line } from './line';
@@ -46,7 +47,6 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
   const toolStrokeDashArray = activeTool.defaults.strokeDashArray;
   const toolLineEndings = activeTool.defaults.lineEndings;
   const intent = activeTool.defaults.intent;
-
   /* ------------------------------------------------------------------ */
   /* interaction manager integration                                    */
   /* ------------------------------------------------------------------ */
@@ -87,7 +87,7 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
       lineEndings: toolLineEndings,
       intent,
       pageIndex,
-      id: Date.now() + Math.random(),
+      id: uuidV4(),
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);

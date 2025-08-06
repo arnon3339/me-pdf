@@ -766,9 +766,14 @@ export interface PdfAnnotationObjectBase {
   pageIndex: number;
 
   /**
+   * contents of the annotation
+   */
+  contents?: string;
+
+  /**
    * id of the annotation
    */
-  id: number;
+  id: string;
 
   /**
    * Rectangle of the annotation
@@ -2176,6 +2181,7 @@ export enum PdfErrorCode {
   CantSelectText,
   CantSelectOption,
   CantCheckField,
+  CantSetAnnotString,
 }
 
 export interface PdfErrorReason {

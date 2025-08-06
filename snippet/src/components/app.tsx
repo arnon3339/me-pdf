@@ -10,6 +10,7 @@ import {
   PdfBlendMode,
   PerfLogger,
   Rotation,
+  uuidV4,
 } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
@@ -1537,7 +1538,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const formattedSelection = selection.getFormattedSelection();
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now() + Math.random(),
+          id: uuidV4(),
           type: PdfAnnotationSubtype.SQUIGGLY,
           blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
@@ -1566,7 +1567,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const formattedSelection = selection.getFormattedSelection();
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now() + Math.random(),
+          id: uuidV4(),
           type: PdfAnnotationSubtype.UNDERLINE,
           blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
@@ -1594,7 +1595,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const formattedSelection = selection.getFormattedSelection();
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now() + Math.random(),
+          id: uuidV4(),
           type: PdfAnnotationSubtype.STRIKEOUT,
           blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
@@ -1622,7 +1623,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const formattedSelection = selection.getFormattedSelection();
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now() + Math.random(),
+          id: uuidV4(),
           type: PdfAnnotationSubtype.HIGHLIGHT,
           blendMode: PdfBlendMode.Multiply,
           color: defaultSettings.color,
@@ -1672,13 +1673,17 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const selectedAnnotation = annotation.getSelectedAnnotation();
       if (!selectedAnnotation) return;
 
-      annotation.deleteAnnotation(selectedAnnotation.object.pageIndex, selectedAnnotation.localId);
+      annotation.deleteAnnotation(
+        selectedAnnotation.object.pageIndex,
+        selectedAnnotation.object.id,
+      );
     },
   },
   panMode: {
     id: 'panMode',
     label: 'Pan',
     type: 'action',
+    dividerBefore: true,
     icon: 'hand',
     action: (registry) => {
       const interactionManager = registry
@@ -2422,7 +2427,7 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'groupedItems',
     slots: [
       { componentId: 'searchButton', priority: 1 },
-      //{ componentId: 'commentButton', priority: 2 },
+      { componentId: 'commentButton', priority: 2 },
     ],
     props: {
       gap: 10,
