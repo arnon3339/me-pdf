@@ -50,9 +50,10 @@ import { Dialog } from './ui/dialog';
 import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
+import { SidebarAnnotationEntry } from '@embedpdf/plugin-annotation';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
-  { commandId, onClick, active, color, disabled = false, ...props },
+  { commandId, onClick, active, iconProps, disabled = false, ...props },
   children,
   context,
 ) => {
@@ -99,7 +100,7 @@ export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
         {!command?.icon && props.img && (
           <img src={props.img} alt={props.label} className="h-5 w-5" />
         )}
-        {command?.icon && <Icon icon={command.icon} className="h-5 w-5" style={{ color }} />}
+        {command?.icon && <Icon icon={command.icon} className="h-5 w-5" {...iconProps} />}
       </Button>
     </Tooltip>
   );
@@ -308,7 +309,9 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId
       </div>
 
       <div className="flex flex-row justify-end md:hidden">
-        <Icon icon="x" className="mr-5 h-5 w-5 cursor-pointer" onClick={togglePanel} />
+        <button onClick={togglePanel} className="mr-5 cursor-pointer">
+          <Icon icon="x" className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Panel content */}
@@ -966,7 +969,9 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
         >
           <div className="flex flex-row items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center">
-              {command.icon && <Icon icon={command.icon} className="h-6 w-6" />}
+              {command.icon && (
+                <Icon icon={command.icon} className="h-6 w-6" {...command.iconProps} />
+              )}
             </div>
             <div className="text-sm">{command.label}</div>
           </div>
@@ -1008,10 +1013,6 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
       {menuContent}
     </Dropdown>
   );
-};
-
-export const commentRender: ComponentRenderFunction<any> = (props, children) => {
-  return <div>Comments</div>;
 };
 
 export interface ThumbnailsRenderProps {

@@ -2,8 +2,16 @@ import { PluginRegistry } from '@embedpdf/core';
 
 export type Dynamic<TStore, T> = T | ((state: TStore) => T);
 
+export type IconProps = {
+  primaryColor?: string;
+  secondaryColor?: string;
+  className?: string;
+  title?: string;
+};
+
 export interface MenuItemBase<TStore = any> {
   icon?: Dynamic<TStore, string>;
+  iconProps?: Dynamic<TStore, IconProps>;
   label: Dynamic<TStore, string>;
   active?: Dynamic<TStore, boolean>; // whether command is currently active
   disabled?: Dynamic<TStore, boolean>; // whether command is currently disabled
@@ -64,6 +72,7 @@ export type Resolved<TStore, T> = T extends Dynamic<TStore, infer U> ? U : T;
 
 export interface ResolvedMenuItemBase<TStore = any> {
   icon?: string;
+  iconProps?: IconProps;
   label: string;
   active?: boolean;
   disabled?: boolean;

@@ -27,7 +27,6 @@ import {
   UpdateComponentStatePayload,
 } from './actions';
 import { MenuManager } from './menu/menu-manager';
-import { IconManager } from './icons/icon-manager';
 
 export class UIPlugin extends BasePlugin<
   UIPluginConfig,
@@ -51,7 +50,6 @@ export class UIPlugin extends BasePlugin<
   } = {};
   private globalStoreSubscription: () => void = () => {};
   private menuManager: MenuManager; // Add this
-  private iconManager: IconManager;
 
   constructor(id: string, registry: PluginRegistry, config: UIPluginConfig) {
     super(id, registry);
@@ -59,9 +57,6 @@ export class UIPlugin extends BasePlugin<
 
     // Initialize command center
     this.menuManager = new MenuManager(config.menuItems || {}, this.registry);
-
-    // Initialize icon registry
-    this.iconManager = new IconManager(config.icons || []);
 
     // Subscribe to command events
     this.setupCommandEventHandlers();
@@ -268,7 +263,6 @@ export class UIPlugin extends BasePlugin<
       updateComponentState: (payload: UpdateComponentStatePayload) => {
         this.dispatch(uiUpdateComponentState(payload));
       },
-      ...this.iconManager.capabilities(),
       ...this.menuManager.capabilities(),
     };
   }

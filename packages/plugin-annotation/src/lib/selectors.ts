@@ -1,6 +1,14 @@
-import { AnnotationDefaults, AnnotationState, SelectedAnnotation } from './types';
+import {
+  AnnotationDefaults,
+  AnnotationState,
+  SelectedAnnotation,
+  SidebarAnnotationEntry,
+  TrackedAnnotation,
+} from './types';
 import { parseUid, makeUid } from './utils';
 import { makeVariantKey } from './variant-key';
+import { PdfTextAnnoObject } from '@embedpdf/models';
+import { isSidebarAnnotation, isText } from './helpers';
 
 /* ─────────── public selectors ─────────── */
 
@@ -76,3 +84,86 @@ export function getToolDefaultsBySubtypeAndIntent<
   // Cast is safe because we narrow the union by subtype
   return defaults as Extract<AnnotationDefaults, { subtype: TSub }>;
 }
+
+/**
+ * Collect every sidebar-eligible annotation and attach its TEXT replies,
+ * grouped by page for efficient rendering.
+ *
+ * Result shape:
+ * {
+ *   0: [{ page: 0, annotation: <TrackedAnnotation>, replies: [ … ] }, ...],
+ *   1: [{ page: 1, annotation: <TrackedAnnotation>, replies: [ … ] }, ...],
+ *   …
+ * }
+ */
+export const getSidebarAnnotationsWithRepliesGroupedByPage = (
+  s: AnnotationState,
+): Record<number, SidebarAnnotationEntry[]> => {
+  /* ------------------------------------------------------------
+   * 1.  Build an index of TEXT replies keyed by their parent ID
+   * ------------------------------------------------------------ */
+  const repliesByParent: Record<string, TrackedAnnotation<PdfTextAnnoObject>[]> = {};
+
+  for (const uidList of Object.values(s.pages)) {
+    for (const uid of uidList) {
+      const ta = s.byUid[uid];
+      if (isText(ta)) {
+        const parentId = ta.object.inReplyToId;
+        if (parentId) (repliesByParent[parentId] ||= []).push(ta);
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------
+   * 2.  Gather sidebar annotations and group them by page
+   * ------------------------------------------------------------ */
+  const out: Record<number, SidebarAnnotationEntry[]> = {};
+
+  for (const [pageStr, uidList] of Object.entries(s.pages)) {
+    const page = Number(pageStr);
+    const pageAnnotations: SidebarAnnotationEntry[] = [];
+
+    for (const uid of uidList) {
+      const ta = s.byUid[uid];
+      if (isSidebarAnnotation(ta)) {
+        pageAnnotations.push({
+          page,
+          annotation: ta,
+          replies: repliesByParent[ta.object.id] ?? [],
+        });
+      }
+    }
+
+    // Only add pages that have annotations
+    if (pageAnnotations.length > 0) {
+      out[page] = pageAnnotations;
+    }
+  }
+
+  return out;
+};
+
+/**
+ * Collect every sidebar-eligible annotation and attach its TEXT replies.
+ *
+ * Result shape:
+ * [
+ *   { page: 0, annotation: <TrackedAnnotation>, replies: [ … ] },
+ *   { page: 1, annotation: <TrackedAnnotation>, replies: [ … ] },
+ *   …
+ * ]
+ */
+export const getSidebarAnnotationsWithReplies = (s: AnnotationState): SidebarAnnotationEntry[] => {
+  const grouped = getSidebarAnnotationsWithRepliesGroupedByPage(s);
+  const out: SidebarAnnotationEntry[] = [];
+
+  // Flatten the grouped structure while maintaining page order
+  const sortedPages = Object.keys(grouped)
+    .map(Number)
+    .sort((a, b) => a - b);
+  for (const page of sortedPages) {
+    out.push(...grouped[page]);
+  }
+
+  return out;
+};

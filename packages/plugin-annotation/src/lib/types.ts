@@ -15,6 +15,7 @@ import {
   PdfTextAlignment,
   PdfVerticalAlignment,
   AnnotationCreateContext,
+  PdfTextAnnoObject,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -269,4 +270,13 @@ export interface GetPageAnnotationsOptions {
 export interface UpdateAnnotationColorOptions extends WebAlphaColor {
   pageIndex: number;
   annotationId: string;
+}
+
+export interface SidebarAnnotationEntry {
+  /** Zero-based page index */
+  page: number;
+  /** The tracked root annotation shown in the sidebar */
+  annotation: TrackedAnnotation;
+  /** Any TEXT-type annotations whose `inReplyToId` points to the root */
+  replies: TrackedAnnotation<PdfTextAnnoObject>[];
 }

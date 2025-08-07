@@ -645,7 +645,7 @@ export enum PdfAnnotationState {
   /**
    * Annotation is complete
    */
-  Complete = 'Complete',
+  Completed = 'Completed',
   /**
    * Annotation is cancelled
    */
@@ -669,13 +669,131 @@ export enum PdfAnnotationStateModel {
   /**
    * Annotation is reviewed
    */
-  Reviewed = 'Reviewed',
+  Review = 'Review',
+}
+
+/**
+ * Icon of pdf annotation
+ *
+ * @public
+ */
+export enum PdfAnnotationIcon {
+  /**
+   * Unknown icon
+   */
+  Unknown = -1,
+  /**
+   * Comment icon
+   */
+  Comment = 0,
+  /**
+   * Key icon
+   */
+  Key = 1,
+  /**
+   * Note icon
+   */
+  Note = 2,
+  /**
+   * Help icon
+   */
+  Help = 3,
+  /**
+   * New paragraph icon
+   */
+  NewParagraph = 4,
+  /**
+   * Paragraph icon
+   */
+  Paragraph = 5,
+  /**
+   * Insert icon
+   */
+  Insert = 6,
+  /**
+   * Graph icon
+   */
+  Graph = 7,
+  /**
+   * Push pin icon
+   */
+  PushPin = 8,
+  /**
+   * Paperclip icon
+   */
+  Paperclip = 9,
+  /**
+   * Tag icon
+   */
+  Tag = 10,
+  /**
+   * Speaker icon
+   */
+  Speaker = 11,
+  /**
+   * Mic icon
+   */
+  Mic = 12,
+  /**
+   * Approved icon
+   */
+  Approved = 13,
+  /**
+   * Experimental icon
+   */
+  Experimental = 14,
+  /**
+   * Not approved icon
+   */
+  NotApproved = 15,
+  /**
+   * As is icon
+   */
+  AsIs = 16,
+  /**
+   * Expired icon
+   */
+  Expired = 17,
+  /**
+   * Not for public release icon
+   */
+  NotForPublicRelease = 18,
+  /**
+   * Confidential icon
+   */
+  Confidential = 19,
+  /**
+   * Final icon
+   */
+  Final = 20,
+  /**
+   * Sold icon
+   */
+  Sold = 21,
+  /**
+   * Departmental icon
+   */
+  Departmental = 22,
+  /**
+   * For comment icon
+   */
+  ForComment = 23,
+  /**
+   * Top secret icon
+   */
+  TopSecret = 24,
+  /**
+   * Draft icon
+   */
+  Draft = 25,
+  /**
+   * For public release icon
+   */
+  ForPublicRelease = 26,
 }
 
 /**
  * Line ending of annotation
- *
- * @public
  */
 export enum PdfAnnotationLineEnding {
   /**
@@ -739,6 +857,11 @@ export interface PdfAnnotationObjectBase {
    * Modified date of the annotation
    */
   modified?: Date;
+
+  /**
+   * Created date of the annotation
+   */
+  created?: Date;
 
   /**
    * blend mode of annotation
@@ -856,6 +979,11 @@ export interface PdfTextAnnoObject extends PdfAnnotationObjectBase {
    * State model of the text annotation
    */
   stateModel?: PdfAnnotationStateModel;
+
+  /**
+   * Icon of the text annotation
+   */
+  icon?: PdfAnnotationIcon;
 }
 
 /**

@@ -23,5 +23,4 @@ export * from './types';
 export * from './ui-component';
 export * from './utils';
 export * from './menu/types';
-export * from './icons/types';
 export * from './menu/utils';
