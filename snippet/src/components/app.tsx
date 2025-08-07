@@ -1360,6 +1360,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Squiggly Selection',
     type: 'action',
     icon: 'squiggly',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.SQUIGGLY,
+      ).color,
+    }),
     action: (registry) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
@@ -1370,6 +1376,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
           id: uuidV4(),
+          created: new Date(),
           type: PdfAnnotationSubtype.SQUIGGLY,
           blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
@@ -1388,6 +1395,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Underline Selection',
     type: 'action',
     icon: 'underline',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.UNDERLINE,
+      ).color,
+    }),
     action: (registry) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
@@ -1399,6 +1412,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
           id: uuidV4(),
+          created: new Date(),
           type: PdfAnnotationSubtype.UNDERLINE,
           blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
@@ -1417,6 +1431,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Strikethrough Selection',
     type: 'action',
     icon: 'strikethrough',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.STRIKEOUT,
+      ).color,
+    }),
     action: (registry) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
@@ -1427,6 +1447,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
           id: uuidV4(),
+          created: new Date(),
           type: PdfAnnotationSubtype.STRIKEOUT,
           blendMode: PdfBlendMode.Normal,
           color: defaultSettings.color,
@@ -1445,6 +1466,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Highlight Selection',
     type: 'action',
     icon: 'highlight',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.HIGHLIGHT,
+      ).color,
+    }),
     action: (registry) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
@@ -1455,6 +1482,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
       for (const selection of formattedSelection) {
         annotation.createAnnotation(selection.pageIndex, {
           id: uuidV4(),
+          created: new Date(),
           type: PdfAnnotationSubtype.HIGHLIGHT,
           blendMode: PdfBlendMode.Multiply,
           color: defaultSettings.color,
@@ -1905,10 +1933,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.HIGHLIGHT,
-      ).color,
+      iconProps: getIconProps(menuItems.highlightSelection, storeState),
     }),
   },
   underlineSelectionButton: {
@@ -1920,10 +1945,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.UNDERLINE,
-      ).color,
+      iconProps: getIconProps(menuItems.underlineSelection, storeState),
     }),
   },
   strikethroughSelectionButton: {
@@ -1935,10 +1957,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.STRIKEOUT,
-      ).color,
+      iconProps: getIconProps(menuItems.strikethroughSelection, storeState),
     }),
   },
   squigglySelectionButton: {
@@ -1950,10 +1969,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.SQUIGGLY,
-      ).color,
+      iconProps: getIconProps(menuItems.squigglySelection, storeState),
     }),
   },
   viewCtrButton: {

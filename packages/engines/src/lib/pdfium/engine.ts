@@ -2390,24 +2390,24 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
       return false;
     }
-    if (!this.setAnnotationDate(annotationPtr, 'M', annotation.modified || new Date())) {
+    if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
       return false;
     }
-    if (!this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created || new Date())) {
+    if (
+      annotation.created &&
+      !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
+    ) {
       return false;
     }
-    console.log('annotation.inReplyToId', annotation.inReplyToId);
     if (
       annotation.inReplyToId &&
       !this.setInReplyToId(pagePtr, annotationPtr, annotation.inReplyToId)
     ) {
       return false;
     }
-    console.log('annotation.icon', annotation.icon);
     if (!this.setAnnotationIcon(annotationPtr, annotation.icon || PdfAnnotationIcon.Comment)) {
       return false;
     }
-    console.log('annotation.flags', annotation.flags);
     if (
       !this.setAnnotationFlags(annotationPtr, annotation.flags || ['print', 'noZoom', 'noRotate'])
     ) {
@@ -2441,6 +2441,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotationPtr: number,
     annotation: PdfFreeTextAnnoObject,
   ) {
+    if (
+      annotation.created &&
+      !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
+    ) {
+      return false;
+    }
+    if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
+      return false;
+    }
     if (!this.setBorderStyle(annotationPtr, PdfAnnotationBorderStyle.SOLID, 0)) {
       return false;
     }
@@ -2451,9 +2460,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
-      return false;
-    }
-    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
       return false;
     }
     if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
@@ -2511,6 +2517,18 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotation: PdfInkAnnoObject,
   ) {
     if (
+      annotation.created &&
+      !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
+    ) {
+      return false;
+    }
+    if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
+    if (
       !this.setBorderStyle(annotationPtr, PdfAnnotationBorderStyle.SOLID, annotation.strokeWidth)
     ) {
       return false;
@@ -2522,9 +2540,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
-      return false;
-    }
-    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
       return false;
     }
     if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
@@ -2559,6 +2574,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotationPtr: number,
     annotation: PdfLineAnnoObject,
   ) {
+    if (
+      annotation.created &&
+      !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
+    ) {
+      return false;
+    }
+    if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
+      return false;
+    }
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
       return false;
     }
@@ -2585,9 +2609,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
-      return false;
-    }
-    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
       return false;
     }
     if (!this.setBorderStyle(annotationPtr, annotation.strokeStyle, annotation.strokeWidth)) {
@@ -2645,6 +2666,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotationPtr: number,
     annotation: PdfPolygonAnnoObject | PdfPolylineAnnoObject,
   ) {
+    if (
+      annotation.created &&
+      !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
+    ) {
+      return false;
+    }
+    if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
+      return false;
+    }
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
       return false;
     }
@@ -2665,9 +2695,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
-      return false;
-    }
-    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
       return false;
     }
     if (!this.setBorderStyle(annotationPtr, annotation.strokeStyle, annotation.strokeWidth)) {
@@ -2726,6 +2753,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotationPtr: number,
     annotation: PdfCircleAnnoObject | PdfSquareAnnoObject,
   ) {
+    if (
+      annotation.created &&
+      !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
+    ) {
+      return false;
+    }
+    if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
+      return false;
+    }
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
       return false;
     }
@@ -2733,9 +2769,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
-      return false;
-    }
-    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
       return false;
     }
     if (!this.setBorderStyle(annotationPtr, annotation.strokeStyle, annotation.strokeWidth)) {
@@ -2797,6 +2830,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       | PdfStrikeOutAnnoObject
       | PdfSquigglyAnnoObject,
   ) {
+    if (
+      annotation.created &&
+      !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
+    ) {
+      return false;
+    }
+    if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
+      return false;
+    }
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
       return false;
     }
@@ -2807,9 +2849,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
-      return false;
-    }
-    if (!this.setAnnotString(annotationPtr, 'M', dateToPdfDate(annotation.modified))) {
       return false;
     }
     if (!this.setAnnotationOpacity(annotationPtr, annotation.opacity ?? 1)) {
@@ -2848,6 +2887,18 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotation: PdfStampAnnoObject,
     imageData?: ImageData,
   ) {
+    if (
+      annotation.created &&
+      !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
+    ) {
+      return false;
+    }
+    if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
+      return false;
+    }
+    if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
+      return false;
+    }
     if (imageData) {
       for (let i = this.pdfiumModule.FPDFAnnot_GetObjectCount(annotationPtr) - 1; i >= 0; i--) {
         this.pdfiumModule.FPDFAnnot_RemoveObject(annotationPtr, i);
