@@ -2263,6 +2263,18 @@ export interface PdfFileLoader extends PdfFileWithoutContent {
   callback: (offset: number, length: number) => Uint8Array;
 }
 
+export interface PdfPageWithAnnotations {
+  page: number;
+  annotations: PdfAnnotationObject[];
+}
+
+/**
+ * Progress of search all pages
+ *
+ * @public
+ */
+export type PdfPageSearchProgress = { page: number; results: SearchResult[] };
+
 /**
  * Pdf File
  *
@@ -2600,19 +2612,15 @@ export interface PdfEngine<T = Blob> {
     doc: PdfDocumentObject,
     keyword: string,
     flags?: MatchFlag[],
-  ) => PdfTask<SearchAllPagesResult>;
+  ) => PdfTask<SearchAllPagesResult, PdfPageSearchProgress>;
   /**
    * Get all annotations in this file
    * @param doc - pdf document
    * @returns task that contains the annotations or error
    */
-  getAllAnnotations: (doc: PdfDocumentObject) => PdfTask<
-    Record<number, PdfAnnotationObject[]>,
-    {
-      page: number;
-      annotations: PdfAnnotationObject[];
-    }
-  >;
+  getAllAnnotations: (
+    doc: PdfDocumentObject,
+  ) => PdfTask<Record<number, PdfAnnotationObject[]>, PdfPageWithAnnotations>;
   /**
    * Get all attachments in this file
    * @param doc - pdf document

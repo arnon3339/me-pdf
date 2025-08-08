@@ -1,5 +1,12 @@
 import { BasePluginConfig, EventHook } from '@embedpdf/core';
-import { MatchFlag, SearchResult, SearchTarget, SearchAllPagesResult } from '@embedpdf/models';
+import {
+  MatchFlag,
+  SearchResult,
+  SearchTarget,
+  SearchAllPagesResult,
+  PdfTask,
+  PdfPageSearchProgress,
+} from '@embedpdf/models';
 
 export interface SearchPluginConfig extends BasePluginConfig {
   flags?: MatchFlag[];
@@ -77,7 +84,7 @@ export interface SearchCapability {
    * @param keyword - Text to search for
    * @returns Promise that resolves to all search results or empty result if none found
    */
-  searchAllPages: (keyword: string) => Promise<SearchAllPagesResult>;
+  searchAllPages: (keyword: string) => PdfTask<SearchAllPagesResult, PdfPageSearchProgress>;
 
   /**
    * Navigate to the next search result

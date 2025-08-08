@@ -41,6 +41,8 @@ import {
   AnnotationCreateContext,
   PdfEngineMethodArgs,
   PdfEngineMethodName,
+  PdfPageWithAnnotations,
+  PdfPageSearchProgress,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response, SpecificExecuteRequest } from './runner';
 
@@ -517,9 +519,7 @@ export class WebWorkerEngine implements PdfEngine {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getAllAnnotations', doc);
     const requestId = this.generateRequestId(doc.id);
 
-    type Progress = { page: number; annotations: PdfAnnotationObject[] };
-
-    const task = new WorkerTask<Record<number, PdfAnnotationObject[]>, Progress>(
+    const task = new WorkerTask<Record<number, PdfAnnotationObject[]>, PdfPageWithAnnotations>(
       this.worker,
       requestId,
     );
@@ -700,17 +700,21 @@ export class WebWorkerEngine implements PdfEngine {
    * @public
    */
   searchAllPages(doc: PdfDocumentObject, keyword: string, flags: MatchFlag[] = []) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'searchAllPages 123', doc, keyword, flags);
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'searchAllPages', doc, keyword, flags);
+
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<SearchAllPagesResult>(this.worker, requestId);
+    const task = new WorkerTask<SearchAllPagesResult, PdfPageSearchProgress>(
+      this.worker,
+      requestId,
+    );
 
     const request: ExecuteRequest = createRequest(requestId, 'searchAllPages', [
       doc,
       keyword,
       flags,
     ]);
-    this.proxy(task, request);
 
+    this.proxy(task, request);
     return task;
   }
 

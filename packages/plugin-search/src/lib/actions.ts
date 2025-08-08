@@ -8,6 +8,7 @@ export const SET_SEARCH_FLAGS = 'SET_SEARCH_FLAGS';
 export const SET_SHOW_ALL_RESULTS = 'SET_SHOW_ALL_RESULTS';
 export const START_SEARCH = 'START_SEARCH';
 export const SET_SEARCH_RESULTS = 'SET_SEARCH_RESULTS';
+export const APPEND_SEARCH_RESULTS = 'APPEND_SEARCH_RESULTS';
 export const SET_ACTIVE_RESULT_INDEX = 'SET_ACTIVE_RESULT_INDEX';
 
 // Action Interfaces
@@ -43,6 +44,13 @@ export interface SetSearchResultsAction extends Action {
   };
 }
 
+export interface AppendSearchResultsAction extends Action {
+  type: typeof APPEND_SEARCH_RESULTS;
+  payload: {
+    results: SearchResult[];
+  };
+}
+
 export interface SetActiveResultIndexAction extends Action {
   type: typeof SET_ACTIVE_RESULT_INDEX;
   payload: number;
@@ -56,6 +64,7 @@ export type SearchAction =
   | SetShowAllResultsAction
   | StartSearchAction
   | SetSearchResultsAction
+  | AppendSearchResultsAction
   | SetActiveResultIndexAction;
 
 // Action Creators
@@ -85,6 +94,10 @@ export function setSearchResults(
   activeResultIndex: number,
 ): SetSearchResultsAction {
   return { type: SET_SEARCH_RESULTS, payload: { results, total, activeResultIndex } };
+}
+
+export function appendSearchResults(results: SearchResult[]): AppendSearchResultsAction {
+  return { type: APPEND_SEARCH_RESULTS, payload: { results } };
 }
 
 export function setActiveResultIndex(index: number): SetActiveResultIndexAction {

@@ -114,6 +114,8 @@ import {
   isUuidV4,
   uuidV4,
   PdfAnnotationIcon,
+  PdfPageWithAnnotations,
+  PdfPageSearchProgress,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1000,7 +1002,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     /* 1 ── create an async task wrapper ─────────────────────────────── */
     const task = PdfTaskHelper.create<
       Record<number, PdfAnnotationObject[]>,
-      { page: number; annotations: PdfAnnotationObject[] }
+      PdfPageWithAnnotations
     >();
 
     let cancelled = false;
@@ -6854,69 +6856,108 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
-   * Search for a keyword across all pages in the document
-   * Returns all search results throughout the entire document
+   * {@inheritDoc @embedpdf/models!PdfEngine.searchAllPages}
    *
-   * @param doc - Pdf document object
-   * @param keyword - Search keyword
-   * @param flags - Match flags for search
-   * @returns Promise of all search results in the document
+   * Runs inside the worker.
+   * Emits per-page progress: { page, results }
    *
    * @public
    */
-  searchAllPages(doc: PdfDocumentObject, keyword: string, flags: MatchFlag[] = []) {
+  searchAllPages(
+    doc: PdfDocumentObject,
+    keyword: string,
+    flags: MatchFlag[] = [],
+  ): PdfTask<SearchAllPagesResult, PdfPageSearchProgress> {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'searchAllPages', doc, keyword, flags);
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchAllPages`, 'Begin', doc.id);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SearchAllPages', 'Begin', doc.id);
 
+    // Resolve early if doc not open
     const ctx = this.cache.getContext(doc.id);
-
     if (!ctx) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchAllPages`, 'End', doc.id);
-      return PdfTaskHelper.resolve<SearchAllPagesResult>({ results: [], total: 0 });
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SearchAllPages', 'End', doc.id);
+      return PdfTaskHelper.resolve<SearchAllPagesResult, PdfPageSearchProgress>({
+        results: [],
+        total: 0,
+      });
     }
 
+    // Build UTF-16 keyword buffer
     const length = 2 * (keyword.length + 1);
     const keywordPtr = this.malloc(length);
     this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
 
-    const flag = flags.reduce((flag: MatchFlag, currFlag: MatchFlag) => {
-      return flag | currFlag;
-    }, MatchFlag.None);
+    // Fold flags
+    const flag = flags.reduce((acc: MatchFlag, f: MatchFlag) => acc | f, MatchFlag.None);
 
-    const results: SearchResult[] = [];
+    // Create task with progress payload
+    const task = PdfTaskHelper.create<SearchAllPagesResult, PdfPageSearchProgress>();
 
-    // Search through all pages
-    const searchAllPagesTask = PdfTaskHelper.create<SearchAllPagesResult>();
+    let cancelled = false;
+    task.wait(
+      () => {},
+      (err) => {
+        if (err.type === 'abort') cancelled = true;
+      },
+    );
 
-    // Execute search in a separate function to avoid issues with resolve parameter
-    const executeSearch = async () => {
-      for (let pageIndex = 0; pageIndex < doc.pageCount; pageIndex++) {
-        // Get all results for the current page efficiently (load page only once)
-        const pageResults = this.searchAllInPage(ctx, doc.pages[pageIndex], keywordPtr, flag);
+    const CHUNK_SIZE = 100; // tune as needed
+    const allResults: SearchResult[] = [];
 
-        results.push(...pageResults);
+    const processChunk = (startIdx: number): void => {
+      if (cancelled) return;
+
+      const endIdx = Math.min(startIdx + CHUNK_SIZE, doc.pageCount);
+
+      try {
+        for (let pageIndex = startIdx; pageIndex < endIdx && !cancelled; pageIndex++) {
+          // Search this page once
+          const pageResults = this.searchAllInPage(ctx, doc.pages[pageIndex], keywordPtr, flag);
+
+          // Accumulate and emit progress
+          allResults.push(...pageResults);
+          task.progress({ page: pageIndex, results: pageResults });
+        }
+      } catch (e) {
+        if (!cancelled) {
+          this.free(keywordPtr);
+          this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SearchAllPages', 'End', doc.id);
+          task.reject({
+            code: PdfErrorCode.Unknown,
+            message: `Error searching document: ${e}`,
+          });
+        }
+        return;
       }
 
-      this.free(keywordPtr);
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchAllPages`, 'End', doc.id);
+      if (cancelled) return;
 
-      searchAllPagesTask.resolve({
-        results,
-        total: results.length,
-      });
+      if (endIdx >= doc.pageCount) {
+        this.free(keywordPtr);
+        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SearchAllPages', 'End', doc.id);
+        task.resolve({ results: allResults, total: allResults.length });
+        return;
+      }
+
+      // yield to event loop
+      setTimeout(() => processChunk(endIdx), 0);
     };
 
-    // Start the search process
-    executeSearch().catch((error) => {
-      this.free(keywordPtr);
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SearchAllPages`, 'End', doc.id);
-      searchAllPagesTask.reject({
-        code: PdfErrorCode.Unknown,
-        message: `Error searching document: ${error}`,
-      });
-    });
+    // kick off
+    setTimeout(() => processChunk(0), 0);
 
-    return searchAllPagesTask;
+    // Ensure buffer is freed if caller aborts mid-flight
+    task.wait(
+      () => {},
+      (err) => {
+        if (err.type === 'abort') {
+          try {
+            this.free(keywordPtr);
+          } catch {}
+        }
+      },
+    );
+
+    return task;
   }
 
   /**

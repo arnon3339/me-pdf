@@ -5,6 +5,9 @@ import {
   SearchAllPagesResult,
   TaskError,
   PdfEngine,
+  PdfTask,
+  PdfPageSearchProgress,
+  PdfTaskHelper,
 } from '@embedpdf/models';
 import { SearchPluginConfig, SearchCapability, SearchState, SearchResultState } from './types';
 import { LoaderCapability, LoaderEvent, LoaderPlugin } from '@embedpdf/plugin-loader';
@@ -16,6 +19,7 @@ import {
   startSearch,
   setSearchResults,
   setActiveResultIndex,
+  appendSearchResults,
   SearchAction,
 } from './actions';
 
@@ -36,6 +40,9 @@ export class SearchPlugin extends BasePlugin<
   private readonly searchActiveResultChange$ = createBehaviorEmitter<number>();
   private readonly searchResultState$ = createBehaviorEmitter<SearchResultState>();
   private readonly searchState$ = createBehaviorEmitter<SearchState>();
+
+  // keep reference to current running task (optional abort handling if your PdfTask supports it)
+  private currentTask?: ReturnType<PdfEngine['searchAllPages']>;
 
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
@@ -121,70 +128,99 @@ export class SearchPlugin extends BasePlugin<
   }
 
   private startSearchSession(): void {
-    if (!this.currentDocument) {
-      return;
-    }
+    if (!this.currentDocument) return;
     this.dispatch(startSearchSession());
     this.notifySearchStart();
   }
 
   private stopSearchSession(): void {
-    if (!this.currentDocument || !this.getState().active) {
-      return;
-    }
+    if (!this.currentDocument || !this.state.active) return;
+    // optional: abort current task if PdfTask supports it
+    try {
+      // @ts-expect-error: optional abort if available
+      this.currentTask?.abort?.({ type: 'abort', code: 'cancelled', message: 'search stopped' });
+    } catch {}
+    this.currentTask = undefined;
+
     this.dispatch(stopSearchSession());
     this.notifySearchStop();
   }
 
-  private async searchAllPages(
+  private searchAllPages(
     keyword: string,
     force: boolean = false,
-  ): Promise<SearchAllPagesResult> {
+  ): PdfTask<SearchAllPagesResult, PdfPageSearchProgress> {
     const trimmedKeyword = keyword.trim();
 
     if (this.state.query === trimmedKeyword && !force) {
-      return { results: this.state.results, total: this.state.total };
+      return PdfTaskHelper.resolve<SearchAllPagesResult, PdfPageSearchProgress>({
+        results: this.state.results,
+        total: this.state.total,
+      });
+    }
+
+    // stop previous task if still running
+    if (this.currentTask) {
+      try {
+        // @ts-expect-error: optional abort if available
+        this.currentTask.abort?.({ type: 'abort', code: 'superseded', message: 'new search' });
+      } catch {}
+      this.currentTask = undefined;
     }
 
     this.dispatch(startSearch(trimmedKeyword));
 
-    if (!trimmedKeyword) {
+    if (!trimmedKeyword || !this.currentDocument) {
       this.dispatch(setSearchResults([], 0, -1));
-      return { results: [], total: 0 };
-    }
-    if (!this.currentDocument) {
-      this.dispatch(setSearchResults([], 0, -1));
-      return { results: [], total: 0 };
+      return PdfTaskHelper.resolve<SearchAllPagesResult, PdfPageSearchProgress>({
+        results: [],
+        total: 0,
+      });
     }
 
     if (!this.state.active) {
       this.startSearchSession();
     }
 
-    return new Promise<SearchAllPagesResult>((resolve) => {
-      this.engine.searchAllPages(this.currentDocument!, trimmedKeyword, this.state.flags).wait(
-        (results) => {
-          const activeResultIndex = results.total > 0 ? 0 : -1;
-          this.dispatch(setSearchResults(results.results, results.total, activeResultIndex));
-          this.searchResult$.emit(results);
-          if (results.total > 0) {
-            this.notifyActiveResultChange(0);
-          }
-          resolve(results);
-        },
-        (error: TaskError<any>) => {
-          console.error('Error during search:', error);
-          this.dispatch(setSearchResults([], 0, -1));
-          resolve({ results: [], total: 0 });
-        },
-      );
+    const task = (this.currentTask = this.engine.searchAllPages(
+      this.currentDocument!,
+      trimmedKeyword,
+      this.state.flags,
+    ));
+
+    task.onProgress((p) => {
+      if (p?.results?.length) {
+        this.dispatch(appendSearchResults(p.results));
+        // set first active result as soon as we have something
+        if (this.state.activeResultIndex === -1) {
+          this.dispatch(setActiveResultIndex(0));
+          this.notifyActiveResultChange(0);
+        }
+      }
     });
+
+    task.wait(
+      (results) => {
+        this.currentTask = undefined;
+        const activeResultIndex = results.total > 0 ? 0 : -1;
+        this.dispatch(setSearchResults(results.results, results.total, activeResultIndex));
+        this.searchResult$.emit(results);
+        if (results.total > 0) {
+          this.notifyActiveResultChange(0);
+        }
+      },
+      (error) => {
+        this.currentTask = undefined;
+        console.error('Error during search:', error);
+        this.dispatch(setSearchResults([], 0, -1));
+      },
+    );
+
+    return task;
   }
 
   private nextResult(): number {
-    if (this.state.results.length === 0) {
-      return -1;
-    }
+    if (this.state.results.length === 0) return -1;
     const nextIndex =
       this.state.activeResultIndex >= this.state.results.length - 1
         ? 0
@@ -193,9 +229,7 @@ export class SearchPlugin extends BasePlugin<
   }
 
   private previousResult(): number {
-    if (this.state.results.length === 0) {
-      return -1;
-    }
+    if (this.state.results.length === 0) return -1;
     const prevIndex =
       this.state.activeResultIndex <= 0
         ? this.state.results.length - 1
