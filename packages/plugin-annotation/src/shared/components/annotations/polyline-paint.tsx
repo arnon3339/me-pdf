@@ -94,6 +94,7 @@ export const PolylinePaint = ({
       lineEndings: toolLineEndings,
       pageIndex,
       id: uuidV4(),
+      created: new Date(),
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);

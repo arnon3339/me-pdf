@@ -118,6 +118,7 @@ export const StampPaint = ({ pageIndex, scale, pageWidth, pageHeight }: StampPai
       flags: ['print'],
       pageIndex,
       id: uuidV4(),
+      created: new Date(),
       rect,
     };
 

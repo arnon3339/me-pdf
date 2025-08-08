@@ -118,6 +118,7 @@ export const SquarePaint = ({
               strokeDashArray: toolStrokeDashArray,
               pageIndex,
               id: uuidV4(),
+              created: new Date(),
             };
 
             annotationProvides.createAnnotation(pageIndex, anno);

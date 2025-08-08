@@ -133,7 +133,8 @@ export class AnnotationPlugin extends BasePlugin<
       if (!defaults || !isTextMarkupDefaults(defaults)) return;
 
       const formattedSelection = this.selection?.getFormattedSelection();
-      if (!formattedSelection) return;
+      const selectionText = this.selection?.getSelectedText();
+      if (!formattedSelection || !selectionText) return;
 
       for (const selection of formattedSelection) {
         const rect = selection.rect;
@@ -143,17 +144,22 @@ export class AnnotationPlugin extends BasePlugin<
         const opacity = defaults.opacity;
         const blendMode = defaults.blendMode ?? PdfBlendMode.Normal;
 
-        this.createAnnotation(selection.pageIndex, {
-          type: subtype,
-          rect,
-          segmentRects,
-          color,
-          opacity,
-          blendMode,
-          pageIndex: selection.pageIndex,
-          id: uuidV4(),
-          author: this.config.annotationAuthor,
-        });
+        selectionText.wait((text) => {
+          this.createAnnotation(selection.pageIndex, {
+            type: subtype,
+            rect,
+            segmentRects,
+            color,
+            opacity,
+            blendMode,
+            pageIndex: selection.pageIndex,
+            id: uuidV4(),
+            author: this.config.annotationAuthor,
+            custom: {
+              text,
+            },
+          });
+        }, ignore);
       }
 
       this.selection?.clear();

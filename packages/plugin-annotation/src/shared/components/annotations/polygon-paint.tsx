@@ -79,6 +79,7 @@ export const PolygonPaint = ({
       strokeDashArray: toolStrokeDashArray,
       pageIndex,
       id: uuidV4(),
+      created: new Date(),
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);

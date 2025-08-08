@@ -6,6 +6,7 @@ import { usePdfiumEngine } from '@embedpdf/engines/preact';
 import {
   AllLogger,
   ConsoleLogger,
+  ignore,
   PdfAnnotationSubtype,
   PdfBlendMode,
   PerfLogger,
@@ -1373,18 +1374,25 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       const defaultSettings = annotation.getToolDefaultsBySubtype(PdfAnnotationSubtype.SQUIGGLY);
       const formattedSelection = selection.getFormattedSelection();
+      const selectionText = selection.getSelectedText();
+
       for (const selection of formattedSelection) {
-        annotation.createAnnotation(selection.pageIndex, {
-          id: uuidV4(),
-          created: new Date(),
-          type: PdfAnnotationSubtype.SQUIGGLY,
-          blendMode: PdfBlendMode.Normal,
-          color: defaultSettings.color,
-          opacity: defaultSettings.opacity,
-          pageIndex: selection.pageIndex,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-        });
+        selectionText.wait((text) => {
+          annotation.createAnnotation(selection.pageIndex, {
+            id: uuidV4(),
+            created: new Date(),
+            type: PdfAnnotationSubtype.SQUIGGLY,
+            blendMode: PdfBlendMode.Normal,
+            color: defaultSettings.color,
+            opacity: defaultSettings.opacity,
+            pageIndex: selection.pageIndex,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            custom: {
+              text,
+            },
+          });
+        }, ignore);
       }
 
       selection.clear();
@@ -1409,18 +1417,25 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const defaultSettings = annotation.getToolDefaultsBySubtype(PdfAnnotationSubtype.UNDERLINE);
 
       const formattedSelection = selection.getFormattedSelection();
+      const selectionText = selection.getSelectedText();
+
       for (const selection of formattedSelection) {
-        annotation.createAnnotation(selection.pageIndex, {
-          id: uuidV4(),
-          created: new Date(),
-          type: PdfAnnotationSubtype.UNDERLINE,
-          blendMode: PdfBlendMode.Normal,
-          color: defaultSettings.color,
-          opacity: defaultSettings.opacity,
-          pageIndex: selection.pageIndex,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-        });
+        selectionText.wait((text) => {
+          annotation.createAnnotation(selection.pageIndex, {
+            id: uuidV4(),
+            created: new Date(),
+            type: PdfAnnotationSubtype.UNDERLINE,
+            blendMode: PdfBlendMode.Normal,
+            color: defaultSettings.color,
+            opacity: defaultSettings.opacity,
+            pageIndex: selection.pageIndex,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            custom: {
+              text,
+            },
+          });
+        }, ignore);
       }
 
       selection.clear();
@@ -1444,18 +1459,25 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       const defaultSettings = annotation.getToolDefaultsBySubtype(PdfAnnotationSubtype.STRIKEOUT);
       const formattedSelection = selection.getFormattedSelection();
+      const selectionText = selection.getSelectedText();
+
       for (const selection of formattedSelection) {
-        annotation.createAnnotation(selection.pageIndex, {
-          id: uuidV4(),
-          created: new Date(),
-          type: PdfAnnotationSubtype.STRIKEOUT,
-          blendMode: PdfBlendMode.Normal,
-          color: defaultSettings.color,
-          opacity: defaultSettings.opacity,
-          pageIndex: selection.pageIndex,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-        });
+        selectionText.wait((text) => {
+          annotation.createAnnotation(selection.pageIndex, {
+            id: uuidV4(),
+            created: new Date(),
+            type: PdfAnnotationSubtype.STRIKEOUT,
+            blendMode: PdfBlendMode.Normal,
+            color: defaultSettings.color,
+            opacity: defaultSettings.opacity,
+            pageIndex: selection.pageIndex,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            custom: {
+              text,
+            },
+          });
+        }, ignore);
       }
 
       selection.clear();
@@ -1479,18 +1501,25 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       const defaultSettings = annotation.getToolDefaultsBySubtype(PdfAnnotationSubtype.HIGHLIGHT);
       const formattedSelection = selection.getFormattedSelection();
+      const selectionText = selection.getSelectedText();
+
       for (const selection of formattedSelection) {
-        annotation.createAnnotation(selection.pageIndex, {
-          id: uuidV4(),
-          created: new Date(),
-          type: PdfAnnotationSubtype.HIGHLIGHT,
-          blendMode: PdfBlendMode.Multiply,
-          color: defaultSettings.color,
-          opacity: defaultSettings.opacity,
-          pageIndex: selection.pageIndex,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-        });
+        selectionText.wait((text) => {
+          annotation.createAnnotation(selection.pageIndex, {
+            id: uuidV4(),
+            created: new Date(),
+            type: PdfAnnotationSubtype.HIGHLIGHT,
+            blendMode: PdfBlendMode.Multiply,
+            color: defaultSettings.color,
+            opacity: defaultSettings.opacity,
+            pageIndex: selection.pageIndex,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            custom: {
+              text,
+            },
+          });
+        }, ignore);
       }
 
       selection.clear();
@@ -2538,6 +2567,7 @@ export const components: Record<string, UIComponentType<State>> = {
       sidebarAnnotations: getSidebarAnnotationsWithRepliesGroupedByPage(
         storeState.plugins[ANNOTATION_PLUGIN_ID],
       ),
+      activeAnnotation: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedUid,
     }),
   },
   commandMenu: {

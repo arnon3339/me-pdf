@@ -19,6 +19,7 @@ import { Icon } from './ui/icon';
 
 export interface CommentRenderProps {
   sidebarAnnotations: Record<number, SidebarAnnotationEntry[]>;
+  activeAnnotation: PdfAnnotationObject | null;
 }
 
 // Annotation type configuration
@@ -193,6 +194,22 @@ const AnnotationIcon = ({
 export const commentRender: ComponentRenderFunction<CommentRenderProps> = (props, children) => {
   const { provides: annotation } = useAnnotationCapability();
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
+  const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
+
+  const addComment = (
+    pageIndex: number,
+    currentAnnotation: PdfAnnotationObject,
+    comment: string,
+  ) => {
+    if (!comment.trim()) return;
+
+    annotation?.updateAnnotation(pageIndex, currentAnnotation.id, {
+      contents: comment,
+    });
+
+    // Clear the comment text after adding
+    setCommentTexts((prev) => ({ ...prev, [currentAnnotation.id]: '' }));
+  };
 
   const addReply = (pageIndex: number, currentAnnotation: PdfAnnotationObject, reply: string) => {
     if (!reply.trim()) return;
@@ -227,35 +244,44 @@ export const commentRender: ComponentRenderFunction<CommentRenderProps> = (props
     setReplyTexts((prev) => ({ ...prev, [annotationId]: value }));
   };
 
+  const handleCommentChange = (annotationId: string, value: string) => {
+    setCommentTexts((prev) => ({ ...prev, [annotationId]: value }));
+  };
+
   // Sort pages by page number
   const sortedPages = Object.keys(props.sidebarAnnotations)
     .map(Number)
     .sort((a, b) => a - b);
 
-  console.log(props.sidebarAnnotations);
-
   return (
-    <div className="h-full overflow-auto bg-gray-50">
+    <div className="h-full overflow-auto">
       {/* Header */}
 
       {/* Comments List Grouped by Page */}
-      <div className="space-y-6 p-4">
+      <div className="space-y-6 p-3">
         {sortedPages.map((pageNumber) => (
           <div key={pageNumber} className="space-y-3">
             {/* Page Header */}
-            <div className="sticky top-0 border-b border-gray-200 bg-gray-50 py-2">
-              <h3 className="text-lg font-semibold text-gray-800">Page {pageNumber + 1}</h3>
-              <p className="text-sm text-gray-500">
-                {props.sidebarAnnotations[pageNumber].length} comment
-                {props.sidebarAnnotations[pageNumber].length !== 1 ? 's' : ''}
-              </p>
+            <div className="sticky top-0 bg-white px-1">
+              <div className="border-b border-gray-200 py-2">
+                <h3 className="text-md font-semibold text-gray-800">Page {pageNumber + 1}</h3>
+                <p className="text-sm text-gray-500">
+                  {props.sidebarAnnotations[pageNumber].length} comment
+                  {props.sidebarAnnotations[pageNumber].length !== 1 ? 's' : ''}
+                </p>
+              </div>
             </div>
 
             {/* Annotations for this page */}
-            <div className="space-y-3">
+            <div className="space-y-3 px-1">
               {props.sidebarAnnotations[pageNumber].map((entry) => {
                 const replyText = replyTexts[entry.annotation.object.id] || '';
+                const commentText = commentTexts[entry.annotation.object.id] || '';
                 const config = getAnnotationConfig(entry.annotation);
+                const hasContent = entry.annotation.object.contents;
+                const hasReplies = entry.replies.length > 0;
+                const showCommentInput = !hasContent && !hasReplies;
+
                 if (!config) {
                   return null;
                 }
@@ -290,9 +316,16 @@ export const commentRender: ComponentRenderFunction<CommentRenderProps> = (props
                                 </span>
                               </div>
                             </div>
-                            <p className="mt-2 text-sm text-gray-700">
-                              {entry.annotation.object.contents || config.label}
-                            </p>
+                            {entry.annotation.object.custom?.text && (
+                              <p className="mt-2 text-sm text-gray-500">
+                                {entry.annotation.object.custom?.text}
+                              </p>
+                            )}
+                            {(entry.annotation.object.contents || config.label) && (
+                              <p className="mt-2 text-sm text-gray-800">
+                                {entry.annotation.object.contents || config.label}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -325,39 +358,65 @@ export const commentRender: ComponentRenderFunction<CommentRenderProps> = (props
                         </div>
                       )}
 
-                      {/* Reply Input */}
+                      {/* Comment/Reply Input */}
                       <div className="mt-4 border-t border-gray-100 pt-4">
                         <div className="flex items-end space-x-2">
                           <div className="flex-1">
                             <input
                               type="text"
-                              placeholder="Add reply..."
-                              value={replyText}
-                              onInput={(e) =>
-                                handleReplyChange(entry.annotation.object.id, e.currentTarget.value)
-                              }
+                              placeholder={showCommentInput ? 'Add comment...' : 'Add reply...'}
+                              value={showCommentInput ? commentText : replyText}
+                              onInput={(e) => {
+                                if (showCommentInput) {
+                                  handleCommentChange(
+                                    entry.annotation.object.id,
+                                    e.currentTarget.value,
+                                  );
+                                } else {
+                                  handleReplyChange(
+                                    entry.annotation.object.id,
+                                    e.currentTarget.value,
+                                  );
+                                }
+                              }}
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                   e.preventDefault();
-                                  addReply(
-                                    entry.annotation.object.pageIndex,
-                                    entry.annotation.object,
-                                    replyText,
-                                  );
+                                  if (showCommentInput) {
+                                    addComment(
+                                      entry.annotation.object.pageIndex,
+                                      entry.annotation.object,
+                                      commentText,
+                                    );
+                                  } else {
+                                    addReply(
+                                      entry.annotation.object.pageIndex,
+                                      entry.annotation.object,
+                                      replyText,
+                                    );
+                                  }
                                 }
                               }}
                               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                           </div>
                           <button
-                            onClick={() =>
-                              addReply(
-                                entry.annotation.object.pageIndex,
-                                entry.annotation.object,
-                                replyText,
-                              )
-                            }
-                            disabled={!replyText.trim()}
+                            onClick={() => {
+                              if (showCommentInput) {
+                                addComment(
+                                  entry.annotation.object.pageIndex,
+                                  entry.annotation.object,
+                                  commentText,
+                                );
+                              } else {
+                                addReply(
+                                  entry.annotation.object.pageIndex,
+                                  entry.annotation.object,
+                                  replyText,
+                                );
+                              }
+                            }}
+                            disabled={showCommentInput ? !commentText.trim() : !replyText.trim()}
                             className="rounded-lg bg-blue-500 p-2 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
                           >
                             <svg

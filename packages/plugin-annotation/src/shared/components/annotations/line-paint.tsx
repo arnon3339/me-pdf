@@ -88,6 +88,7 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
       intent,
       pageIndex,
       id: uuidV4(),
+      created: new Date(),
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);

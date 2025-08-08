@@ -902,6 +902,11 @@ export interface PdfAnnotationObjectBase {
    * Rectangle of the annotation
    */
   rect: Rect;
+
+  /**
+   * Custom data of the annotation
+   */
+  custom?: any;
 }
 
 /**

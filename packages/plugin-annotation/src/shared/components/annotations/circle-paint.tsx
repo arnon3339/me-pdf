@@ -115,6 +115,7 @@ export const CirclePaint = ({
               strokeColor: toolStrokeColor,
               strokeStyle: toolStrokeStyle,
               strokeDashArray: toolStrokeDashArray,
+              created: new Date(),
               pageIndex,
               id: uuidV4(),
             };

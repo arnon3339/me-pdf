@@ -138,6 +138,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
               color: toolColor,
               opacity: toolOpacity,
               strokeWidth: toolStrokeWidth,
+              created: new Date(),
               pageIndex,
               id: uuidV4(),
             };

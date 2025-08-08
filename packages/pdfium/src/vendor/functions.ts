@@ -50,6 +50,7 @@ export const functions = {
   EPDFAnnot_SetTextAlignment: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetVerticalAlignment: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_SetVertices: [['number', 'number', 'number'] as const, 'boolean'] as const,
+  EPDFPage_CreateAnnot: [['number', 'number'] as const, 'number'] as const,
   EPDFPage_GetAnnotByName: [['number', 'number'] as const, 'number'] as const,
   EPDFPage_GetAnnotCountRaw: [['number', 'number'] as const, 'number'] as const,
   EPDFPage_GetAnnotRaw: [['number', 'number', 'number'] as const, 'number'] as const,
