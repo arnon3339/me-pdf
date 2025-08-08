@@ -28,7 +28,6 @@ import {
   AnnotationState,
   TrackedAnnotation,
 } from './types';
-import { makeUid } from './utils';
 import { makeVariantKey } from './variant-key';
 
 /* ─────────── util helpers ─────────── */
@@ -233,7 +232,7 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
           delete newByUid[uid];
         }
         const newUidsOnPage = list.map((a) => {
-          const uid = makeUid(pageIndex, a.id);
+          const uid = a.id;
           newByUid[uid] = { commitState: 'synced', object: a };
           return uid;
         });
@@ -248,7 +247,7 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
     case SELECT_ANNOTATION:
       return {
         ...state,
-        selectedUid: makeUid(action.payload.pageIndex, action.payload.id),
+        selectedUid: action.payload.id,
       };
     case DESELECT_ANNOTATION:
       return { ...state, selectedUid: null };
@@ -274,7 +273,7 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
     /* ───── create ───── */
     case CREATE_ANNOTATION: {
       const { pageIndex, annotation } = action.payload;
-      const uid = makeUid(pageIndex, annotation.id);
+      const uid = annotation.id;
 
       return {
         ...state,
@@ -289,8 +288,7 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
 
     /* ───── delete ───── */
     case DELETE_ANNOTATION: {
-      const { pageIndex, id } = action.payload;
-      const uid = makeUid(pageIndex, id);
+      const { pageIndex, id: uid } = action.payload;
       if (!state.byUid[uid]) return state;
 
       /* keep the object but mark it as deleted */
@@ -310,7 +308,7 @@ export const reducer: Reducer<AnnotationState, AnnotationAction> = (state, actio
 
     /* ───── field edits ───── */
     case PATCH_ANNOTATION: {
-      const uid = makeUid(action.payload.pageIndex, action.payload.id);
+      const uid = action.payload.id;
       return patchAnno(state, uid, action.payload.patch);
     }
 

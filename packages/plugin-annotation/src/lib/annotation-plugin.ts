@@ -48,7 +48,6 @@ import {
 import { SelectionPlugin, SelectionCapability } from '@embedpdf/plugin-selection';
 import { HistoryPlugin, HistoryCapability, Command } from '@embedpdf/plugin-history';
 import { getSelectedAnnotation, getToolDefaultsBySubtypeAndIntent } from './selectors';
-import { makeUid, parseUid } from './utils';
 import { parseVariantKey } from './variant-key';
 import { deriveRect } from './patching';
 import { isTextMarkupDefaults } from './helpers';
@@ -156,7 +155,7 @@ export class AnnotationPlugin extends BasePlugin<
             id: uuidV4(),
             author: this.config.annotationAuthor,
             custom: {
-              text,
+              text: text.join('\n'),
             },
           });
         }, ignore);
@@ -373,7 +372,7 @@ export class AnnotationPlugin extends BasePlugin<
   }
 
   private updateAnnotation(pageIndex: number, id: string, patch: Partial<PdfAnnotationObject>) {
-    const originalObject = this.state.byUid[makeUid(pageIndex, id)].object;
+    const originalObject = this.state.byUid[id].object;
     const finalPatch = this.buildPatch(originalObject, {
       ...patch,
       author: patch.author ?? this.config.annotationAuthor,
@@ -405,7 +404,7 @@ export class AnnotationPlugin extends BasePlugin<
       }
       return;
     }
-    const originalAnnotation = this.state.byUid[makeUid(pageIndex, id)].object;
+    const originalAnnotation = this.state.byUid[id].object;
     const command: Command = {
       execute: () => {
         this.dispatch(deselectAnnotation());
@@ -433,8 +432,7 @@ export class AnnotationPlugin extends BasePlugin<
     for (const [uid, ta] of Object.entries(this.state.byUid)) {
       if (ta.commitState === 'synced') continue;
 
-      const { pageIndex } = parseUid(uid);
-      const page = doc.pages.find((p) => p.index === pageIndex);
+      const page = doc.pages.find((p) => p.index === ta.object.pageIndex);
       if (!page) continue;
 
       switch (ta.commitState) {

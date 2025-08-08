@@ -1,11 +1,9 @@
 import {
   AnnotationDefaults,
   AnnotationState,
-  SelectedAnnotation,
   SidebarAnnotationEntry,
   TrackedAnnotation,
 } from './types';
-import { parseUid, makeUid } from './utils';
 import { makeVariantKey } from './variant-key';
 import { PdfTextAnnoObject } from '@embedpdf/models';
 import { isSidebarAnnotation, isText } from './helpers';
@@ -27,14 +25,6 @@ export const getAnnotations = (s: AnnotationState) => {
 export const getSelectedAnnotation = (s: AnnotationState) =>
   s.selectedUid ? s.byUid[s.selectedUid] : null;
 
-export const getSelectedAnnotationWithPageIndex = (
-  s: AnnotationState,
-): SelectedAnnotation | null => {
-  if (!s.selectedUid) return null;
-  const { pageIndex, id } = parseUid(s.selectedUid);
-  return { pageIndex, id, annotation: s.byUid[s.selectedUid].object };
-};
-
 export const getSelectedAnnotationByPageIndex = (s: AnnotationState, pageIndex: number) => {
   if (!s.selectedUid) return null;
 
@@ -52,8 +42,7 @@ export const isInAnnotationVariant = (s: AnnotationState) => s.activeVariant !==
 export const getSelectedAnnotationVariant = (s: AnnotationState) => s.activeVariant;
 
 /** Check if a given anno on a page is the current selection. */
-export const isAnnotationSelected = (s: AnnotationState, page: number, id: string) =>
-  s.selectedUid === makeUid(page, id);
+export const isAnnotationSelected = (s: AnnotationState, id: string) => s.selectedUid === id;
 
 /**
  * Return the tool-defaults for a given subtype and (optionally) intent.

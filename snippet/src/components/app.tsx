@@ -111,8 +111,7 @@ import {
   AnnotationPlugin,
   AnnotationPluginPackage,
   AnnotationState,
-  getSelectedAnnotationWithPageIndex,
-  getSidebarAnnotationsWithReplies,
+  getSelectedAnnotation,
   getSidebarAnnotationsWithRepliesGroupedByPage,
   getToolDefaultsBySubtypeAndIntent,
   makeVariantKey,
@@ -1378,8 +1377,9 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       for (const selection of formattedSelection) {
         selectionText.wait((text) => {
+          const annotationId = uuidV4();
           annotation.createAnnotation(selection.pageIndex, {
-            id: uuidV4(),
+            id: annotationId,
             created: new Date(),
             type: PdfAnnotationSubtype.SQUIGGLY,
             blendMode: PdfBlendMode.Normal,
@@ -1389,9 +1389,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
             rect: selection.rect,
             segmentRects: selection.segmentRects,
             custom: {
-              text,
+              text: text.join('\n'),
             },
           });
+          annotation.selectAnnotation(selection.pageIndex, annotationId);
         }, ignore);
       }
 
@@ -1421,8 +1422,9 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       for (const selection of formattedSelection) {
         selectionText.wait((text) => {
+          const annotationId = uuidV4();
           annotation.createAnnotation(selection.pageIndex, {
-            id: uuidV4(),
+            id: annotationId,
             created: new Date(),
             type: PdfAnnotationSubtype.UNDERLINE,
             blendMode: PdfBlendMode.Normal,
@@ -1432,9 +1434,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
             rect: selection.rect,
             segmentRects: selection.segmentRects,
             custom: {
-              text,
+              text: text.join('\n'),
             },
           });
+          annotation.selectAnnotation(selection.pageIndex, annotationId);
         }, ignore);
       }
 
@@ -1463,8 +1466,9 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       for (const selection of formattedSelection) {
         selectionText.wait((text) => {
+          const annotationId = uuidV4();
           annotation.createAnnotation(selection.pageIndex, {
-            id: uuidV4(),
+            id: annotationId,
             created: new Date(),
             type: PdfAnnotationSubtype.STRIKEOUT,
             blendMode: PdfBlendMode.Normal,
@@ -1474,9 +1478,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
             rect: selection.rect,
             segmentRects: selection.segmentRects,
             custom: {
-              text,
+              text: text.join('\n'),
             },
           });
+          annotation.selectAnnotation(selection.pageIndex, annotationId);
         }, ignore);
       }
 
@@ -1505,8 +1510,9 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       for (const selection of formattedSelection) {
         selectionText.wait((text) => {
+          const annotationId = uuidV4();
           annotation.createAnnotation(selection.pageIndex, {
-            id: uuidV4(),
+            id: annotationId,
             created: new Date(),
             type: PdfAnnotationSubtype.HIGHLIGHT,
             blendMode: PdfBlendMode.Multiply,
@@ -1516,9 +1522,10 @@ export const menuItems: Record<string, MenuItem<State>> = {
             rect: selection.rect,
             segmentRects: selection.segmentRects,
             custom: {
-              text,
+              text: text.join('\n'),
             },
           });
+          annotation.selectAnnotation(selection.pageIndex, annotationId);
         }, ignore);
       }
 
@@ -2466,9 +2473,7 @@ export const components: Record<string, UIComponentType<State>> = {
     render: 'leftPanelAnnotationStyle',
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      selectedAnnotation: getSelectedAnnotationWithPageIndex(
-        storeState.plugins[ANNOTATION_PLUGIN_ID],
-      ),
+      selectedAnnotation: getSelectedAnnotation(storeState.plugins[ANNOTATION_PLUGIN_ID]),
       activeVariant: storeState.plugins[ANNOTATION_PLUGIN_ID].activeVariant,
       colorPresets: storeState.plugins[ANNOTATION_PLUGIN_ID].colorPresets,
       toolDefaults: storeState.plugins[ANNOTATION_PLUGIN_ID].toolDefaults,
@@ -2567,7 +2572,7 @@ export const components: Record<string, UIComponentType<State>> = {
       sidebarAnnotations: getSidebarAnnotationsWithRepliesGroupedByPage(
         storeState.plugins[ANNOTATION_PLUGIN_ID],
       ),
-      activeAnnotation: storeState.plugins[ANNOTATION_PLUGIN_ID].selectedUid,
+      selectedAnnotation: getSelectedAnnotation(storeState.plugins[ANNOTATION_PLUGIN_ID]),
     }),
   },
   commandMenu: {

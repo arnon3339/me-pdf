@@ -16,7 +16,7 @@ export const InkSidebar = ({
   const { provides: annotation } = useAnnotationCapability();
   if (!annotation) return null;
 
-  const anno = selected?.annotation;
+  const anno = selected?.object;
   const defaults = annotation.getToolDefaultsBySubtypeAndIntent(subtype, intent);
 
   /* base values */
@@ -45,7 +45,7 @@ export const InkSidebar = ({
   function applyPatch(patch: Partial<PdfInkAnnoObject>) {
     if (!annotation) return;
     if (anno) {
-      annotation.updateAnnotation(selected!.pageIndex, selected!.annotation.id, patch);
+      annotation.updateAnnotation(anno.pageIndex, anno.id, patch);
     } else if (activeVariant) {
       annotation.setToolDefaults(activeVariant, patch);
     }

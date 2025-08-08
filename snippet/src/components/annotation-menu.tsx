@@ -29,6 +29,14 @@ export const AnnotationMenu = ({ trackedAnnotation, ...props }: AnnotationMenuPr
     });
   };
 
+  const handleCommentClick = () => {
+    ui?.togglePanel({
+      id: 'rightPanel',
+      visibleChild: 'comment',
+      open: true,
+    });
+  };
+
   return (
     <div
       {...props}
@@ -36,6 +44,9 @@ export const AnnotationMenu = ({ trackedAnnotation, ...props }: AnnotationMenuPr
     >
       <Button onClick={handleDeleteClick}>
         <Icon icon="trash" className="h-5 w-5" />
+      </Button>
+      <Button onClick={handleCommentClick}>
+        <Icon icon="comment" className="h-5 w-5" />
       </Button>
       <Button onClick={handleStyleClick}>
         <Icon icon="palette" className="h-5 w-5" />

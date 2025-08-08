@@ -257,12 +257,6 @@ export interface AnnotationCapability {
   commit: () => void;
 }
 
-export interface SelectedAnnotation<T extends PdfAnnotationObject = PdfAnnotationObject> {
-  pageIndex: number;
-  id: string;
-  annotation: T;
-}
-
 export interface GetPageAnnotationsOptions {
   pageIndex: number;
 }
