@@ -10,7 +10,7 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/cloudpdf/pdf-viewer/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/embedpdf/embed-pdf-viewer/issues)
 2. If not, create a new issue with:
    - A clear, descriptive title
    - Detailed steps to reproduce the bug
