@@ -98,17 +98,23 @@ export const commentRender = ({ sidebarAnnotations, selectedAnnotation }: Commen
   }
 
   return (
-    <div ref={scrollContainerRef} className="h-full overflow-auto bg-gray-50">
+    <div ref={scrollContainerRef} className="h-full overflow-auto">
       <div className="space-y-6 p-3">
         {sortedPages.map((pageNumber) => (
           <div key={pageNumber} className="space-y-3">
             {/* Page Header */}
-            <div className="sticky top-0 z-10 border-b bg-gray-50/80 py-2 backdrop-blur-sm">
-              <h3 className="text-md font-semibold text-gray-800">Page {pageNumber + 1}</h3>
+            <div className="sticky top-0 z-10 bg-white px-1">
+              <div className="border-b border-gray-200 py-2">
+                <h3 className="text-md font-semibold text-gray-800">Page {pageNumber + 1}</h3>
+                <p className="text-sm text-gray-500">
+                  {sidebarAnnotations[pageNumber].length} comment
+                  {sidebarAnnotations[pageNumber].length !== 1 ? 's' : ''}
+                </p>
+              </div>
             </div>
 
             {/* Annotation Cards */}
-            <div className="space-y-3">
+            <div className="space-y-3 px-1">
               {sidebarAnnotations[pageNumber].map((entry) => (
                 <div
                   key={entry.annotation.object.id}
