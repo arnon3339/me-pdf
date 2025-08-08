@@ -50,9 +50,10 @@ import { Dialog } from './ui/dialog';
 import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
+import { SidebarAnnotationEntry } from '@embedpdf/plugin-annotation';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
-  { commandId, onClick, active, color, disabled = false, ...props },
+  { commandId, onClick, active, iconProps, disabled = false, ...props },
   children,
   context,
 ) => {
@@ -99,7 +100,7 @@ export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
         {!command?.icon && props.img && (
           <img src={props.img} alt={props.label} className="h-5 w-5" />
         )}
-        {command?.icon && <Icon icon={command.icon} className="h-5 w-5" style={{ color }} />}
+        {command?.icon && <Icon icon={command.icon} className="h-5 w-5" {...iconProps} />}
       </Button>
     </Tooltip>
   );
@@ -308,7 +309,9 @@ export const panelRenderer: ComponentRenderFunction<PanelProps & { tabsCommandId
       </div>
 
       <div className="flex flex-row justify-end md:hidden">
-        <Icon icon="x" className="mr-5 h-5 w-5 cursor-pointer" onClick={togglePanel} />
+        <button onClick={togglePanel} className="mr-5 cursor-pointer">
+          <Icon icon="x" className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Panel content */}
@@ -353,7 +356,7 @@ function HitLine({
     <button
       ref={ref}
       onClick={() => onClick(hit)}
-      className={`shadow-xs w-full cursor-pointer rounded border border-[#cfd4da] p-3 text-left text-xs leading-tight text-gray-600 ${active ? 'border-blue-500 bg-blue-50' : 'hover:border-[#1a466b] hover:bg-gray-100'}`}
+      className={`shadow-xs w-full cursor-pointer overflow-hidden rounded border border-[#cfd4da] p-3 text-left text-xs leading-tight text-gray-600 ${active ? 'border-blue-500 bg-blue-50' : 'hover:border-[#1a466b] hover:bg-gray-100'}`}
     >
       {truncatedLeft && '… '}
       {before}
@@ -397,10 +400,10 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
   }, [debouncedValue, search]);
 
   useEffect(() => {
-    if (props.activeResultIndex !== undefined && !props.loading) {
+    if (props.activeResultIndex !== undefined) {
       scrollToItem(props.activeResultIndex);
     }
-  }, [props.activeResultIndex, props.loading, props.query, props.flags]);
+  }, [props.activeResultIndex, props.query, props.flags]);
 
   const handleInputChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -504,7 +507,7 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
           />
         </div>
         <hr className="mb-2 mt-5 border-gray-200" />
-        {props.active && !props.loading && (
+        {props.active && (
           <div className="flex h-[32px] flex-row items-center justify-between">
             <div className="text-xs text-gray-500">{props.total} results found</div>
             {props.total > 1 && (
@@ -529,32 +532,26 @@ export const searchRenderer: ComponentRenderFunction<SearchRendererProps> = (pro
         )}
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4">
-        {props.loading && (
-          <div className="flex h-full flex-row items-center justify-center">
-            <div className="text-xs text-gray-500">Loading...</div>
-          </div>
-        )}
-        {!props.loading &&
-          Object.entries(grouped).map(([page, hits]) => (
-            <div key={page} className="mt-2 first:mt-0">
-              <div className="bg-white/80 py-2 text-xs text-gray-500 backdrop-blur">
-                Page {Number(page) + 1}
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {hits.map(({ hit, index }) => (
-                  <HitLine
-                    key={index}
-                    hit={hit}
-                    active={index === props.activeResultIndex}
-                    onClick={() => {
-                      search?.goToResult(index);
-                    }}
-                  />
-                ))}
-              </div>
+        {Object.entries(grouped).map(([page, hits]) => (
+          <div key={page} className="mt-2 first:mt-0">
+            <div className="bg-white/80 py-2 text-xs text-gray-500 backdrop-blur">
+              Page {Number(page) + 1}
             </div>
-          ))}
+
+            <div className="flex flex-col gap-2">
+              {hits.map(({ hit, index }) => (
+                <HitLine
+                  key={index}
+                  hit={hit}
+                  active={index === props.activeResultIndex}
+                  onClick={() => {
+                    search?.goToResult(index);
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
         <div />
       </div>
     </div>
@@ -966,7 +963,9 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
         >
           <div className="flex flex-row items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center">
-              {command.icon && <Icon icon={command.icon} className="h-6 w-6" />}
+              {command.icon && (
+                <Icon icon={command.icon} className="h-6 w-6" {...command.iconProps} />
+              )}
             </div>
             <div className="text-sm">{command.label}</div>
           </div>
@@ -1008,10 +1007,6 @@ export const commandMenuRenderer: ComponentRenderFunction<CommandMenuProps> = ({
       {menuContent}
     </Dropdown>
   );
-};
-
-export const commentRender: ComponentRenderFunction<any> = (props, children) => {
-  return <div>Comments</div>;
 };
 
 export interface ThumbnailsRenderProps {

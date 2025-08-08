@@ -24,13 +24,11 @@ export function Stamp({ isSelected, annotation, pageIndex, scale, onClick }: Sta
       onPointerDown={onClick}
       onTouchStart={onClick}
     >
-      {annotation.pdfId !== undefined && (
-        <RenderAnnotation
-          pageIndex={pageIndex}
-          annotation={{ ...annotation.object, id: annotation.pdfId }}
-          scaleFactor={scale}
-        />
-      )}
+      <RenderAnnotation
+        pageIndex={pageIndex}
+        annotation={{ ...annotation.object, id: annotation.object.id }}
+        scaleFactor={scale}
+      />
     </div>
   );
 }

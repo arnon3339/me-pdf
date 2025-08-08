@@ -1,4 +1,4 @@
-import { PdfAnnotationSubtype, PdfStampAnnoObject, Rect } from '@embedpdf/models';
+import { PdfAnnotationSubtype, PdfStampAnnoObject, Rect, uuidV4 } from '@embedpdf/models';
 import { useState, useEffect, useMemo, useRef, ChangeEvent, Fragment } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
@@ -117,7 +117,8 @@ export const StampPaint = ({ pageIndex, scale, pageWidth, pageHeight }: StampPai
       type: PdfAnnotationSubtype.STAMP,
       flags: ['print'],
       pageIndex,
-      id: Date.now() + Math.random(),
+      id: uuidV4(),
+      created: new Date(),
       rect,
     };
 

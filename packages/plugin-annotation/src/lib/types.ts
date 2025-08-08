@@ -15,6 +15,7 @@ import {
   PdfTextAlignment,
   PdfVerticalAlignment,
   AnnotationCreateContext,
+  PdfTextAnnoObject,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -26,17 +27,9 @@ export type CommitState =
   | 'ignored'; // managed by a different plugin – never auto-committed
 
 export interface TrackedAnnotation<T extends PdfAnnotationObject = PdfAnnotationObject> {
-  /** A stable, client-side unique identifier for history and state management. */
-  localId: number;
-  /**
-   * If the engine has already created the annotation in the PDF
-   * this is the definitive id coming from the engine.
-   * It is **never** cleared once set.
-   */
-  pdfId?: number;
   /** local commit bookkeeping */
   commitState: CommitState;
-  /** the actual annotation object */
+  /** the actual annotation object, where `object.id` is the stable string ID */
   object: T;
 }
 
@@ -210,6 +203,10 @@ export interface AnnotationPluginConfig extends BasePluginConfig {
    * flushed with `commitPendingChanges()`.
    */
   autoCommit?: boolean;
+  /**
+   * Author of the annotation
+   */
+  annotationAuthor?: string;
 }
 
 export interface AnnotationCapability {
@@ -217,7 +214,7 @@ export interface AnnotationCapability {
     options: GetPageAnnotationsOptions,
   ) => Task<PdfAnnotationObject[], PdfErrorReason>;
   getSelectedAnnotation: () => TrackedAnnotation | null;
-  selectAnnotation: (pageIndex: number, annotationId: number) => void;
+  selectAnnotation: (pageIndex: number, annotationId: string) => void;
   deselectAnnotation: () => void;
   getActiveVariant: () => string | null;
   setActiveVariant: (variantKey: string | null) => void;
@@ -248,10 +245,10 @@ export interface AnnotationCapability {
   ) => void;
   updateAnnotation: (
     pageIndex: number,
-    annotationId: number,
+    annotationId: string,
     patch: Partial<PdfAnnotationObject>,
   ) => void;
-  deleteAnnotation: (pageIndex: number, annotationId: number) => void;
+  deleteAnnotation: (pageIndex: number, annotationId: string) => void;
   renderAnnotation: (options: RenderAnnotationOptions) => Task<Blob, PdfErrorReason>;
   /** undo / redo */
   onStateChange: EventHook<AnnotationState>;
@@ -260,17 +257,20 @@ export interface AnnotationCapability {
   commit: () => void;
 }
 
-export interface SelectedAnnotation<T extends PdfAnnotationObject = PdfAnnotationObject> {
-  pageIndex: number;
-  localId: number;
-  annotation: T;
-}
-
 export interface GetPageAnnotationsOptions {
   pageIndex: number;
 }
 
 export interface UpdateAnnotationColorOptions extends WebAlphaColor {
   pageIndex: number;
-  annotationId: number;
+  annotationId: string;
+}
+
+export interface SidebarAnnotationEntry {
+  /** Zero-based page index */
+  page: number;
+  /** The tracked root annotation shown in the sidebar */
+  annotation: TrackedAnnotation;
+  /** Any TEXT-type annotations whose `inReplyToId` points to the root */
+  replies: TrackedAnnotation<PdfTextAnnoObject>[];
 }

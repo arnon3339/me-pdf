@@ -7,6 +7,7 @@ import {
   SET_SHOW_ALL_RESULTS,
   START_SEARCH,
   SET_SEARCH_RESULTS,
+  APPEND_SEARCH_RESULTS,
   SET_ACTIVE_RESULT_INDEX,
   SearchAction,
 } from './actions';
@@ -45,7 +46,29 @@ export const searchReducer: Reducer<SearchState, SearchAction> = (state = initia
       return { ...state, showAllResults: action.payload };
 
     case START_SEARCH:
-      return { ...state, loading: true, query: action.payload };
+      return {
+        ...state,
+        loading: true,
+        query: action.payload,
+        // clear old results on new search start
+        results: [],
+        total: 0,
+        activeResultIndex: -1,
+      };
+
+    case APPEND_SEARCH_RESULTS: {
+      const newResults = [...state.results, ...action.payload.results];
+      const firstHitIndex =
+        state.activeResultIndex === -1 && newResults.length > 0 ? 0 : state.activeResultIndex;
+      return {
+        ...state,
+        results: newResults,
+        total: newResults.length, // total-so-far
+        activeResultIndex: firstHitIndex,
+        // keep loading true until final SET_SEARCH_RESULTS
+        loading: true,
+      };
+    }
 
     case SET_SEARCH_RESULTS:
       return {

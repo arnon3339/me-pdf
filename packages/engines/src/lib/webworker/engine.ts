@@ -41,6 +41,8 @@ import {
   AnnotationCreateContext,
   PdfEngineMethodArgs,
   PdfEngineMethodName,
+  PdfPageWithAnnotations,
+  PdfPageSearchProgress,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response, SpecificExecuteRequest } from './runner';
 
@@ -72,7 +74,7 @@ function createRequest<M extends PdfEngineMethodName>(
 /**
  * Task that executed by webworker
  */
-export class WorkerTask<R> extends Task<R, PdfErrorReason> {
+export class WorkerTask<R, P = unknown> extends Task<R, PdfErrorReason, P> {
   /**
    * Create a task that bind to web worker with specified message id
    * @param worker - web worker instance
@@ -96,11 +98,18 @@ export class WorkerTask<R> extends Task<R, PdfErrorReason> {
     super.abort(e);
 
     this.worker.postMessage({
+      id: this.messageId,
       type: 'AbortRequest',
-      data: {
-        messageId: this.messageId,
-      },
     });
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!Task.progress}
+   *
+   * @override
+   */
+  progress(p: P) {
+    super.progress(p);
   }
 }
 
@@ -162,6 +171,9 @@ export class WebWorkerEngine implements PdfEngine {
       switch (response.type) {
         case 'ReadyResponse':
           this.readyTask.resolve(true);
+          break;
+        case 'ExecuteProgress':
+          task.progress(response.data);
           break;
         case 'ExecuteResponse':
           {
@@ -506,7 +518,11 @@ export class WebWorkerEngine implements PdfEngine {
   getAllAnnotations(doc: PdfDocumentObject) {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getAllAnnotations', doc);
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<Record<number, PdfAnnotationObject[]>>(this.worker, requestId);
+
+    const task = new WorkerTask<Record<number, PdfAnnotationObject[]>, PdfPageWithAnnotations>(
+      this.worker,
+      requestId,
+    );
 
     const request: ExecuteRequest = createRequest(requestId, 'getAllAnnotations', [doc]);
     this.proxy(task, request);
@@ -684,17 +700,21 @@ export class WebWorkerEngine implements PdfEngine {
    * @public
    */
   searchAllPages(doc: PdfDocumentObject, keyword: string, flags: MatchFlag[] = []) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'searchAllPages 123', doc, keyword, flags);
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'searchAllPages', doc, keyword, flags);
+
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<SearchAllPagesResult>(this.worker, requestId);
+    const task = new WorkerTask<SearchAllPagesResult, PdfPageSearchProgress>(
+      this.worker,
+      requestId,
+    );
 
     const request: ExecuteRequest = createRequest(requestId, 'searchAllPages', [
       doc,
       keyword,
       flags,
     ]);
-    this.proxy(task, request);
 
+    this.proxy(task, request);
     return task;
   }
 

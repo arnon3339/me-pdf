@@ -1,8 +1,7 @@
 import { CoreState } from '@embedpdf/core';
 import { UI_PLUGIN_ID } from './manifest';
 import { UIComponent } from './ui-component';
-import { MenuRegistry, MenuManagerCapabilities } from './menu/types';
-import { IconRegistry, IconCapabilities } from './icons/types';
+import { MenuRegistry, MenuManagerCapabilities, IconProps } from './menu/types';
 import {
   SetHeaderVisiblePayload,
   TogglePanelPayload,
@@ -13,7 +12,6 @@ export interface UIPluginConfig {
   enabled: boolean;
   components: Record<string, UIComponentType>;
   menuItems?: MenuRegistry;
-  icons?: IconRegistry;
 }
 
 export interface UIPluginState {
@@ -56,34 +54,33 @@ export interface childrenFunctionOptions {
   filter?: (childId: string) => boolean;
 }
 
-export type UICapability = IconCapabilities &
-  MenuManagerCapabilities & {
-    registerComponentRenderer: (
-      type: string,
-      renderer: (
-        props: any,
-        children: (options?: childrenFunctionOptions) => any[],
-        context?: Record<string, any>,
-      ) => any,
-    ) => void;
-    getComponent: <T extends BaseUIComponent<any, any, any>>(
-      id: string,
-    ) => UIComponent<T> | undefined;
-    getCommandMenu: () => UIComponent<CommandMenuComponent> | undefined;
-    hideCommandMenu: () => void;
-    getHeadersByPlacement: (
-      placement: 'top' | 'bottom' | 'left' | 'right',
-    ) => UIComponent<HeaderComponent<any>>[];
-    getPanelsByLocation: (location: 'left' | 'right') => UIComponent<PanelComponent<any>>[];
-    getFloatingComponents: (
-      viewportPosition?: 'inside' | 'outside',
-    ) => UIComponent<FloatingComponent>[];
-    addSlot: (parentId: string, slotId: string, priority?: number) => void;
-    registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
-    togglePanel: (payload: TogglePanelPayload) => void;
-    setHeaderVisible: (payload: SetHeaderVisiblePayload) => void;
-    updateComponentState: <T>(payload: UpdateComponentStatePayload<T>) => void;
-  };
+export type UICapability = MenuManagerCapabilities & {
+  registerComponentRenderer: (
+    type: string,
+    renderer: (
+      props: any,
+      children: (options?: childrenFunctionOptions) => any[],
+      context?: Record<string, any>,
+    ) => any,
+  ) => void;
+  getComponent: <T extends BaseUIComponent<any, any, any>>(
+    id: string,
+  ) => UIComponent<T> | undefined;
+  getCommandMenu: () => UIComponent<CommandMenuComponent> | undefined;
+  hideCommandMenu: () => void;
+  getHeadersByPlacement: (
+    placement: 'top' | 'bottom' | 'left' | 'right',
+  ) => UIComponent<HeaderComponent<any>>[];
+  getPanelsByLocation: (location: 'left' | 'right') => UIComponent<PanelComponent<any>>[];
+  getFloatingComponents: (
+    viewportPosition?: 'inside' | 'outside',
+  ) => UIComponent<FloatingComponent>[];
+  addSlot: (parentId: string, slotId: string, priority?: number) => void;
+  registerComponent: (componentId: string, componentProps: UIComponentType) => UIComponent<any>;
+  togglePanel: (payload: TogglePanelPayload) => void;
+  setHeaderVisible: (payload: SetHeaderVisiblePayload) => void;
+  updateComponentState: <T>(payload: UpdateComponentStatePayload<T>) => void;
+};
 
 export interface BaseUIComponent<TProps, TInitial = undefined, TStore = any> {
   id: string; // e.g., "highlightToolButton",
@@ -174,6 +171,7 @@ export interface IconButtonProps {
   active?: boolean;
   disabled?: boolean;
   commandId?: string;
+  iconProps?: IconProps;
   onClick?: () => void;
   label?: string;
   img?: string;

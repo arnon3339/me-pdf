@@ -30,7 +30,7 @@ export const FreeTextSidebar = ({
   const { provides: annotation } = useAnnotationCapability();
   if (!annotation) return null;
 
-  const anno = selected?.annotation;
+  const anno = selected?.object;
   const defaults = annotation.getToolDefaultsBySubtypeAndIntent(subtype, intent);
   const editing = !!anno;
 
@@ -77,7 +77,7 @@ export const FreeTextSidebar = ({
   function applyPatch(patch: Partial<PdfFreeTextAnnoObject>) {
     if (!annotation) return;
     if (editing) {
-      annotation.updateAnnotation(selected!.pageIndex, selected!.localId, patch);
+      annotation.updateAnnotation(anno.pageIndex, anno.id, patch);
     } else if (activeVariant) {
       annotation.setToolDefaults(activeVariant, patch);
     }

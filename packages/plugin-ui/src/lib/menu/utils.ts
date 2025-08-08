@@ -18,6 +18,7 @@ export function resolveMenuItem<TStore>(
   return {
     ...item,
     icon: dyn(item.icon) ?? '',
+    iconProps: dyn(item.iconProps) ?? {},
     label: dyn(item.label) ?? '',
     visible: dyn(item.visible) ?? true,
     active: dyn(item.active) ?? false,
@@ -53,4 +54,12 @@ export function isDisabled<TStore>(item: MenuItem<TStore>, state: TStore): boole
   }
 
   return resolved.disabled ? true : false;
+}
+
+export function getIconProps<TStore>(item: MenuItem<TStore>, state: TStore): any {
+  const resolved = resolveMenuItem(item, state);
+  if (resolved.type === 'group') {
+    return {};
+  }
+  return resolved.iconProps ?? {};
 }

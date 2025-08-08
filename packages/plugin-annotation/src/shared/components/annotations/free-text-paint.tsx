@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { ActiveTool } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationSubtype, PdfFreeTextAnnoObject, Rect } from '@embedpdf/models';
-import { useAnnotationCapability } from '../../hooks';
+import { PdfAnnotationSubtype, PdfFreeTextAnnoObject, Rect, uuidV4 } from '@embedpdf/models';
+import { useAnnotationCapability, useAnnotationPlugin } from '../../hooks';
 
 interface FreeTextPaintProps {
   pageIndex: number;
@@ -26,7 +26,6 @@ export const FreeTextPaint = ({
   /* annotation capability                                              */
   /* ------------------------------------------------------------------ */
   const { provides: annotationProvides } = useAnnotationCapability();
-
   /* ------------------------------------------------------------------ */
   /* active tool                                                        */
   /* ------------------------------------------------------------------ */
@@ -87,7 +86,8 @@ export const FreeTextPaint = ({
       textAlign: toolTextAlign,
       verticalAlign: toolVerticalAlign,
       pageIndex,
-      id: Date.now() + Math.random(),
+      id: uuidV4(),
+      created: new Date(),
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);

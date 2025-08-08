@@ -7,6 +7,7 @@ import {
   PdfEngineMethodName,
   PdfEngineMethodReturnType,
   PdfErrorCode,
+  Task,
   TaskReturn,
 } from '@embedpdf/models';
 
@@ -90,6 +91,24 @@ export interface ExecuteResponse {
 }
 
 /**
+ * Response that indicate progress of the task
+ */
+export interface ExecuteProgress<T = unknown> {
+  /**
+   * message id
+   */
+  id: string;
+  /**
+   * response type
+   */
+  type: 'ExecuteProgress';
+  /**
+   * response body
+   */
+  data: T;
+}
+
+/**
  * Response that indicate engine is ready
  */
 export interface ReadyResponse {
@@ -110,7 +129,7 @@ export type Request = ExecuteRequest | AbortRequest;
 /**
  * Response type
  */
-export type Response = ExecuteResponse | ReadyResponse;
+export type Response = ExecuteResponse | ReadyResponse | ExecuteProgress;
 
 const LOG_SOURCE = 'WebWorkerEngineRunner';
 const LOG_CATEGORY = 'Engine';
@@ -121,6 +140,9 @@ const LOG_CATEGORY = 'Engine';
  */
 export class EngineRunner {
   engine: PdfEngine | undefined;
+
+  /** All running tasks, keyed by the message-id coming from the UI */
+  private tasks = new Map<string, Task<any, any>>();
 
   /**
    * Create instance of EngineRunnder
@@ -148,6 +170,9 @@ export class EngineRunner {
         case 'ExecuteRequest':
           this.execute(request);
           break;
+        case 'AbortRequest':
+          this.abort(request);
+          break;
       }
     } catch (e) {
       this.logger.info(
@@ -173,6 +198,22 @@ export class EngineRunner {
       type: 'ReadyResponse',
     });
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'runner is ready');
+  }
+
+  private abort(request: AbortRequest) {
+    const t = this.tasks.get(request.id);
+    if (!t) {
+      // nothing to cancel (already finished or wrong id) – just ignore
+      return;
+    }
+
+    t.abort({
+      code: PdfErrorCode.Cancelled,
+      message: 'aborted by client',
+    });
+
+    // we won’t hear from that task again
+    this.tasks.delete(request.id);
   }
 
   /**
@@ -335,6 +376,17 @@ export class EngineRunner {
         break;
     }
 
+    this.tasks.set(request.id, task);
+
+    task.onProgress((progress) => {
+      const response: ExecuteProgress = {
+        id: request.id,
+        type: 'ExecuteProgress',
+        data: progress,
+      };
+      this.respond(response);
+    });
+
     task.wait(
       (result) => {
         const response: ExecuteResponse = {
@@ -346,6 +398,7 @@ export class EngineRunner {
           },
         };
         this.respond(response);
+        this.tasks.delete(request.id);
       },
       (error) => {
         const response: ExecuteResponse = {
@@ -357,6 +410,7 @@ export class EngineRunner {
           },
         };
         this.respond(response);
+        this.tasks.delete(request.id);
       },
     );
   };

@@ -104,7 +104,7 @@ export function Line({
         onTouchStart={onClick}
         style={{
           cursor: isSelected ? 'move' : 'pointer',
-          pointerEvents: 'visibleStroke',
+          pointerEvents: isSelected ? 'none' : 'visibleStroke',
           stroke: strokeColor,
           strokeWidth,
           strokeLinecap: 'butt',
@@ -126,7 +126,7 @@ export function Line({
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
             strokeLinecap: 'butt',
-            pointerEvents: endings.start.filled ? 'visible' : 'visibleStroke',
+            pointerEvents: isSelected ? 'none' : endings.start.filled ? 'visible' : 'visibleStroke',
             ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {
               strokeDasharray: strokeDashArray?.join(','),
             }),
@@ -145,7 +145,7 @@ export function Line({
             cursor: isSelected ? 'move' : 'pointer',
             strokeWidth,
             strokeLinecap: 'butt',
-            pointerEvents: endings.end.filled ? 'visible' : 'visibleStroke',
+            pointerEvents: isSelected ? 'none' : endings.end.filled ? 'visible' : 'visibleStroke',
             ...(strokeStyle === PdfAnnotationBorderStyle.DASHED && {
               strokeDasharray: strokeDashArray?.join(','),
             }),

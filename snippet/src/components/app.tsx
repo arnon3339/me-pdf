@@ -6,10 +6,12 @@ import { usePdfiumEngine } from '@embedpdf/engines/preact';
 import {
   AllLogger,
   ConsoleLogger,
+  ignore,
   PdfAnnotationSubtype,
   PdfBlendMode,
   PerfLogger,
   Rotation,
+  uuidV4,
 } from '@embedpdf/models';
 import {
   VIEWPORT_PLUGIN_ID,
@@ -41,7 +43,6 @@ import {
   MenuItem,
   defineComponent,
   GlobalStoreState,
-  IconRegistry,
   UIComponentType,
   UIPlugin,
   UIPluginConfig,
@@ -49,11 +50,11 @@ import {
   isActive,
   UI_PLUGIN_ID,
   isDisabled,
+  getIconProps,
 } from '@embedpdf/plugin-ui';
 import {
   attachmentsRenderer,
   commandMenuRenderer,
-  commentRender,
   dividerRenderer,
   groupedItemsRenderer,
   headerRenderer,
@@ -110,7 +111,8 @@ import {
   AnnotationPlugin,
   AnnotationPluginPackage,
   AnnotationState,
-  getSelectedAnnotationWithPageIndex,
+  getSelectedAnnotation,
+  getSidebarAnnotationsWithRepliesGroupedByPage,
   getToolDefaultsBySubtypeAndIntent,
   makeVariantKey,
 } from '@embedpdf/plugin-annotation';
@@ -152,6 +154,7 @@ import {
 import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
 import { AnnotationMenu } from './annotation-menu';
+import { commentRender } from './comment-sidebar';
 
 export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
@@ -239,261 +242,6 @@ type State = GlobalStoreState<{
   [INTERACTION_MANAGER_PLUGIN_ID]: InteractionManagerState;
   [HISTORY_PLUGIN_ID]: HistoryState;
 }>;
-
-export const icons: IconRegistry = {
-  menu: {
-    id: 'menu',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-menu"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8l16 0" /><path d="M4 16l16 0" /></svg>',
-  },
-  download: {
-    id: 'download',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-download"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>',
-  },
-  fullscreen: {
-    id: 'fullscreen',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-maximize"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2 -2v-2" /></svg>',
-  },
-  fullscreenExit: {
-    id: 'fullscreenExit',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-maximize-off"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8v-2c0 -.551 .223 -1.05 .584 -1.412" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2c.545 0 1.04 -.218 1.4 -.572" /><path d="M3 3l18 18" /></svg>',
-  },
-  save: {
-    id: 'save',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>',
-  },
-  print: {
-    id: 'print',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" /><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" /><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" /></svg>',
-  },
-  settings: {
-    id: 'settings',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>',
-  },
-  viewSettings: {
-    id: 'viewSettings',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-file-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M12 10.5v1.5" /><path d="M12 16v1.5" /><path d="M15.031 12.25l-1.299 .75" /><path d="M10.268 15l-1.3 .75" /><path d="M15 15.803l-1.285 -.773" /><path d="M10.285 12.97l-1.285 -.773" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /></svg>',
-  },
-  rotateClockwise: {
-    id: 'rotateClockwise',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-rotate-clockwise"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5" /></svg>',
-  },
-  rotateCounterClockwise: {
-    id: 'rotateCounterClockwise',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-rotate"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" /></svg>',
-  },
-  singlePage: {
-    id: 'singlePage',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-columns-1"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 3m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v16a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z" /></svg>',
-  },
-  doublePage: {
-    id: 'doublePage',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-columns-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 3m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v16a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1zm9 -1v18" /></svg>',
-  },
-  zoomIn: {
-    id: 'zoomIn',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M9 12h6" /><path d="M12 9v6" /></svg>',
-  },
-  zoomOut: {
-    id: 'zoomOut',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-minus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l6 0" /></svg>',
-  },
-  fitToWidth: {
-    id: 'fitToWidth',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-autofit-width"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 12v-6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6" /><path d="M10 18h-7" /><path d="M21 18h-7" /><path d="M6 15l-3 3l3 3" /><path d="M18 15l3 3l-3 3" /></svg>',
-  },
-  fitToPage: {
-    id: 'fitToPage',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-autofit-height"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 20h-6a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h6" /><path d="M18 14v7" /><path d="M18 3v7" /><path d="M15 18l3 3l3 -3" /><path d="M15 6l3 -3l3 3" /></svg>',
-  },
-  chevronRight: {
-    id: 'chevronRight',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>',
-  },
-  chevronLeft: {
-    id: 'chevronLeft',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>',
-  },
-  chevronDown: {
-    id: 'chevronDown',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>',
-  },
-  search: {
-    id: 'search',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-search"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>',
-  },
-  comment: {
-    id: 'comment',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-message-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 11v.01" /><path d="M8 11v.01" /><path d="M16 11v.01" /><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3z" /></svg>',
-  },
-  sidebar: {
-    id: 'sidebar',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-sidebar-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 18v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M14 18v-12a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2z" /></svg>',
-  },
-  dots: {
-    id: 'dots',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>',
-  },
-  vertical: {
-    id: 'vertical',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-vertical"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7l4 -4l4 4" /><path d="M8 17l4 4l4 -4" /><path d="M12 3l0 18" /></svg>',
-  },
-  horizontal: {
-    id: 'horizontal',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-horizontal"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 8l-4 4l4 4" /><path d="M17 8l4 4l-4 4" /><path d="M3 12l18 0" /></svg>',
-  },
-  book: {
-    id: 'book',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6l0 13" /><path d="M12 6l0 13" /><path d="M21 6l0 13" /></svg>',
-  },
-  book2: {
-    id: 'book2',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-book-2"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z" /><path d="M19 16h-12a2 2 0 0 0 -2 2" /><path d="M9 8h6" /></svg>',
-  },
-  squares: {
-    id: 'squares',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-squares"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 10a2 2 0 0 1 2 -2h9a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-9a2 2 0 0 1 -2 -2z" /><path d="M16 8v-3a2 2 0 0 0 -2 -2h-9a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h3" /></svg>',
-  },
-  listTree: {
-    id: 'listTree',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-list-tree"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6h11" /><path d="M12 12h8" /><path d="M15 18h5" /><path d="M5 6v.01" /><path d="M8 12v.01" /><path d="M11 18v.01" /></svg>',
-  },
-  paperclip: {
-    id: 'paperclip',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-paperclip"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" /></svg>',
-  },
-  copy: {
-    id: 'copy',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-copy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>',
-  },
-  underline: {
-    id: 'underline',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h16" stroke="currentColor" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M8 10h8" stroke="#000000" /></svg>',
-  },
-  squiggly: {
-    id: 'squiggly',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-wavy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M8 10h8" stroke="#000000" /><path d="M4 20c1.5 -1.5 3.5 -1.5 5 0s3.5 1.5 5 0 3.5 -1.5 5 0" stroke="currentColor" /></svg>',
-  },
-  strikethrough: {
-    id: 'strikethrough',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000" /><path d="M4 10h16" stroke="currentColor" /></svg>',
-  },
-  highlight: {
-    id: 'highlight',
-    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100%"  height="100%" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-baseline-highlight"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="2" y="6" width="20" height="16" rx="2" fill="currentColor" stroke="none" /><path d="M8 16v-8a4 4 0 1 1 8 0v8" stroke="#000000"/><path d="M8 10h8" stroke="#000000"/></svg>',
-  },
-  palette: {
-    id: 'palette',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-palette"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25" /><path d="M8.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M16.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>',
-  },
-  x: {
-    id: 'x',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>',
-  },
-  fileImport: {
-    id: 'fileImport',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-file-import"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M5 13v-8a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-5.5m-9.5 -2h7m-3 -3l3 3l-3 3" /></svg>',
-  },
-  hand: {
-    id: 'hand',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-hand-stop"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5" /><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5" /><path d="M14 5.5a1.5 1.5 0 0 1 3 0v6.5" /><path d="M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47" /></svg>',
-  },
-  zoomInArea: {
-    id: 'zoomInArea',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-zoom-in-area"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 13v4" /><path d="M13 15h4" /><path d="M15 15m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0" /><path d="M22 22l-3 -3" /><path d="M6 18h-1a2 2 0 0 1 -2 -2v-1" /><path d="M3 11v-1" /><path d="M3 6v-1a2 2 0 0 1 2 -2h1" /><path d="M10 3h1" /><path d="M15 3h1a2 2 0 0 1 2 2v1" /></svg>',
-  },
-  screenshot: {
-    id: 'screenshot',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-screenshot"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 19a2 2 0 0 1 -2 -2" /><path d="M5 13v-2" /><path d="M5 7a2 2 0 0 1 2 -2" /><path d="M11 5h2" /><path d="M17 5a2 2 0 0 1 2 2" /><path d="M19 11v2" /><path d="M19 17v4" /><path d="M21 19h-4" /><path d="M13 19h-2" /></svg>',
-  },
-  arrowBackUp: {
-    id: 'arrowBackUp',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-back-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4" /><path d="M5 10h11a4 4 0 1 1 0 8h-1" /></svg>',
-  },
-  arrowForwardUp: {
-    id: 'arrowForwardUp',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-forward-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 14l4 -4l-4 -4" /><path d="M19 10h-11a4 4 0 1 0 0 8h1" /></svg>',
-  },
-  trash: {
-    id: 'trash',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>',
-  },
-  deviceFloppy: {
-    id: 'deviceFloppy',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>',
-  },
-  pencilMarker: {
-    id: 'pencilMarker',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24" class="icon icon-tabler icons-tabler-outline icon-tabler-writing-draw" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none"><g transform="rotate(47.565 12.1875 10.75)"><path stroke="#000000" d="m14.18752,16.75l0,-12c0,-1.1 -0.9,-2 -2,-2s-2,0.9 -2,2l0,12l2,2l2,-2z"/><path stroke="#000000" d="m10.18752,6.75l4,0"/></g><path stroke="currentColor" d="m19.37499,20.125c0.56874,0.0625 -4.04999,-0.5625 -6.41249,-0.4375c-2.3625,0.125 -4.75833,1.22916 -6.85624,1.625c-1.76458,0.6875 -3.40416,-0.9375 -1.98125,-2.49999"/></svg>',
-  },
-  circle: {
-    id: 'circle',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%" viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /></svg>',
-  },
-  square: {
-    id: 'square',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%" viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-square"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /></svg>',
-  },
-  line: {
-    id: 'line',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2.2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-slash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20 4l-16 16" /></svg>',
-  },
-  lineArrow: {
-    id: 'lineArrow',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2.2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-slash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M20 4l-16 16" /><path d="M16 3h5v5" /></svg>',
-  },
-  polygon: {
-    id: 'polygon',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-pentagon-number-7"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z" /></svg>',
-  },
-  zigzag: {
-    id: 'zigzag',
-    svg: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.4L21.36 11.76L2.64 12.24L12 21.6" /></svg>',
-  },
-  text: {
-    id: 'text',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-letter-case-toggle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6.5 15.5m-3.5 0a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0" /><path d="M14 19v-10.5a3.5 3.5 0 0 1 7 0v10.5" /><path d="M14 13h7" /><path d="M10 12v7" /></svg>',
-  },
-  italic: {
-    id: 'italic',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%" viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-italic"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11 5l6 0" /><path d="M7 19l6 0" /><path d="M14 5l-4 14" /></svg>',
-  },
-  bold: {
-    id: 'bold',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-bold"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 5h6a3.5 3.5 0 0 1 0 7h-6z" /><path d="M13 12h1a3.5 3.5 0 0 1 0 7h-7v-7" /></svg>',
-  },
-  alignLeft: {
-    id: 'alignLeft',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-align-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6l16 0" /><path d="M4 12l10 0" /><path d="M4 18l14 0" /></svg>',
-  },
-  alignCenter: {
-    id: 'alignCenter',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-align-center"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6l16 0" /><path d="M8 12l8 0" /><path d="M6 18l12 0" /></svg>',
-  },
-  alignRight: {
-    id: 'alignRight',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-align-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6l16 0" /><path d="M10 12l10 0" /><path d="M6 18l14 0" /></svg>',
-  },
-  alignTop: {
-    id: 'alignTop',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-align-box-center-top"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M11 13h2" /><path d="M9 10h6" /><path d="M10 7h4" /></svg>',
-  },
-  alignMiddle: {
-    id: 'alignMiddle',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-align-box-center-middle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M11 15h2" /><path d="M9 12h6" /><path d="M10 9h4" /></svg>',
-  },
-  alignBottom: {
-    id: 'alignBottom',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-align-box-center-bottom"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M11 17h2" /><path d="M9 14h6" /><path d="M10 11h4" /></svg>',
-  },
-  photo: {
-    id: 'photo',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-photo"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 8h.01" /><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z" /><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5" /><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3" /></svg>',
-  },
-  pointer: {
-    id: 'pointer',
-    svg: '<svg  xmlns="http://www.w3.org/2000/svg"  width="100%"  height="100%"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-pointer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7.904 17.563a1.2 1.2 0 0 0 2.228 .308l2.09 -3.093l4.907 4.907a1.067 1.067 0 0 0 1.509 0l1.047 -1.047a1.067 1.067 0 0 0 0 -1.509l-4.907 -4.907l3.113 -2.09a1.2 1.2 0 0 0 -.309 -2.228l-13.582 -3.904l3.904 13.563z" /></svg>',
-  },
-};
 
 export const menuItems: Record<string, MenuItem<State>> = {
   menuCtr: {
@@ -1267,6 +1015,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Underline',
     type: 'action',
     icon: 'underline',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.UNDERLINE,
+      ).color,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1288,6 +1042,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Squiggly',
     type: 'action',
     icon: 'squiggly',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.SQUIGGLY,
+      ).color,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1308,6 +1068,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Strikethrough',
     type: 'action',
     icon: 'strikethrough',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.STRIKEOUT,
+      ).color,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1329,6 +1095,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Highlight',
     type: 'action',
     icon: 'highlight',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.HIGHLIGHT,
+      ).color,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1350,6 +1122,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Freehand',
     type: 'action',
     icon: 'pencilMarker',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.INK,
+      ).color,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1370,6 +1148,16 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Circle',
     type: 'action',
     icon: 'circle',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.CIRCLE,
+      ).strokeColor,
+      secondaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.CIRCLE,
+      ).color,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1390,6 +1178,16 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Square',
     type: 'action',
     icon: 'square',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.SQUARE,
+      ).strokeColor,
+      secondaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.SQUARE,
+      ).color,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1410,6 +1208,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Line',
     type: 'action',
     icon: 'line',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.LINE,
+      ).strokeColor,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1428,6 +1232,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Line Arrow',
     type: 'action',
     icon: 'lineArrow',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.LINE,
+      ).strokeColor,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1450,6 +1260,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Polyline',
     type: 'action',
     icon: 'zigzag',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.POLYLINE,
+      ).strokeColor,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1470,6 +1286,16 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Polygon',
     type: 'action',
     icon: 'polygon',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.POLYGON,
+      ).strokeColor,
+      secondaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.POLYGON,
+      ).color,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1490,6 +1316,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Free Text',
     type: 'action',
     icon: 'text',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.FREETEXT,
+      ).fontColor,
+    }),
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
@@ -1528,6 +1360,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Squiggly Selection',
     type: 'action',
     icon: 'squiggly',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.SQUIGGLY,
+      ).color,
+    }),
     action: (registry) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
@@ -1535,17 +1373,27 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       const defaultSettings = annotation.getToolDefaultsBySubtype(PdfAnnotationSubtype.SQUIGGLY);
       const formattedSelection = selection.getFormattedSelection();
+      const selectionText = selection.getSelectedText();
+
       for (const selection of formattedSelection) {
-        annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now() + Math.random(),
-          type: PdfAnnotationSubtype.SQUIGGLY,
-          blendMode: PdfBlendMode.Normal,
-          color: defaultSettings.color,
-          opacity: defaultSettings.opacity,
-          pageIndex: selection.pageIndex,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-        });
+        selectionText.wait((text) => {
+          const annotationId = uuidV4();
+          annotation.createAnnotation(selection.pageIndex, {
+            id: annotationId,
+            created: new Date(),
+            type: PdfAnnotationSubtype.SQUIGGLY,
+            blendMode: PdfBlendMode.Normal,
+            color: defaultSettings.color,
+            opacity: defaultSettings.opacity,
+            pageIndex: selection.pageIndex,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            custom: {
+              text: text.join('\n'),
+            },
+          });
+          annotation.selectAnnotation(selection.pageIndex, annotationId);
+        }, ignore);
       }
 
       selection.clear();
@@ -1556,6 +1404,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Underline Selection',
     type: 'action',
     icon: 'underline',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.UNDERLINE,
+      ).color,
+    }),
     action: (registry) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
@@ -1564,17 +1418,27 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const defaultSettings = annotation.getToolDefaultsBySubtype(PdfAnnotationSubtype.UNDERLINE);
 
       const formattedSelection = selection.getFormattedSelection();
+      const selectionText = selection.getSelectedText();
+
       for (const selection of formattedSelection) {
-        annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now() + Math.random(),
-          type: PdfAnnotationSubtype.UNDERLINE,
-          blendMode: PdfBlendMode.Normal,
-          color: defaultSettings.color,
-          opacity: defaultSettings.opacity,
-          pageIndex: selection.pageIndex,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-        });
+        selectionText.wait((text) => {
+          const annotationId = uuidV4();
+          annotation.createAnnotation(selection.pageIndex, {
+            id: annotationId,
+            created: new Date(),
+            type: PdfAnnotationSubtype.UNDERLINE,
+            blendMode: PdfBlendMode.Normal,
+            color: defaultSettings.color,
+            opacity: defaultSettings.opacity,
+            pageIndex: selection.pageIndex,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            custom: {
+              text: text.join('\n'),
+            },
+          });
+          annotation.selectAnnotation(selection.pageIndex, annotationId);
+        }, ignore);
       }
 
       selection.clear();
@@ -1585,6 +1449,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Strikethrough Selection',
     type: 'action',
     icon: 'strikethrough',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.STRIKEOUT,
+      ).color,
+    }),
     action: (registry) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
@@ -1592,17 +1462,27 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       const defaultSettings = annotation.getToolDefaultsBySubtype(PdfAnnotationSubtype.STRIKEOUT);
       const formattedSelection = selection.getFormattedSelection();
+      const selectionText = selection.getSelectedText();
+
       for (const selection of formattedSelection) {
-        annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now() + Math.random(),
-          type: PdfAnnotationSubtype.STRIKEOUT,
-          blendMode: PdfBlendMode.Normal,
-          color: defaultSettings.color,
-          opacity: defaultSettings.opacity,
-          pageIndex: selection.pageIndex,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-        });
+        selectionText.wait((text) => {
+          const annotationId = uuidV4();
+          annotation.createAnnotation(selection.pageIndex, {
+            id: annotationId,
+            created: new Date(),
+            type: PdfAnnotationSubtype.STRIKEOUT,
+            blendMode: PdfBlendMode.Normal,
+            color: defaultSettings.color,
+            opacity: defaultSettings.opacity,
+            pageIndex: selection.pageIndex,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            custom: {
+              text: text.join('\n'),
+            },
+          });
+          annotation.selectAnnotation(selection.pageIndex, annotationId);
+        }, ignore);
       }
 
       selection.clear();
@@ -1613,6 +1493,12 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'Highlight Selection',
     type: 'action',
     icon: 'highlight',
+    iconProps: (storeState) => ({
+      primaryColor: getToolDefaultsBySubtypeAndIntent(
+        storeState.plugins.annotation,
+        PdfAnnotationSubtype.HIGHLIGHT,
+      ).color,
+    }),
     action: (registry) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       const selection = registry.getPlugin<SelectionPlugin>(SELECTION_PLUGIN_ID)?.provides();
@@ -1620,17 +1506,27 @@ export const menuItems: Record<string, MenuItem<State>> = {
 
       const defaultSettings = annotation.getToolDefaultsBySubtype(PdfAnnotationSubtype.HIGHLIGHT);
       const formattedSelection = selection.getFormattedSelection();
+      const selectionText = selection.getSelectedText();
+
       for (const selection of formattedSelection) {
-        annotation.createAnnotation(selection.pageIndex, {
-          id: Date.now() + Math.random(),
-          type: PdfAnnotationSubtype.HIGHLIGHT,
-          blendMode: PdfBlendMode.Multiply,
-          color: defaultSettings.color,
-          opacity: defaultSettings.opacity,
-          pageIndex: selection.pageIndex,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-        });
+        selectionText.wait((text) => {
+          const annotationId = uuidV4();
+          annotation.createAnnotation(selection.pageIndex, {
+            id: annotationId,
+            created: new Date(),
+            type: PdfAnnotationSubtype.HIGHLIGHT,
+            blendMode: PdfBlendMode.Multiply,
+            color: defaultSettings.color,
+            opacity: defaultSettings.opacity,
+            pageIndex: selection.pageIndex,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            custom: {
+              text: text.join('\n'),
+            },
+          });
+          annotation.selectAnnotation(selection.pageIndex, annotationId);
+        }, ignore);
       }
 
       selection.clear();
@@ -1672,13 +1568,17 @@ export const menuItems: Record<string, MenuItem<State>> = {
       const selectedAnnotation = annotation.getSelectedAnnotation();
       if (!selectedAnnotation) return;
 
-      annotation.deleteAnnotation(selectedAnnotation.object.pageIndex, selectedAnnotation.localId);
+      annotation.deleteAnnotation(
+        selectedAnnotation.object.pageIndex,
+        selectedAnnotation.object.id,
+      );
     },
   },
   panMode: {
     id: 'panMode',
     label: 'Pan',
     type: 'action',
+    dividerBefore: true,
     icon: 'hand',
     action: (registry) => {
       const interactionManager = registry
@@ -1883,10 +1783,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.circle, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.CIRCLE,
-      ).strokeColor,
+      iconProps: getIconProps(menuItems.circle, storeState),
     }),
   },
   freeTextButton: {
@@ -1900,10 +1797,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.freeText, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.FREETEXT,
-      ).fontColor,
+      iconProps: getIconProps(menuItems.freeText, storeState),
     }),
   },
   squareButton: {
@@ -1917,10 +1811,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.square, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.SQUARE,
-      ).strokeColor,
+      iconProps: getIconProps(menuItems.square, storeState),
     }),
   },
   polygonButton: {
@@ -1934,10 +1825,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.polygon, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.POLYGON,
-      ).strokeColor,
+      iconProps: getIconProps(menuItems.polygon, storeState),
     }),
   },
   lineButton: {
@@ -1951,10 +1839,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.line, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.LINE,
-      ).strokeColor,
+      iconProps: getIconProps(menuItems.line, storeState),
     }),
   },
   lineArrowButton: {
@@ -1968,11 +1853,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.lineArrow, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.LINE,
-        'LineArrow',
-      ).strokeColor,
+      iconProps: getIconProps(menuItems.lineArrow, storeState),
     }),
   },
   polylineButton: {
@@ -1986,10 +1867,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.polyline, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.POLYLINE,
-      ).strokeColor,
+      iconProps: getIconProps(menuItems.polyline, storeState),
     }),
   },
   underlineButton: {
@@ -2004,10 +1882,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.underline, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.UNDERLINE,
-      ).color,
+      iconProps: getIconProps(menuItems.underline, storeState),
     }),
   },
   squigglyButton: {
@@ -2022,10 +1897,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.squiggly, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.SQUIGGLY,
-      ).color,
+      iconProps: getIconProps(menuItems.squiggly, storeState),
     }),
   },
   strikethroughButton: {
@@ -2040,10 +1912,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.strikethrough, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.STRIKEOUT,
-      ).color,
+      iconProps: getIconProps(menuItems.strikethrough, storeState),
     }),
   },
   highlightButton: {
@@ -2058,10 +1927,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.highlight, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.HIGHLIGHT,
-      ).color,
+      iconProps: getIconProps(menuItems.highlight, storeState),
     }),
   },
   freehandButton: {
@@ -2076,10 +1942,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.freehand, storeState),
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.INK,
-      ).color,
+      iconProps: getIconProps(menuItems.freehand, storeState),
     }),
   },
   photoButton: {
@@ -2094,6 +1957,7 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.photo, storeState),
+      iconProps: getIconProps(menuItems.photo, storeState),
     }),
   },
   highlightSelectionButton: {
@@ -2105,10 +1969,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.HIGHLIGHT,
-      ).color,
+      iconProps: getIconProps(menuItems.highlightSelection, storeState),
     }),
   },
   underlineSelectionButton: {
@@ -2120,10 +1981,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.UNDERLINE,
-      ).color,
+      iconProps: getIconProps(menuItems.underlineSelection, storeState),
     }),
   },
   strikethroughSelectionButton: {
@@ -2135,10 +1993,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.STRIKEOUT,
-      ).color,
+      iconProps: getIconProps(menuItems.strikethroughSelection, storeState),
     }),
   },
   squigglySelectionButton: {
@@ -2150,10 +2005,7 @@ export const components: Record<string, UIComponentType<State>> = {
     },
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      color: getToolDefaultsBySubtypeAndIntent(
-        storeState.plugins.annotation,
-        PdfAnnotationSubtype.SQUIGGLY,
-      ).color,
+      iconProps: getIconProps(menuItems.squigglySelection, storeState),
     }),
   },
   viewCtrButton: {
@@ -2422,7 +2274,7 @@ export const components: Record<string, UIComponentType<State>> = {
     type: 'groupedItems',
     slots: [
       { componentId: 'searchButton', priority: 1 },
-      //{ componentId: 'commentButton', priority: 2 },
+      { componentId: 'commentButton', priority: 2 },
     ],
     props: {
       gap: 10,
@@ -2621,9 +2473,7 @@ export const components: Record<string, UIComponentType<State>> = {
     render: 'leftPanelAnnotationStyle',
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
-      selectedAnnotation: getSelectedAnnotationWithPageIndex(
-        storeState.plugins[ANNOTATION_PLUGIN_ID],
-      ),
+      selectedAnnotation: getSelectedAnnotation(storeState.plugins[ANNOTATION_PLUGIN_ID]),
       activeVariant: storeState.plugins[ANNOTATION_PLUGIN_ID].activeVariant,
       colorPresets: storeState.plugins[ANNOTATION_PLUGIN_ID].colorPresets,
       toolDefaults: storeState.plugins[ANNOTATION_PLUGIN_ID].toolDefaults,
@@ -2717,6 +2567,13 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'comment',
     type: 'custom',
     render: 'comment',
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      sidebarAnnotations: getSidebarAnnotationsWithRepliesGroupedByPage(
+        storeState.plugins[ANNOTATION_PLUGIN_ID],
+      ),
+      selectedAnnotation: getSelectedAnnotation(storeState.plugins[ANNOTATION_PLUGIN_ID]),
+    }),
   },
   commandMenu: {
     id: 'commandMenu',
@@ -2794,7 +2651,6 @@ export const uiConfig: UIPluginConfig = {
   enabled: true,
   components,
   menuItems,
-  icons,
 };
 
 const logger = new AllLogger([new ConsoleLogger(), new PerfLogger()]);

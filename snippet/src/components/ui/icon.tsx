@@ -1,47 +1,46 @@
-import { h, VNode, JSX, ComponentChildren } from 'preact';
-import { IconIdentifier, IconRenderOptions } from '@embedpdf/plugin-ui';
-import { useIcon } from '@embedpdf/plugin-ui/preact';
+import { h, VNode, JSX } from 'preact';
+import { icons } from '../icons';
 
-type IconProps = JSX.ButtonHTMLAttributes<HTMLSpanElement> &
-  IconRenderOptions & {
-    icon: IconIdentifier;
-  };
+type IconProps = JSX.HTMLAttributes<HTMLElement> & {
+  icon: string;
+  size?: number;
+  strokeWidth?: number;
+  primaryColor?: string;
+  secondaryColor?: string;
+  className?: string;
+  title?: string;
+};
 
 /**
- * Icon component for React
- * Renders an icon from the registry or a raw SVG string in an SSR-compatible way
+ * Icon component for Preact
+ * Renders an icon using the new component-based icon system
  */
-export function Icon({ icon, title, ...props }: IconProps): VNode | null {
-  const iconManager = useIcon();
-  let svgContent: string | undefined;
+export function Icon({
+  icon,
+  title,
+  size = 24,
+  strokeWidth = 2,
+  primaryColor = 'currentColor',
+  secondaryColor,
+  className,
+  ...props
+}: IconProps): VNode | null {
+  const IconComponent = icons[icon];
 
-  // Check if it's a data URI
-  if (iconManager.isSvgDataUri(icon)) {
-    svgContent = iconManager.dataUriToSvgString(icon);
-  } else {
-    svgContent = iconManager.getSvgString(icon);
-  }
-
-  if (!svgContent) {
+  if (!IconComponent) {
     console.warn(`Icon not found: ${icon}`);
     return null;
   }
 
-  // Build the component with dangerouslySetInnerHTML to avoid DOM usage
-  const iconElement = (
-    <span
+  return (
+    <IconComponent
+      size={size}
+      strokeWidth={strokeWidth}
+      primaryColor={primaryColor}
+      secondaryColor={secondaryColor}
+      className={className}
+      title={title}
       {...props}
-      dangerouslySetInnerHTML={{
-        __html: svgContent,
-      }}
     />
-  );
-
-  return title ? (
-    <span title={title} {...props}>
-      {iconElement}
-    </span>
-  ) : (
-    iconElement
   );
 }

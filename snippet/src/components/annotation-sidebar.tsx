@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/preact';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
-import { SelectedAnnotation } from '@embedpdf/plugin-annotation';
+import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 
 import { SidebarPropsBase } from './annotation-sidebar/common';
 import { SIDEbars } from './annotation-sidebar/registry';
@@ -16,7 +16,7 @@ export function leftPanelAnnotationStyleRenderer({
   activeVariant,
   colorPresets,
 }: {
-  selectedAnnotation: SelectedAnnotation | null;
+  selectedAnnotation: TrackedAnnotation | null;
   activeVariant: string | null;
   colorPresets: string[];
 }) {
@@ -30,8 +30,8 @@ export function leftPanelAnnotationStyleRenderer({
   let subtype: PdfAnnotationSubtype | null = null;
 
   if (selectedAnnotation) {
-    subtype = selectedAnnotation.annotation.type;
-    intent = selectedAnnotation.annotation.intent;
+    subtype = selectedAnnotation.object.type;
+    intent = selectedAnnotation.object.intent;
   } else if (activeVariant) {
     const { subtype: s, intent: i } = annotation.getSubtypeAndIntentByVariant(activeVariant);
     subtype = s;

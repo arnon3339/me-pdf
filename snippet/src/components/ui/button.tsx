@@ -1,3 +1,4 @@
+import { IconProps } from '@embedpdf/plugin-ui';
 import { h, ComponentChildren, Ref, JSX } from 'preact';
 
 type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {

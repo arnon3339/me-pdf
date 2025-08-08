@@ -48,7 +48,7 @@ export function FreeText({
     if (!annotationProvides) return;
     if (!editorRef.current) return;
 
-    annotationProvides.updateAnnotation(pageIndex, annotation.localId, {
+    annotationProvides.updateAnnotation(pageIndex, annotation.object.id, {
       contents: editorRef.current.innerText,
     });
   };

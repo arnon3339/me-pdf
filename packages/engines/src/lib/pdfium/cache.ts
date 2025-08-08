@@ -45,6 +45,11 @@ export class DocumentContext {
     return this.pageCache.acquire(pageIdx);
   }
 
+  /** Scoped accessor for one-off / bulk operations */
+  borrowPage<T>(pageIdx: number, fn: (ctx: PageContext) => T): T {
+    return this.pageCache.borrowPage(pageIdx, fn);
+  }
+
   /** Tear down all pages + this document */
   dispose(): void {
     // 1️⃣ release all pages (with their TTL or immediate)
@@ -78,6 +83,20 @@ export class PageCache {
     ctx.clearExpiryTimer(); // cancel any pending teardown
     ctx.bumpRefCount(); // bump ref‐count
     return ctx;
+  }
+
+  /** Helper: run a function “scoped” to a page.
+   *    – if the page was already cached  → .release() (keeps TTL logic)
+   *    – if the page was loaded just now → .disposeImmediate() (free right away)
+   */
+  borrowPage<T>(pageIdx: number, fn: (ctx: PageContext) => T): T {
+    const existed = this.cache.has(pageIdx);
+    const ctx = this.acquire(pageIdx);
+    try {
+      return fn(ctx);
+    } finally {
+      existed ? ctx.release() : ctx.disposeImmediate();
+    }
   }
 
   forceReleaseAll(): void {

@@ -6,6 +6,7 @@ import {
   PdfAnnotationBorderStyle,
   PdfAnnotationSubtype,
   PdfPolylineAnnoObject,
+  uuidV4,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
 import { patching } from '@embedpdf/plugin-annotation';
@@ -92,7 +93,8 @@ export const PolylinePaint = ({
       strokeDashArray: toolStrokeDashArray,
       lineEndings: toolLineEndings,
       pageIndex,
-      id: Date.now() + Math.random(),
+      id: uuidV4(),
+      created: new Date(),
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);

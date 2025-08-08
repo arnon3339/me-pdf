@@ -15,6 +15,22 @@ import {
 
 export type AnnoOf<S extends PdfAnnotationSubtype> = Extract<PdfAnnotationObject, { type: S }>;
 
+export type TextMarkupSubtype =
+  | PdfAnnotationSubtype.HIGHLIGHT
+  | PdfAnnotationSubtype.UNDERLINE
+  | PdfAnnotationSubtype.STRIKEOUT
+  | PdfAnnotationSubtype.SQUIGGLY;
+export type SidebarSubtype =
+  | TextMarkupSubtype
+  | PdfAnnotationSubtype.INK
+  | PdfAnnotationSubtype.SQUARE
+  | PdfAnnotationSubtype.CIRCLE
+  | PdfAnnotationSubtype.POLYGON
+  | PdfAnnotationSubtype.LINE
+  | PdfAnnotationSubtype.POLYLINE
+  | PdfAnnotationSubtype.FREETEXT
+  | PdfAnnotationSubtype.STAMP;
+
 /* ------------------------------------------------------------------ */
 /* 2. Narrowing type‑guards (add more as needed)                      */
 /* ------------------------------------------------------------------ */
@@ -83,14 +99,7 @@ export function isSquiggly(
 
 export function isTextMarkup(
   a: TrackedAnnotation,
-): a is TrackedAnnotation<
-  AnnoOf<
-    | PdfAnnotationSubtype.HIGHLIGHT
-    | PdfAnnotationSubtype.UNDERLINE
-    | PdfAnnotationSubtype.STRIKEOUT
-    | PdfAnnotationSubtype.SQUIGGLY
-  >
-> {
+): a is TrackedAnnotation<AnnoOf<TextMarkupSubtype>> {
   return isHighlight(a) || isUnderline(a) || isStrikeout(a) || isSquiggly(a);
 }
 
@@ -104,6 +113,28 @@ export function isStamp(
   a: TrackedAnnotation,
 ): a is TrackedAnnotation<AnnoOf<PdfAnnotationSubtype.STAMP>> {
   return a.object.type === PdfAnnotationSubtype.STAMP;
+}
+
+export function isText(
+  a: TrackedAnnotation,
+): a is TrackedAnnotation<AnnoOf<PdfAnnotationSubtype.TEXT>> {
+  return a.object.type === PdfAnnotationSubtype.TEXT;
+}
+
+export function isSidebarAnnotation(
+  a: TrackedAnnotation,
+): a is TrackedAnnotation<AnnoOf<SidebarSubtype>> {
+  return (
+    isTextMarkup(a) ||
+    isInk(a) ||
+    isSquare(a) ||
+    isCircle(a) ||
+    isPolygon(a) ||
+    isLine(a) ||
+    isPolyline(a) ||
+    isFreeText(a) ||
+    isStamp(a)
+  );
 }
 
 /* ------------------------------------------------------------------ */
