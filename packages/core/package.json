@@ -1,6 +1,6 @@
 {
   "name": "@embedpdf/core",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
