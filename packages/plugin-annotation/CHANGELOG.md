@@ -1,5 +1,11 @@
 # @embedpdf/plugin-annotation
 
+## 1.0.17
+
+### Patch Changes
+
+- [#63](https://github.com/embedpdf/embed-pdf-viewer/pull/63) by [@bobsingor](https://github.com/bobsingor) – Add support for comments on annotations
+
 ## 1.0.16
 
 ### Patch Changes

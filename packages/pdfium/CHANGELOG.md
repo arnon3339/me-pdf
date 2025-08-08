@@ -1,5 +1,13 @@
 # @embedpdf/pdfium
 
+## 1.0.17
+
+### Patch Changes
+
+- [#63](https://github.com/embedpdf/embed-pdf-viewer/pull/63) by [@bobsingor](https://github.com/bobsingor) – Add new function EPDFPage_GetAnnotCountRaw and EPDFPage_GetAnnotRaw to increase speed of annotations
+
+- [#63](https://github.com/embedpdf/embed-pdf-viewer/pull/63) by [@bobsingor](https://github.com/bobsingor) – Add support for comments on annotations
+
 ## 1.0.16
 
 ## 1.0.15

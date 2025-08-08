@@ -1,5 +1,11 @@
 # @embedpdf/plugin-ui
 
+## 1.0.17
+
+### Patch Changes
+
+- [#63](https://github.com/embedpdf/embed-pdf-viewer/pull/63) by [@bobsingor](https://github.com/bobsingor) – Take the icons out of the plugin-ui for more flexibility
+
 ## 1.0.16
 
 ## 1.0.15
