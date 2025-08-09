@@ -55,6 +55,8 @@ export const functions = {
   EPDFPage_GetAnnotCountRaw: [['number', 'number'] as const, 'number'] as const,
   EPDFPage_GetAnnotRaw: [['number', 'number', 'number'] as const, 'number'] as const,
   EPDFPage_RemoveAnnotByName: [['number', 'number'] as const, 'boolean'] as const,
+  EPDFText_RedactInQuads: [['number', 'number', 'number', 'boolean'] as const, 'boolean'] as const,
+  EPDFText_RedactInRect: [['number', 'number', 'boolean'] as const, 'boolean'] as const,
   FORM_CanRedo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_CanUndo: [['number', 'number'] as const, 'boolean'] as const,
   FORM_DoDocumentAAction: [['number', 'number'] as const, null] as const,

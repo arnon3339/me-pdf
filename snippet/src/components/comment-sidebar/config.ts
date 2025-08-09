@@ -1,4 +1,4 @@
-import { PdfAnnotationObject, PdfAnnotationSubtype } from '@embedpdf/models';
+import { PdfAnnotationObject, PdfAnnotationSubtype, PdfPolygonAnnoObject } from '@embedpdf/models';
 import {
   isSidebarAnnotation,
   SidebarSubtype,
@@ -80,7 +80,7 @@ export const annotationConfigs: Record<SidebarSubtype, AnnotationConfig> = {
     label: 'Text',
     icon: 'text',
     iconProps: (annotation: any) => ({
-      primaryColor: annotation.color || '#000000',
+      primaryColor: annotation.fontColor || '#000000',
     }),
   },
   [PdfAnnotationSubtype.POLYGON]: {

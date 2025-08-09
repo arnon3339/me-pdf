@@ -151,6 +151,11 @@ import {
   HistoryPluginPackage,
   HistoryState,
 } from '@embedpdf/plugin-history';
+import {
+  REDACTION_PLUGIN_ID,
+  RedactionPlugin,
+  RedactionPluginPackage,
+} from '@embedpdf/plugin-redaction';
 import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
 import { AnnotationMenu } from './annotation-menu';
@@ -1532,6 +1537,18 @@ export const menuItems: Record<string, MenuItem<State>> = {
       selection.clear();
     },
   },
+  redactSelection: {
+    id: 'redactSelection',
+    label: 'Redact Selection',
+    type: 'action',
+    icon: 'redact',
+    action: (registry) => {
+      const redaction = registry.getPlugin<RedactionPlugin>(REDACTION_PLUGIN_ID)?.provides();
+      if (!redaction) return;
+
+      redaction.redactCurrentSelection();
+    },
+  },
   styleAnnotation: {
     id: 'styleAnnotation',
     label: 'Style',
@@ -2008,6 +2025,19 @@ export const components: Record<string, UIComponentType<State>> = {
       iconProps: getIconProps(menuItems.squigglySelection, storeState),
     }),
   },
+  redactSelectionButton: {
+    type: 'iconButton',
+    id: 'redactSelectionButton',
+    props: {
+      commandId: 'redactSelection',
+      label: 'Redact Selection',
+      color: '#e44234',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      iconProps: getIconProps(menuItems.redactSelection, storeState),
+    }),
+  },
   viewCtrButton: {
     type: 'iconButton',
     id: 'viewCtrButton',
@@ -2322,6 +2352,7 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'underlineSelectionButton', priority: 2 },
       { componentId: 'strikethroughSelectionButton', priority: 3 },
       { componentId: 'squigglySelectionButton', priority: 4 },
+      { componentId: 'redactSelectionButton', priority: 5 },
     ],
     props: {
       gap: 10,
@@ -2748,6 +2779,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             imageType: 'image/png',
           }),
           createPluginRegistration(HistoryPluginPackage, {}),
+          createPluginRegistration(RedactionPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (

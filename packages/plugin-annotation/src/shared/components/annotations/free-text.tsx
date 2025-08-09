@@ -91,7 +91,6 @@ export function FreeText({
           cursor: isEditing ? 'text' : 'pointer',
         }}
         contentEditable={isEditing}
-        suppressContentEditableWarning={true}
       >
         {annotation.object.contents}
       </span>

@@ -1,5 +1,4 @@
-import { WebAlphaColor } from './color';
-import { Size, Rect, Position, Rotation, Quad } from './geometry';
+import { Size, Rect, Position, Rotation } from './geometry';
 import { Task, TaskError } from './task';
 
 /**
@@ -2675,6 +2674,18 @@ export interface PdfEngine<T = Blob> {
    * @returns task contains the text
    */
   extractText: (doc: PdfDocumentObject, pageIndexes: number[]) => PdfTask<string>;
+  /**
+   * Redact text by run slices
+   * @param doc - pdf document
+   * @param perPage - per page run slices
+   * @returns task contains the result
+   */
+  redactTextInRects: (
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    rects: Rect[],
+    recurseForms: boolean,
+  ) => PdfTask<boolean>;
   /**
    * Extract text on specified pdf pages
    * @param doc - pdf document

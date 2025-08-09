@@ -187,7 +187,7 @@ export const FreeTextSidebar = ({
               bold ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
             } disabled:opacity-40`}
           >
-            <Icon icon="bold" />
+            <Icon icon="bold" size={18} />
           </button>
 
           <button
@@ -201,7 +201,7 @@ export const FreeTextSidebar = ({
               italic ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
             } disabled:opacity-40`}
           >
-            <Icon icon="italic" />
+            <Icon icon="italic" size={18} />
           </button>
         </div>
       </section>
@@ -220,7 +220,7 @@ export const FreeTextSidebar = ({
                 : 'bg-white text-gray-900'
             } disabled:opacity-40`}
           >
-            <Icon icon="alignLeft" />
+            <Icon icon="alignLeft" size={18} />
           </button>
           <button
             type="button"
@@ -232,7 +232,7 @@ export const FreeTextSidebar = ({
                 : 'bg-white text-gray-900'
             } disabled:opacity-40`}
           >
-            <Icon icon="alignCenter" />
+            <Icon icon="alignCenter" size={18} />
           </button>
           <button
             type="button"
@@ -244,7 +244,7 @@ export const FreeTextSidebar = ({
                 : 'bg-white text-gray-900'
             } disabled:opacity-40`}
           >
-            <Icon icon="alignRight" />
+            <Icon icon="alignRight" size={18} />
           </button>
         </div>
       </section>
@@ -263,7 +263,7 @@ export const FreeTextSidebar = ({
                 : 'bg-white text-gray-900'
             } disabled:opacity-40`}
           >
-            <Icon icon="alignTop" />
+            <Icon icon="alignTop" size={18} />
           </button>
           <button
             type="button"
@@ -275,7 +275,7 @@ export const FreeTextSidebar = ({
                 : 'bg-white text-gray-900'
             } disabled:opacity-40`}
           >
-            <Icon icon="alignMiddle" />
+            <Icon icon="alignMiddle" size={18} />
           </button>
           <button
             type="button"
@@ -287,7 +287,7 @@ export const FreeTextSidebar = ({
                 : 'bg-white text-gray-900'
             } disabled:opacity-40`}
           >
-            <Icon icon="alignBottom" />
+            <Icon icon="alignBottom" size={18} />
           </button>
         </div>
       </section>

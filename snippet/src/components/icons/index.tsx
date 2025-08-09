@@ -61,6 +61,7 @@ import { AlignMiddleIcon } from './align-middle';
 import { AlignBottomIcon } from './align-bottom';
 import { PhotoIcon } from './photo';
 import { PointerIcon } from './pointer';
+import { RedactIcon } from './redact';
 import { IconComponent } from './types';
 
 export type Icons = {
@@ -131,4 +132,5 @@ export const icons: Icons = {
   alignBottom: AlignBottomIcon,
   photo: PhotoIcon,
   pointer: PointerIcon,
+  redact: RedactIcon,
 };
