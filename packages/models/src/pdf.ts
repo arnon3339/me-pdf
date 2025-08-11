@@ -2685,6 +2685,7 @@ export interface PdfEngine<T = Blob> {
     page: PdfPageObject,
     rects: Rect[],
     recurseForms: boolean,
+    drawBlackBoxes: boolean,
   ) => PdfTask<boolean>;
   /**
    * Extract text on specified pdf pages

@@ -1,15 +1,23 @@
 import { PluginPackage } from '@embedpdf/core';
-import { RedactionPluginConfig } from './types';
+import { RedactionPluginConfig, RedactionState } from './types';
 import { RedactionPlugin } from './redaction-plugin';
 import { manifest, REDACTION_PLUGIN_ID } from './manifest';
+import { RedactionAction } from './actions';
+import { initialState, redactionReducer } from './reducer';
 
-export const RedactionPluginPackage: PluginPackage<RedactionPlugin, RedactionPluginConfig> = {
+export const RedactionPluginPackage: PluginPackage<
+  RedactionPlugin,
+  RedactionPluginConfig,
+  RedactionState,
+  RedactionAction
+> = {
   manifest,
   create: (registry, engine) => new RedactionPlugin(REDACTION_PLUGIN_ID, registry, engine),
-  reducer: () => {},
-  initialState: {},
+  reducer: redactionReducer,
+  initialState: initialState,
 };
 
 export * from './redaction-plugin';
 export * from './types';
 export * from './manifest';
+export * from './selectors';

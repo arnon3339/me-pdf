@@ -63,6 +63,8 @@ import { PhotoIcon } from './photo';
 import { PointerIcon } from './pointer';
 import { RedactIcon } from './redact';
 import { IconComponent } from './types';
+import { RedactAreaIcon } from './redact-area';
+import { CheckIcon } from './check';
 
 export type Icons = {
   [key: string]: IconComponent;
@@ -133,4 +135,6 @@ export const icons: Icons = {
   photo: PhotoIcon,
   pointer: PointerIcon,
   redact: RedactIcon,
+  redactArea: RedactAreaIcon,
+  check: CheckIcon,
 };

@@ -830,6 +830,7 @@ export class WebWorkerEngine implements PdfEngine {
     page: PdfPageObject,
     rects: Rect[],
     recurseForms: boolean,
+    drawBlackBoxes: boolean,
   ) {
     this.logger.debug(
       LOG_SOURCE,
@@ -839,6 +840,7 @@ export class WebWorkerEngine implements PdfEngine {
       page,
       rects,
       recurseForms,
+      drawBlackBoxes,
     );
     const requestId = this.generateRequestId(doc.id);
     const task = new WorkerTask<boolean>(this.worker, requestId);
@@ -848,6 +850,7 @@ export class WebWorkerEngine implements PdfEngine {
       page,
       rects,
       recurseForms,
+      drawBlackBoxes,
     ]);
     this.proxy(task, request);
 

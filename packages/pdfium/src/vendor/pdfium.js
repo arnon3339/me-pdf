@@ -6653,11 +6653,11 @@ var createPdfium = (() => {
       createExportWrapper('FPDFGlyphPath_GetGlyphPathSegment', 2));
     var _EPDFText_RedactInRect = (Module['_EPDFText_RedactInRect'] = createExportWrapper(
       'EPDFText_RedactInRect',
-      3,
+      4,
     ));
     var _EPDFText_RedactInQuads = (Module['_EPDFText_RedactInQuads'] = createExportWrapper(
       'EPDFText_RedactInQuads',
-      4,
+      5,
     ));
     var _FPDFDoc_GetPageMode = (Module['_FPDFDoc_GetPageMode'] = createExportWrapper(
       'FPDFDoc_GetPageMode',

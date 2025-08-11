@@ -874,6 +874,9 @@ importers:
       '@embedpdf/core':
         specifier: workspace:*
         version: link:../core
+      '@embedpdf/plugin-interaction-manager':
+        specifier: workspace:*
+        version: link:../plugin-interaction-manager
       '@embedpdf/plugin-selection':
         specifier: workspace:*
         version: link:../plugin-selection

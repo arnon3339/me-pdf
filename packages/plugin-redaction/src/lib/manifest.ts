@@ -8,8 +8,8 @@ export const manifest: PluginManifest<RedactionPluginConfig> = {
   name: 'Redaction Plugin',
   version: '1.0.0',
   provides: ['redaction'],
-  requires: ['selection'],
-  optional: [],
+  requires: [],
+  optional: ['interaction-manager', 'selection'],
   defaultConfig: {
     enabled: true,
   },

@@ -179,11 +179,28 @@ export function createPointerProvider(
         metaKey: evt.metaKey,
         target: evt.target,
         currentTarget: evt.currentTarget,
+        setPointerCapture: () => {},
+        releasePointerCapture: () => {},
       };
     } else {
       const pe = evt as PointerEvent;
       pos = toPos(pe, element);
-      normEvt = pe;
+      normEvt = {
+        clientX: pe.clientX,
+        clientY: pe.clientY,
+        ctrlKey: pe.ctrlKey,
+        shiftKey: pe.shiftKey,
+        altKey: pe.altKey,
+        metaKey: pe.metaKey,
+        target: pe.target,
+        currentTarget: pe.currentTarget,
+        setPointerCapture: () => {
+          (pe.target as HTMLElement)?.setPointerCapture?.(pe.pointerId);
+        },
+        releasePointerCapture: () => {
+          (pe.target as HTMLElement)?.releasePointerCapture?.(pe.pointerId);
+        },
+      };
     }
 
     active[handlerKey]?.(pos, normEvt, cap.getActiveMode());

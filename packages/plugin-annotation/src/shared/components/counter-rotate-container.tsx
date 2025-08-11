@@ -1,4 +1,4 @@
-import { Rect, Rotation, Size } from '@embedpdf/models';
+import { Rect, Rotation } from '@embedpdf/models';
 import { ReactNode, CSSProperties, PointerEvent, Fragment, TouchEvent } from '@framework';
 
 interface CounterRotateProps {

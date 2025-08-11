@@ -116,7 +116,6 @@ import {
   PdfAnnotationIcon,
   PdfPageWithAnnotations,
   PdfPageSearchProgress,
-  RunEdit,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -4479,6 +4478,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     page: PdfPageObject,
     rects: Rect[],
     recurseForms: boolean = true,
+    drawBlackBoxes: boolean = false,
   ): Task<boolean, PdfErrorReason> {
     this.logger.debug(
       'PDFiumEngine',
@@ -4529,6 +4529,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         ptr,
         count,
         recurseForms ? true : false,
+        drawBlackBoxes ? true : false,
       );
     } finally {
       this.free(ptr);

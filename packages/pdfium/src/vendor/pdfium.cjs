@@ -5180,8 +5180,8 @@ var _FPDFFont_GetGlyphWidth = Module['_FPDFFont_GetGlyphWidth'] = createExportWr
 var _FPDFFont_GetGlyphPath = Module['_FPDFFont_GetGlyphPath'] = createExportWrapper('FPDFFont_GetGlyphPath', 3);
 var _FPDFGlyphPath_CountGlyphSegments = Module['_FPDFGlyphPath_CountGlyphSegments'] = createExportWrapper('FPDFGlyphPath_CountGlyphSegments', 1);
 var _FPDFGlyphPath_GetGlyphPathSegment = Module['_FPDFGlyphPath_GetGlyphPathSegment'] = createExportWrapper('FPDFGlyphPath_GetGlyphPathSegment', 2);
-var _EPDFText_RedactInRect = Module['_EPDFText_RedactInRect'] = createExportWrapper('EPDFText_RedactInRect', 3);
-var _EPDFText_RedactInQuads = Module['_EPDFText_RedactInQuads'] = createExportWrapper('EPDFText_RedactInQuads', 4);
+var _EPDFText_RedactInRect = Module['_EPDFText_RedactInRect'] = createExportWrapper('EPDFText_RedactInRect', 4);
+var _EPDFText_RedactInQuads = Module['_EPDFText_RedactInQuads'] = createExportWrapper('EPDFText_RedactInQuads', 5);
 var _FPDFDoc_GetPageMode = Module['_FPDFDoc_GetPageMode'] = createExportWrapper('FPDFDoc_GetPageMode', 1);
 var _FPDFPage_Flatten = Module['_FPDFPage_Flatten'] = createExportWrapper('FPDFPage_Flatten', 2);
 var _FPDFPage_HasFormFieldAtPoint = Module['_FPDFPage_HasFormFieldAtPoint'] = createExportWrapper('FPDFPage_HasFormFieldAtPoint', 4);

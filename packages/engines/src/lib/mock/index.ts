@@ -323,6 +323,7 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       page: PdfPageObject,
       rects: Rect[],
       recurseForms: boolean,
+      drawBlackBoxes: boolean,
     ) => {
       return PdfTaskHelper.resolve(true);
     },
