@@ -69,7 +69,8 @@ export function PendingRedactions({
                   pointerEvents: 'auto',
                   cursor: 'pointer',
                 }}
-                onClick={(e) => select(e, it.id)}
+                onPointerDown={(e) => select(e, it.id)}
+                onTouchStart={(e) => select(e, it.id)}
               />
               <CounterRotate
                 rect={{

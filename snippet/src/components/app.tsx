@@ -3025,7 +3025,14 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                               annotation,
                                               menuWrapperProps,
                                             }) => (
-                                              <div {...menuWrapperProps}>
+                                              <div
+                                                {...menuWrapperProps}
+                                                style={{
+                                                  ...menuWrapperProps.style,
+                                                  display: 'flex',
+                                                  justifyContent: 'center',
+                                                }}
+                                              >
                                                 {selected ? (
                                                   <AnnotationMenu
                                                     trackedAnnotation={annotation}
@@ -3061,7 +3068,14 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                               rect,
                                               menuWrapperProps,
                                             }) => (
-                                              <div {...menuWrapperProps}>
+                                              <div
+                                                {...menuWrapperProps}
+                                                style={{
+                                                  ...menuWrapperProps.style,
+                                                  display: 'flex',
+                                                  justifyContent: 'center',
+                                                }}
+                                              >
                                                 {selected ? (
                                                   <RedactionMenu
                                                     item={item}
