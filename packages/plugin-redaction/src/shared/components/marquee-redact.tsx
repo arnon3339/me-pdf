@@ -15,10 +15,6 @@ interface MarqueeRedactProps {
   fill?: string;
 }
 
-/**
- * Draws a marquee rectangle while the user drags.
- * Hook it into the interaction-manager with modeId = 'marqueeZoom'.
- */
 export const MarqueeRedact = ({
   pageIndex,
   scale,
@@ -26,15 +22,10 @@ export const MarqueeRedact = ({
   stroke = 'red',
   fill = 'transparent',
 }: MarqueeRedactProps) => {
-  /* ------------------------------------------------------------------ */
-  /* zoom capability                                                   */
-  /* ------------------------------------------------------------------ */
   const { plugin: redactionPlugin } = useRedactionPlugin();
 
-  /* ------------------------------------------------------------------ */
   const [rect, setRect] = useState<Rect | null>(null);
 
-  /* register with the interaction-manager */
   useEffect(() => {
     if (!redactionPlugin) return;
     return redactionPlugin.registerMarqueeOnPage({
@@ -46,17 +37,13 @@ export const MarqueeRedact = ({
     });
   }, [redactionPlugin, pageIndex]);
 
-  /* ------------------------------------------------------------------ */
-  /* render                                                              */
-  /* ------------------------------------------------------------------ */
-  if (!rect) return null; // nothing to draw
+  if (!rect) return null;
 
   return (
     <div
-      /* Each page wrapper is position:relative, so absolute is fine */
       style={{
         position: 'absolute',
-        pointerEvents: 'none', // ignore hits – underlying page still gets events
+        pointerEvents: 'none',
         left: rect.origin.x * scale,
         top: rect.origin.y * scale,
         width: rect.size.width * scale,

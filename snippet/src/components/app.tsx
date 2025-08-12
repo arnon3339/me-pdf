@@ -163,6 +163,7 @@ import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
 import { AnnotationMenu } from './annotation-menu';
 import { commentRender } from './comment-sidebar';
+import { RedactionMenu } from './redaction-menu';
 
 export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
@@ -3050,7 +3051,31 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                             pageWidth={width}
                                             pageHeight={height}
                                           />
-                                          <RedactionLayer pageIndex={pageIndex} scale={scale} />
+                                          <RedactionLayer
+                                            pageIndex={pageIndex}
+                                            scale={scale}
+                                            rotation={rotation}
+                                            selectionMenu={({
+                                              item,
+                                              selected,
+                                              rect,
+                                              menuWrapperProps,
+                                            }) => (
+                                              <div {...menuWrapperProps}>
+                                                {selected ? (
+                                                  <RedactionMenu
+                                                    item={item}
+                                                    pageIndex={pageIndex}
+                                                    style={{
+                                                      pointerEvents: 'auto',
+                                                      position: 'absolute',
+                                                      top: rect.size.height + 10,
+                                                    }}
+                                                  />
+                                                ) : null}
+                                              </div>
+                                            )}
+                                          />
                                           <SelectionLayer pageIndex={pageIndex} scale={scale} />
                                         </PagePointerProvider>
                                       </Rotate>
