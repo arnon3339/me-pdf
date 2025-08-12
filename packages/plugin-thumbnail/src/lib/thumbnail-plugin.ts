@@ -2,9 +2,12 @@ import {
   BasePlugin,
   CoreState,
   createBehaviorEmitter,
+  createEmitter,
   PluginRegistry,
+  REFRESH_PAGES,
   SET_DOCUMENT,
   StoreState,
+  Unsubscribe,
 } from '@embedpdf/core';
 import { ThumbMeta, ThumbnailPluginConfig, WindowState } from './types';
 import { ThumbnailCapability } from './types';
@@ -18,6 +21,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
   private thumbs: ThumbMeta[] = [];
   private window: WindowState | null = null;
   private readonly emitWindow = createBehaviorEmitter<WindowState>();
+  private readonly refreshPages$ = createEmitter<number[]>();
   private readonly taskCache = new Map<number, Task<Blob, PdfErrorReason>>();
 
   constructor(
@@ -33,10 +37,21 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
       this.taskCache.clear();
       this.setWindowState(state);
     });
+
+    this.coreStore.onAction(REFRESH_PAGES, (action) => {
+      this.refreshPages$.emit(action.payload);
+      for (const pageIdx of action.payload) {
+        this.taskCache.delete(pageIdx);
+      }
+    });
   }
 
   /* ------------ init ------------------------------------------------ */
   async initialize(): Promise<void> {}
+
+  public onRefreshPages(fn: (pages: number[]) => void): Unsubscribe {
+    return this.refreshPages$.on(fn);
+  }
 
   private setWindowState(state: StoreState<CoreState>) {
     const core = state.core;

@@ -96,14 +96,14 @@ export const FreeTextPaint = ({
   };
 
   /* pointer handlers -------------------------------------------------- */
-  const handlers = useMemo<PointerEventHandlers<PointerEvent>>(
+  const handlers = useMemo<PointerEventHandlers>(
     () => ({
       onPointerDown: (pos, evt) => {
         const x = clamp(pos.x, 0, pageWidthPDF);
         const y = clamp(pos.y, 0, pageHeightPDF);
         setStart({ x, y });
         setCurrent({ x, y });
-        (evt.target as HTMLElement)?.setPointerCapture?.(evt.pointerId);
+        evt.setPointerCapture?.();
       },
       onPointerMove: (pos) => {
         if (!start) return;
@@ -115,12 +115,12 @@ export const FreeTextPaint = ({
         if (start && current && annotationProvides) {
           commitFreeText(start, current);
         }
-        (evt.target as HTMLElement)?.releasePointerCapture?.(evt.pointerId);
+        evt.releasePointerCapture?.();
         setStart(null);
         setCurrent(null);
       },
       onPointerCancel: (_, evt) => {
-        (evt.target as HTMLElement)?.releasePointerCapture?.(evt.pointerId);
+        evt.releasePointerCapture?.();
         setStart(null);
         setCurrent(null);
       },

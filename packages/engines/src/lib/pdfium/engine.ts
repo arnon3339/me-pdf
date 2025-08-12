@@ -206,7 +206,8 @@ export const browserImageDataToBlobConverter: ImageDataConverter<Blob> = (
     );
   }
 
-  const imageData = new ImageData(pdfImageData.data, pdfImageData.width, pdfImageData.height);
+  const rgba = new Uint8ClampedArray(pdfImageData.data);
+  const imageData = new ImageData(rgba, pdfImageData.width, pdfImageData.height);
   const off = new OffscreenCanvas(imageData.width, imageData.height);
   off.getContext('2d')!.putImageData(imageData, 0, 0);
   return off.convertToBlob({ type: imageType });
@@ -4466,6 +4467,116 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     this.free(buf);
     return true;
+  }
+
+  /**
+   * Redact text that intersects ANY of the provided **quads** (device-space).
+   * Returns `true` if the page changed. Always regenerates the page stream.
+   */
+  public redactTextInRects(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    rects: Rect[],
+    recurseForms: boolean = true,
+    drawBlackBoxes: boolean = false,
+  ): Task<boolean, PdfErrorReason> {
+    this.logger.debug(
+      'PDFiumEngine',
+      'Engine',
+      'redactTextInQuads',
+      doc.id,
+      page.index,
+      rects.length,
+    );
+    const label = 'RedactTextInQuads';
+    this.logger.perf('PDFiumEngine', 'Engine', label, 'Begin', `${doc.id}-${page.index}`);
+
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf('PDFiumEngine', 'Engine', label, 'End', `${doc.id}-${page.index}`);
+      return PdfTaskHelper.reject<boolean>({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    // sanitize inputs
+    const clean = (rects ?? []).filter(
+      (r) =>
+        r &&
+        Number.isFinite(r.origin?.x) &&
+        Number.isFinite(r.origin?.y) &&
+        Number.isFinite(r.size?.width) &&
+        Number.isFinite(r.size?.height) &&
+        r.size.width > 0 &&
+        r.size.height > 0,
+    );
+
+    if (clean.length === 0) {
+      this.logger.perf('PDFiumEngine', 'Engine', label, 'End', `${doc.id}-${page.index}`);
+      return PdfTaskHelper.resolve<boolean>(false);
+    }
+
+    const pageCtx = ctx.acquirePage(page.index);
+
+    // pack buffer → native call
+    const { ptr, count } = this.allocFSQuadsBufferFromRects(page, clean);
+    let ok = false;
+    try {
+      // If your wrapper exposes FPDFText_RedactInQuads, call that instead.
+      ok = !!this.pdfiumModule.EPDFText_RedactInQuads(
+        pageCtx.pagePtr,
+        ptr,
+        count,
+        recurseForms ? true : false,
+        drawBlackBoxes ? true : false,
+      );
+    } finally {
+      this.free(ptr);
+    }
+
+    if (ok) {
+      ok = !!this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
+    }
+
+    pageCtx.disposeImmediate();
+    this.logger.perf('PDFiumEngine', 'Engine', label, 'End', `${doc.id}-${page.index}`);
+
+    return PdfTaskHelper.resolve<boolean>(!!ok);
+  }
+
+  /** Pack device-space Rects into an FS_QUADPOINTSF[] buffer (page space). */
+  private allocFSQuadsBufferFromRects(page: PdfPageObject, rects: Rect[]) {
+    const STRIDE = 32; // 8 floats × 4 bytes
+    const count = rects.length;
+    const ptr = this.malloc(STRIDE * count);
+    const pdf = this.pdfiumModule.pdfium;
+
+    for (let i = 0; i < count; i++) {
+      const r = rects[i];
+      const q = rectToQuad(r); // TL, TR, BR, BL (device-space)
+
+      // Convert into PAGE USER SPACE (native expects page coords)
+      const p1 = this.convertDevicePointToPagePoint(page, q.p1); // TL
+      const p2 = this.convertDevicePointToPagePoint(page, q.p2); // TR
+      const p3 = this.convertDevicePointToPagePoint(page, q.p3); // BR
+      const p4 = this.convertDevicePointToPagePoint(page, q.p4); // BL
+
+      const base = ptr + i * STRIDE;
+
+      // Keep the exact mapping you used in syncQuadPointsAnno:
+      // PDF QuadPoints order comment says BL,BR,TL,TR – and you wrote:
+      pdf.setValue(base + 0, p1.x, 'float');
+      pdf.setValue(base + 4, p1.y, 'float');
+      pdf.setValue(base + 8, p2.x, 'float');
+      pdf.setValue(base + 12, p2.y, 'float');
+      pdf.setValue(base + 16, p4.x, 'float');
+      pdf.setValue(base + 20, p4.y, 'float');
+      pdf.setValue(base + 24, p3.x, 'float');
+      pdf.setValue(base + 28, p3.y, 'float');
+    }
+
+    return { ptr, count };
   }
 
   /**

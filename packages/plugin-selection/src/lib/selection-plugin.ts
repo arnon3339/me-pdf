@@ -1,7 +1,9 @@
 import {
   BasePlugin,
   PluginRegistry,
+  REFRESH_PAGES,
   SET_DOCUMENT,
+  Unsubscribe,
   createBehaviorEmitter,
   createEmitter,
 } from '@embedpdf/core';
@@ -14,6 +16,7 @@ import {
   PdfErrorCode,
   ignore,
   PageTextSlice,
+  Task,
 } from '@embedpdf/models';
 
 import {
@@ -56,6 +59,7 @@ export class SelectionPlugin extends BasePlugin<
   private readonly copyToClipboard$ = createEmitter<string>();
   private readonly beginSelection$ = createEmitter<{ page: number; index: number }>();
   private readonly endSelection$ = createEmitter<void>();
+  private readonly refreshPages$ = createEmitter<number[]>();
 
   constructor(
     id: string,
@@ -66,6 +70,13 @@ export class SelectionPlugin extends BasePlugin<
 
     this.coreStore.onAction(SET_DOCUMENT, (_action) => {
       this.dispatch(reset());
+    });
+
+    this.coreStore.onAction(REFRESH_PAGES, (action) => {
+      const tasks = action.payload.map((pageIdx) => this.getNewPageGeometryAndCache(pageIdx));
+      Task.all(tasks).wait(() => {
+        this.refreshPages$.emit(action.payload);
+      }, ignore);
     });
   }
 
@@ -102,22 +113,27 @@ export class SelectionPlugin extends BasePlugin<
     };
   }
 
+  public onRefreshPages(fn: (pages: number[]) => void): Unsubscribe {
+    return this.refreshPages$.on(fn);
+  }
+
+  private getNewPageGeometryAndCache(pageIdx: number): PdfTask<PdfPageGeometry> {
+    if (!this.coreState.core.document)
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Doc Not Found' });
+    const page = this.coreState.core.document.pages.find((p) => p.index === pageIdx)!;
+    const task = this.engine.getPageGeometry(this.coreState.core.document, page);
+    task.wait((geo) => {
+      this.dispatch(cachePageGeometry(pageIdx, geo));
+    }, ignore);
+    return task;
+  }
+
   /* ── geometry cache ───────────────────────────────────── */
   private getOrLoadGeometry(pageIdx: number): PdfTask<PdfPageGeometry> {
     const cached = this.state.geometry[pageIdx];
     if (cached) return PdfTaskHelper.resolve(cached);
 
-    if (!this.coreState.core.document)
-      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Doc Not Found' });
-    const page = this.coreState.core.document.pages.find((p) => p.index === pageIdx)!;
-
-    const task = this.engine.getPageGeometry(this.coreState.core.document, page);
-
-    task.wait((geo) => {
-      this.dispatch(cachePageGeometry(pageIdx, geo));
-    }, ignore);
-
-    return task;
+    return this.getNewPageGeometryAndCache(pageIdx);
   }
 
   /* ── selection state updates ───────────────────────────── */

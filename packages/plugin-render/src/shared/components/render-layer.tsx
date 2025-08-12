@@ -3,7 +3,7 @@ import type { CSSProperties, HTMLAttributes } from '@framework';
 
 import { ignore, PdfErrorCode } from '@embedpdf/models';
 
-import { useRenderCapability } from '../hooks/use-render';
+import { useRenderCapability, useRenderPlugin } from '../hooks/use-render';
 
 type RenderLayerProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
   pageIndex: number;
@@ -20,8 +20,20 @@ export function RenderLayer({
   ...props
 }: RenderLayerProps) {
   const { provides: renderProvides } = useRenderCapability();
+  const { plugin: renderPlugin } = useRenderPlugin();
+
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    if (!renderPlugin) return;
+    return renderPlugin.onRefreshPages((pages) => {
+      if (pages.includes(pageIndex)) {
+        setRefreshTick((tick) => tick + 1);
+      }
+    });
+  }, [renderPlugin]);
 
   useEffect(() => {
     if (renderProvides) {
@@ -44,7 +56,7 @@ export function RenderLayer({
         }
       };
     }
-  }, [pageIndex, scaleFactor, dpr, renderProvides]);
+  }, [pageIndex, scaleFactor, dpr, renderProvides, refreshTick]);
 
   const handleImageLoad = () => {
     if (urlRef.current) {

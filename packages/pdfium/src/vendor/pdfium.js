@@ -64,6 +64,8 @@ var createPdfium = (() => {
       '_EPDFPage_GetAnnotCountRaw',
       '_EPDFPage_GetAnnotRaw',
       '_EPDFPage_RemoveAnnotByName',
+      '_EPDFText_RedactInQuads',
+      '_EPDFText_RedactInRect',
       '_FORM_CanRedo',
       '_FORM_CanUndo',
       '_FORM_DoDocumentAAction',
@@ -6649,6 +6651,14 @@ var createPdfium = (() => {
       createExportWrapper('FPDFGlyphPath_CountGlyphSegments', 1));
     var _FPDFGlyphPath_GetGlyphPathSegment = (Module['_FPDFGlyphPath_GetGlyphPathSegment'] =
       createExportWrapper('FPDFGlyphPath_GetGlyphPathSegment', 2));
+    var _EPDFText_RedactInRect = (Module['_EPDFText_RedactInRect'] = createExportWrapper(
+      'EPDFText_RedactInRect',
+      4,
+    ));
+    var _EPDFText_RedactInQuads = (Module['_EPDFText_RedactInQuads'] = createExportWrapper(
+      'EPDFText_RedactInQuads',
+      5,
+    ));
     var _FPDFDoc_GetPageMode = (Module['_FPDFDoc_GetPageMode'] = createExportWrapper(
       'FPDFDoc_GetPageMode',
       1,

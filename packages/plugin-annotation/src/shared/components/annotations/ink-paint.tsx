@@ -13,6 +13,7 @@ import {
   uuidV4,
 } from '@embedpdf/models';
 import { useAnnotationCapability, useAnnotationPlugin } from '../../hooks';
+import { clamp } from '@embedpdf/core';
 
 interface InkPaintProps {
   /** Index of the page this layer lives on */
@@ -61,11 +62,6 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
   const { register } = usePointerHandlers({ modeId: 'ink', pageIndex });
 
   /* ------------------------------------------------------------------ */
-  /* helpers                                                            */
-  /* ------------------------------------------------------------------ */
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-
-  /* ------------------------------------------------------------------ */
   /* local state – current strokes (preview), persist timer, and drawing flag */
   /* ------------------------------------------------------------------ */
   const [currentStrokes, setCurrentStrokes] = useState<PdfInkListObject[]>([]);
@@ -79,7 +75,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
   /* ------------------------------------------------------------------ */
   /* pointer handlers                                                   */
   /* ------------------------------------------------------------------ */
-  const handlers = useMemo<PointerEventHandlers<PointerEvent>>(
+  const handlers = useMemo<PointerEventHandlers>(
     () => ({
       onPointerDown: (pos, evt) => {
         const curX = clamp(pos.x, 0, pageWidthPDF);
@@ -97,7 +93,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
           setCurrentStrokes([{ points: [{ x: curX, y: curY }] }]);
         }
 
-        (evt.target as HTMLElement)?.setPointerCapture?.(evt.pointerId);
+        evt.setPointerCapture?.();
       },
       onPointerMove: (pos) => {
         if (!isDrawing) return;
@@ -115,7 +111,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
       },
       onPointerUp: (_, evt) => {
         setIsDrawing(false);
-        (evt.target as HTMLElement)?.releasePointerCapture?.(evt.pointerId);
+        evt.releasePointerCapture?.();
 
         // Start/restart the persist timer
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -154,7 +150,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
       },
       onPointerCancel: (_, evt) => {
         setIsDrawing(false);
-        (evt.target as HTMLElement)?.releasePointerCapture?.(evt.pointerId);
+        evt.releasePointerCapture?.();
 
         // Cancel – clear preview without persisting
         setCurrentStrokes([]);

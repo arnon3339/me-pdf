@@ -3,6 +3,7 @@ import { CoreState } from './initial-state';
 import {
   CoreAction,
   LOAD_DOCUMENT,
+  REFRESH_DOCUMENT,
   SET_DOCUMENT,
   SET_DOCUMENT_ERROR,
   SET_PAGES,
@@ -20,6 +21,15 @@ export const coreReducer: Reducer<CoreState, CoreAction> = (state, action): Core
       };
 
     case SET_DOCUMENT:
+      return {
+        ...state,
+        document: action.payload,
+        pages: action.payload.pages.map((page) => [page]),
+        loading: false,
+        error: null,
+      };
+
+    case REFRESH_DOCUMENT:
       return {
         ...state,
         document: action.payload,

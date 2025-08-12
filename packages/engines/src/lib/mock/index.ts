@@ -11,14 +11,12 @@ import {
   PdfAnnotationObject,
   PdfBookmarkObject,
   PdfTextRectObject,
-  SearchTarget,
   SearchResult,
   PdfAttachmentObject,
   PdfSignatureObject,
   Rect,
   PdfRenderOptions,
   PdfFile,
-  PdfAnnotationObjectStatus,
   PdfWidgetAnnoObject,
   FormFieldValue,
   PdfTaskHelper,
@@ -27,25 +25,14 @@ import {
   PdfFileLoader,
   SearchAllPagesResult,
   MatchFlag,
-  Task,
-  Logger,
-  NoopLogger,
-  PdfAnnotationTransformation,
-  PdfEngineError,
-  PdfMetadataObject,
-  PdfErrorCode,
-  PdfErrorReason,
-  PdfBookmarksObject,
   PdfUrlOptions,
   PdfFileUrl,
   PdfGlyphObject,
   PdfPageGeometry,
   PageTextSlice,
-  PdfAnnotationObjectBase,
-  PdfAlphaColor,
-  WebAlphaColor,
   AppearanceMode,
   ImageConversionTypes,
+  PdfPageSearchProgress,
 } from '@embedpdf/models';
 
 /**
@@ -243,7 +230,7 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     getPageAnnotations: jest.fn((doc: PdfDocumentObject, page: PdfPageObject) => {
       const link: PdfLinkAnnoObject = {
         pageIndex: page.index,
-        id: page.index + 1,
+        id: '1',
         type: PdfAnnotationSubtype.LINK,
         target: {
           type: 'action',
@@ -252,7 +239,6 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
             uri: 'https://localhost',
           },
         },
-        text: 'localhost',
         rect: {
           origin: {
             x: 0,
@@ -316,6 +302,15 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     extractText: (pdf: PdfDocumentObject, pageIndexes: number[]) => {
       return PdfTaskHelper.resolve('');
     },
+    redactTextInRects: (
+      pdf: PdfDocumentObject,
+      page: PdfPageObject,
+      rects: Rect[],
+      recurseForms: boolean,
+      drawBlackBoxes: boolean,
+    ) => {
+      return PdfTaskHelper.resolve(true);
+    },
     getTextSlices: (doc: PdfDocumentObject, slices: PageTextSlice[]) => {
       return PdfTaskHelper.resolve([] as string[]);
     },
@@ -367,7 +362,7 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       };
 
       // Return a mock SearchAllPagesResult with a single result
-      return PdfTaskHelper.resolve<SearchAllPagesResult>({
+      return PdfTaskHelper.resolve<SearchAllPagesResult, PdfPageSearchProgress>({
         results: [mockResult],
         total: 1,
       });

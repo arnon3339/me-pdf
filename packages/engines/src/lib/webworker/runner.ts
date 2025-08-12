@@ -359,6 +359,9 @@ export class EngineRunner {
       case 'extractText':
         task = this.engine[name]!(...args);
         break;
+      case 'redactTextInRects':
+        task = this.engine[name]!(...args);
+        break;
       case 'getTextSlices':
         task = this.engine[name]!(...args);
         break;

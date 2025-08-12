@@ -1,3 +1,5 @@
+import { toArrayBuffer } from '../utils';
+
 /**
  * Function type for converting ImageData to Blob
  * In browser: uses OffscreenCanvas
@@ -150,12 +152,9 @@ export function createNodeCanvasImageDataToBlobConverter(
 export function createCustomImageDataToBlobConverter(
   processor: (imageData: ImageData) => Promise<Buffer>,
 ): ImageDataConverter {
-  return async (
-    imageData: ImageData,
-    imageType: ImageConversionTypes = 'image/webp',
-  ): Promise<Blob> => {
-    const buffer = await processor(imageData);
-    return new Blob([buffer], { type: imageType });
+  return async (imageData, imageType = 'image/webp') => {
+    const bytes = await processor(imageData);
+    return new Blob([toArrayBuffer(bytes)], { type: imageType });
   };
 }
 

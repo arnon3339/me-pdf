@@ -11,6 +11,7 @@ import {
 import { useAnnotationCapability } from '../../hooks';
 import { patching } from '@embedpdf/plugin-annotation';
 import { Polyline } from './polyline';
+import { clamp } from '@embedpdf/core';
 
 interface PolylinePaintProps {
   pageIndex: number;
@@ -57,11 +58,6 @@ export const PolylinePaint = ({
   /* integration with interaction-manager                               */
   /* ------------------------------------------------------------------ */
   const { register } = usePointerHandlers({ modeId: 'polyline', pageIndex });
-
-  /* ------------------------------------------------------------------ */
-  /* helpers                                                            */
-  /* ------------------------------------------------------------------ */
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
   /* page size in **PDF-space** (unscaled) ----------------------------- */
   const pageWidthPDF = pageWidth / scale;

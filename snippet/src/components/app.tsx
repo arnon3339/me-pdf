@@ -151,10 +151,19 @@ import {
   HistoryPluginPackage,
   HistoryState,
 } from '@embedpdf/plugin-history';
+import {
+  hasPendingRedactions,
+  REDACTION_PLUGIN_ID,
+  RedactionPlugin,
+  RedactionPluginPackage,
+  RedactionState,
+} from '@embedpdf/plugin-redaction';
+import { RedactionLayer } from '@embedpdf/plugin-redaction/preact';
 import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
 import { AnnotationMenu } from './annotation-menu';
 import { commentRender } from './comment-sidebar';
+import { RedactionMenu } from './redaction-menu';
 
 export { ScrollStrategy, ZoomMode, SpreadMode, Rotation };
 
@@ -241,6 +250,7 @@ type State = GlobalStoreState<{
   [FULLSCREEN_PLUGIN_ID]: FullscreenState;
   [INTERACTION_MANAGER_PLUGIN_ID]: InteractionManagerState;
   [HISTORY_PLUGIN_ID]: HistoryState;
+  [REDACTION_PLUGIN_ID]: RedactionState;
 }>;
 
 export const menuItems: Record<string, MenuItem<State>> = {
@@ -900,6 +910,21 @@ export const menuItems: Record<string, MenuItem<State>> = {
       storeState.plugins.ui.header.toolsHeader.visible === true &&
       storeState.plugins.ui.header.toolsHeader.visibleChild === 'shapeTools',
   },
+  redaction: {
+    id: 'redaction',
+    label: 'Redaction',
+    type: 'action',
+    action: (registry) => {
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+
+      if (ui) {
+        ui.setHeaderVisible({ id: 'toolsHeader', visible: true, visibleChild: 'redactionTools' });
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins.ui.header.toolsHeader.visible === true &&
+      storeState.plugins.ui.header.toolsHeader.visibleChild === 'redactionTools',
+  },
   fillAndSign: {
     id: 'fillAndSign',
     label: 'Fill and Sign',
@@ -935,7 +960,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     label: 'More',
     icon: 'dots',
     type: 'menu',
-    children: ['view', 'annotate', 'shapes' /*'fillAndSign', 'form'*/],
+    children: ['view', 'annotate', 'shapes', 'redaction' /*'fillAndSign', 'form'*/],
     active: (storeState) =>
       storeState.plugins.ui.commandMenu.commandMenu.activeCommand === 'tabOverflow',
   },
@@ -1532,6 +1557,88 @@ export const menuItems: Record<string, MenuItem<State>> = {
       selection.clear();
     },
   },
+  saveRedaction: {
+    id: 'saveRedaction',
+    label: 'Save redaction',
+    type: 'action',
+    icon: 'check',
+    action: (registry) => {
+      const redaction = registry.getPlugin<RedactionPlugin>(REDACTION_PLUGIN_ID)?.provides();
+      if (!redaction) return;
+
+      redaction.commitAllPending();
+    },
+    disabled: (storeState) => {
+      const redaction = storeState.plugins[REDACTION_PLUGIN_ID];
+      return !hasPendingRedactions(redaction);
+    },
+  },
+  exitRedaction: {
+    id: 'exitRedaction',
+    label: 'Exit redaction',
+    type: 'action',
+    icon: 'x',
+    action: (registry) => {
+      const redaction = registry.getPlugin<RedactionPlugin>(REDACTION_PLUGIN_ID)?.provides();
+      if (!redaction) return;
+
+      redaction.endRedaction();
+    },
+    disabled: (storeState) => {
+      const redaction = storeState.plugins[REDACTION_PLUGIN_ID];
+      return !redaction.isRedacting;
+    },
+  },
+  redactSelection: {
+    id: 'redactSelection',
+    label: 'Redact Selection',
+    type: 'action',
+    icon: 'redact',
+    action: (registry) => {
+      const redaction = registry.getPlugin<RedactionPlugin>(REDACTION_PLUGIN_ID)?.provides();
+      const ui = registry.getPlugin<UIPlugin>(UI_PLUGIN_ID)?.provides();
+      if (!redaction || !ui) return;
+
+      redaction.queueCurrentSelectionAsPending();
+      ui.setHeaderVisible({ id: 'toolsHeader', visible: true, visibleChild: 'redactionTools' });
+    },
+  },
+  redact: {
+    id: 'redact',
+    label: 'Redact Selection',
+    type: 'action',
+    icon: 'redact',
+    action: (registry) => {
+      const redaction = registry.getPlugin<RedactionPlugin>(REDACTION_PLUGIN_ID)?.provides();
+      if (!redaction) return;
+
+      if (redaction.isRedactSelectionActive()) {
+        redaction.endRedaction();
+      } else {
+        redaction.enableRedactSelection();
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'redactSelection',
+  },
+  redactArea: {
+    id: 'redactArea',
+    label: 'Redact Area',
+    type: 'action',
+    icon: 'redactArea',
+    action: (registry) => {
+      const redaction = registry.getPlugin<RedactionPlugin>(REDACTION_PLUGIN_ID)?.provides();
+      if (!redaction) return;
+
+      if (redaction.isMarqueeRedactActive()) {
+        redaction.endRedaction();
+      } else {
+        redaction.enableMarqueeRedact();
+      }
+    },
+    active: (storeState) =>
+      storeState.plugins[INTERACTION_MANAGER_PLUGIN_ID].activeMode === 'marqueeRedact',
+  },
   styleAnnotation: {
     id: 'styleAnnotation',
     label: 'Style',
@@ -2008,6 +2115,39 @@ export const components: Record<string, UIComponentType<State>> = {
       iconProps: getIconProps(menuItems.squigglySelection, storeState),
     }),
   },
+  redactionButton: {
+    type: 'iconButton',
+    id: 'redactionButton',
+    props: {
+      commandId: 'redact',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.redact, storeState),
+    }),
+  },
+  redactionAreaButton: {
+    type: 'iconButton',
+    id: 'redactionAreaButton',
+    props: {
+      commandId: 'redactArea',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.redactArea, storeState),
+    }),
+  },
+  redactSelectionButton: {
+    type: 'iconButton',
+    id: 'redactSelectionButton',
+    props: {
+      commandId: 'redactSelection',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      iconProps: getIconProps(menuItems.redactSelection, storeState),
+    }),
+  },
   viewCtrButton: {
     type: 'iconButton',
     id: 'viewCtrButton',
@@ -2019,6 +2159,30 @@ export const components: Record<string, UIComponentType<State>> = {
     mapStateToProps: (storeState, ownProps) => ({
       ...ownProps,
       active: isActive(menuItems.viewCtr, storeState),
+    }),
+  },
+  saveRedactionButton: {
+    type: 'iconButton',
+    id: 'saveRedactionButton',
+    props: {
+      commandId: 'saveRedaction',
+      label: 'Save redaction',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      disabled: isDisabled(menuItems.saveRedaction, storeState),
+    }),
+  },
+  exitRedactionButton: {
+    type: 'iconButton',
+    id: 'exitRedactionButton',
+    props: {
+      commandId: 'exitRedaction',
+      label: 'Exit redaction',
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      disabled: isDisabled(menuItems.exitRedaction, storeState),
     }),
   },
   commentButton: {
@@ -2169,6 +2333,19 @@ export const components: Record<string, UIComponentType<State>> = {
       active: isActive(menuItems.shapes, storeState),
     }),
   },
+  redactionTab: {
+    type: 'tabButton',
+    id: 'redactionTab',
+    props: {
+      label: 'Redact',
+      commandId: 'redaction',
+      active: false,
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      active: isActive(menuItems.redaction, storeState),
+    }),
+  },
   fillAndSignTab: {
     type: 'tabButton',
     id: 'fillAndSignTab',
@@ -2239,7 +2416,7 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'selectButton',
     props: {
       menuCommandId: 'tabOverflow',
-      commandIds: ['view', 'annotate', 'shapes'],
+      commandIds: ['view', 'annotate', 'shapes', 'redaction'],
       activeCommandId: 'view',
       active: false,
     },
@@ -2259,9 +2436,10 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'viewTab', priority: 1, className: 'hidden @min-[500px]:block' },
       { componentId: 'annotateTab', priority: 2, className: 'hidden @min-[800px]:block' },
       { componentId: 'shapesTab', priority: 3, className: 'hidden @min-[800px]:block' },
+      { componentId: 'redactionTab', priority: 4, className: 'hidden @min-[800px]:block' },
       {
         componentId: 'tabOverflowButton',
-        priority: 4,
+        priority: 5,
         className: 'hidden @min-[500px]:block @min-[800px]:hidden',
       },
     ],
@@ -2322,6 +2500,7 @@ export const components: Record<string, UIComponentType<State>> = {
       { componentId: 'underlineSelectionButton', priority: 2 },
       { componentId: 'strikethroughSelectionButton', priority: 3 },
       { componentId: 'squigglySelectionButton', priority: 4 },
+      { componentId: 'redactSelectionButton', priority: 5 },
     ],
     props: {
       gap: 10,
@@ -2411,6 +2590,20 @@ export const components: Record<string, UIComponentType<State>> = {
       gap: 10,
     },
   },
+  redactionTools: {
+    id: 'redactionTools',
+    type: 'groupedItems',
+    slots: [
+      { componentId: 'redactionButton', priority: 1 },
+      { componentId: 'redactionAreaButton', priority: 2 },
+      { componentId: 'divider1', priority: 3 },
+      { componentId: 'saveRedactionButton', priority: 4 },
+      { componentId: 'exitRedactionButton', priority: 5 },
+    ],
+    props: {
+      gap: 10,
+    },
+  },
   annotationTools: {
     id: 'annotationTools',
     type: 'groupedItems',
@@ -2461,6 +2654,7 @@ export const components: Record<string, UIComponentType<State>> = {
     slots: [
       { componentId: 'annotationTools', priority: 0 },
       { componentId: 'shapeTools', priority: 1 },
+      { componentId: 'redactionTools', priority: 2 },
     ],
     getChildContext: (props) => ({
       direction:
@@ -2748,6 +2942,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
             imageType: 'image/png',
           }),
           createPluginRegistration(HistoryPluginPackage, {}),
+          createPluginRegistration(RedactionPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (
@@ -2830,7 +3025,14 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                               annotation,
                                               menuWrapperProps,
                                             }) => (
-                                              <div {...menuWrapperProps}>
+                                              <div
+                                                {...menuWrapperProps}
+                                                style={{
+                                                  ...menuWrapperProps.style,
+                                                  display: 'flex',
+                                                  justifyContent: 'center',
+                                                }}
+                                              >
                                                 {selected ? (
                                                   <AnnotationMenu
                                                     trackedAnnotation={annotation}
@@ -2855,6 +3057,38 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                             scale={scale}
                                             pageWidth={width}
                                             pageHeight={height}
+                                          />
+                                          <RedactionLayer
+                                            pageIndex={pageIndex}
+                                            scale={scale}
+                                            rotation={rotation}
+                                            selectionMenu={({
+                                              item,
+                                              selected,
+                                              rect,
+                                              menuWrapperProps,
+                                            }) => (
+                                              <div
+                                                {...menuWrapperProps}
+                                                style={{
+                                                  ...menuWrapperProps.style,
+                                                  display: 'flex',
+                                                  justifyContent: 'center',
+                                                }}
+                                              >
+                                                {selected ? (
+                                                  <RedactionMenu
+                                                    item={item}
+                                                    pageIndex={pageIndex}
+                                                    style={{
+                                                      pointerEvents: 'auto',
+                                                      position: 'absolute',
+                                                      top: rect.size.height + 10,
+                                                    }}
+                                                  />
+                                                ) : null}
+                                              </div>
+                                            )}
                                           />
                                           <SelectionLayer pageIndex={pageIndex} scale={scale} />
                                         </PagePointerProvider>

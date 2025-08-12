@@ -36,6 +36,10 @@ export interface EmbedPdfPointerEvent {
   shiftKey: boolean;
   altKey: boolean;
   metaKey: boolean;
+  target: any;
+  currentTarget: any;
+  setPointerCapture?(): void;
+  releasePointerCapture?(): void;
 }
 
 export interface PointerEventHandlers<T = EmbedPdfPointerEvent> {

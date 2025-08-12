@@ -2,8 +2,11 @@ import {
   BasePlugin,
   CoreState,
   createBehaviorEmitter,
+  createEmitter,
   PluginRegistry,
+  REFRESH_PAGES,
   StoreState,
+  Unsubscribe,
 } from '@embedpdf/core';
 import { ignore } from '@embedpdf/models';
 import { RenderCapability, RenderPlugin } from '@embedpdf/plugin-render';
@@ -24,6 +27,7 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
   static readonly id = 'tiling' as const;
 
   private readonly tileRendering$ = createBehaviorEmitter<Record<number, Tile[]>>();
+  private readonly refreshPages$ = createEmitter<number[]>();
 
   private config: TilingPluginConfig;
   private renderCapability: RenderCapability;
@@ -44,6 +48,10 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
       wait: 500,
       throttleMode: 'trailing',
     });
+
+    this.coreStore.onAction(REFRESH_PAGES, (action) => {
+      this.refreshPages$.emit(action.payload);
+    });
   }
 
   async initialize(): Promise<void> {
@@ -59,6 +67,10 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
         this.scrollCapability.getMetrics(this.viewportCapability.getMetrics()),
       );
     }
+  }
+
+  public onRefreshPages(fn: (pages: number[]) => void): Unsubscribe {
+    return this.refreshPages$.on(fn);
   }
 
   private calculateVisibleTiles(scrollMetrics: ScrollMetrics): void {

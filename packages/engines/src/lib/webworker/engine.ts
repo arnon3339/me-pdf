@@ -1,15 +1,11 @@
 import {
   FormFieldValue,
-  PdfAnnotationTransformation,
   PdfAttachmentObject,
-  PdfEngineError,
   PdfFile,
   PdfMetadataObject,
   PdfSignatureObject,
   PdfTextRectObject,
   PdfWidgetAnnoObject,
-  SearchResult,
-  SearchTarget,
   Task,
   Logger,
   NoopLogger,
@@ -33,10 +29,7 @@ import {
   PdfGlyphObject,
   PdfPageGeometry,
   ImageConversionTypes,
-  PdfAnnotationObjectBase,
-  PdfAlphaColor,
   PageTextSlice,
-  WebAlphaColor,
   AppearanceMode,
   AnnotationCreateContext,
   PdfEngineMethodArgs,
@@ -822,6 +815,43 @@ export class WebWorkerEngine implements PdfEngine {
     const task = new WorkerTask<ArrayBuffer>(this.worker, requestId);
 
     const request: ExecuteRequest = createRequest(requestId, 'extractPages', [doc, pageIndexes]);
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.redactTextInQuads}
+   *
+   * @public
+   */
+  redactTextInRects(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    rects: Rect[],
+    recurseForms: boolean,
+    drawBlackBoxes: boolean,
+  ) {
+    this.logger.debug(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      'redactTextInRects',
+      doc,
+      page,
+      rects,
+      recurseForms,
+      drawBlackBoxes,
+    );
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+
+    const request: ExecuteRequest = createRequest(requestId, 'redactTextInRects', [
+      doc,
+      page,
+      rects,
+      recurseForms,
+      drawBlackBoxes,
+    ]);
     this.proxy(task, request);
 
     return task;

@@ -5,12 +5,12 @@ import { ActiveTool, patching } from '@embedpdf/plugin-annotation';
 import {
   PdfAnnotationSubtype,
   PdfLineAnnoObject,
-  LineEndings,
   PdfAnnotationBorderStyle,
   uuidV4,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
 import { Line } from './line';
+import { clamp } from '@embedpdf/core';
 
 interface LinePaintProps {
   pageIndex: number;
@@ -55,7 +55,6 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
   /* ------------------------------------------------------------------ */
   /* helpers                                                            */
   /* ------------------------------------------------------------------ */
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
   const pageWidthPDF = pageWidth / scale;
   const pageHeightPDF = pageHeight / scale;
 
@@ -99,14 +98,14 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
   /* ------------------------------------------------------------------ */
   /* pointer handlers                                                   */
   /* ------------------------------------------------------------------ */
-  const handlers = useMemo<PointerEventHandlers<PointerEvent>>(
+  const handlers = useMemo<PointerEventHandlers>(
     () => ({
       onPointerDown: (pos, evt) => {
         const x = clamp(pos.x, 0, pageWidthPDF);
         const y = clamp(pos.y, 0, pageHeightPDF);
         setStart({ x, y });
         setCurrent({ x, y });
-        (evt.target as HTMLElement)?.setPointerCapture?.(evt.pointerId);
+        evt.setPointerCapture?.();
       },
       onPointerMove: (pos) => {
         if (!start) return;
@@ -118,12 +117,12 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
         if (start && current && annotationProvides) {
           commitLine(start, current);
         }
-        (evt.target as HTMLElement)?.releasePointerCapture?.(evt.pointerId);
+        evt.releasePointerCapture?.();
         setStart(null);
         setCurrent(null);
       },
       onPointerCancel: (_, evt) => {
-        (evt.target as HTMLElement)?.releasePointerCapture?.(evt.pointerId);
+        evt.releasePointerCapture?.();
         setStart(null);
         setCurrent(null);
       },
