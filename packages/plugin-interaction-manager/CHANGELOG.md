@@ -1,5 +1,11 @@
 # @embedpdf/plugin-interaction-manager
 
+## 1.0.18
+
+### Patch Changes
+
+- [#72](https://github.com/embedpdf/embed-pdf-viewer/pull/72) by [@bobsingor](https://github.com/bobsingor) – Abstract away the setPointerCapture and releasePointerCapture for better way to interact
+
 ## 1.0.17
 
 ## 1.0.16

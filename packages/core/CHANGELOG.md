@@ -1,5 +1,11 @@
 # @embedpdf/core
 
+## 1.0.18
+
+### Patch Changes
+
+- [#72](https://github.com/embedpdf/embed-pdf-viewer/pull/72) by [@bobsingor](https://github.com/bobsingor) – Ability to refresh a page and cause rerender (necessary for redaction)
+
 ## 1.0.17
 
 ## 1.0.16
