@@ -39,7 +39,9 @@ export interface RegisterMarqueeOnPageOptions {
   callback: MarqueeRedactCallback;
 }
 
-export interface RedactionPluginConfig extends BasePluginConfig {}
+export interface RedactionPluginConfig extends BasePluginConfig {
+  blackbox: boolean;
+}
 
 export interface RedactionCapability {
   queueCurrentSelectionAsPending: () => Task<boolean, PdfErrorReason>;
@@ -58,6 +60,7 @@ export interface RedactionCapability {
   removePending: (page: number, id: string) => void;
   clearPending: () => void;
   commitAllPending: () => Task<boolean, PdfErrorReason>;
+  commitPending: (page: number, id: string) => Task<boolean, PdfErrorReason>;
 
   endRedaction: () => void;
   startRedaction: () => void;

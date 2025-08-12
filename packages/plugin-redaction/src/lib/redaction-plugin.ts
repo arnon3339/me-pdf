@@ -52,6 +52,7 @@ export class RedactionPlugin extends BasePlugin<
 > {
   static readonly id = 'redaction' as const;
   private engine: PdfEngine;
+  private config: RedactionPluginConfig;
 
   private selectionCapability: SelectionCapability | undefined;
   private interactionManagerCapability: InteractionManagerCapability | undefined;
@@ -64,9 +65,15 @@ export class RedactionPlugin extends BasePlugin<
   private readonly unsubscribeEndSelection: Unsubscribe | undefined;
   private readonly unsubscribeModeChange: Unsubscribe | undefined;
 
-  constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
+  constructor(
+    id: string,
+    registry: PluginRegistry,
+    engine: PdfEngine,
+    config: RedactionPluginConfig,
+  ) {
     super(id, registry);
     this.engine = engine;
+    this.config = config;
 
     this.selectionCapability = this.registry.getPlugin<SelectionPlugin>('selection')?.provides();
     this.interactionManagerCapability = this.registry
@@ -156,6 +163,7 @@ export class RedactionPlugin extends BasePlugin<
         this.pending$.emit(this.state.pending);
       },
       commitAllPending: () => this.commitAllPending(),
+      commitPending: (page, id) => this.commitPendingOne(page, id),
 
       endRedaction: () => this.endRedaction(),
       startRedaction: () => this.startRedaction(),
@@ -298,6 +306,33 @@ export class RedactionPlugin extends BasePlugin<
     return PdfTaskHelper.resolve(true);
   }
 
+  private commitPendingOne(page: number, id: string): Task<boolean, PdfErrorReason> {
+    const doc = this.coreState.core.document;
+    if (!doc)
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Document not found' });
+
+    const item = (this.state.pending[page] ?? []).find((it) => it.id === id);
+    if (!item) return PdfTaskHelper.resolve(true);
+
+    const rects: Rect[] = item.kind === 'text' ? item.rects : [item.rect];
+    const pdfPage = doc.pages[page];
+    if (!pdfPage)
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Page not found' });
+
+    const task = new Task<boolean, PdfErrorReason>();
+    this.engine.redactTextInRects(doc, pdfPage, rects, false, this.config.blackbox).wait(
+      () => {
+        this.dispatch(removePending(page, id));
+        this.pending$.emit(this.state.pending);
+        this.dispatchCoreAction(refreshPages([page]));
+        task.resolve(true);
+      },
+      () => task.reject({ code: PdfErrorCode.Unknown, message: 'Failed to commit redactions' }),
+    );
+
+    return task;
+  }
+
   private commitAllPending(): Task<boolean, PdfErrorReason> {
     const doc = this.coreState.core.document;
     if (!doc)
@@ -324,7 +359,7 @@ export class RedactionPlugin extends BasePlugin<
       const page = doc.pages[pageIndex];
       if (!page) continue;
       if (!rects.length) continue;
-      tasks.push(this.engine.redactTextInRects(doc, page, rects, false, false));
+      tasks.push(this.engine.redactTextInRects(doc, page, rects, false, this.config.blackbox));
     }
 
     const task = new Task<boolean, PdfErrorReason>();
