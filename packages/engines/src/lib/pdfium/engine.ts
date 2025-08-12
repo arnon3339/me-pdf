@@ -4539,7 +4539,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       ok = !!this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
     }
 
-    pageCtx.release();
+    pageCtx.disposeImmediate();
     this.logger.perf('PDFiumEngine', 'Engine', label, 'End', `${doc.id}-${page.index}`);
 
     return PdfTaskHelper.resolve<boolean>(!!ok);

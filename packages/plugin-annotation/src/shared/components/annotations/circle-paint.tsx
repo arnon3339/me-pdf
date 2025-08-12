@@ -10,6 +10,7 @@ import {
   uuidV4,
 } from '@embedpdf/models';
 import { useAnnotationCapability, useAnnotationPlugin } from '../../hooks';
+import { clamp } from '@embedpdf/core';
 
 interface CirclePaintProps {
   pageIndex: number;
@@ -57,11 +58,6 @@ export const CirclePaint = ({
   /* ------------------------------------------------------------------ */
   const { register } = usePointerHandlers({ modeId: 'circle', pageIndex });
 
-  /* ------------------------------------------------------------------ */
-  /* helpers                                                            */
-  /* ------------------------------------------------------------------ */
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-
   /* page size in **PDF-space** (unscaled) ----------------------------- */
   const pageWidthPDF = pageWidth / scale;
   const pageHeightPDF = pageHeight / scale;
@@ -72,14 +68,14 @@ export const CirclePaint = ({
   const [start, setStart] = useState<{ x: number; y: number } | null>(null);
   const [current, setCurrent] = useState<{ x: number; y: number } | null>(null);
 
-  const handlers = useMemo<PointerEventHandlers<PointerEvent>>(
+  const handlers = useMemo<PointerEventHandlers>(
     () => ({
       onPointerDown: (pos, evt) => {
         const x = clamp(pos.x, 0, pageWidthPDF);
         const y = clamp(pos.y, 0, pageHeightPDF);
         setStart({ x, y });
         setCurrent({ x, y });
-        (evt.target as HTMLElement)?.setPointerCapture?.(evt.pointerId);
+        evt.setPointerCapture?.();
       },
       onPointerMove: (pos) => {
         if (!start) return;
@@ -125,12 +121,12 @@ export const CirclePaint = ({
             annotationProvides.selectAnnotation(pageIndex, anno.id);
           }
         }
-        (evt.target as HTMLElement)?.releasePointerCapture?.(evt.pointerId);
+        evt.releasePointerCapture?.();
         setStart(null);
         setCurrent(null);
       },
       onPointerCancel: (_, evt) => {
-        (evt.target as HTMLElement)?.releasePointerCapture?.(evt.pointerId);
+        evt.releasePointerCapture?.();
         setStart(null);
         setCurrent(null);
       },

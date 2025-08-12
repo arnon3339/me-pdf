@@ -1,6 +1,8 @@
 import { PdfDocumentObject, PdfPageObject, Rotation } from '@embedpdf/models';
 
 export const LOAD_DOCUMENT = 'LOAD_DOCUMENT';
+export const REFRESH_DOCUMENT = 'REFRESH_DOCUMENT';
+export const REFRESH_PAGES = 'REFRESH_PAGES';
 export const SET_DOCUMENT = 'SET_DOCUMENT';
 export const SET_DOCUMENT_ERROR = 'SET_DOCUMENT_ERROR';
 export const SET_SCALE = 'SET_SCALE';
@@ -9,6 +11,7 @@ export const SET_PAGES = 'SET_PAGES';
 
 export const CORE_ACTION_TYPES = [
   LOAD_DOCUMENT,
+  REFRESH_DOCUMENT,
   SET_DOCUMENT,
   SET_DOCUMENT_ERROR,
   SET_SCALE,
@@ -19,6 +22,16 @@ export const CORE_ACTION_TYPES = [
 // Action Type Interfaces
 export interface LoadDocumentAction {
   type: typeof LOAD_DOCUMENT;
+}
+
+export interface RefreshDocumentAction {
+  type: typeof REFRESH_DOCUMENT;
+  payload: PdfDocumentObject;
+}
+
+export interface RefreshPagesAction {
+  type: typeof REFRESH_PAGES;
+  payload: number[];
 }
 
 export interface SetDocumentAction {
@@ -48,6 +61,8 @@ export interface SetPagesAction {
 
 export type DocumentAction =
   | LoadDocumentAction
+  | RefreshDocumentAction
+  | RefreshPagesAction
   | SetDocumentAction
   | SetDocumentErrorAction
   | SetScaleAction
@@ -58,6 +73,14 @@ export type DocumentAction =
 export type CoreAction = DocumentAction;
 
 export const loadDocument = (): CoreAction => ({ type: LOAD_DOCUMENT });
+export const refreshDocument = (document: PdfDocumentObject): CoreAction => ({
+  type: REFRESH_DOCUMENT,
+  payload: document,
+});
+export const refreshPages = (pages: number[]): CoreAction => ({
+  type: REFRESH_PAGES,
+  payload: pages,
+});
 export const setDocument = (document: PdfDocumentObject): CoreAction => ({
   type: SET_DOCUMENT,
   payload: document,

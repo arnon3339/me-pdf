@@ -6,8 +6,16 @@ import {
   RedactionItem,
   SelectedRedaction,
 } from './types';
-import { BasePlugin, createBehaviorEmitter, PluginRegistry, Unsubscribe } from '@embedpdf/core';
 import {
+  BasePlugin,
+  createBehaviorEmitter,
+  PluginRegistry,
+  refreshDocument,
+  refreshPages,
+  Unsubscribe,
+} from '@embedpdf/core';
+import {
+  ignore,
   PdfEngine,
   PdfErrorCode,
   PdfErrorReason,
@@ -307,6 +315,10 @@ export class RedactionPlugin extends BasePlugin<
       perPage.set(p, list);
     }
 
+    const pagesToRefresh = Array.from(perPage.entries())
+      .filter(([_, rects]) => rects.length > 0)
+      .map(([pageIndex]) => pageIndex);
+
     const tasks: PdfTask<boolean>[] = [];
     for (const [pageIndex, rects] of perPage) {
       const page = doc.pages[pageIndex];
@@ -319,11 +331,13 @@ export class RedactionPlugin extends BasePlugin<
     Task.all(tasks).wait(
       () => {
         this.dispatch(clearPending());
+        this.dispatchCoreAction(refreshPages(pagesToRefresh));
         this.pending$.emit(this.state.pending);
         task.resolve(true);
       },
       () => task.reject({ code: PdfErrorCode.Unknown, message: 'Failed to commit redactions' }),
     );
+
     return task;
   }
 

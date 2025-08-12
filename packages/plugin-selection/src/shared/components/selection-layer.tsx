@@ -8,7 +8,7 @@ import {
 import { PointerEventHandlersWithLifecycle } from '@embedpdf/plugin-interaction-manager';
 import { glyphAt } from '@embedpdf/plugin-selection';
 
-import { useSelectionCapability } from '../hooks';
+import { useSelectionCapability, useSelectionPlugin } from '../hooks';
 
 type Props = {
   pageIndex: number;
@@ -18,6 +18,7 @@ type Props = {
 
 export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243)' }: Props) {
   const { provides: sel } = useSelectionCapability();
+  const { plugin: selectionPlugin } = useSelectionPlugin();
   const { provides: im } = useInteractionManagerCapability();
   const { register } = usePointerHandlers({ pageIndex });
   const [rects, setRects] = useState<Array<Rect>>([]);
@@ -60,6 +61,16 @@ export function SelectionLayer({ pageIndex, scale, background = 'rgba(33,150,243
       geoCacheRef.current = null;
     };
   }, [sel, pageIndex]);
+
+  useEffect(() => {
+    if (!selectionPlugin || !sel) return;
+    return selectionPlugin.onRefreshPages((pages) => {
+      if (pages.includes(pageIndex)) {
+        const task = sel.getGeometry(pageIndex);
+        task.wait((g) => (geoCacheRef.current = g), ignore);
+      }
+    });
+  }, [sel, selectionPlugin, pageIndex]);
 
   const handlers = useMemo(
     (): PointerEventHandlersWithLifecycle<PointerEvent> => ({

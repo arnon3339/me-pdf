@@ -11,6 +11,7 @@ import {
   uuidV4,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
+import { clamp } from '@embedpdf/core';
 
 interface SquarePaintProps {
   pageIndex: number;
@@ -57,11 +58,6 @@ export const SquarePaint = ({
   /* integration with interaction-manager                               */
   /* ------------------------------------------------------------------ */
   const { register } = usePointerHandlers({ modeId: 'square', pageIndex });
-
-  /* ------------------------------------------------------------------ */
-  /* helpers                                                            */
-  /* ------------------------------------------------------------------ */
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
   /* page size in **PDF-space** (unscaled) ----------------------------- */
   const pageWidthPDF = pageWidth / scale;

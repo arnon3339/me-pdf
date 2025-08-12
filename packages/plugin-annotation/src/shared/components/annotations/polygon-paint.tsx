@@ -10,6 +10,7 @@ import {
   uuidV4,
 } from '@embedpdf/models';
 import { useAnnotationCapability } from '../../hooks';
+import { clamp } from '@embedpdf/core';
 
 interface PolygonPaintProps {
   pageIndex: number;
@@ -45,7 +46,6 @@ export const PolygonPaint = ({
 
   const { register } = usePointerHandlers({ modeId: 'polygon', pageIndex });
 
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
   const pageWidthPDF = pageWidth / scale;
   const pageHeightPDF = pageHeight / scale;
 
@@ -96,7 +96,7 @@ export const PolygonPaint = ({
     return x >= v0.x - half && x <= v0.x + half && y >= v0.y - half && y <= v0.y + half;
   };
 
-  const handlers = useMemo<PointerEventHandlers<PointerEvent>>(
+  const handlers = useMemo<PointerEventHandlers>(
     () => ({
       onClick: (pos) => {
         const x = clamp(pos.x, 0, pageWidthPDF);

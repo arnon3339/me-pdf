@@ -1,4 +1,10 @@
-import { BasePlugin, PluginRegistry } from '@embedpdf/core';
+import {
+  BasePlugin,
+  createEmitter,
+  PluginRegistry,
+  REFRESH_PAGES,
+  Unsubscribe,
+} from '@embedpdf/core';
 import {
   RenderCapability,
   RenderPageOptions,
@@ -11,9 +17,15 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
   static readonly id = 'render' as const;
   private engine: PdfEngine;
 
+  private readonly refreshPages$ = createEmitter<number[]>();
+
   constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
     super(id, registry);
     this.engine = engine;
+
+    this.coreStore.onAction(REFRESH_PAGES, (action) => {
+      this.refreshPages$.emit(action.payload);
+    });
   }
 
   async initialize(_config: RenderPluginConfig): Promise<void> {}
@@ -23,6 +35,10 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
       renderPage: this.renderPage.bind(this),
       renderPageRect: this.renderPageRect.bind(this),
     };
+  }
+
+  public onRefreshPages(fn: (pages: number[]) => void): Unsubscribe {
+    return this.refreshPages$.on(fn);
   }
 
   private renderPage({

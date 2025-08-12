@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef, HTMLAttributes, CSSProperties } from '@framework';
+import { useEffect, useState, useRef, HTMLAttributes, CSSProperties, Fragment } from '@framework';
 import { ThumbMeta } from '@embedpdf/plugin-thumbnail';
 import { ignore, PdfErrorCode } from '@embedpdf/models';
-import { useThumbnailCapability } from '../hooks';
+import { useThumbnailCapability, useThumbnailPlugin } from '../hooks';
 
 type ThumbnailImgProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
   style?: CSSProperties;
@@ -10,8 +10,19 @@ type ThumbnailImgProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
 
 export function ThumbImg({ meta, style, ...props }: ThumbnailImgProps) {
   const { provides: thumbs } = useThumbnailCapability();
+  const { plugin: thumbnailPlugin } = useThumbnailPlugin();
   const [url, setUrl] = useState<string>();
   const urlRef = useRef<string | null>(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    if (!thumbnailPlugin) return;
+    return thumbnailPlugin.onRefreshPages((pages) => {
+      if (pages.includes(meta.pageIndex)) {
+        setRefreshTick((tick) => tick + 1);
+      }
+    });
+  }, [thumbnailPlugin]);
 
   useEffect(() => {
     const task = thumbs?.renderThumb(meta.pageIndex, window.devicePixelRatio);
@@ -32,7 +43,7 @@ export function ThumbImg({ meta, style, ...props }: ThumbnailImgProps) {
         });
       }
     };
-  }, [meta.pageIndex]);
+  }, [thumbs, meta.pageIndex, refreshTick]);
 
   const handleImageLoad = () => {
     if (urlRef.current) {

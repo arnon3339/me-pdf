@@ -4,6 +4,7 @@ import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager'
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
 import { ActiveTool } from '@embedpdf/plugin-annotation';
 import { useAnnotationCapability } from '../../hooks';
+import { clamp } from '@embedpdf/core';
 
 interface StampPaintProps {
   pageIndex: number;
@@ -42,8 +43,6 @@ export const StampPaint = ({ pageIndex, scale, pageWidth, pageHeight }: StampPai
   /* page size in **PDF-space** (unscaled) ----------------------------- */
   const pageWidthPDF = pageWidth / scale;
   const pageHeightPDF = pageHeight / scale;
-
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
   const [start, setStart] = useState<{ x: number; y: number } | null>(null);
 
