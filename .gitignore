@@ -11,5 +11,4 @@ config/tsup.frameworks.config.bundled*
 .gcs_entries
 .gclient*
 .cipd
-
 .idea
