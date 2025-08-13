@@ -102,13 +102,20 @@ export class UIPlugin extends BasePlugin<
 
     // Optional: Track command execution for analytics or other purposes
     this.menuManager.on(MenuManager.EVENTS.COMMAND_EXECUTED, (data) => {
-      console.log('Command executed:', data.command.id, 'source:', data.source);
+      this.logger.debug('UIPlugin', 'CommandExecuted', `Command executed: ${data.command.id}`, {
+        commandId: data.command.id,
+        source: data.source,
+      });
     });
   }
 
   private addComponent(id: string, componentConfig: UIComponentType<any>) {
     if (this.components[id]) {
-      console.warn(`Component with ID ${id} already exists and will be overwritten`);
+      this.logger.warn(
+        'UIPlugin',
+        'ComponentAlreadyExists',
+        `Component with ID ${id} already exists and will be overwritten`,
+      );
     }
     // Step 1: Build the UIComponent
     const component = new UIComponent(componentConfig, this.componentRenderers);
@@ -137,7 +144,9 @@ export class UIPlugin extends BasePlugin<
           if (child) {
             component.addChild(slot.componentId, child, slot.priority, slot.className);
           } else {
-            console.warn(
+            this.logger.warn(
+              'UIPlugin',
+              'ChildComponentNotFound',
               `Child component ${slot.componentId} not found for GroupedItems ${props.id}`,
             );
           }
@@ -184,13 +193,21 @@ export class UIPlugin extends BasePlugin<
     const parentComponent = this.components[parentId];
 
     if (!parentComponent) {
-      console.error(`Parent component ${parentId} not found`);
+      this.logger.error(
+        'UIPlugin',
+        'ParentComponentNotFound',
+        `Parent component ${parentId} not found`,
+      );
       return;
     }
 
     // 2. Check if parent has slots (is a container type)
     if (!isItemWithSlots(parentComponent)) {
-      console.error(`Parent component ${parentId} does not support slots`);
+      this.logger.error(
+        'UIPlugin',
+        'ParentComponentDoesNotSupportSlots',
+        `Parent component ${parentId} does not support slots`,
+      );
       return;
     }
 
@@ -198,7 +215,11 @@ export class UIPlugin extends BasePlugin<
     const childComponent = this.components[slotId];
 
     if (!childComponent) {
-      console.error(`Child component ${slotId} not found`);
+      this.logger.error(
+        'UIPlugin',
+        'ChildComponentNotFound',
+        `Child component ${slotId} not found`,
+      );
       return;
     }
 
