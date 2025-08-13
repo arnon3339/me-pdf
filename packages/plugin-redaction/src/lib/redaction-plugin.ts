@@ -51,7 +51,6 @@ export class RedactionPlugin extends BasePlugin<
   RedactionState
 > {
   static readonly id = 'redaction' as const;
-  private engine: PdfEngine;
   private config: RedactionPluginConfig;
 
   private selectionCapability: SelectionCapability | undefined;
@@ -65,14 +64,8 @@ export class RedactionPlugin extends BasePlugin<
   private readonly unsubscribeEndSelection: Unsubscribe | undefined;
   private readonly unsubscribeModeChange: Unsubscribe | undefined;
 
-  constructor(
-    id: string,
-    registry: PluginRegistry,
-    engine: PdfEngine,
-    config: RedactionPluginConfig,
-  ) {
+  constructor(id: string, registry: PluginRegistry, config: RedactionPluginConfig) {
     super(id, registry);
-    this.engine = engine;
     this.config = config;
 
     this.selectionCapability = this.registry.getPlugin<SelectionPlugin>('selection')?.provides();

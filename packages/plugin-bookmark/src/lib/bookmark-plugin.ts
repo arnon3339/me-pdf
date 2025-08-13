@@ -6,12 +6,8 @@ import { BookmarkCapability, BookmarkPluginConfig } from './types';
 export class BookmarkPlugin extends BasePlugin<BookmarkPluginConfig, BookmarkCapability> {
   static readonly id = 'bookmark' as const;
 
-  private engine: PdfEngine;
-
-  constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
+  constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
-
-    this.engine = engine;
   }
 
   async initialize(_: BookmarkPluginConfig): Promise<void> {}

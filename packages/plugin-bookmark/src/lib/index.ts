@@ -5,7 +5,7 @@ import { BookmarkPlugin } from './bookmark-plugin';
 
 export const BookmarkPluginPackage: PluginPackage<BookmarkPlugin, BookmarkPluginConfig> = {
   manifest,
-  create: (registry, engine) => new BookmarkPlugin(BOOKMARK_PLUGIN_ID, registry, engine),
+  create: (registry) => new BookmarkPlugin(BOOKMARK_PLUGIN_ID, registry),
   reducer: () => {},
   initialState: {},
 };

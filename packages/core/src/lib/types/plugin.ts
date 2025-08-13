@@ -1,5 +1,5 @@
 import { PluginRegistry } from '../registry/plugin-registry';
-import { PdfEngine, Rotation } from '@embedpdf/models';
+import { Logger, PdfEngine, Rotation } from '@embedpdf/models';
 import { Action, Reducer } from '../store/types';
 import { CoreState } from '../store';
 
@@ -20,6 +20,7 @@ export interface BasePluginConfig {
 export interface PluginRegistryConfig {
   rotation?: Rotation;
   scale?: number;
+  logger?: Logger;
 }
 
 export interface PluginManifest<TConfig = unknown> {
@@ -45,7 +46,7 @@ export interface PluginPackage<
   TAction extends Action = Action,
 > {
   manifest: PluginManifest<TConfig>;
-  create(registry: PluginRegistry, engine: PdfEngine, config: TConfig): T;
+  create(registry: PluginRegistry, config: TConfig): T;
   reducer: Reducer<TState, TAction>;
   initialState: TState | ((coreState: CoreState, config: TConfig) => TState);
 }

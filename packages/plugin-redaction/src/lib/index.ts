@@ -12,8 +12,7 @@ export const RedactionPluginPackage: PluginPackage<
   RedactionAction
 > = {
   manifest,
-  create: (registry, engine, config) =>
-    new RedactionPlugin(REDACTION_PLUGIN_ID, registry, engine, config),
+  create: (registry, config) => new RedactionPlugin(REDACTION_PLUGIN_ID, registry, config),
   reducer: redactionReducer,
   initialState: initialState,
 };

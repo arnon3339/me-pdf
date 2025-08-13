@@ -11,17 +11,14 @@ import {
   RenderPageRectOptions,
   RenderPluginConfig,
 } from './types';
-import { PdfEngine } from '@embedpdf/models';
 
 export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapability> {
   static readonly id = 'render' as const;
-  private engine: PdfEngine;
 
   private readonly refreshPages$ = createEmitter<number[]>();
 
-  constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
+  constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
-    this.engine = engine;
 
     this.coreStore.onAction(REFRESH_PAGES, (action) => {
       this.refreshPages$.emit(action.payload);

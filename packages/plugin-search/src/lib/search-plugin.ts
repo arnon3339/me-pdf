@@ -32,7 +32,6 @@ export class SearchPlugin extends BasePlugin<
   static readonly id = 'search' as const;
   private loader: LoaderCapability;
   private currentDocument?: PdfDocumentObject;
-  private engine: PdfEngine;
 
   private readonly searchStop$ = createBehaviorEmitter();
   private readonly searchStart$ = createBehaviorEmitter();
@@ -44,9 +43,8 @@ export class SearchPlugin extends BasePlugin<
   // keep reference to current running task (optional abort handling if your PdfTask supports it)
   private currentTask?: ReturnType<PdfEngine['searchAllPages']>;
 
-  constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
+  constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
-    this.engine = engine;
     this.loader = this.registry.getPlugin<LoaderPlugin>('loader')!.provides();
 
     this.loader.onDocumentLoaded(this.handleDocumentLoaded.bind(this));

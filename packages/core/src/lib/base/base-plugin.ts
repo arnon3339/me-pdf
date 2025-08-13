@@ -1,6 +1,7 @@
 import { IPlugin } from '../types/plugin';
 import { PluginRegistry } from '../registry/plugin-registry';
 import { Action, CoreAction, CoreState, PluginStore, Store, StoreState } from '../store';
+import { Logger, PdfEngine } from '@embedpdf/models';
 
 export interface StateChangeHandler<TState> {
   (state: TState): void;
@@ -17,6 +18,9 @@ export abstract class BasePlugin<
 
   protected pluginStore: PluginStore<TState, TAction>;
   protected coreStore: Store<CoreState, CoreAction>;
+  protected readonly logger: Logger;
+  protected readonly engine: PdfEngine;
+
   // Track debounced actions
   private debouncedActions: Record<string, number> = {};
   private unsubscribeFromState: (() => void) | null = null;
@@ -36,6 +40,8 @@ export abstract class BasePlugin<
         `Plugin ID mismatch: ${id} !== ${(this.constructor as typeof BasePlugin).id}`,
       );
     }
+    this.engine = this.registry.getEngine();
+    this.logger = this.registry.getLogger();
     this.coreStore = this.registry.getStore();
     this.pluginStore = this.coreStore.getPluginStore<TState, TAction>(this.id);
     this.unsubscribeFromState = this.pluginStore.subscribeToState((action, newState, oldState) => {

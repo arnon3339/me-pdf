@@ -5,7 +5,7 @@ import { ThumbnailPlugin } from './thumbnail-plugin';
 
 export const ThumbnailPluginPackage: PluginPackage<ThumbnailPlugin, ThumbnailPluginConfig> = {
   manifest,
-  create: (registry, _engine, config) => new ThumbnailPlugin(THUMBNAIL_PLUGIN_ID, registry, config),
+  create: (registry, config) => new ThumbnailPlugin(THUMBNAIL_PLUGIN_ID, registry, config),
   reducer: () => {},
   initialState: {},
 };

@@ -53,9 +53,6 @@ const plugins = [
         id: 'pdf',
         url: 'https://snippet.embedpdf.com/ebook.pdf',
       },
-      options: {
-        mode: 'full-fetch',
-      },
     },
   }),
   createPluginRegistration(ViewportPluginPackage, {

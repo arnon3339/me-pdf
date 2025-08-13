@@ -12,7 +12,7 @@ export const SpreadPluginPackage: PluginPackage<
   SpreadAction
 > = {
   manifest,
-  create: (registry, _engine, config) => new SpreadPlugin(SPREAD_PLUGIN_ID, registry, config),
+  create: (registry, config) => new SpreadPlugin(SPREAD_PLUGIN_ID, registry, config),
   reducer: spreadReducer,
   initialState,
 };

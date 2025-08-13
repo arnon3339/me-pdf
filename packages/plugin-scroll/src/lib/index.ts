@@ -12,7 +12,7 @@ export const ScrollPluginPackage: PluginPackage<
   ScrollAction
 > = {
   manifest,
-  create: (registry, _engine, config) => new ScrollPlugin(SCROLL_PLUGIN_ID, registry, config),
+  create: (registry, config) => new ScrollPlugin(SCROLL_PLUGIN_ID, registry, config),
   reducer: scrollReducer,
   initialState: (coreState, config) => initialState(coreState, config),
 };

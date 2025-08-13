@@ -3,14 +3,11 @@ import {
   ignore,
   PdfAnnotationObject,
   PdfDocumentObject,
-  PdfEngine,
   PdfErrorReason,
   Task,
   PdfAnnotationSubtype,
   PdfTaskHelper,
   PdfErrorCode,
-  Rotation,
-  AppearanceMode,
   PdfBlendMode,
   AnnotationCreateContext,
   uuidV4,
@@ -64,7 +61,6 @@ export class AnnotationPlugin extends BasePlugin<
 
   public readonly config: AnnotationPluginConfig;
 
-  private engine: PdfEngine;
   private readonly state$ = createBehaviorEmitter<AnnotationState>();
   private readonly interactionManager: InteractionManagerCapability | null;
   private readonly selection: SelectionCapability | null;
@@ -80,14 +76,8 @@ export class AnnotationPlugin extends BasePlugin<
     defaults: null,
   });
 
-  constructor(
-    id: string,
-    registry: PluginRegistry,
-    engine: PdfEngine,
-    config: AnnotationPluginConfig,
-  ) {
+  constructor(id: string, registry: PluginRegistry, config: AnnotationPluginConfig) {
     super(id, registry);
-    this.engine = engine;
     this.config = config;
 
     const selection = registry.getPlugin<SelectionPlugin>('selection');

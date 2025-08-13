@@ -26,7 +26,6 @@ export class LoaderPlugin extends BasePlugin<LoaderPluginConfig, LoaderCapabilit
   constructor(
     public readonly id: string,
     registry: PluginRegistry,
-    private engine: PdfEngine,
   ) {
     super(id, registry);
     this.documentLoader = new PDFDocumentLoader();

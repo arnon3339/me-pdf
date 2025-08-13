@@ -5,7 +5,7 @@ import { RotatePlugin } from './rotate-plugin';
 
 export const RotatePluginPackage: PluginPackage<RotatePlugin, RotatePluginConfig> = {
   manifest,
-  create: (registry, _engine, config) => new RotatePlugin(ROTATE_PLUGIN_ID, registry, config),
+  create: (registry, config) => new RotatePlugin(ROTATE_PLUGIN_ID, registry, config),
   reducer: () => {},
   initialState: {},
 };

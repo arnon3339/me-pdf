@@ -12,7 +12,7 @@ export const UIPluginPackage: PluginPackage<
   UIPluginAction
 > = {
   manifest,
-  create: (registry, _engine, config) => new UIPlugin(UI_PLUGIN_ID, registry, config!),
+  create: (registry, config) => new UIPlugin(UI_PLUGIN_ID, registry, config),
   reducer: uiReducer,
   initialState,
 };

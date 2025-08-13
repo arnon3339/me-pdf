@@ -9,7 +9,7 @@ import { ZoomPlugin } from './zoom-plugin';
 export const ZoomPluginPackage: PluginPackage<ZoomPlugin, ZoomPluginConfig, ZoomState, ZoomAction> =
   {
     manifest,
-    create: (registry, _engine, config) => new ZoomPlugin(ZOOM_PLUGIN_ID, registry, config),
+    create: (registry, config) => new ZoomPlugin(ZOOM_PLUGIN_ID, registry, config),
     reducer: zoomReducer,
     initialState,
   };

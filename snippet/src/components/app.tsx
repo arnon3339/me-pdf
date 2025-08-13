@@ -2873,6 +2873,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
     <>
       <style>{styles}</style>
       <EmbedPDF
+        logger={config.log ? logger : undefined}
         engine={engine}
         onInitialized={async (registry) => {
           const uiCapability = registry.getPlugin<UIPlugin>('ui')?.provides();
