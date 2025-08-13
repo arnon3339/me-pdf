@@ -2278,14 +2278,6 @@ export interface PdfFileUrl extends PdfFileWithoutContent {
   url: string;
 }
 
-export interface PdfUrlOptions {
-  /**
-   * Mode of the url (range request is not supported yet, fallback to full-fetch)
-   */
-  mode?: 'auto' | 'range-request' | 'full-fetch';
-  password?: string;
-}
-
 export enum PdfErrorCode {
   Ok, //  #define FPDF_ERR_SUCCESS 0    // No error.
   Unknown, // #define FPDF_ERR_UNKNOWN 1    // Unknown error.
@@ -2372,6 +2364,24 @@ export class PdfTaskHelper {
 
     return task;
   }
+}
+
+export interface PdfOpenDocumentBufferOptions {
+  /**
+   * Password for the document
+   */
+  password?: string;
+}
+
+export interface PdfOpenDocumentUrlOptions {
+  /**
+   * Password for the document
+   */
+  password?: string;
+  /**
+   * Loading mode
+   */
+  mode?: 'auto' | 'range-request' | 'full-fetch';
 }
 
 export interface PdfRenderOptions {
@@ -2467,14 +2477,20 @@ export interface PdfEngine<T = Blob> {
    * @param options - Additional options including mode (auto, range-request, full-fetch) and password
    * @returns Task that resolves with the PdfDocumentObject or an error
    */
-  openDocumentUrl: (file: PdfFileUrl, options?: PdfUrlOptions) => PdfTask<PdfDocumentObject>;
+  openDocumentUrl: (
+    file: PdfFileUrl,
+    options?: PdfOpenDocumentUrlOptions,
+  ) => PdfTask<PdfDocumentObject>;
   /**
    * Open pdf document from buffer
    * @param file - pdf file
-   * @param password - protected password for this file
+   * @param options - Additional options including password
    * @returns task that contains the file or error
    */
-  openDocumentFromBuffer: (file: PdfFile, password: string) => PdfTask<PdfDocumentObject>;
+  openDocumentBuffer: (
+    file: PdfFile,
+    options?: PdfOpenDocumentBufferOptions,
+  ) => PdfTask<PdfDocumentObject>;
   /**
    * Get the metadata of the file
    * @param doc - pdf document

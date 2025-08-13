@@ -3,7 +3,6 @@ import {
   MatchFlag,
   PdfDocumentObject,
   SearchAllPagesResult,
-  TaskError,
   PdfEngine,
   PdfTask,
   PdfPageSearchProgress,

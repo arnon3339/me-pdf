@@ -5,7 +5,7 @@ export class BufferStrategy implements PDFLoadingStrategy {
   async load(loadingOptions: PDFBufferLoadingOptions): Promise<PdfDocumentObject> {
     const { pdfFile, options, engine } = loadingOptions;
 
-    const task = engine.openDocumentFromBuffer(pdfFile, options?.password || '');
+    const task = engine.openDocumentBuffer(pdfFile, options);
 
     return new Promise<PdfDocumentObject>((resolve, reject) => {
       task.wait(
