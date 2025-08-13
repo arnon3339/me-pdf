@@ -3,7 +3,11 @@ import { useEffect, useRef } from '@framework';
 
 import { useExportCapability } from '../hooks';
 
-export function Download() {
+export interface DownloadProps {
+  fileName?: string
+}
+
+export function Download(props: DownloadProps) {
   const { provides: exportCapability } = useExportCapability();
   const ref = useRef<HTMLAnchorElement>(null);
 
@@ -19,7 +23,7 @@ export function Download() {
         task.wait((buffer) => {
           const url = URL.createObjectURL(new Blob([buffer]));
           el.href = url;
-          el.download = 'document.pdf';
+          el.download = props.fileName ?? 'document.pdf';
           el.click();
           URL.revokeObjectURL(url);
         }, ignore);
