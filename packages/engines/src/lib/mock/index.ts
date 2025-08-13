@@ -21,7 +21,7 @@ import {
   PdfTaskHelper,
   PdfPageFlattenResult,
   SearchAllPagesResult,
-  PdfUrlOptions,
+  PdfOpenDocumentUrlOptions,
   PdfFileUrl,
   PdfGlyphObject,
   PdfPageGeometry,
@@ -32,6 +32,7 @@ import {
   PdfFlattenPageOptions,
   PdfRedactTextOptions,
   PdfSearchAllPagesOptions,
+  PdfOpenDocumentBufferOptions,
 } from '@embedpdf/models';
 
 /**
@@ -43,10 +44,10 @@ import {
  */
 export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngine {
   const engine: PdfEngine = {
-    openDocumentUrl: jest.fn((file: PdfFileUrl, options?: PdfUrlOptions) => {
+    openDocumentUrl: jest.fn((file: PdfFileUrl, options?: PdfOpenDocumentUrlOptions) => {
       return PdfTaskHelper.create();
     }),
-    openDocumentFromBuffer: jest.fn((file: PdfFile, password: string) => {
+    openDocumentBuffer: jest.fn((file: PdfFile, options?: PdfOpenDocumentBufferOptions) => {
       return PdfTaskHelper.create();
     }),
     getMetadata: () => {

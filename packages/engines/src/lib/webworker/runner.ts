@@ -281,7 +281,7 @@ export class EngineRunner {
       case 'openDocumentUrl':
         task = this.engine[name]!(...args);
         break;
-      case 'openDocumentFromBuffer':
+      case 'openDocumentBuffer':
         task = this.engine[name]!(...args);
         break;
       case 'getDocPermissions':

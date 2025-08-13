@@ -19,7 +19,6 @@ import {
   PdfErrorReason,
   PdfPageFlattenResult,
   SearchAllPagesResult,
-  PdfUrlOptions,
   PdfFileUrl,
   PdfGlyphObject,
   PdfPageGeometry,
@@ -35,6 +34,8 @@ import {
   PdfRedactTextOptions,
   PdfRenderPageAnnotationOptions,
   PdfRenderPageOptions,
+  PdfOpenDocumentUrlOptions,
+  PdfOpenDocumentBufferOptions,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response, SpecificExecuteRequest } from './runner';
 
@@ -240,7 +241,7 @@ export class WebWorkerEngine implements PdfEngine {
    *
    * @public
    */
-  openDocumentUrl(file: PdfFileUrl, options?: PdfUrlOptions) {
+  openDocumentUrl(file: PdfFileUrl, options?: PdfOpenDocumentUrlOptions) {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentUrl', file.url, options);
     const requestId = this.generateRequestId(file.id);
     const task = new WorkerTask<PdfDocumentObject>(this.worker, requestId);
@@ -256,15 +257,12 @@ export class WebWorkerEngine implements PdfEngine {
    *
    * @public
    */
-  openDocumentFromBuffer(file: PdfFile, password: string) {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromBuffer', file, password);
+  openDocumentBuffer(file: PdfFile, options?: PdfOpenDocumentBufferOptions) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentBuffer', file, options);
     const requestId = this.generateRequestId(file.id);
     const task = new WorkerTask<PdfDocumentObject>(this.worker, requestId);
 
-    const request: ExecuteRequest = createRequest(requestId, 'openDocumentFromBuffer', [
-      file,
-      password,
-    ]);
+    const request: ExecuteRequest = createRequest(requestId, 'openDocumentBuffer', [file, options]);
     this.proxy(task, request);
 
     return task;

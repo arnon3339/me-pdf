@@ -63,7 +63,8 @@ import {
   PdfFileLoader,
   transformRect,
   SearchAllPagesResult,
-  PdfUrlOptions,
+  PdfOpenDocumentUrlOptions,
+  PdfOpenDocumentBufferOptions,
   PdfFileUrl,
   Task,
   PdfErrorReason,
@@ -265,7 +266,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  public openDocumentUrl(file: PdfFileUrl, options?: PdfUrlOptions) {
+  public openDocumentUrl(file: PdfFileUrl, options?: PdfOpenDocumentUrlOptions) {
     const mode = options?.mode ?? 'auto';
     const password = options?.password ?? '';
 
@@ -368,7 +369,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     // 3. call openDocumentFromBuffer (the method you already have)
     //    that returns a PdfTask, but let's wrap it in a Promise
-    return this.openDocumentFromBuffer(pdfFile, password);
+    return this.openDocumentBuffer(pdfFile, { password });
   }
 
   /**
@@ -450,15 +451,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  openDocumentFromBuffer(file: PdfFile, password: string = '') {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromBuffer', file, password);
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromBuffer`, 'Begin', file.id);
+  openDocumentBuffer(file: PdfFile, options?: PdfOpenDocumentBufferOptions) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentBuffer', file, options);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentBuffer`, 'Begin', file.id);
     const array = new Uint8Array(file.content);
     const length = array.length;
     const filePtr = this.malloc(length);
     this.pdfiumModule.pdfium.HEAPU8.set(array, filePtr);
 
-    const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, password);
+    const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, options?.password ?? '');
 
     if (!docPtr) {
       const lastError = this.pdfiumModule.FPDF_GetLastError();
