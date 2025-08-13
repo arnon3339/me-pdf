@@ -145,8 +145,10 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     const task = this.renderCapability.renderPageRect({
       pageIndex: idx,
       rect: { origin: { x: 0, y: 0 }, size: page.size },
-      scaleFactor: scale,
-      dpr,
+      options: {
+        scaleFactor: scale,
+        dpr,
+      },
     });
 
     this.taskCache.set(idx, task);

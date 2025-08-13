@@ -185,7 +185,7 @@ export class SearchPlugin extends BasePlugin<
     const task = (this.currentTask = this.engine.searchAllPages(
       this.currentDocument!,
       trimmedKeyword,
-      this.state.flags,
+      { flags: this.state.flags },
     ));
 
     task.onProgress((p) => {

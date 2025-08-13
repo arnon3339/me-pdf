@@ -284,9 +284,6 @@ export class EngineRunner {
       case 'openDocumentFromBuffer':
         task = this.engine[name]!(...args);
         break;
-      case 'openDocumentFromLoader':
-        task = this.engine[name]!(...args);
-        break;
       case 'getDocPermissions':
         task = this.engine[name]!(...args);
         break;
@@ -308,7 +305,7 @@ export class EngineRunner {
       case 'renderPageRect':
         task = this.engine[name]!(...args);
         break;
-      case 'renderAnnotation':
+      case 'renderPageAnnotation':
         task = this.engine[name]!(...args);
         break;
       case 'renderThumbnail':

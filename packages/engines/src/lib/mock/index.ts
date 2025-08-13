@@ -15,24 +15,23 @@ import {
   PdfAttachmentObject,
   PdfSignatureObject,
   Rect,
-  PdfRenderOptions,
   PdfFile,
   PdfWidgetAnnoObject,
   FormFieldValue,
   PdfTaskHelper,
-  PdfPageFlattenFlag,
   PdfPageFlattenResult,
-  PdfFileLoader,
   SearchAllPagesResult,
-  MatchFlag,
   PdfUrlOptions,
   PdfFileUrl,
   PdfGlyphObject,
   PdfPageGeometry,
   PageTextSlice,
-  AppearanceMode,
-  ImageConversionTypes,
   PdfPageSearchProgress,
+  PdfRenderPageOptions,
+  PdfRenderPageAnnotationOptions,
+  PdfFlattenPageOptions,
+  PdfRedactTextOptions,
+  PdfSearchAllPagesOptions,
 } from '@embedpdf/models';
 
 /**
@@ -48,9 +47,6 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       return PdfTaskHelper.create();
     }),
     openDocumentFromBuffer: jest.fn((file: PdfFile, password: string) => {
-      return PdfTaskHelper.create();
-    }),
-    openDocumentFromLoader: jest.fn((file: PdfFileLoader, password: string) => {
       return PdfTaskHelper.create();
     }),
     getMetadata: () => {
@@ -125,14 +121,8 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       });
     },
     renderPage: jest.fn(
-      (
-        doc: PdfDocumentObject,
-        page: PdfPageObject,
-        scaleFactor: number,
-        rotation: Rotation,
-        dpr: number,
-        options: PdfRenderOptions,
-      ) => {
+      (doc: PdfDocumentObject, page: PdfPageObject, options?: PdfRenderPageOptions) => {
+        const { scaleFactor = 1, rotation = Rotation.Degree0, dpr = 1 } = options ?? {};
         const pageSize = rotation % 2 === 0 ? page.size : swap(page.size);
         const imageSize = {
           width: Math.ceil(pageSize.width * scaleFactor),
@@ -157,15 +147,8 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       },
     ),
     renderPageRect: jest.fn(
-      (
-        doc: PdfDocumentObject,
-        page: PdfPageObject,
-        scaleFactor: number,
-        rotation: Rotation,
-        dpr: number,
-        rect: Rect,
-        options: PdfRenderOptions,
-      ) => {
+      (doc: PdfDocumentObject, page: PdfPageObject, rect: Rect, options?: PdfRenderPageOptions) => {
+        const { scaleFactor = 1, rotation = Rotation.Degree0, dpr = 1 } = options ?? {};
         const pageSize = rotation % 2 === 0 ? page.size : swap(page.size);
         const imageSize = {
           width: Math.ceil(pageSize.width * scaleFactor),
@@ -210,16 +193,12 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
 
       return PdfTaskHelper.resolve(blob);
     }),
-    renderAnnotation: jest.fn(
+    renderPageAnnotation: jest.fn(
       (
         doc: PdfDocumentObject,
         page: PdfPageObject,
         annotation: PdfAnnotationObject,
-        scaleFactor: number,
-        rotation: Rotation,
-        dpr: number,
-        mode: AppearanceMode,
-        imageType: ImageConversionTypes,
+        options?: PdfRenderPageAnnotationOptions,
       ) => {
         return PdfTaskHelper.resolve(new Blob([], { type: 'image/png' }));
       },
@@ -263,37 +242,35 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     removePageAnnotation: jest.fn(() => {
       return PdfTaskHelper.resolve(true);
     }),
-    getPageTextRects: jest.fn(
-      (doc: PdfDocumentObject, page: PdfPageObject, scaleFactor: number, rotation: Rotation) => {
-        const textRects: PdfTextRectObject[] = [
-          {
-            content: 'pdf text',
-            font: {
-              family: 'sans-serif',
-              size: 12,
+    getPageTextRects: jest.fn((doc: PdfDocumentObject, page: PdfPageObject) => {
+      const textRects: PdfTextRectObject[] = [
+        {
+          content: 'pdf text',
+          font: {
+            family: 'sans-serif',
+            size: 12,
+          },
+          rect: {
+            origin: {
+              x: 0,
+              y: 0,
             },
-            rect: {
-              origin: {
-                x: 0,
-                y: 0,
-              },
-              size: {
-                width: 100,
-                height: 100,
-              },
+            size: {
+              width: 100,
+              height: 100,
             },
           },
-        ];
-        return PdfTaskHelper.resolve(textRects);
-      },
-    ),
+        },
+      ];
+      return PdfTaskHelper.resolve(textRects);
+    }),
     closeDocument: (pdf: PdfDocumentObject) => {
       return PdfTaskHelper.resolve(true);
     },
     saveAsCopy: (pdf: PdfDocumentObject) => {
       return PdfTaskHelper.resolve(new ArrayBuffer(0));
     },
-    flattenPage: (pdf: PdfDocumentObject, page: PdfPageObject, flag: PdfPageFlattenFlag) => {
+    flattenPage: (pdf: PdfDocumentObject, page: PdfPageObject, options?: PdfFlattenPageOptions) => {
       return PdfTaskHelper.resolve<PdfPageFlattenResult>(PdfPageFlattenResult.Success);
     },
     extractPages: (pdf: PdfDocumentObject, pageIndexes: number[]) => {
@@ -306,8 +283,7 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       pdf: PdfDocumentObject,
       page: PdfPageObject,
       rects: Rect[],
-      recurseForms: boolean,
-      drawBlackBoxes: boolean,
+      options?: PdfRedactTextOptions,
     ) => {
       return PdfTaskHelper.resolve(true);
     },
@@ -334,7 +310,11 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
         content: new ArrayBuffer(0),
       });
     },
-    searchAllPages: (doc: PdfDocumentObject, keyword: string, flags?: MatchFlag[]) => {
+    searchAllPages: (
+      doc: PdfDocumentObject,
+      keyword: string,
+      options?: PdfSearchAllPagesOptions,
+    ) => {
       // Create a mock search result
       const mockResult: SearchResult = {
         pageIndex: 0,

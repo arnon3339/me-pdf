@@ -55,8 +55,10 @@ function startRender() {
 
   const task = renderProvides.value.renderPage({
     pageIndex: props.pageIndex,
-    scaleFactor: props.scaleFactor,
-    dpr: props.dpr,
+    options: {
+      scaleFactor: props.scaleFactor,
+      dpr: props.dpr,
+    },
   });
 
   currentTask = task;

@@ -1,5 +1,5 @@
 import { Fragment, HTMLAttributes, CSSProperties, useEffect, useRef, useState } from '@framework';
-import { ignore, PdfAnnotationObject, PdfErrorCode } from '@embedpdf/models';
+import { AppearanceMode, ignore, PdfAnnotationObject, PdfErrorCode } from '@embedpdf/models';
 
 import { useAnnotationCapability } from '../hooks/use-annotation';
 
@@ -29,8 +29,10 @@ export function RenderAnnotation({
       const task = annotationProvides.renderAnnotation({
         pageIndex,
         annotation,
-        scaleFactor,
-        dpr: window.devicePixelRatio,
+        options: {
+          scaleFactor,
+          dpr: window.devicePixelRatio,
+        },
       });
       task.wait((blob) => {
         const url = URL.createObjectURL(blob);

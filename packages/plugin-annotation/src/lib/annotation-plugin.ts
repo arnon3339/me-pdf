@@ -296,15 +296,7 @@ export class AnnotationPlugin extends BasePlugin<
     return this.engine.getPageAnnotations(doc, page);
   }
 
-  private renderAnnotation({
-    pageIndex,
-    annotation,
-    scaleFactor = 1,
-    rotation = Rotation.Degree0,
-    dpr = 1,
-    mode = AppearanceMode.Normal,
-    imageType = 'image/webp',
-  }: RenderAnnotationOptions) {
+  private renderAnnotation({ pageIndex, annotation, options }: RenderAnnotationOptions) {
     const coreState = this.coreState.core;
 
     if (!coreState.document) {
@@ -316,16 +308,7 @@ export class AnnotationPlugin extends BasePlugin<
       throw new Error('page does not exist');
     }
 
-    return this.engine.renderAnnotation(
-      coreState.document,
-      page,
-      annotation,
-      scaleFactor,
-      rotation,
-      dpr,
-      mode,
-      imageType,
-    );
+    return this.engine.renderPageAnnotation(coreState.document, page, annotation, options);
   }
 
   private selectAnnotation(pageIndex: number, annotationId: string) {

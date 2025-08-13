@@ -28,7 +28,6 @@ import {
   PdfUnsupportedAnnoObject,
   PdfTextAnnoObject,
   PdfSignatureObject,
-  PdfRenderOptions,
   PdfInkAnnoObject,
   PdfInkListObject,
   Position,
@@ -42,7 +41,6 @@ import {
   PdfUnderlineAnnoObject,
   transformSize,
   PdfFile,
-  PdfAnnotationTransformation,
   PdfSegmentObject,
   AppearanceMode,
   PdfImageObject,
@@ -76,19 +74,14 @@ import {
   toIntRect,
   toIntSize,
   Quad,
-  PdfAlphaColor,
   PdfAnnotationState,
   PdfAnnotationStateModel,
   quadToRect,
   PdfImage,
   ImageConversionTypes,
-  PdfAnnotationObjectBase,
   PageTextSlice,
   stripPdfUnwantedMarkers,
-  webAlphaColorToPdfAlphaColor,
-  pdfAlphaColorToWebAlphaColor,
   rectToQuad,
-  WebAlphaColor,
   dateToPdfDate,
   pdfDateToDate,
   PdfAnnotationColorType,
@@ -116,6 +109,12 @@ import {
   PdfAnnotationIcon,
   PdfPageWithAnnotations,
   PdfPageSearchProgress,
+  PdfSearchAllPagesOptions,
+  PdfRenderPageAnnotationOptions,
+  PdfRedactTextOptions,
+  PdfFlattenPageOptions,
+  PdfRenderThumbnailOptions,
+  PdfRenderPageOptions,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -278,50 +277,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     // Start an async procedure
     (async () => {
       try {
-        // Decide on approach
-        if (mode === 'full-fetch') {
-          const fetchFullTask = await this.fetchFullAndOpen(file, password);
-          fetchFullTask.wait(
-            (doc) => task.resolve(doc),
-            (err) => task.reject(err.reason),
-          );
-        } else if (mode === 'range-request') {
-          const openDocumentWithRangeRequestTask = await this.openDocumentWithRangeRequest(
-            file,
-            password,
-          );
-          openDocumentWithRangeRequestTask.wait(
-            (doc) => task.resolve(doc),
-            (err) => task.reject(err.reason),
-          );
-        } else {
-          // mode: 'auto'
-          const { supportsRanges, fileLength, content } = await this.checkRangeSupport(file.url);
-          if (supportsRanges) {
-            const openDocumentWithRangeRequestTask = await this.openDocumentWithRangeRequest(
-              file,
-              password,
-              fileLength,
-            );
-            openDocumentWithRangeRequestTask.wait(
-              (doc) => task.resolve(doc),
-              (err) => task.reject(err.reason),
-            );
-          } else if (content) {
-            // If we already have the content from the range check, use it
-            const pdfFile: PdfFile = { id: file.id, content };
-            this.openDocumentFromBuffer(pdfFile, password).wait(
-              (doc) => task.resolve(doc),
-              (err) => task.reject(err.reason),
-            );
-          } else {
-            const fetchFullTask = await this.fetchFullAndOpen(file, password);
-            fetchFullTask.wait(
-              (doc) => task.resolve(doc),
-              (err) => task.reject(err.reason),
-            );
-          }
-        }
+        const fetchFullTask = await this.fetchFullAndOpen(file, password);
+        fetchFullTask.wait(
+          (doc) => task.resolve(doc),
+          (err) => task.reject(err.reason),
+        );
       } catch (err) {
         this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'openDocumentUrl error', err);
         task.reject({
@@ -560,11 +520,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     return PdfTaskHelper.resolve(pdfDoc);
   }
 
-  /**
-   * {@inheritDoc @embedpdf/models!PdfEngine.openDocumentFromLoader}
-   *
-   * @public
-   */
   openDocumentFromLoader(fileLoader: PdfFileLoader, password: string = '') {
     const { fileLength, callback, ...file } = fileLoader;
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'openDocumentFromLoader', file, password);
@@ -869,25 +824,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   renderPage(
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    scaleFactor: number = 1,
-    rotation: Rotation = Rotation.Degree0,
-    dpr: number = 1,
-    options: PdfRenderOptions = { withAnnotations: false },
-    imageType: ImageConversionTypes = 'image/webp',
+    options?: PdfRenderPageOptions,
   ): PdfTask<T> {
+    const { imageType = 'image/webp' } = options ?? {};
     const task = new Task<T, PdfErrorReason>();
 
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'renderPage',
-      doc,
-      page,
-      scaleFactor,
-      rotation,
-      dpr,
-      options,
-    );
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'renderPage', doc, page, options);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPage`, 'Begin', `${doc.id}-${page.index}`);
 
     const ctx = this.cache.getContext(doc.id);
@@ -907,9 +849,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         origin: { x: 0, y: 0 },
         size: page.size,
       },
-      scaleFactor,
-      rotation,
-      dpr,
       options,
     );
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPage`, 'End', `${doc.id}-${page.index}`);
@@ -927,27 +866,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   renderPageRect(
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number,
     rect: Rect,
-    options: PdfRenderOptions,
-    imageType: ImageConversionTypes = 'image/webp',
+    options?: PdfRenderPageOptions,
   ): PdfTask<T> {
+    const { imageType = 'image/webp' } = options ?? {};
     const task = new Task<T, PdfErrorReason>();
 
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'renderPageRect',
-      doc,
-      page,
-      scaleFactor,
-      rotation,
-      dpr,
-      rect,
-      options,
-    );
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'renderPageRect', doc, page, rect, options);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -972,15 +897,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    const imageData = this.renderPageRectToImageData(
-      ctx,
-      page,
-      rect,
-      scaleFactor,
-      rotation,
-      dpr,
-      options,
-    );
+    const imageData = this.renderPageRectToImageData(ctx, page, rect, options);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPageRect`, 'End', `${doc.id}-${page.index}`);
 
     this.imageDataConverter(imageData, imageType).then((blob) => task.resolve(blob));
@@ -1520,21 +1437,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  getPageTextRects(
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-  ) {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'getPageTextRects',
-      doc,
-      page,
-      scaleFactor,
-      rotation,
-    );
+  getPageTextRects(doc: PdfDocumentObject, page: PdfPageObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getPageTextRects', doc, page);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1585,20 +1489,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   renderThumbnail(
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number,
+    options?: PdfRenderThumbnailOptions,
   ): PdfTask<T> {
-    this.logger.debug(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      'renderThumbnail',
-      doc,
-      page,
-      scaleFactor,
-      rotation,
-      dpr,
-    );
+    const { scaleFactor = 1, rotation = Rotation.Degree0, dpr = 1 } = options ?? {};
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'renderThumbnail', doc, page, options);
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
@@ -1623,8 +1517,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    scaleFactor = Math.max(scaleFactor, 0.5);
-    const result = this.renderPage(doc, page, scaleFactor, rotation, dpr, {
+    const result = this.renderPage(doc, page, {
+      scaleFactor: Math.max(scaleFactor, 0.5),
+      rotation,
+      dpr,
       withAnnotations: true,
     });
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderThumbnail`, 'End', `${doc.id}-${page.index}`);
@@ -1932,8 +1828,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   flattenPage(
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    flag: PdfPageFlattenFlag,
+    options?: PdfFlattenPageOptions,
   ): PdfTask<PdfPageFlattenResult> {
+    const { flag = PdfPageFlattenFlag.Display } = options ?? {};
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'flattenPage', doc, page, flag);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `flattenPage`, 'Begin', doc.id);
 
@@ -4477,9 +4374,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     doc: PdfDocumentObject,
     page: PdfPageObject,
     rects: Rect[],
-    recurseForms: boolean = true,
-    drawBlackBoxes: boolean = false,
+    options?: PdfRedactTextOptions,
   ): Task<boolean, PdfErrorReason> {
+    const { recurseForms = true, drawBlackBoxes = false } = options ?? {};
+
     this.logger.debug(
       'PDFiumEngine',
       'Engine',
@@ -6185,33 +6083,33 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  renderAnnotation(
+  renderPageAnnotation(
     doc: PdfDocumentObject,
     page: PdfPageObject,
     annotation: PdfAnnotationObject,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number = 1, // device-pixel-ratio (canvas)
-    mode: AppearanceMode = AppearanceMode.Normal,
-    imageType: ImageConversionTypes = 'image/webp',
+    options?: PdfRenderPageAnnotationOptions,
   ): PdfTask<T> {
+    const {
+      scaleFactor = 1,
+      rotation = Rotation.Degree0,
+      dpr = 1,
+      mode = AppearanceMode.Normal,
+      imageType = 'image/webp',
+    } = options ?? {};
+
     this.logger.debug(
       LOG_SOURCE,
       LOG_CATEGORY,
-      'renderAnnotation',
+      'renderPageAnnotation',
       doc,
       page,
       annotation,
-      scaleFactor,
-      rotation,
-      dpr,
-      mode,
-      imageType,
+      options,
     );
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
-      `RenderAnnotation`,
+      `RenderPageAnnotation`,
       'Begin',
       `${doc.id}-${page.index}-${annotation.id}`,
     );
@@ -6222,7 +6120,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
-        `RenderAnnotation`,
+        `RenderPageAnnotation`,
         'End',
         `${doc.id}-${page.index}-${annotation.id}`,
       );
@@ -6240,7 +6138,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
-        `RenderAnnotation`,
+        `RenderPageAnnotation`,
         'End',
         `${doc.id}-${page.index}-${annotation.id}`,
       );
@@ -6305,7 +6203,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
-        `RenderAnnotation`,
+        `RenderPageAnnotation`,
         'End',
         `${doc.id}-${page.index}-${annotation.id}`,
       );
@@ -6332,7 +6230,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.logger.perf(
       LOG_SOURCE,
       LOG_CATEGORY,
-      `RenderAnnotation`,
+      `RenderPageAnnotation`,
       'End',
       `${doc.id}-${page.index}-${annotation.id}`,
     );
@@ -6360,11 +6258,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     ctx: DocumentContext,
     page: PdfPageObject,
     rect: Rect,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number,
-    options: PdfRenderOptions,
+    options?: PdfRenderPageOptions,
   ) {
+    const { scaleFactor = 1, rotation = Rotation.Degree0, dpr = 1 } = options ?? {};
     const format = BitmapFormat.Bitmap_BGRA;
     const bytesPerPixel = 4;
 
@@ -6977,9 +6873,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   searchAllPages(
     doc: PdfDocumentObject,
     keyword: string,
-    flags: MatchFlag[] = [],
+    options?: PdfSearchAllPagesOptions,
   ): PdfTask<SearchAllPagesResult, PdfPageSearchProgress> {
-    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'searchAllPages', doc, keyword, flags);
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'searchAllPages', doc, keyword, options);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SearchAllPages', 'Begin', doc.id);
 
     // Resolve early if doc not open
@@ -6998,7 +6894,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
 
     // Fold flags
-    const flag = flags.reduce((acc: MatchFlag, f: MatchFlag) => acc | f, MatchFlag.None);
+    const flag =
+      options?.flags?.reduce((acc: MatchFlag, f: MatchFlag) => acc | f, MatchFlag.None) ??
+      MatchFlag.None;
 
     // Create task with progress payload
     const task = PdfTaskHelper.create<SearchAllPagesResult, PdfPageSearchProgress>();

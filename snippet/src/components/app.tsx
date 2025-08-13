@@ -2915,9 +2915,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
                 id: 'pdf',
                 url: config.src,
               },
-              options: {
-                mode: 'full-fetch',
-              },
             },
           }),
           createPluginRegistration(ViewportPluginPackage, pluginConfigs.viewport),

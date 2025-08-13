@@ -55,9 +55,9 @@ export class CapturePlugin extends BasePlugin<CapturePluginConfig, CaptureCapabi
     const task = this.renderCapability.renderPageRect({
       pageIndex,
       rect,
-      imageType: this.config.imageType,
-      scaleFactor: this.config.scale,
       options: {
+        imageType: this.config.imageType,
+        scaleFactor: this.config.scale,
         withAnnotations: this.config.withAnnotations || false,
       },
     });

@@ -37,7 +37,7 @@ export function RenderLayer({
 
   useEffect(() => {
     if (renderProvides) {
-      const task = renderProvides.renderPage({ pageIndex, scaleFactor, dpr });
+      const task = renderProvides.renderPage({ pageIndex, options: { scaleFactor, dpr } });
       task.wait((blob) => {
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
