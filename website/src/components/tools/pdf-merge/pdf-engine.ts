@@ -5,6 +5,7 @@ import {
   PdfEngine,
   PdfFile,
   PdfTaskHelper,
+  Rotation,
 } from '@embedpdf/models'
 
 // Singleton instance of the engine
@@ -88,7 +89,11 @@ export async function generateThumbnail(
   scale: number = 0.5,
 ): Promise<string> {
   const page = doc.pages[pageIndex]
-  const task = engine.renderThumbnail(doc, page, scale, 0, 1)
+  const task = engine.renderThumbnail(doc, page, {
+    scaleFactor: scale,
+    dpr: 1,
+    rotation: Rotation.Degree0,
+  })
 
   return new Promise<string>((resolve, reject) => {
     task.wait(
