@@ -36,13 +36,11 @@ Curious how it feels? Open the playground and drop any PDF to test drive EmbedPD
 
 ## ✨ Features
 
-* **Smooth, virtualized scrolling** for lightning‑fast navigation through large documents
-* **Zoom & pan** with mouse wheel, pinch, or programmatic control
-* **Outline / bookmarks** & thumbnail sidebar out‑of‑the‑box
-* **Text search** with highlighted results
-* **Pluggable architecture**—extend or replace UI components without forking
-* **Tiny core + tree‑shakable plugins**: pull in only what you need
-* **TypeScript first**: full types for a friction‑free DX
+- Annotations (highlight, sticky notes, free text, ink)
+- True redaction (content is actually removed)
+- Search, text selection, zoom, rotation
+- Smooth, virtualized scrolling
+- Pluggable architecture & tree-shakable plugins
 
 ## 🤝 Contributing
 
