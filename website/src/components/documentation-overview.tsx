@@ -349,7 +349,7 @@ const FrameworkGettingStartedCard = () => {
               <div className="p-8">
                 <div className="mb-8">
                   <h4 className="mb-4 text-lg font-bold text-white">
-                    What you'll get:
+                    What you&apos;ll get:
                   </h4>
                   <ul className="space-y-3">
                     <li className="flex items-center text-slate-300">
@@ -403,7 +403,7 @@ const FrameworkGettingStartedCard = () => {
               <div className="p-8">
                 <div className="mb-8">
                   <h4 className="mb-4 text-lg font-bold text-white">
-                    What you'll get:
+                    What you&apos;ll get:
                   </h4>
                   <ul className="space-y-3">
                     <li className="flex items-center text-slate-300">
@@ -440,7 +440,7 @@ const FrameworkGettingStartedCard = () => {
         {/* Bottom CTA */}
         <div className="mt-12 text-center">
           <p className="mb-6 text-lg text-slate-400">
-            Need something else? We've got you covered.
+            Need something else? We&apos;ve got you covered.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
