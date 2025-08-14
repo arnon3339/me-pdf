@@ -29,7 +29,11 @@ const viewportRef = useViewportRef();
 </script>
 
 <template>
-  <div ref="viewportRef" v-bind="attrs" :style="{ padding: `${viewportGap}px` }">
+  <div
+    ref="viewportRef"
+    v-bind="attrs"
+    :style="{ padding: `${viewportGap}px`, width: '100%', height: '100%', overflow: 'auto' }"
+  >
     <slot />
   </div>
 </template>
