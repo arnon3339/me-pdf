@@ -33,6 +33,7 @@ import {
   PdfRedactTextOptions,
   PdfSearchAllPagesOptions,
   PdfOpenDocumentBufferOptions,
+  uuidV4,
 } from '@embedpdf/models';
 
 /**
@@ -235,7 +236,7 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       return PdfTaskHelper.resolve(annotations);
     }),
     createPageAnnotation: jest.fn(() => {
-      return PdfTaskHelper.resolve(1);
+      return PdfTaskHelper.resolve(uuidV4());
     }),
     updatePageAnnotation: jest.fn(() => {
       return PdfTaskHelper.resolve(true);

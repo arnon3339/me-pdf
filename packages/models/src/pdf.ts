@@ -2250,7 +2250,7 @@ export interface PdfFileLoader extends PdfFileWithoutContent {
   callback: (offset: number, length: number) => Uint8Array;
 }
 
-export interface PdfPageWithAnnotations {
+export interface PdfAnnotationsProgress {
   page: number;
   annotations: PdfAnnotationObject[];
 }
@@ -2598,7 +2598,7 @@ export interface PdfEngine<T = Blob> {
     page: PdfPageObject,
     annotation: A,
     context?: AnnotationCreateContext<A>,
-  ) => PdfTask<number>;
+  ) => PdfTask<string>;
   /**
    * Update a annotation on specified page
    * @param doc - pdf document
@@ -2650,7 +2650,7 @@ export interface PdfEngine<T = Blob> {
    */
   getAllAnnotations: (
     doc: PdfDocumentObject,
-  ) => PdfTask<Record<number, PdfAnnotationObject[]>, PdfPageWithAnnotations>;
+  ) => PdfTask<Record<number, PdfAnnotationObject[]>, PdfAnnotationsProgress>;
   /**
    * Get all attachments in this file
    * @param doc - pdf document

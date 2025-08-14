@@ -26,7 +26,6 @@ import {
   AnnotationCreateContext,
   PdfEngineMethodArgs,
   PdfEngineMethodName,
-  PdfPageWithAnnotations,
   PdfPageSearchProgress,
   PdfRenderThumbnailOptions,
   PdfSearchAllPagesOptions,
@@ -36,6 +35,7 @@ import {
   PdfRenderPageOptions,
   PdfOpenDocumentUrlOptions,
   PdfOpenDocumentBufferOptions,
+  PdfAnnotationsProgress,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response, SpecificExecuteRequest } from './runner';
 
@@ -425,7 +425,7 @@ export class WebWorkerEngine implements PdfEngine {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getAllAnnotations', doc);
     const requestId = this.generateRequestId(doc.id);
 
-    const task = new WorkerTask<Record<number, PdfAnnotationObject[]>, PdfPageWithAnnotations>(
+    const task = new WorkerTask<Record<number, PdfAnnotationObject[]>, PdfAnnotationsProgress>(
       this.worker,
       requestId,
     );
@@ -473,7 +473,7 @@ export class WebWorkerEngine implements PdfEngine {
       context,
     );
     const requestId = this.generateRequestId(doc.id);
-    const task = new WorkerTask<number>(this.worker, requestId);
+    const task = new WorkerTask<string>(this.worker, requestId);
 
     const request: ExecuteRequest = createRequest(requestId, 'createPageAnnotation', [
       doc,

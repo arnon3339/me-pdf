@@ -108,7 +108,6 @@ import {
   isUuidV4,
   uuidV4,
   PdfAnnotationIcon,
-  PdfPageWithAnnotations,
   PdfPageSearchProgress,
   PdfSearchAllPagesOptions,
   PdfRenderPageAnnotationOptions,
@@ -116,6 +115,7 @@ import {
   PdfFlattenPageOptions,
   PdfRenderThumbnailOptions,
   PdfRenderPageOptions,
+  PdfAnnotationsProgress,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -911,17 +911,16 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  getAllAnnotations(doc: PdfDocumentObject): PdfTask<
-    Record<number, PdfAnnotationObject[]>, // final result
-    { page: number; annotations: PdfAnnotationObject[] } // progress payload
-  > {
+  getAllAnnotations(
+    doc: PdfDocumentObject,
+  ): PdfTask<Record<number, PdfAnnotationObject[]>, PdfAnnotationsProgress> {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getAllAnnotations-with-progress', doc);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'GetAllAnnotations', 'Begin', doc.id);
 
     /* 1 ── create an async task wrapper ─────────────────────────────── */
     const task = PdfTaskHelper.create<
       Record<number, PdfAnnotationObject[]>,
-      PdfPageWithAnnotations
+      PdfAnnotationsProgress
     >();
 
     let cancelled = false;
@@ -1049,7 +1048,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     page: PdfPageObject,
     annotation: A,
     context?: AnnotationCreateContext<A>,
-  ): PdfTask<number> {
+  ): PdfTask<string> {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'createPageAnnotation', doc, page, annotation);
     this.logger.perf(
       LOG_SOURCE,
@@ -1091,6 +1090,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         code: PdfErrorCode.CantCreateAnnot,
         message: 'can not create annotation with specified type',
       });
+    }
+
+    if (!isUuidV4(annotation.id)) {
+      annotation.id = uuidV4();
     }
 
     if (!this.setAnnotString(annotationPtr, 'NM', annotation.id)) {
@@ -1183,8 +1186,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     this.pdfiumModule.FPDFPage_GenerateContent(pageCtx.pagePtr);
 
-    const annotId = this.pdfiumModule.FPDFPage_GetAnnotIndex(pageCtx.pagePtr, annotationPtr);
-
     this.pdfiumModule.FPDFPage_CloseAnnot(annotationPtr);
     pageCtx.release();
     this.logger.perf(
@@ -1195,12 +1196,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       `${doc.id}-${page.index}`,
     );
 
-    return annotId >= 0
-      ? PdfTaskHelper.resolve<number>(annotId)
-      : PdfTaskHelper.reject<number>({
-          code: PdfErrorCode.CantCreateAnnot,
-          message: 'annotation created but index could not be determined',
-        });
+    return PdfTaskHelper.resolve<string>(annotation.id);
   }
 
   /**
@@ -3508,12 +3504,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
   /**
    * Read page annotations
+   *
+   * @param ctx - document context
    * @param page - page info
-   * @param docPtr - pointer to pdf document
-   * @param pagePtr - pointer to pdf page
-   * @param textPagePtr - pointe to pdf text page
-   * @param scaleFactor - scale factor
-   * @param rotation - rotation angle
    * @returns annotations on the pdf page
    *
    * @private
@@ -3533,6 +3526,15 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     });
   }
 
+  /**
+   * Read page annotations
+   *
+   * @param ctx - document context
+   * @param page - page info
+   * @returns annotations on the pdf page
+   *
+   * @private
+   */
   private readPageAnnotationsRaw(ctx: DocumentContext, page: PdfPageObject): PdfAnnotationObject[] {
     const count = this.pdfiumModule.EPDFPage_GetAnnotCountRaw(ctx.docPtr, page.index);
     if (count <= 0) return [];
@@ -3555,14 +3557,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
   /**
    * Read pdf annotation from pdf document
-   * @param page  - pdf page infor
-   * @param docPtr - pointer to pdf document object
-   * @param pagePtr - pointer to pdf page object
-   * @param  textPagePtr - pointer to pdf text page object
-   * @param formHandle - form handle
-   * @param index - index of annotation in the pdf page
-   * @param scaleFactor  - factor of scalling
-   * @param rotation  - rotation angle
+   *
+   * @param docPtr - pointer to pdf document
+   * @param page - page info
+   * @param annotationPtr - pointer to pdf annotation
+   * @param pageCtx - page context
    * @returns pdf annotation
    *
    * @private
