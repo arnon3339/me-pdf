@@ -20,15 +20,13 @@
 
 ## 📚 Documentation
 
-The full documentation —including installation guides, API reference, and framework‑specific examples—is hosted on our website:
+Full docs, installation guides, API reference, and examples:  
 
 👉 **[https://www.embedpdf.com](https://www.embedpdf.com)**
 
-> Tip: Bookmark the docs to stay up‑to‑date with the latest features and release notes.
-
 ## 🚀 Live Demo
 
-Curious how it feels? Open the playground and drop any PDF to test drive EmbedPDF in your browser:
+Try it now — load your own PDF or use the sample:
 
 👉 **[https://app.embedpdf.com](https://app.embedpdf.com)**
 
