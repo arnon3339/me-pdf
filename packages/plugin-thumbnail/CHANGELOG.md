@@ -1,5 +1,11 @@
 # @embedpdf/plugin-thumbnail
 
+## 1.0.19
+
+### Patch Changes
+
+- [#75](https://github.com/embedpdf/embed-pdf-viewer/pull/75) by [@bobsingor](https://github.com/bobsingor) – Update engine model to make it more clear for developers
+
 ## 1.0.18
 
 ### Patch Changes
