@@ -8,12 +8,8 @@ export class ExportPlugin extends BasePlugin<ExportPluginConfig, ExportCapabilit
 
   private readonly downloadRequest$ = createEmitter<'download'>();
 
-  private engine: PdfEngine;
-
-  constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
+  constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
-
-    this.engine = engine;
   }
 
   async initialize(_: ExportPluginConfig): Promise<void> {}

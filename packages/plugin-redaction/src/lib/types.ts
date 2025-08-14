@@ -40,7 +40,7 @@ export interface RegisterMarqueeOnPageOptions {
 }
 
 export interface RedactionPluginConfig extends BasePluginConfig {
-  blackbox: boolean;
+  drawBlackBoxes: boolean;
 }
 
 export interface RedactionCapability {

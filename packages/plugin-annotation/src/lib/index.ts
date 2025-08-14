@@ -12,8 +12,7 @@ export const AnnotationPluginPackage: PluginPackage<
   AnnotationAction
 > = {
   manifest,
-  create: (registry, engine, config) =>
-    new AnnotationPlugin(ANNOTATION_PLUGIN_ID, registry, engine, config),
+  create: (registry, config) => new AnnotationPlugin(ANNOTATION_PLUGIN_ID, registry, config),
   reducer,
   initialState: (_, config) => initialState(config),
 };

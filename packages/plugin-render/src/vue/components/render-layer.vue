@@ -2,7 +2,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { ignore, PdfErrorCode, PdfErrorReason, Task } from '@embedpdf/models';
 
-import { useRenderCapability } from '../hooks';
+import { useRenderCapability, useRenderPlugin } from '../hooks';
 
 interface Props {
   pageIndex: number;
@@ -12,14 +12,16 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   scaleFactor: 1,
-  dpr: 1,
 });
 
 const { provides: renderProvides } = useRenderCapability();
+const { plugin: renderPlugin } = useRenderPlugin();
 
 const imageUrl = ref<string | null>(null);
+const refreshTick = ref(0);
+
 let currentBlobUrl: string | null = null;
-let currentTask: Task<Blob, PdfErrorReason> | null = null; // Track current render task
+let currentTask: Task<Blob, PdfErrorReason> | null = null;
 
 /* ------------------------------------------ */
 /* Helper function to abort current task */
@@ -34,7 +36,7 @@ function abortCurrentTask() {
 }
 
 /* ------------------------------------------ */
-/* render whenever pageIndex/scale/dpr change */
+/* render whenever pageIndex/scale/dpr/tick change */
 /* ------------------------------------------ */
 function revoke() {
   if (currentBlobUrl) {
@@ -44,9 +46,7 @@ function revoke() {
 }
 
 function startRender() {
-  // Abort any existing task
   abortCurrentTask();
-
   revoke();
   imageUrl.value = null;
   currentTask = null;
@@ -55,8 +55,10 @@ function startRender() {
 
   const task = renderProvides.value.renderPage({
     pageIndex: props.pageIndex,
-    scaleFactor: props.scaleFactor,
-    dpr: props.dpr,
+    options: {
+      scaleFactor: props.scaleFactor,
+      dpr: props.dpr || window.devicePixelRatio,
+    },
   });
 
   currentTask = task;
@@ -64,17 +66,35 @@ function startRender() {
   task.wait((blob) => {
     currentBlobUrl = URL.createObjectURL(blob);
     imageUrl.value = currentBlobUrl;
-    currentTask = null; // Task completed
+    currentTask = null;
   }, ignore);
 }
 
-watch(() => [props.pageIndex, props.scaleFactor, props.dpr, renderProvides.value], startRender, {
-  immediate: true,
-});
+// Watch for external refresh events
+watch(
+  renderPlugin,
+  (pluginInstance, _, onCleanup) => {
+    if (pluginInstance) {
+      const unsubscribe = pluginInstance.onRefreshPages((pages: number[]) => {
+        if (pages.includes(props.pageIndex)) {
+          refreshTick.value++;
+        }
+      });
+      onCleanup(unsubscribe);
+    }
+  },
+  { immediate: true },
+);
+
+// Watch for changes that require a re-render
+watch(
+  () => [props.pageIndex, props.scaleFactor, props.dpr, renderProvides.value, refreshTick.value],
+  startRender,
+  { immediate: true },
+);
 
 /* ------------------------------------------ */
 onBeforeUnmount(() => {
-  // Abort any pending task when component unmounts
   abortCurrentTask();
   revoke();
 });

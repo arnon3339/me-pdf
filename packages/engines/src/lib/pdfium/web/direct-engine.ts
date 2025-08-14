@@ -7,5 +7,5 @@ export async function createPdfiumEngine(wasmUrl: string, logger?: Logger): Prom
   const response = await fetch(wasmUrl);
   const wasmBinary = await response.arrayBuffer();
   const wasmModule = await init({ wasmBinary });
-  return new PdfiumEngine(wasmModule, logger);
+  return new PdfiumEngine(wasmModule, { logger });
 }

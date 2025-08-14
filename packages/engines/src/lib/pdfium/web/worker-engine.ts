@@ -1,4 +1,4 @@
-import { Logger } from '@embedpdf/models';
+import { Logger, serializeLogger } from '@embedpdf/models';
 
 import { WebWorkerEngine } from '../../webworker/engine';
 
@@ -19,7 +19,11 @@ export function createPdfiumEngine(wasmUrl: string, logger?: Logger) {
   );
 
   // Send initialization message with WASM URL
-  worker.postMessage({ type: 'wasmInit', wasmUrl });
+  worker.postMessage({
+    type: 'wasmInit',
+    wasmUrl,
+    logger: logger ? serializeLogger(logger) : undefined,
+  });
 
   return new WebWorkerEngine(worker, logger);
 }

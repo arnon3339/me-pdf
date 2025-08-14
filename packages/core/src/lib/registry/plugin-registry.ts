@@ -11,10 +11,9 @@ import {
   PluginRegistrationError,
   PluginNotFoundError,
   CircularDependencyError,
-  CapabilityNotFoundError,
   PluginConfigurationError,
 } from '../types/errors';
-import { ignore, PdfEngine, Rotation } from '@embedpdf/models';
+import { Logger, NoopLogger, PdfEngine } from '@embedpdf/models';
 import { Action, CoreState, Store, initialCoreState, Reducer } from '../store';
 import { CoreAction } from '../store/actions';
 import { coreReducer } from '../store/reducer';
@@ -37,6 +36,7 @@ export class PluginRegistry {
   private engineInitialized = false;
   private store: Store<CoreState, CoreAction>;
   private initPromise: Promise<void> | null = null;
+  private logger: Logger;
 
   private pendingRegistrations: PluginRegistration[] = [];
   private processingRegistrations: PluginRegistration[] = [];
@@ -51,6 +51,14 @@ export class PluginRegistry {
     this.engine = engine;
     this.initialCoreState = initialCoreState(config);
     this.store = new Store<CoreState, CoreAction>(coreReducer, this.initialCoreState);
+    this.logger = config?.logger ?? new NoopLogger();
+  }
+
+  /**
+   * Get the logger instance
+   */
+  getLogger(): Logger {
+    return this.logger;
   }
 
   /**
@@ -241,11 +249,7 @@ export class PluginRegistry {
    */
   private async initializePlugin<TConfig>(
     manifest: PluginManifest<TConfig>,
-    packageCreator: (
-      registry: PluginRegistry,
-      engine: PdfEngine,
-      config?: TConfig,
-    ) => IPlugin<TConfig>,
+    packageCreator: (registry: PluginRegistry, config?: TConfig) => IPlugin<TConfig>,
     config?: Partial<TConfig>,
   ): Promise<void> {
     const finalConfig = {
@@ -256,7 +260,7 @@ export class PluginRegistry {
     this.validateConfig(manifest.id, finalConfig, manifest.defaultConfig);
 
     // Create plugin instance during initialization
-    const plugin = packageCreator(this, this.engine, finalConfig);
+    const plugin = packageCreator(this, finalConfig);
     this.validatePlugin(plugin);
 
     // Verify all required capabilities are available
@@ -272,11 +276,17 @@ export class PluginRegistry {
     for (const capability of manifest.optional) {
       if (this.capabilities.has(capability)) {
         // Optional capability is available, but we don't require it
-        console.debug(`Optional capability ${capability} is available for plugin ${manifest.id}`);
+        this.logger.debug(
+          'PluginRegistry',
+          'OptionalCapability',
+          `Optional capability ${capability} is available for plugin ${manifest.id}`,
+        );
       }
     }
 
-    console.log('initializePlugin', manifest.id, manifest.provides);
+    this.logger.debug('PluginRegistry', 'InitializePlugin', `Initializing plugin ${manifest.id}`, {
+      provides: manifest.provides,
+    });
 
     // Register provided capabilities
     for (const capability of manifest.provides) {
@@ -299,11 +309,22 @@ export class PluginRegistry {
         await plugin.initialize(finalConfig);
       }
       this.status.set(manifest.id, 'active');
+
+      this.logger.info(
+        'PluginRegistry',
+        'PluginInitialized',
+        `Plugin ${manifest.id} initialized successfully`,
+      );
     } catch (error) {
       // Cleanup on initialization failure
       this.plugins.delete(manifest.id);
       this.manifests.delete(manifest.id);
-      console.log('initializePlugin failed', manifest.id, manifest.provides);
+      this.logger.error(
+        'PluginRegistry',
+        'InitializationFailed',
+        `Plugin ${manifest.id} initialization failed`,
+        { provides: manifest.provides, error },
+      );
       manifest.provides.forEach((cap) => this.capabilities.delete(cap));
       throw error;
     }

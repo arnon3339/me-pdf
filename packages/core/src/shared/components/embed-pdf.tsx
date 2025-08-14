@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, ReactNode } from '@framework';
-import { PdfEngine } from '@embedpdf/models';
+import { Logger, PdfEngine } from '@embedpdf/models';
 import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
 
@@ -7,12 +7,13 @@ import { PDFContext, PDFContextState } from '../context';
 
 interface EmbedPDFProps {
   engine: PdfEngine;
+  logger?: Logger;
   onInitialized?: (registry: PluginRegistry) => Promise<void>;
   plugins: PluginBatchRegistration<IPlugin<any>, any>[];
   children: ReactNode | ((state: PDFContextState) => ReactNode);
 }
 
-export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFProps) {
+export function EmbedPDF({ engine, logger, onInitialized, plugins, children }: EmbedPDFProps) {
   const [registry, setRegistry] = useState<PluginRegistry | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [pluginsReady, setPluginsReady] = useState<boolean>(false);
@@ -23,7 +24,7 @@ export function EmbedPDF({ engine, onInitialized, plugins, children }: EmbedPDFP
   }, [onInitialized]);
 
   useEffect(() => {
-    const pdfViewer = new PluginRegistry(engine);
+    const pdfViewer = new PluginRegistry(engine, { logger });
     pdfViewer.registerPluginBatch(plugins);
 
     const initialize = async () => {

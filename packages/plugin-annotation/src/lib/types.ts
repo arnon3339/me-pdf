@@ -5,9 +5,6 @@ import {
   Task,
   PdfAnnotationSubtype,
   WebAlphaColor,
-  Rotation,
-  ImageConversionTypes,
-  AppearanceMode,
   PdfBlendMode,
   PdfAnnotationBorderStyle,
   LineEndings,
@@ -16,6 +13,7 @@ import {
   PdfVerticalAlignment,
   AnnotationCreateContext,
   PdfTextAnnoObject,
+  PdfRenderPageAnnotationOptions,
 } from '@embedpdf/models';
 
 /* Metadata tracked per anno */
@@ -36,11 +34,7 @@ export interface TrackedAnnotation<T extends PdfAnnotationObject = PdfAnnotation
 export interface RenderAnnotationOptions {
   pageIndex: number;
   annotation: PdfAnnotationObject;
-  scaleFactor?: number;
-  rotation?: Rotation;
-  dpr?: number; // device-pixel-ratio (canvas)
-  mode?: AppearanceMode;
-  imageType?: ImageConversionTypes;
+  options?: PdfRenderPageAnnotationOptions;
 }
 
 export interface BaseAnnotationDefaults {

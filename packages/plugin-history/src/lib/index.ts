@@ -12,7 +12,7 @@ export const HistoryPluginPackage: PluginPackage<
   HistoryAction
 > = {
   manifest,
-  create: (registry, _engine) => new HistoryPlugin(HISTORY_PLUGIN_ID, registry),
+  create: (registry) => new HistoryPlugin(HISTORY_PLUGIN_ID, registry),
   reducer,
   initialState,
 };

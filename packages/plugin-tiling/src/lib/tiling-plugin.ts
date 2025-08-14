@@ -126,8 +126,10 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
     const task = this.renderCapability.renderPageRect({
       pageIndex: options.pageIndex,
       rect: options.tile.pageRect,
-      scaleFactor: options.tile.srcScale,
-      dpr: options.dpr,
+      options: {
+        scaleFactor: options.tile.srcScale,
+        dpr: options.dpr,
+      },
     });
 
     task.wait(() => {

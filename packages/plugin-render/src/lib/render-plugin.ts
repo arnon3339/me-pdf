@@ -11,17 +11,14 @@ import {
   RenderPageRectOptions,
   RenderPluginConfig,
 } from './types';
-import { PdfEngine, Rotation } from '@embedpdf/models';
 
 export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapability> {
   static readonly id = 'render' as const;
-  private engine: PdfEngine;
 
   private readonly refreshPages$ = createEmitter<number[]>();
 
-  constructor(id: string, registry: PluginRegistry, engine: PdfEngine) {
+  constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
-    this.engine = engine;
 
     this.coreStore.onAction(REFRESH_PAGES, (action) => {
       this.refreshPages$.emit(action.payload);
@@ -41,14 +38,7 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
     return this.refreshPages$.on(fn);
   }
 
-  private renderPage({
-    pageIndex,
-    scaleFactor = 1,
-    dpr = 1,
-    rotation = Rotation.Degree0,
-    options = { withAnnotations: false },
-    imageType = 'image/webp',
-  }: RenderPageOptions) {
+  private renderPage({ pageIndex, options }: RenderPageOptions) {
     const coreState = this.coreState.core;
 
     if (!coreState.document) {
@@ -60,26 +50,10 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
       throw new Error('page does not exist');
     }
 
-    return this.engine.renderPage(
-      coreState.document,
-      page,
-      scaleFactor,
-      rotation,
-      dpr,
-      options,
-      imageType,
-    );
+    return this.engine.renderPage(coreState.document, page, options);
   }
 
-  private renderPageRect({
-    pageIndex,
-    scaleFactor = 1,
-    dpr = 1,
-    rect,
-    rotation = Rotation.Degree0,
-    options = { withAnnotations: false },
-    imageType = 'image/webp',
-  }: RenderPageRectOptions) {
+  private renderPageRect({ pageIndex, rect, options }: RenderPageRectOptions) {
     const coreState = this.coreState.core;
 
     if (!coreState.document) {
@@ -91,15 +65,6 @@ export class RenderPlugin extends BasePlugin<RenderPluginConfig, RenderCapabilit
       throw new Error('page does not exist');
     }
 
-    return this.engine.renderPageRect(
-      coreState.document,
-      page,
-      scaleFactor,
-      rotation,
-      dpr,
-      rect,
-      options,
-      imageType,
-    );
+    return this.engine.renderPageRect(coreState.document, page, rect, options);
   }
 }

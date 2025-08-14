@@ -1156,7 +1156,6 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
-        console.log(state.plugins.annotation.activeVariant);
         if (state.plugins.annotation.activeVariant === makeVariantKey(PdfAnnotationSubtype.INK)) {
           annotation.setActiveVariant(null);
         } else {
@@ -2873,6 +2872,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
     <>
       <style>{styles}</style>
       <EmbedPDF
+        logger={config.log ? logger : undefined}
         engine={engine}
         onInitialized={async (registry) => {
           const uiCapability = registry.getPlugin<UIPlugin>('ui')?.provides();
@@ -2914,9 +2914,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
               pdfFile: {
                 id: 'pdf',
                 url: config.src,
-              },
-              options: {
-                mode: 'full-fetch',
               },
             },
           }),

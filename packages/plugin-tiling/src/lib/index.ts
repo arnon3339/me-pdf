@@ -13,7 +13,7 @@ export const TilingPluginPackage: PluginPackage<
   TilingAction
 > = {
   manifest,
-  create: (registry, _engine, config) => new TilingPlugin(TILING_PLUGIN_ID, registry, config),
+  create: (registry, config) => new TilingPlugin(TILING_PLUGIN_ID, registry, config),
   reducer: (state, action) => tilingReducer(state, action),
   initialState,
 };

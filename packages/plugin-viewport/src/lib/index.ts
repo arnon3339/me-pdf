@@ -13,7 +13,7 @@ export const ViewportPluginPackage: PluginPackage<
   ViewportAction
 > = {
   manifest,
-  create: (registry, _engine, config) => new ViewportPlugin(VIEWPORT_PLUGIN_ID, registry, config),
+  create: (registry, config) => new ViewportPlugin(VIEWPORT_PLUGIN_ID, registry, config),
   reducer: viewportReducer,
   initialState: initialState,
 };

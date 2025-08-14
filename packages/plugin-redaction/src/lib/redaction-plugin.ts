@@ -51,7 +51,6 @@ export class RedactionPlugin extends BasePlugin<
   RedactionState
 > {
   static readonly id = 'redaction' as const;
-  private engine: PdfEngine;
   private config: RedactionPluginConfig;
 
   private selectionCapability: SelectionCapability | undefined;
@@ -65,14 +64,8 @@ export class RedactionPlugin extends BasePlugin<
   private readonly unsubscribeEndSelection: Unsubscribe | undefined;
   private readonly unsubscribeModeChange: Unsubscribe | undefined;
 
-  constructor(
-    id: string,
-    registry: PluginRegistry,
-    engine: PdfEngine,
-    config: RedactionPluginConfig,
-  ) {
+  constructor(id: string, registry: PluginRegistry, config: RedactionPluginConfig) {
     super(id, registry);
-    this.engine = engine;
     this.config = config;
 
     this.selectionCapability = this.registry.getPlugin<SelectionPlugin>('selection')?.provides();
@@ -320,15 +313,19 @@ export class RedactionPlugin extends BasePlugin<
       return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'Page not found' });
 
     const task = new Task<boolean, PdfErrorReason>();
-    this.engine.redactTextInRects(doc, pdfPage, rects, false, this.config.blackbox).wait(
-      () => {
-        this.dispatch(removePending(page, id));
-        this.pending$.emit(this.state.pending);
-        this.dispatchCoreAction(refreshPages([page]));
-        task.resolve(true);
-      },
-      () => task.reject({ code: PdfErrorCode.Unknown, message: 'Failed to commit redactions' }),
-    );
+    this.engine
+      .redactTextInRects(doc, pdfPage, rects, {
+        drawBlackBoxes: this.config.drawBlackBoxes,
+      })
+      .wait(
+        () => {
+          this.dispatch(removePending(page, id));
+          this.pending$.emit(this.state.pending);
+          this.dispatchCoreAction(refreshPages([page]));
+          task.resolve(true);
+        },
+        () => task.reject({ code: PdfErrorCode.Unknown, message: 'Failed to commit redactions' }),
+      );
 
     return task;
   }
@@ -359,7 +356,11 @@ export class RedactionPlugin extends BasePlugin<
       const page = doc.pages[pageIndex];
       if (!page) continue;
       if (!rects.length) continue;
-      tasks.push(this.engine.redactTextInRects(doc, page, rects, false, this.config.blackbox));
+      tasks.push(
+        this.engine.redactTextInRects(doc, page, rects, {
+          drawBlackBoxes: this.config.drawBlackBoxes,
+        }),
+      );
     }
 
     const task = new Task<boolean, PdfErrorReason>();

@@ -5,7 +5,7 @@ import { PrintPlugin } from './print-plugin';
 
 export const PrintPluginPackage: PluginPackage<PrintPlugin, PrintPluginConfig> = {
   manifest,
-  create: (registry, _engine, config) => new PrintPlugin(PRINT_PLUGIN_ID, registry, config),
+  create: (registry, config) => new PrintPlugin(PRINT_PLUGIN_ID, registry, config),
   reducer: () => {},
   initialState: {},
 };

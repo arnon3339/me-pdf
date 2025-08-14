@@ -5,7 +5,7 @@ import { CapturePlugin } from './capture-plugin';
 
 export const CapturePluginPackage: PluginPackage<CapturePlugin, CapturePluginConfig> = {
   manifest,
-  create: (registry, _engine, config) => new CapturePlugin(CAPTURE_PLUGIN_ID, registry, config),
+  create: (registry, config) => new CapturePlugin(CAPTURE_PLUGIN_ID, registry, config),
   reducer: () => {},
   initialState: {},
 };

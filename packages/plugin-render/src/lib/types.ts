@@ -1,29 +1,17 @@
 import { BasePluginConfig } from '@embedpdf/core';
-import { ImageConversionTypes, PdfErrorReason, Rect, Rotation, Task } from '@embedpdf/models';
+import { PdfErrorReason, PdfRenderPageOptions, Rect, Task } from '@embedpdf/models';
 
 export interface RenderPluginConfig extends BasePluginConfig {}
 
 export interface RenderPageRectOptions {
   pageIndex: number;
-  scaleFactor?: number;
-  rotation?: Rotation;
-  dpr?: number;
   rect: Rect;
-  options?: {
-    withAnnotations: boolean;
-  };
-  imageType?: ImageConversionTypes;
+  options: PdfRenderPageOptions;
 }
 
 export interface RenderPageOptions {
   pageIndex: number;
-  scaleFactor?: number;
-  dpr?: number;
-  rotation?: Rotation;
-  options?: {
-    withAnnotations: boolean;
-  };
-  imageType?: ImageConversionTypes;
+  options: PdfRenderPageOptions;
 }
 
 export interface RenderCapability {

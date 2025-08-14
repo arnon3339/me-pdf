@@ -11,7 +11,7 @@ import {
   PrintQuality,
 } from './types';
 import { PrintCapability } from './types';
-import { Rotation } from '@embedpdf/models';
+import { PdfRenderPageOptions, Rotation } from '@embedpdf/models';
 
 export class PrintPlugin extends BasePlugin<PrintPluginConfig, PrintCapability> {
   static readonly id = 'print' as const;
@@ -76,7 +76,11 @@ export class PrintPlugin extends BasePlugin<PrintPluginConfig, PrintCapability> 
           message: `Rendering page ${pageIndex + 1}...`,
         });
 
-        const blob = await this.renderPage(pageIndex, scaleFactor, dpr, options.includeAnnotations);
+        const blob = await this.renderPage(pageIndex, {
+          scaleFactor,
+          dpr,
+          withAnnotations: options.includeAnnotations,
+        });
 
         // Send page ready immediately after rendering
         onPageReady?.({
@@ -99,21 +103,11 @@ export class PrintPlugin extends BasePlugin<PrintPluginConfig, PrintCapability> 
     });
   }
 
-  private async renderPage(
-    pageIndex: number,
-    scaleFactor: number,
-    dpr: number,
-    withAnnotations: boolean,
-  ): Promise<Blob> {
+  private async renderPage(pageIndex: number, options: PdfRenderPageOptions): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const renderTask = this.renderCapability.renderPage({
         pageIndex,
-        scaleFactor,
-        dpr,
-        rotation: Rotation.Degree0,
-        options: {
-          withAnnotations,
-        },
+        options,
       });
 
       renderTask.wait(

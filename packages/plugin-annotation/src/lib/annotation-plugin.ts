@@ -3,14 +3,11 @@ import {
   ignore,
   PdfAnnotationObject,
   PdfDocumentObject,
-  PdfEngine,
   PdfErrorReason,
   Task,
   PdfAnnotationSubtype,
   PdfTaskHelper,
   PdfErrorCode,
-  Rotation,
-  AppearanceMode,
   PdfBlendMode,
   AnnotationCreateContext,
   uuidV4,
@@ -64,7 +61,6 @@ export class AnnotationPlugin extends BasePlugin<
 
   public readonly config: AnnotationPluginConfig;
 
-  private engine: PdfEngine;
   private readonly state$ = createBehaviorEmitter<AnnotationState>();
   private readonly interactionManager: InteractionManagerCapability | null;
   private readonly selection: SelectionCapability | null;
@@ -80,14 +76,8 @@ export class AnnotationPlugin extends BasePlugin<
     defaults: null,
   });
 
-  constructor(
-    id: string,
-    registry: PluginRegistry,
-    engine: PdfEngine,
-    config: AnnotationPluginConfig,
-  ) {
+  constructor(id: string, registry: PluginRegistry, config: AnnotationPluginConfig) {
     super(id, registry);
-    this.engine = engine;
     this.config = config;
 
     const selection = registry.getPlugin<SelectionPlugin>('selection');
@@ -296,15 +286,7 @@ export class AnnotationPlugin extends BasePlugin<
     return this.engine.getPageAnnotations(doc, page);
   }
 
-  private renderAnnotation({
-    pageIndex,
-    annotation,
-    scaleFactor = 1,
-    rotation = Rotation.Degree0,
-    dpr = 1,
-    mode = AppearanceMode.Normal,
-    imageType = 'image/webp',
-  }: RenderAnnotationOptions) {
+  private renderAnnotation({ pageIndex, annotation, options }: RenderAnnotationOptions) {
     const coreState = this.coreState.core;
 
     if (!coreState.document) {
@@ -316,16 +298,7 @@ export class AnnotationPlugin extends BasePlugin<
       throw new Error('page does not exist');
     }
 
-    return this.engine.renderAnnotation(
-      coreState.document,
-      page,
-      annotation,
-      scaleFactor,
-      rotation,
-      dpr,
-      mode,
-      imageType,
-    );
+    return this.engine.renderPageAnnotation(coreState.document, page, annotation, options);
   }
 
   private selectAnnotation(pageIndex: number, annotationId: string) {

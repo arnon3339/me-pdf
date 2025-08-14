@@ -213,15 +213,15 @@ export class PerfLogger implements Logger {
   ) {
     switch (phase) {
       case 'Begin':
-        window.performance.mark(`${source}.${category}.${event}.${phase}.${identifier}`, {
+        globalThis.performance.mark(`${source}.${category}.${event}.${phase}.${identifier}`, {
           detail: args,
         });
         break;
       case 'End':
-        window.performance.mark(`${source}.${category}.${event}.${phase}.${identifier}`, {
+        globalThis.performance.mark(`${source}.${category}.${event}.${phase}.${identifier}`, {
           detail: args,
         });
-        window.performance.measure(
+        globalThis.performance.measure(
           `${source}.${category}.${event}.Measure.${identifier}`,
           `${source}.${category}.${event}.Begin.${identifier}`,
           `${source}.${category}.${event}.End.${identifier}`,

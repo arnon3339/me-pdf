@@ -6,7 +6,7 @@ import { AttachmentPluginConfig } from './types';
 
 export const AttachmentPluginPackage: PluginPackage<AttachmentPlugin, AttachmentPluginConfig> = {
   manifest,
-  create: (registry, engine) => new AttachmentPlugin(ATTACHMENT_PLUGIN_ID, registry, engine),
+  create: (registry) => new AttachmentPlugin(ATTACHMENT_PLUGIN_ID, registry),
   reducer: () => {},
   initialState: {},
 };

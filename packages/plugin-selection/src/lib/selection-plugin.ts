@@ -61,11 +61,7 @@ export class SelectionPlugin extends BasePlugin<
   private readonly endSelection$ = createEmitter<void>();
   private readonly refreshPages$ = createEmitter<number[]>();
 
-  constructor(
-    id: string,
-    registry: PluginRegistry,
-    private engine: PdfEngine,
-  ) {
+  constructor(id: string, registry: PluginRegistry) {
     super(id, registry);
 
     this.coreStore.onAction(SET_DOCUMENT, (_action) => {

@@ -42,8 +42,8 @@ export const browserImageDataToBlobConverter: ImageDataConverter = (
  * import sharp from 'sharp';
  * import { createNodeImageDataToBufferConverter } from '@embedpdf/engines/pdfium/image-converters';
  *
- * const converter = createNodeImageDataToBufferConverter(sharp);
- * const engine = new PdfiumEngine(pdfiumModule, logger, converter);
+ * const imageDataConverter = createNodeImageDataToBufferConverter(sharp);
+ * const engine = new PdfiumEngine(pdfiumModule, { logger, imageDataConverter });
  * ```
  */
 export function createNodeImageDataToBufferConverter(
@@ -98,8 +98,8 @@ export function createNodeImageDataToBufferConverter(
  * import { createCanvas } from 'canvas';
  * import { createNodeCanvasImageDataToBlobConverter } from '@embedpdf/engines/pdfium/image-converters';
  *
- * const converter = createNodeCanvasImageDataToBlobConverter(createCanvas, 'image/png');
- * const engine = new PdfiumEngine(pdfiumModule, logger, converter);
+ * const imageDataConverter = createNodeCanvasImageDataToBlobConverter(createCanvas);
+ * const engine = new PdfiumEngine(pdfiumModule, { logger, imageDataConverter });
  * ```
  */
 export function createNodeCanvasImageDataToBlobConverter(

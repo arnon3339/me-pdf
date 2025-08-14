@@ -12,7 +12,7 @@ export const SearchPluginPackage: PluginPackage<
   SearchAction
 > = {
   manifest,
-  create: (registry, engine) => new SearchPlugin(SEARCH_PLUGIN_ID, registry, engine),
+  create: (registry) => new SearchPlugin(SEARCH_PLUGIN_ID, registry),
   reducer: searchReducer,
   initialState,
 };

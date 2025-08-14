@@ -18,7 +18,10 @@ async function runExample() {
 
   // Initialize PDFium
   const pdfiumInstance = await init();
-  const engine = new PdfiumEngine(pdfiumInstance, consoleLogger, imageConverter);
+  const engine = new PdfiumEngine(pdfiumInstance, {
+    logger: consoleLogger,
+    imageDataConverter: imageConverter,
+  });
   engine.initialize();
 
   const pdfPath = process.argv[2] || join(__dirname, 'sample.pdf');

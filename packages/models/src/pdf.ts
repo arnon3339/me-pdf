@@ -2196,18 +2196,6 @@ export interface PdfAnnotationTransformation {
 }
 
 /**
- * Render options
- *
- * @public
- */
-export interface PdfRenderOptions {
-  /**
-   * Whether needs to render the page with annotations
-   */
-  withAnnotations: boolean;
-}
-
-/**
  * source can be byte array contains pdf content
  *
  * @public
@@ -2262,7 +2250,7 @@ export interface PdfFileLoader extends PdfFileWithoutContent {
   callback: (offset: number, length: number) => Uint8Array;
 }
 
-export interface PdfPageWithAnnotations {
+export interface PdfAnnotationsProgress {
   page: number;
   annotations: PdfAnnotationObject[];
 }
@@ -2288,11 +2276,6 @@ export interface PdfFile extends PdfFileWithoutContent {
 
 export interface PdfFileUrl extends PdfFileWithoutContent {
   url: string;
-}
-
-export interface PdfUrlOptions {
-  mode?: 'auto' | 'range-request' | 'full-fetch';
-  password?: string;
 }
 
 export enum PdfErrorCode {
@@ -2383,6 +2366,89 @@ export class PdfTaskHelper {
   }
 }
 
+export interface PdfOpenDocumentBufferOptions {
+  /**
+   * Password for the document
+   */
+  password?: string;
+}
+
+export interface PdfOpenDocumentUrlOptions {
+  /**
+   * Password for the document
+   */
+  password?: string;
+  /**
+   * Loading mode
+   */
+  mode?: 'auto' | 'range-request' | 'full-fetch';
+}
+
+export interface PdfRenderOptions {
+  /**
+   * Scale factor
+   */
+  scaleFactor?: number;
+  /**
+   * Rotation
+   */
+  rotation?: Rotation;
+  /**
+   * Device pixel ratio
+   */
+  dpr?: number;
+  /**
+   * Image type
+   */
+  imageType?: ImageConversionTypes;
+}
+
+export interface PdfRenderPageOptions extends PdfRenderOptions {
+  /**
+   * Whether to render annotations
+   */
+  withAnnotations?: boolean;
+}
+
+export interface PdfRenderPageAnnotationOptions extends PdfRenderOptions {
+  /**
+   * Appearance mode normal down or rollover
+   */
+  mode?: AppearanceMode;
+}
+
+export interface PdfRenderThumbnailOptions extends PdfRenderOptions {
+  /**
+   * Whether to render annotations
+   */
+  withAnnotations?: boolean;
+}
+
+export interface PdfSearchAllPagesOptions {
+  /**
+   * Search flags
+   */
+  flags?: MatchFlag[];
+}
+
+export interface PdfRedactTextOptions {
+  /**
+   * Whether to recurse forms
+   */
+  recurseForms?: boolean;
+  /**
+   * Whether to draw black boxes
+   */
+  drawBlackBoxes?: boolean;
+}
+
+export interface PdfFlattenPageOptions {
+  /**
+   * Flatten flag
+   */
+  flag?: PdfPageFlattenFlag;
+}
+
 /**
  * Pdf engine
  *
@@ -2411,21 +2477,20 @@ export interface PdfEngine<T = Blob> {
    * @param options - Additional options including mode (auto, range-request, full-fetch) and password
    * @returns Task that resolves with the PdfDocumentObject or an error
    */
-  openDocumentUrl: (file: PdfFileUrl, options?: PdfUrlOptions) => PdfTask<PdfDocumentObject>;
+  openDocumentUrl: (
+    file: PdfFileUrl,
+    options?: PdfOpenDocumentUrlOptions,
+  ) => PdfTask<PdfDocumentObject>;
   /**
    * Open pdf document from buffer
    * @param file - pdf file
-   * @param password - protected password for this file
+   * @param options - Additional options including password
    * @returns task that contains the file or error
    */
-  openDocumentFromBuffer: (file: PdfFile, password: string) => PdfTask<PdfDocumentObject>;
-  /**
-   * Open pdf document from loader
-   * @param file - pdf file
-   * @param password - protected password for this file
-   * @returns task that contains the file or error
-   */
-  openDocumentFromLoader: (file: PdfFileLoader, password: string) => PdfTask<PdfDocumentObject>;
+  openDocumentBuffer: (
+    file: PdfFile,
+    options?: PdfOpenDocumentBufferOptions,
+  ) => PdfTask<PdfDocumentObject>;
   /**
    * Get the metadata of the file
    * @param doc - pdf document
@@ -2460,28 +2525,18 @@ export interface PdfEngine<T = Blob> {
    * Render the specified pdf page
    * @param doc - pdf document
    * @param page - pdf page
-   * @param scaleFactor - factor of scaling
-   * @param rotation - rotated angle
-   * @param dpr - devicePixelRatio
    * @param options - render options
    * @returns task contains the rendered image or error
    */
   renderPage: (
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number,
-    options: PdfRenderOptions,
-    imageType?: ImageConversionTypes,
+    options?: PdfRenderPageOptions,
   ) => PdfTask<T>;
   /**
    * Render the specified rect of pdf page
    * @param doc - pdf document
    * @param page - pdf page
-   * @param scaleFactor - factor of scaling
-   * @param rotation - rotated angle
-   * @param dpr - devicePixelRatio
    * @param rect - target rect
    * @param options - render options
    * @returns task contains the rendered image or error
@@ -2489,12 +2544,20 @@ export interface PdfEngine<T = Blob> {
   renderPageRect: (
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number,
     rect: Rect,
-    options: PdfRenderOptions,
-    imageType?: ImageConversionTypes,
+    options?: PdfRenderPageOptions,
+  ) => PdfTask<T>;
+  /**
+   * Render the thumbnail of specified pdf page
+   * @param doc - pdf document
+   * @param page - pdf page
+   * @param options - render options
+   * @returns task contains the rendered image or error
+   */
+  renderThumbnail: (
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    options?: PdfRenderThumbnailOptions,
   ) => PdfTask<T>;
   /**
    * Render a single annotation into an ImageData blob.
@@ -2504,39 +2567,30 @@ export interface PdfEngine<T = Blob> {
    * @param doc - pdf document
    * @param page - pdf page
    * @param annotation - the annotation to render
-   * @param scaleFactor - factor of scaling
-   * @param rotation - rotated angle
-   * @param dpr - devicePixelRatio
-   * @param mode - appearance mode
+   * @param options - render options
    */
-  renderAnnotation(
+  renderPageAnnotation(
     doc: PdfDocumentObject,
     page: PdfPageObject,
     annotation: PdfAnnotationObject,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number,
-    mode: AppearanceMode,
-    imageType: ImageConversionTypes,
+    options?: PdfRenderPageAnnotationOptions,
   ): PdfTask<T>;
   /**
    * Get annotations of pdf page
    * @param doc - pdf document
    * @param page - pdf page
-   * @param scaleFactor - factor of scaling
-   * @param rotation - rotated angle
    * @returns task contains the annotations or error
    */
   getPageAnnotations: (
     doc: PdfDocumentObject,
     page: PdfPageObject,
   ) => PdfTask<PdfAnnotationObject[]>;
-
   /**
    * Create a annotation on specified page
    * @param doc - pdf document
    * @param page - pdf page
    * @param annotation - new annotations
+   * @param context - context of the annotation
    * @returns task whether the annotations is created successfully
    */
   createPageAnnotation: <A extends PdfAnnotationObject>(
@@ -2544,7 +2598,7 @@ export interface PdfEngine<T = Blob> {
     page: PdfPageObject,
     annotation: A,
     context?: AnnotationCreateContext<A>,
-  ) => PdfTask<number>;
+  ) => PdfTask<string>;
   /**
    * Update a annotation on specified page
    * @param doc - pdf document
@@ -2573,44 +2627,21 @@ export interface PdfEngine<T = Blob> {
    * get all text rects in pdf page
    * @param doc - pdf document
    * @param page - pdf page
-   * @param scaleFactor - factor of scaling
-   * @param rotation - rotated angle
+   * @param options - get page text rects options
    * @returns task contains the text rects or error
    */
-  getPageTextRects: (
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-  ) => PdfTask<PdfTextRectObject[]>;
-  /**
-   * Render the thumbnail of specified pdf page
-   * @param doc - pdf document
-   * @param page - pdf page
-   * @param scaleFactor - factor of scaling
-   * @param rotation - rotated angle
-   * @param dpr - devicePixelRatio
-   * @param options - render options
-   * @returns task contains the rendered image or error
-   */
-  renderThumbnail: (
-    doc: PdfDocumentObject,
-    page: PdfPageObject,
-    scaleFactor: number,
-    rotation: Rotation,
-    dpr: number,
-  ) => PdfTask<T>;
+  getPageTextRects: (doc: PdfDocumentObject, page: PdfPageObject) => PdfTask<PdfTextRectObject[]>;
   /**
    * Search across all pages in the document
    * @param doc - pdf document
    * @param keyword - search keyword
-   * @param flags - match flags for search
+   * @param options - search all pages options
    * @returns Task contains all search results throughout the document
    */
   searchAllPages: (
     doc: PdfDocumentObject,
     keyword: string,
-    flags?: MatchFlag[],
+    options?: PdfSearchAllPagesOptions,
   ) => PdfTask<SearchAllPagesResult, PdfPageSearchProgress>;
   /**
    * Get all annotations in this file
@@ -2619,7 +2650,7 @@ export interface PdfEngine<T = Blob> {
    */
   getAllAnnotations: (
     doc: PdfDocumentObject,
-  ) => PdfTask<Record<number, PdfAnnotationObject[]>, PdfPageWithAnnotations>;
+  ) => PdfTask<Record<number, PdfAnnotationObject[]>, PdfAnnotationsProgress>;
   /**
    * Get all attachments in this file
    * @param doc - pdf document
@@ -2653,12 +2684,12 @@ export interface PdfEngine<T = Blob> {
    * Flatten annotations and form fields into the page contents.
    * @param doc - pdf document
    * @param page - pdf page
-   * @param flag - flatten flag
+   * @param options - flatten page options
    */
   flattenPage: (
     doc: PdfDocumentObject,
     page: PdfPageObject,
-    flag: PdfPageFlattenFlag,
+    options?: PdfFlattenPageOptions,
   ) => PdfTask<PdfPageFlattenResult>;
   /**
    * Extract pdf pages to a new file
@@ -2677,15 +2708,16 @@ export interface PdfEngine<T = Blob> {
   /**
    * Redact text by run slices
    * @param doc - pdf document
-   * @param perPage - per page run slices
+   * @param page - pdf page
+   * @param rects - rects to redact
+   * @param options - redact text options
    * @returns task contains the result
    */
   redactTextInRects: (
     doc: PdfDocumentObject,
     page: PdfPageObject,
     rects: Rect[],
-    recurseForms: boolean,
-    drawBlackBoxes: boolean,
+    options?: PdfRedactTextOptions,
   ) => PdfTask<boolean>;
   /**
    * Extract text on specified pdf pages
