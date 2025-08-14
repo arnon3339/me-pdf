@@ -15,7 +15,7 @@ type RenderLayerProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
 export function RenderLayer({
   pageIndex,
   scaleFactor = 1,
-  dpr = 1,
+  dpr,
   style,
   ...props
 }: RenderLayerProps) {
@@ -37,7 +37,10 @@ export function RenderLayer({
 
   useEffect(() => {
     if (renderProvides) {
-      const task = renderProvides.renderPage({ pageIndex, options: { scaleFactor, dpr } });
+      const task = renderProvides.renderPage({
+        pageIndex,
+        options: { scaleFactor, dpr: dpr || window.devicePixelRatio },
+      });
       task.wait((blob) => {
         const url = URL.createObjectURL(blob);
         setImageUrl(url);

@@ -253,6 +253,217 @@ const PackageCard = ({
   )
 }
 
+// Framework Getting Started Card
+// React and Vue SVG Icons
+const ReactIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M6.306 8.711c-2.602 .723 -4.306 1.926 -4.306 3.289c0 2.21 4.477 4 10 4c.773 0 1.526 -.035 2.248 -.102" />
+    <path d="M17.692 15.289c2.603 -.722 4.308 -1.926 4.308 -3.289c0 -2.21 -4.477 -4 -10 -4c-.773 0 -1.526 .035 -2.25 .102" />
+    <path d="M6.305 15.287c-.676 2.615 -.485 4.693 .695 5.373c1.913 1.105 5.703 -1.877 8.464 -6.66c.387 -.67 .733 -1.339 1.036 -2" />
+    <path d="M17.694 8.716c.677 -2.616 .487 -4.696 -.694 -5.376c-1.913 -1.105 -5.703 1.877 -8.464 6.66c-.387 .67 -.733 1.34 -1.037 2" />
+    <path d="M12 5.424c-1.925 -1.892 -3.82 -2.766 -5 -2.084c-1.913 1.104 -1.226 5.877 1.536 10.66c.386 .67 .793 1.304 1.212 1.896" />
+    <path d="M12 18.574c1.926 1.893 3.821 2.768 5 2.086c1.913 -1.104 1.226 -5.877 -1.536 -10.66c-.375 -.65 -.78 -1.283 -1.212 -1.897" />
+    <path d="M11.5 12.866a1 1 0 1 0 1 -1.732a1 1 0 0 0 -1 1.732z" />
+  </svg>
+)
+
+const VueIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M16.5 4l-4.5 8l-4.5 -8" />
+    <path d="M3 4l9 16l9 -16" />
+  </svg>
+)
+
+// Framework Getting Started Card
+const FrameworkGettingStartedCard = () => {
+  return (
+    <div className="relative mb-16 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white shadow-2xl">
+      {/* Animated background orbs */}
+      <div className="absolute right-0 top-0 h-80 w-80 -translate-y-1/3 translate-x-1/3 transform animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 opacity-20 blur-3xl"></div>
+      <div className="animation-delay-2000 absolute bottom-0 left-0 h-72 w-72 -translate-x-1/3 translate-y-1/3 transform animate-pulse rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 opacity-25 blur-3xl"></div>
+      <div className="animation-delay-4000 absolute right-1/4 top-1/2 h-64 w-64 -translate-y-1/2 transform animate-pulse rounded-full bg-gradient-to-br from-violet-400 to-purple-600 opacity-15 blur-3xl"></div>
+
+      <div className="relative z-10 p-8 md:p-12">
+        <div className="mb-12 text-center">
+          <div className="mb-6 inline-block rounded-full border border-cyan-400/30 bg-cyan-400/10 px-6 py-2 text-sm font-bold text-slate-300 backdrop-blur-sm">
+            ⚡&nbsp;&nbsp;Start Building Now
+          </div>
+          <h2 className="mb-6 text-4xl font-black leading-tight tracking-tight md:text-5xl">
+            <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent">
+              Jump into your
+            </span>
+            <span className="block bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 bg-clip-text text-transparent">
+              favorite framework
+            </span>
+          </h2>
+          <p className="mx-auto max-w-3xl text-xl leading-relaxed text-slate-300">
+            Headless PDF components that fit any UI framework. Get PDF viewing
+            working in your app with our framework-specific guides designed by
+            developers, for developers.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          {/* React Card */}
+          <div className="group relative">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 opacity-25 blur transition duration-300 group-hover:opacity-40"></div>
+            <div className="relative overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/80 backdrop-blur-sm">
+              {/* Header */}
+              <div className="border-b border-slate-700/50 bg-slate-800/50 px-8 py-6">
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600">
+                    <ReactIcon className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">React</h3>
+                    <p className="text-slate-400">Components & Hooks</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-8">
+                <div className="mb-8">
+                  <h4 className="mb-4 text-lg font-bold text-white">
+                    What you'll get:
+                  </h4>
+                  <ul className="space-y-3">
+                    <li className="flex items-center text-slate-300">
+                      <div className="mr-3 h-2 w-2 rounded-full bg-cyan-400"></div>
+                      Pre-built PDF viewer components
+                    </li>
+                    <li className="flex items-center text-slate-300">
+                      <div className="mr-3 h-2 w-2 rounded-full bg-blue-400"></div>
+                      Custom hooks for PDF interactions
+                    </li>
+                    <li className="flex items-center text-slate-300">
+                      <div className="mr-3 h-2 w-2 rounded-full bg-purple-400"></div>
+                      TypeScript support out of the box
+                    </li>
+                    <li className="flex items-center text-slate-300">
+                      <div className="mr-3 h-2 w-2 rounded-full bg-cyan-400"></div>
+                      Seamless React lifecycle integration
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  href="/docs/react/introduction"
+                  className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-cyan-500 hover:to-blue-500 hover:shadow-xl"
+                >
+                  <span>Start with React</span>
+                  <ArrowRight className="ml-3 h-6 w-6" />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Vue Card */}
+          <div className="group relative">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 opacity-25 blur transition duration-300 group-hover:opacity-40"></div>
+            <div className="relative overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/80 backdrop-blur-sm">
+              {/* Header */}
+              <div className="border-b border-slate-700/50 bg-slate-800/50 px-8 py-6">
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600">
+                    <VueIcon className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Vue</h3>
+                    <p className="text-slate-400">Composition API</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-8">
+                <div className="mb-8">
+                  <h4 className="mb-4 text-lg font-bold text-white">
+                    What you'll get:
+                  </h4>
+                  <ul className="space-y-3">
+                    <li className="flex items-center text-slate-300">
+                      <div className="mr-3 h-2 w-2 rounded-full bg-emerald-400"></div>
+                      Vue 3 compatible components
+                    </li>
+                    <li className="flex items-center text-slate-300">
+                      <div className="mr-3 h-2 w-2 rounded-full bg-teal-400"></div>
+                      Composition API composables
+                    </li>
+                    <li className="flex items-center text-slate-300">
+                      <div className="mr-3 h-2 w-2 rounded-full bg-green-400"></div>
+                      Reactive PDF state management
+                    </li>
+                    <li className="flex items-center text-slate-300">
+                      <div className="mr-3 h-2 w-2 rounded-full bg-emerald-400"></div>
+                      TypeScript support with Vue types
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  href="/docs/vue/introduction"
+                  className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-emerald-500 hover:to-teal-500 hover:shadow-xl"
+                >
+                  <span>Start with Vue.js</span>
+                  <ArrowRight className="ml-3 h-6 w-6" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="mt-12 text-center">
+          <p className="mb-6 text-lg text-slate-400">
+            Need something else? We've got you covered.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/docs/snippet/introduction"
+              className="inline-flex items-center rounded-full border border-slate-600 bg-slate-800/50 px-6 py-3 text-sm font-medium text-slate-300 backdrop-blur-sm transition-all hover:scale-105 hover:bg-slate-700/50 hover:text-white"
+            >
+              <Code className="mr-2 h-4 w-4" />
+              Vanilla JS
+            </Link>
+            <Link
+              href="/docs/engines/introduction"
+              className="inline-flex items-center rounded-full border border-slate-600 bg-slate-800/50 px-6 py-3 text-sm font-medium text-slate-300 backdrop-blur-sm transition-all hover:scale-105 hover:bg-slate-700/50 hover:text-white"
+            >
+              <Zap className="mr-2 h-4 w-4" />
+              Engine
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Getting started card
 const GettingStartedCard = () => {
   return (
@@ -453,7 +664,9 @@ const DocsOverview = () => {
           </div>*/}
 
           {/* Getting Started Section */}
-          {/* <GettingStartedCard /> */}
+          {/* <GettingStartedCard />*/}
+          {/* Framework Getting Started Section */}
+          <FrameworkGettingStartedCard />
 
           {/* Main Documentation */}
           <DocSection title="Available Packages" icon={<Package size={20} />}>

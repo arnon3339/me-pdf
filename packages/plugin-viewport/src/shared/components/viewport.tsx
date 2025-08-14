@@ -24,6 +24,9 @@ export function Viewport({ children, ...props }: ViewportProps) {
       {...restProps}
       ref={viewportRef}
       style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'auto',
         ...(typeof style === 'object' ? style : {}),
         padding: `${viewportGap}px`,
       }}

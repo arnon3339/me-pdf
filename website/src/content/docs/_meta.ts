@@ -11,6 +11,14 @@ export default {
     title: 'Engines',
     type: 'page',
   },
+  react: {
+    title: 'React',
+    type: 'page',
+  },
+  vue: {
+    title: 'Vue',
+    type: 'page',
+  },
   index: {
     title: 'Introduction',
     type: 'page',
