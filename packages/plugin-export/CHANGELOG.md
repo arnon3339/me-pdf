@@ -1,5 +1,11 @@
 # @embedpdf/plugin-export
 
+## 1.0.19
+
+### Patch Changes
+
+- [#73](https://github.com/embedpdf/embed-pdf-viewer/pull/73) by [@lbhfuture](https://github.com/lbhfuture) – Add a prop to the Download component to update the filename
+
 ## 1.0.18
 
 ## 1.0.17
