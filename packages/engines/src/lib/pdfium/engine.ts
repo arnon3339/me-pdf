@@ -213,6 +213,11 @@ export const browserImageDataToBlobConverter: ImageDataConverter<Blob> = (
   return off.convertToBlob({ type: imageType });
 };
 
+interface PdfiumEngineOptions<T> {
+  logger?: Logger;
+  imageDataConverter?: ImageDataConverter<T>;
+}
+
 /**
  * Pdf engine that based on pdfium wasm
  */
@@ -223,6 +228,16 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private readonly cache: PdfCache;
 
   /**
+   * logger instance
+   */
+  private readonly logger: Logger;
+
+  /**
+   * function to convert ImageData to Blob
+   */
+  private readonly imageDataConverter: ImageDataConverter<T>;
+
+  /**
    * Create an instance of PdfiumEngine
    * @param wasmModule - pdfium wasm module
    * @param logger - logger instance
@@ -230,10 +245,16 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   constructor(
     private pdfiumModule: WrappedPdfiumModule,
-    private logger: Logger = new NoopLogger(),
-    private imageDataConverter: ImageDataConverter<T> = browserImageDataToBlobConverter as ImageDataConverter<T>,
+    options: PdfiumEngineOptions<T> = {},
   ) {
+    const {
+      logger = new NoopLogger(),
+      imageDataConverter = browserImageDataToBlobConverter as ImageDataConverter<T>,
+    } = options;
+
     this.cache = new PdfCache(this.pdfiumModule);
+    this.logger = logger;
+    this.imageDataConverter = imageDataConverter;
   }
   /**
    * {@inheritDoc @embedpdf/models!PdfEngine.initialize}

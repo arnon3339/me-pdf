@@ -24,7 +24,7 @@ export class PdfiumEngineRunner extends EngineRunner {
   async prepare() {
     const wasmBinary = this.wasmBinary;
     const wasmModule = await init({ wasmBinary });
-    this.engine = new PdfiumEngine(wasmModule, this.logger);
+    this.engine = new PdfiumEngine(wasmModule, { logger: this.logger });
     this.ready();
   }
 }
