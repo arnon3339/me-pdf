@@ -8,6 +8,17 @@ export default function LoadingPDFiumExample() {
   const { isLoading, error, engine } = usePdfiumEngine()
   const [initialized, setInitialized] = useState(false)
 
+  useEffect(() => {
+    if (engine && !initialized) {
+      if (engine.initialize) {
+        const task = engine.initialize()
+        task.wait(setInitialized, ignore)
+      } else {
+        setInitialized(true)
+      }
+    }
+  }, [engine, initialized])
+
   if (error) {
     return (
       <div className="mt-3 rounded-md bg-red-50 p-4 text-sm font-medium text-red-800">
@@ -23,17 +34,6 @@ export default function LoadingPDFiumExample() {
       </div>
     )
   }
-
-  useEffect(() => {
-    if (engine && !initialized) {
-      if (engine.initialize) {
-        const task = engine.initialize()
-        task.wait(setInitialized, ignore)
-      } else {
-        setInitialized(true)
-      }
-    }
-  }, [engine, initialized])
 
   // Engine is ready to use
   return (
