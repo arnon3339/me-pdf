@@ -47,3 +47,7 @@ We love contributions! To get started, read our [contributing guide](CONTRIBUTIN
 ## 📄 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Third-Party Licenses
+
+This project includes PDFium, licensed under the [Apache License, Version 2.0](packages/pdfium/LICENSE.pdfium). 
