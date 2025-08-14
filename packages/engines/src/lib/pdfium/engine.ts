@@ -486,7 +486,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const lastError = this.pdfiumModule.FPDF_GetLastError();
       this.logger.error(LOG_SOURCE, LOG_CATEGORY, `FPDF_LoadMemDocument failed with ${lastError}`);
       this.free(filePtr);
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromBuffer`, 'End', file.id);
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentBuffer`, 'End', file.id);
 
       return PdfTaskHelper.reject<PdfDocumentObject>({
         code: lastError,
@@ -510,7 +510,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         this.free(sizePtr);
         this.pdfiumModule.FPDF_CloseDocument(docPtr);
         this.free(filePtr);
-        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromBuffer`, 'End', file.id);
+        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentBuffer`, 'End', file.id);
         return PdfTaskHelper.reject<PdfDocumentObject>({
           code: lastError,
           message: `FPDF_GetPageSizeByIndexF failed`,
@@ -537,7 +537,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     this.cache.setDocument(file.id, filePtr, docPtr);
 
-    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromBuffer`, 'End', file.id);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentBuffer`, 'End', file.id);
 
     return PdfTaskHelper.resolve(pdfDoc);
   }
