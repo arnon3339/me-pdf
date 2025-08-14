@@ -61,6 +61,22 @@ document.getElementById('my-image').src = imageUrl;
   - **Fully Typed:** Written entirely in TypeScript for excellent autocompletion and type safety in your projects.
   - **Worker-Optimized:** Built from the ground up to offload heavy PDF processing from the main UI thread, ensuring your app stays fast and responsive.
 
+## Framework Integrations
+
+While `@embedpdf/engines` is framework-agnostic, we provide helpers to make integration seamless with popular frameworks.
+
+### React
+
+For React applications, the `usePdfiumEngine` hook is the recommended way to manage the engine's lifecycle. It handles initialization and cleanup automatically within your components.
+
+➡️ **Learn more in the [Using with React](./react-integration.md) guide.**
+
+### Vue
+
+For Vue 3 applications, we provide a `usePdfiumEngine` composable that ties the engine's lifecycle to your component, providing reactive state for loading and errors.
+
+➡️ **Learn more in the [Using with Vue](./vue-integration.md) guide.**
+
 ## Installation
 
 ```sh npm2yarn
