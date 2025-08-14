@@ -93,3 +93,6 @@ Check out our comprehensive documentation at [embedpdf.com/docs/pdfium](https://
 ## License
 
 This package is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+It also bundles [PDFium](https://pdfium.googlesource.com/pdfium/) in WebAssembly form,  
+which is licensed under the [Apache License, Version 2.0](LICENSE.pdfium).  
