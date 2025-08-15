@@ -63,6 +63,10 @@ function listenerOpts(eventType: string, wantsRawTouch: boolean): AddEventListen
   return eventType.startsWith('touch') ? { passive: !wantsRawTouch } : { passive: false };
 }
 
+function isTouchEvent(evt: Event): evt is TouchEvent {
+  return typeof TouchEvent !== 'undefined' && evt instanceof TouchEvent;
+}
+
 /* -------------------------------------------------- */
 /* createPointerProvider                              */
 /* -------------------------------------------------- */
@@ -148,7 +152,7 @@ export function createPointerProvider(
 
     /* preventDefault only when mode really wants raw touch                        */
     if (
-      evt instanceof TouchEvent &&
+      isTouchEvent(evt) &&
       attachedWithRawTouch &&
       (evt.type === 'touchmove' || evt.type === 'touchcancel')
     ) {
@@ -162,7 +166,7 @@ export function createPointerProvider(
       currentTarget: EventTarget | null;
     };
 
-    if (evt instanceof TouchEvent) {
+    if (isTouchEvent(evt)) {
       const tp =
         evt.type === 'touchend' || evt.type === 'touchcancel'
           ? evt.changedTouches[0]
