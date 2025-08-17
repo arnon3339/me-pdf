@@ -13,6 +13,13 @@ export default {
       timestamp: false,
     },
   },
+  enterprise: {
+    title: 'Enterprise',
+    type: 'page',
+    theme: {
+      timestamp: false,
+    },
+  },
   docs: {
     title: 'Docs',
     type: 'page',
