@@ -3043,18 +3043,8 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                               </div>
                                             )}
                                           />
-                                          <MarqueeZoom
-                                            pageIndex={pageIndex}
-                                            scale={scale}
-                                            pageWidth={width}
-                                            pageHeight={height}
-                                          />
-                                          <MarqueeCapture
-                                            pageIndex={pageIndex}
-                                            scale={scale}
-                                            pageWidth={width}
-                                            pageHeight={height}
-                                          />
+                                          <MarqueeZoom pageIndex={pageIndex} scale={scale} />
+                                          <MarqueeCapture pageIndex={pageIndex} scale={scale} />
                                           <RedactionLayer
                                             pageIndex={pageIndex}
                                             scale={scale}

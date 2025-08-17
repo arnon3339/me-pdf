@@ -16,6 +16,17 @@ export interface CaptureAreaEvent {
   withAnnotations: boolean;
 }
 
+export interface MarqueeCaptureCallback {
+  onPreview?: (rect: Rect | null) => void;
+  onCommit?: (rect: Rect) => void;
+}
+
+export interface RegisterMarqueeOnPageOptions {
+  pageIndex: number;
+  scale: number;
+  callback: MarqueeCaptureCallback;
+}
+
 export interface CaptureCapability {
   onCaptureArea: EventHook<CaptureAreaEvent>;
   captureArea(pageIndex: number, rect: Rect): void;
@@ -23,4 +34,5 @@ export interface CaptureCapability {
   disableMarqueeCapture: () => void;
   toggleMarqueeCapture: () => void;
   isMarqueeCaptureActive: () => boolean;
+  registerMarqueeOnPage: (opts: RegisterMarqueeOnPageOptions) => () => void;
 }
