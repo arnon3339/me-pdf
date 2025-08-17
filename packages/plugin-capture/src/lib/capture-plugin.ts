@@ -1,12 +1,18 @@
 import { BasePlugin, createEmitter, PluginRegistry } from '@embedpdf/core';
+import { ignore, Rect } from '@embedpdf/models';
 import {
   InteractionManagerCapability,
   InteractionManagerPlugin,
 } from '@embedpdf/plugin-interaction-manager';
 import { RenderCapability, RenderPlugin } from '@embedpdf/plugin-render';
 
-import { CaptureAreaEvent, CaptureCapability, CapturePluginConfig } from './types';
-import { ignore, Rect } from '@embedpdf/models';
+import {
+  CaptureAreaEvent,
+  CaptureCapability,
+  CapturePluginConfig,
+  RegisterMarqueeOnPageOptions,
+} from './types';
+import { createMarqueeHandler } from './handlers';
 
 export class CapturePlugin extends BasePlugin<CapturePluginConfig, CaptureCapability> {
   static readonly id = 'capture' as const;
@@ -14,7 +20,7 @@ export class CapturePlugin extends BasePlugin<CapturePluginConfig, CaptureCapabi
   private captureArea$ = createEmitter<CaptureAreaEvent>();
 
   private renderCapability: RenderCapability;
-  private interactionManagerCapability: InteractionManagerCapability;
+  private interactionManagerCapability: InteractionManagerCapability | undefined;
   private config: CapturePluginConfig;
 
   constructor(id: string, registry: PluginRegistry, config: CapturePluginConfig) {
@@ -24,15 +30,17 @@ export class CapturePlugin extends BasePlugin<CapturePluginConfig, CaptureCapabi
 
     this.renderCapability = this.registry.getPlugin<RenderPlugin>('render')!.provides();
     this.interactionManagerCapability = this.registry
-      .getPlugin<InteractionManagerPlugin>('interaction-manager')!
-      .provides();
+      .getPlugin<InteractionManagerPlugin>('interaction-manager')
+      ?.provides();
 
-    this.interactionManagerCapability.registerMode({
-      id: 'marqueeCapture',
-      scope: 'page',
-      exclusive: true,
-      cursor: 'crosshair',
-    });
+    if (this.interactionManagerCapability) {
+      this.interactionManagerCapability.registerMode({
+        id: 'marqueeCapture',
+        scope: 'page',
+        exclusive: true,
+        cursor: 'crosshair',
+      });
+    }
   }
 
   async initialize(_: CapturePluginConfig): Promise<void> {}
@@ -46,7 +54,50 @@ export class CapturePlugin extends BasePlugin<CapturePluginConfig, CaptureCapabi
       toggleMarqueeCapture: this.toggleMarqueeCapture.bind(this),
       isMarqueeCaptureActive: () =>
         this.interactionManagerCapability?.getActiveMode() === 'marqueeCapture',
+      registerMarqueeOnPage: (opts) => this.registerMarqueeOnPage(opts),
     };
+  }
+
+  public registerMarqueeOnPage(opts: RegisterMarqueeOnPageOptions) {
+    if (!this.interactionManagerCapability) {
+      this.logger.warn(
+        'CapturePlugin',
+        'MissingDependency',
+        'Interaction manager plugin not loaded, marquee capture disabled',
+      );
+      return () => {};
+    }
+
+    const document = this.coreState.core.document;
+    if (!document) {
+      this.logger.warn('CapturePlugin', 'DocumentNotFound', 'Document not found');
+      return () => {};
+    }
+
+    const page = document.pages[opts.pageIndex];
+    if (!page) {
+      this.logger.warn('CapturePlugin', 'PageNotFound', `Page ${opts.pageIndex} not found`);
+      return () => {};
+    }
+
+    const handlers = createMarqueeHandler({
+      pageSize: page.size,
+      scale: opts.scale,
+      onPreview: opts.callback.onPreview,
+      onCommit: (rect) => {
+        // Capture the selected area
+        this.captureArea(opts.pageIndex, rect);
+        opts.callback.onCommit?.(rect);
+      },
+    });
+
+    const off = this.interactionManagerCapability.registerHandlers({
+      modeId: 'marqueeCapture',
+      handlers,
+      pageIndex: opts.pageIndex,
+    });
+
+    return off;
   }
 
   private captureArea(pageIndex: number, rect: Rect) {

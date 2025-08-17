@@ -205,16 +205,26 @@ export class RedactionPlugin extends BasePlugin<
   }
 
   public registerMarqueeOnPage(opts: RegisterMarqueeOnPageOptions) {
-    if (!this.interactionManagerCapability)
-      throw new Error(
-        '[RedactionPlugin] Make sure the interaction-manager plugin is loaded, if you want to use marquee redaction',
+    if (!this.interactionManagerCapability) {
+      this.logger.warn(
+        'RedactionPlugin',
+        'MissingDependency',
+        'Interaction manager plugin not loaded, marquee redaction disabled',
       );
+      return () => {};
+    }
 
     const document = this.coreState.core.document;
-    if (!document) throw new Error('[RedactionPlugin] Document not found');
+    if (!document) {
+      this.logger.warn('RedactionPlugin', 'DocumentNotFound', 'Document not found');
+      return () => {};
+    }
 
     const page = document.pages[opts.pageIndex];
-    if (!page) throw new Error('[RedactionPlugin] Page not found');
+    if (!page) {
+      this.logger.warn('RedactionPlugin', 'PageNotFound', `Page ${opts.pageIndex} not found`);
+      return () => {};
+    }
 
     const handlers = createMarqueeHandler({
       pageSize: page.size,

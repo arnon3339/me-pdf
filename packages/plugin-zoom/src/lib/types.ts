@@ -38,6 +38,18 @@ export interface ZoomChangeEvent {
   viewport: ViewportMetrics;
 }
 
+export interface MarqueeZoomCallback {
+  onPreview?: (rect: Rect | null) => void;
+  onCommit?: (rect: Rect) => void;
+  onSmallDrag?: () => void;
+}
+
+export interface RegisterMarqueeOnPageOptions {
+  pageIndex: number;
+  scale: number;
+  callback: MarqueeZoomCallback;
+}
+
 export interface ZoomCapability {
   /** subscribe – returns the unsubscribe function */
   onZoomChange: EventHook<ZoomChangeEvent>;
@@ -60,6 +72,9 @@ export interface ZoomCapability {
   disableMarqueeZoom(): void;
   toggleMarqueeZoom(): void;
   isMarqueeZoomActive(): boolean;
+
+  /** register a marquee handler on a page -------------------------------- */
+  registerMarqueeOnPage: (opts: RegisterMarqueeOnPageOptions) => () => void;
 
   getState(): ZoomState;
   getPresets(): ZoomPreset[];
