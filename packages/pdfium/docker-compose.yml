@@ -4,6 +4,10 @@ services:
   # ────────────────────────────
   pdfium-dev: &pdfium-base
     image: embedpdf/pdfium-dev          # built once with `docker compose build`
+    build:
+      context: .                # folder that has your Dockerfile
+      dockerfile: Dockerfile
+      target: pdfium-deps   
     platform: linux/amd64               # silence QEMU warning on Apple Silicon
     working_dir: /workspace             # run everything from repo root
     entrypoint:

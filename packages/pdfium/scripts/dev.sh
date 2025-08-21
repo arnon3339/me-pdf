@@ -5,6 +5,7 @@ set -x   # verbose – remove once everything works smoothly
 ROOT=/workspace
 SRC=$ROOT/packages/pdfium/pdfium-src
 OUT=$SRC/out/wasm
+WORK=/opt/work/pdfium-src
 PDFIUM=$ROOT/packages/pdfium
 
 # make them visible in child shells
@@ -48,20 +49,23 @@ cp -f "$PDFIUM/build/patch/build/config/BUILDCONFIG.gn" \
 cp -f "$PDFIUM/build/patch/build/toolchain/wasm/BUILD.gn" \
       "$SRC/build/toolchain/wasm/BUILD.gn"
 
-###############################################################################
-# 1.  One-time GN generation (wasm flavour)
-###############################################################################
-if [[ ! -f "$OUT/args.gn" ]]; then
-  echo "Generating GN args for wasm target"
-  # All “normal” args in one call…
-  gn gen "$OUT" --root "$SRC" --args='is_debug=false treat_warnings_as_errors=false pdf_use_skia=false pdf_enable_xfa=false pdf_enable_v8=false is_component_build=false clang_use_chrome_plugins=false pdf_is_standalone=true use_debug_fission=false use_custom_libcxx=false use_sysroot=false pdf_is_complete_lib=true pdf_use_partition_alloc=false is_clang=false symbol_level=0'
 
-  # …then append the two special ones.
-  {
-    echo 'target_os="wasm"'
-    echo 'target_cpu="wasm"'
-  } >> "$OUT/args.gn"
-fi
+#if command -v mountpoint >/dev/null 2>&1 && mountpoint -q "$OUT"; then
+#  echo "⚠️ $OUT is a mount — clearing contents only"
+#  find "$OUT" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+#else
+#  rm -rf "$OUT"
+#fi
+
+###############################################################################
+# 1) GN gen (container-local) — two-step style you wanted, but with OUT last
+###############################################################################
+(
+  cd "$WORK" && \
+  gn --time --root="$SRC" gen \
+    --args='is_debug=false treat_warnings_as_errors=false pdf_use_skia=false pdf_enable_xfa=false pdf_enable_v8=false is_component_build=false clang_use_chrome_plugins=false pdf_is_standalone=true use_debug_fission=false use_custom_libcxx=false use_sysroot=false pdf_is_complete_lib=true pdf_use_partition_alloc=false is_clang=false symbol_level=0 target_os="wasm" target_cpu="wasm"' \
+    "$OUT"
+)
 
 ###############################################################################
 # 2.  Helper – regenerate export lists
