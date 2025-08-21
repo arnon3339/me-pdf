@@ -2401,6 +2401,21 @@ export interface PdfRenderOptions {
    * Image type
    */
   imageType?: ImageConversionTypes;
+  /**
+   * Image quality (0-1) for webp and jpeg and png
+   */
+  imageQuality?: number;
+}
+
+export interface ConvertToBlobOptions {
+  /**
+   * Image type
+   */
+  type: ImageConversionTypes;
+  /**
+   * Image quality (0-1) for webp and jpeg and png
+   */
+  quality?: number;
 }
 
 export interface PdfRenderPageOptions extends PdfRenderOptions {
