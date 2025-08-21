@@ -1,5 +1,11 @@
 # @embedpdf/pdfium
 
+## 1.0.20
+
+### Patch Changes
+
+- [#114](https://github.com/embedpdf/embed-pdf-viewer/pull/114) by [@bobsingor](https://github.com/bobsingor) – Fix issue with redaction as described in issue #109
+
 ## 1.0.19
 
 ## 1.0.18

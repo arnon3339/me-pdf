@@ -1,5 +1,11 @@
 # @embedpdf/plugin-zoom
 
+## 1.0.20
+
+### Patch Changes
+
+- [#98](https://github.com/embedpdf/embed-pdf-viewer/pull/98) by [@bobsingor](https://github.com/bobsingor) – Move interaction manager handlers to the plugin for smaller and cleaner framework layers
+
 ## 1.0.19
 
 ## 1.0.18
