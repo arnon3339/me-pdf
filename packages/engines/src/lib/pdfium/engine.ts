@@ -1597,7 +1597,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     const attachmentPtr = this.pdfiumModule.FPDFDoc_GetAttachment(ctx.docPtr, attachment.index);
-    const sizePtr = this.malloc(8);
+    const sizePtr = this.malloc(4);
     if (!this.pdfiumModule.FPDFAttachment_GetFile(attachmentPtr, 0, 0, sizePtr)) {
       this.free(sizePtr);
       this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `ReadAttachmentContent`, 'End', doc.id);
@@ -1606,7 +1606,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         message: 'can not read attachment size',
       });
     }
-    const size = this.pdfiumModule.pdfium.getValue(sizePtr, 'i64');
+    const size = this.pdfiumModule.pdfium.getValue(sizePtr, 'i32') >>> 0;
 
     const contentPtr = this.malloc(size);
     if (!this.pdfiumModule.FPDFAttachment_GetFile(attachmentPtr, contentPtr, size, sizePtr)) {
