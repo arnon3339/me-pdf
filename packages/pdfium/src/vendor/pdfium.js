@@ -27,7 +27,9 @@ var createPdfium = (() => {
       readyPromiseReject = reject;
     });
     [
+      '_EPDF_HasMetaText',
       '_EPDF_RenderAnnotBitmap',
+      '_EPDF_SetMetaText',
       '_EPDFAnnot_ClearColor',
       '_EPDFAnnot_GenerateAppearance',
       '_EPDFAnnot_GenerateAppearanceWithBlend',
@@ -6271,6 +6273,14 @@ var createPdfium = (() => {
     var _FPDF_GetPageLabel = (Module['_FPDF_GetPageLabel'] = createExportWrapper(
       'FPDF_GetPageLabel',
       4,
+    ));
+    var _EPDF_SetMetaText = (Module['_EPDF_SetMetaText'] = createExportWrapper(
+      'EPDF_SetMetaText',
+      3,
+    ));
+    var _EPDF_HasMetaText = (Module['_EPDF_HasMetaText'] = createExportWrapper(
+      'EPDF_HasMetaText',
+      2,
     ));
     var _FPDFPageObj_NewImageObj = (Module['_FPDFPageObj_NewImageObj'] = createExportWrapper(
       'FPDFPageObj_NewImageObj',
