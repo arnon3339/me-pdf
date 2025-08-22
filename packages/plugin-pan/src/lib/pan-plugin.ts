@@ -1,4 +1,4 @@
-import { BasePlugin, PluginRegistry } from '@embedpdf/core';
+import { BasePlugin, createBehaviorEmitter, PluginRegistry, Unsubscribe } from '@embedpdf/core';
 import {
   InteractionManagerCapability,
   InteractionManagerPlugin,
@@ -10,10 +10,14 @@ import { ViewportCapability, ViewportPlugin } from '@embedpdf/plugin-viewport';
 export class PanPlugin extends BasePlugin<PanPluginConfig, PanCapability> {
   static readonly id = 'pan' as const;
 
+  private readonly panMode$ = createBehaviorEmitter<boolean>();
+
   private interactionManager: InteractionManagerCapability;
   private viewport: ViewportCapability;
   public config: PanPluginConfig;
+
   private unregisterHandlers?: () => void;
+  private unsubscribePanModeChange?: Unsubscribe;
 
   constructor(id: string, registry: PluginRegistry, config: PanPluginConfig) {
     super(id, registry);
@@ -34,6 +38,14 @@ export class PanPlugin extends BasePlugin<PanPluginConfig, PanCapability> {
         wantsRawTouch: false,
       });
 
+      this.unsubscribePanModeChange = this.interactionManager.onStateChange((state) => {
+        if (state.activeMode === 'panMode') {
+          this.panMode$.emit(true);
+        } else {
+          this.panMode$.emit(false);
+        }
+      });
+
       // Register pan handlers immediately
       this.registerPanHandlers();
     }
@@ -48,6 +60,7 @@ export class PanPlugin extends BasePlugin<PanPluginConfig, PanCapability> {
 
   async destroy(): Promise<void> {
     this.unregisterHandlers?.();
+    this.unsubscribePanModeChange?.();
     await super.destroy();
   }
 
@@ -121,6 +134,7 @@ export class PanPlugin extends BasePlugin<PanPluginConfig, PanCapability> {
 
   protected buildCapability(): PanCapability {
     return {
+      onPanModeChange: this.panMode$.on,
       makePanDefault: (autoActivate: boolean = true) => this.makePanDefault(autoActivate),
       enablePan: () => this.interactionManager?.activate('panMode'),
       disablePan: () => this.interactionManager?.activateDefaultMode(),
