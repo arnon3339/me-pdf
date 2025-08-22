@@ -1272,6 +1272,9 @@ importers:
       '@embedpdf/plugin-annotation':
         specifier: workspace:*
         version: link:../packages/plugin-annotation
+      '@embedpdf/plugin-attachment':
+        specifier: workspace:*
+        version: link:../packages/plugin-attachment
       '@embedpdf/plugin-bookmark':
         specifier: workspace:*
         version: link:../packages/plugin-bookmark

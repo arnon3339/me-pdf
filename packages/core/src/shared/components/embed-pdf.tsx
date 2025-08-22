@@ -4,16 +4,44 @@ import { PluginRegistry } from '@embedpdf/core';
 import type { IPlugin, PluginBatchRegistration } from '@embedpdf/core';
 
 import { PDFContext, PDFContextState } from '../context';
+import { AutoMount } from './auto-mount';
 
 interface EmbedPDFProps {
+  /**
+   * The PDF engine to use for the PDF viewer.
+   */
   engine: PdfEngine;
+  /**
+   * The logger to use for the PDF viewer.
+   */
   logger?: Logger;
+  /**
+   * The callback to call when the PDF viewer is initialized.
+   */
   onInitialized?: (registry: PluginRegistry) => Promise<void>;
+  /**
+   * The plugins to use for the PDF viewer.
+   */
   plugins: PluginBatchRegistration<IPlugin<any>, any>[];
+  /**
+   * The children to render for the PDF viewer.
+   */
   children: ReactNode | ((state: PDFContextState) => ReactNode);
+  /**
+   * Whether to auto-mount specific non-visual DOM elements from plugins.
+   * @default true
+   */
+  autoMountDomElements?: boolean;
 }
 
-export function EmbedPDF({ engine, logger, onInitialized, plugins, children }: EmbedPDFProps) {
+export function EmbedPDF({
+  engine,
+  logger,
+  onInitialized,
+  plugins,
+  children,
+  autoMountDomElements = true,
+}: EmbedPDFProps) {
   const [registry, setRegistry] = useState<PluginRegistry | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [pluginsReady, setPluginsReady] = useState<boolean>(false);
@@ -68,6 +96,7 @@ export function EmbedPDF({ engine, logger, onInitialized, plugins, children }: E
       {typeof children === 'function'
         ? children({ registry, isInitializing, pluginsReady })
         : children}
+      {pluginsReady && autoMountDomElements && <AutoMount plugins={plugins} />}
     </PDFContext.Provider>
   );
 }

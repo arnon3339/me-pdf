@@ -51,6 +51,20 @@ export interface PluginPackage<
   initialState: TState | ((coreState: CoreState, config: TConfig) => TState);
 }
 
+/**
+ * Enhanced plugin package that includes auto-mountable elements.
+ * @template T - The base plugin package type
+ * @template TElement - The type of elements that can be auto-mounted (React.FC, Preact.FC, Vue component, etc.)
+ */
+export type WithAutoMount<T extends PluginPackage<any, any, any, any>, TElement = any> = T & {
+  /**
+   * Returns an array of components/elements that should be automatically
+   * mounted in a hidden container when the plugin is initialized.
+   * Useful for non-visual DOM utilities like download anchors, print handlers, etc.
+   */
+  autoMountElements?: () => TElement[];
+};
+
 export type PluginStatus =
   | 'registered' // Plugin is registered but not initialized
   | 'active' // Plugin is initialized and running

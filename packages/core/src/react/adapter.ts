@@ -16,4 +16,5 @@ export type {
   MouseEvent,
   PointerEvent,
   TouchEvent,
+  ComponentType,
 } from 'react';

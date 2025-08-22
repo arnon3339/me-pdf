@@ -37,8 +37,11 @@ import {
   SpreadPluginPackage,
   SpreadState,
 } from '@embedpdf/plugin-spread';
-import { LOADER_PLUGIN_ID, LoaderPlugin, LoaderPluginPackage } from '@embedpdf/plugin-loader';
-import { FilePicker } from '@embedpdf/plugin-loader/preact';
+import {
+  LOADER_PLUGIN_ID,
+  LoaderPlugin,
+  LoaderPluginPackage,
+} from '@embedpdf/plugin-loader/preact';
 import {
   MenuItem,
   defineComponent,
@@ -129,8 +132,11 @@ import {
 } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
-import { EXPORT_PLUGIN_ID, ExportPlugin, ExportPluginPackage } from '@embedpdf/plugin-export';
-import { Download } from '@embedpdf/plugin-export/preact';
+import {
+  EXPORT_PLUGIN_ID,
+  ExportPlugin,
+  ExportPluginPackage,
+} from '@embedpdf/plugin-export/preact';
 import {
   INTERACTION_MANAGER_PLUGIN_ID,
   InteractionManagerPlugin,
@@ -141,8 +147,7 @@ import {
   GlobalPointerProvider,
   PagePointerProvider,
 } from '@embedpdf/plugin-interaction-manager/preact';
-import { PanMode } from '@embedpdf/plugin-pan/preact';
-import { PanPluginPackage } from '@embedpdf/plugin-pan';
+import { PanPluginPackage } from '@embedpdf/plugin-pan/preact';
 import { CAPTURE_PLUGIN_ID, CapturePlugin, CapturePluginPackage } from '@embedpdf/plugin-capture';
 import { MarqueeCapture } from '@embedpdf/plugin-capture/preact';
 import {
@@ -159,6 +164,7 @@ import {
   RedactionState,
 } from '@embedpdf/plugin-redaction';
 import { RedactionLayer } from '@embedpdf/plugin-redaction/preact';
+import { AttachmentPluginPackage } from '@embedpdf/plugin-attachment';
 import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
 import { AnnotationMenu } from './annotation-menu';
@@ -793,7 +799,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
     id: 'sidebarMenu',
     label: 'Sidebar Menu',
     type: 'menu',
-    children: ['thumbnails', 'outline' /*, 'attachments'*/],
+    children: ['thumbnails', 'outline' /*'attachments'*/],
   },
   thumbnails: {
     id: 'thumbnails',
@@ -2740,6 +2746,13 @@ export const components: Record<string, UIComponentType<State>> = {
     id: 'attachments',
     type: 'custom',
     render: 'attachments',
+    props: {
+      document: null,
+    },
+    mapStateToProps: (storeState, ownProps) => ({
+      ...ownProps,
+      document: storeState.core.document,
+    }),
   },
   search: {
     id: 'search',
@@ -2939,7 +2952,10 @@ export function PDFViewer({ config }: PDFViewerProps) {
             imageType: 'image/png',
           }),
           createPluginRegistration(HistoryPluginPackage, {}),
-          createPluginRegistration(RedactionPluginPackage, {}),
+          createPluginRegistration(RedactionPluginPackage, {
+            drawBlackBoxes: false,
+          }),
+          createPluginRegistration(AttachmentPluginPackage, {}),
         ]}
       >
         {({ pluginsReady }) => (
@@ -2955,7 +2971,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
                         {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
                         <div className="relative flex w-full flex-1 overflow-hidden">
                           <GlobalPointerProvider>
-                            <PanMode />
                             <Viewport
                               style={{
                                 width: '100%',
@@ -3096,8 +3111,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
                     {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
                     {commandMenu}
                   </div>
-                  <FilePicker />
-                  <Download />
                   <Capture />
                   <CopyToClipboard />
                 </PrintProvider>

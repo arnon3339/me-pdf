@@ -32,6 +32,7 @@ import {
   ignore,
   PdfAlphaColor,
   PdfAnnotationSubtype,
+  PdfAttachmentObject,
   PdfBookmarkObject,
   PdfDocumentObject,
   PdfErrorCode,
@@ -51,6 +52,7 @@ import { usePrintAction } from '@embedpdf/plugin-print/preact';
 import { PageRange, PageRangeType, PrintOptions, PrintQuality } from '@embedpdf/plugin-print';
 import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/preact';
 import { SidebarAnnotationEntry } from '@embedpdf/plugin-annotation';
+import { useAttachmentCapability } from '@embedpdf/plugin-attachment/preact';
 
 export const iconButtonRenderer: ComponentRenderFunction<IconButtonProps> = (
   { commandId, onClick, active, iconProps, disabled = false, ...props },
@@ -1191,8 +1193,56 @@ export const outlineRenderer: ComponentRenderFunction<OutlineRenderProps> = (pro
   );
 };
 
-export const attachmentsRenderer: ComponentRenderFunction<any> = (props, children) => {
-  return <div>Attachments</div>;
+interface AttachmentsRenderProps {
+  document: PdfDocumentObject;
+}
+
+export const attachmentsRenderer: ComponentRenderFunction<AttachmentsRenderProps> = (
+  props,
+  children,
+) => {
+  const { provides: attachment } = useAttachmentCapability();
+  const [attachments, setAttachments] = useState<PdfAttachmentObject[]>([]);
+
+  useEffect(() => {
+    if (!attachment) return;
+    const task = attachment.getAttachments();
+    task.wait((attachments) => {
+      setAttachments(attachments);
+    }, ignore);
+
+    return () => {
+      task.abort({
+        code: PdfErrorCode.Cancelled,
+        message: 'Bookmark task cancelled',
+      });
+    };
+  }, [attachment, props.document]);
+
+  const handleAttachmentClick = (attachmentObject: PdfAttachmentObject) => {
+    if (!attachment) return;
+    const task = attachment.downloadAttachment(attachmentObject);
+    task.wait((buffer) => {
+      console.log(buffer);
+    }, ignore);
+
+    return () => {
+      task.abort({
+        code: PdfErrorCode.Cancelled,
+        message: 'Attachment task cancelled',
+      });
+    };
+  };
+
+  return (
+    <div>
+      {attachments.map((attachment) => (
+        <div key={attachment.name} onClick={() => handleAttachmentClick(attachment)}>
+          {attachment.name}
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export const selectButtonRenderer: ComponentRenderFunction<SelectButtonProps> = (
