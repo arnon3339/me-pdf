@@ -100,12 +100,12 @@ import { Rotate } from '@embedpdf/plugin-rotate/preact';
 import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/plugin-search';
 import { SearchLayer } from '@embedpdf/plugin-search/preact';
 import {
+  SelectionLayer,
   SELECTION_PLUGIN_ID,
   SelectionPlugin,
   SelectionPluginPackage,
   SelectionState,
-} from '@embedpdf/plugin-selection';
-import { SelectionLayer, CopyToClipboard } from '@embedpdf/plugin-selection/preact';
+} from '@embedpdf/plugin-selection/preact';
 import { TilingPluginConfig, TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
 import { ThumbnailPluginConfig, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
@@ -3116,7 +3116,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
                     {commandMenu}
                   </div>
                   <Capture />
-                  <CopyToClipboard />
                 </PrintProvider>
               </FullscreenProvider>
             )}
