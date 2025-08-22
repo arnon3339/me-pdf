@@ -234,12 +234,7 @@ function App() {
                                   scale={scale}
                                   style={{ pointerEvents: 'none' }}
                                 />
-                                <MarqueeZoom
-                                  pageIndex={pageIndex}
-                                  scale={scale}
-                                  pageWidth={width}
-                                  pageHeight={height}
-                                />
+                                <MarqueeZoom pageIndex={pageIndex} scale={scale} />
                                 <SelectionLayer pageIndex={pageIndex} scale={scale} />
                               </PagePointerProvider>
                             </Rotate>

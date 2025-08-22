@@ -148,8 +148,12 @@ import {
   PagePointerProvider,
 } from '@embedpdf/plugin-interaction-manager/preact';
 import { PanPluginPackage } from '@embedpdf/plugin-pan/preact';
-import { CAPTURE_PLUGIN_ID, CapturePlugin, CapturePluginPackage } from '@embedpdf/plugin-capture';
-import { MarqueeCapture } from '@embedpdf/plugin-capture/preact';
+import {
+  MarqueeCapture,
+  CAPTURE_PLUGIN_ID,
+  CapturePlugin,
+  CapturePluginPackage,
+} from '@embedpdf/plugin-capture/preact';
 import {
   HISTORY_PLUGIN_ID,
   HistoryPlugin,
