@@ -1,5 +1,6 @@
 import { WithAutoMount } from '@embedpdf/core';
 import { SelectionPluginPackage as BaseSelectionPluginPackage } from '@embedpdf/plugin-selection';
+
 import { CopyToClipboard } from './components';
 
 export * from './hooks';

@@ -6,8 +6,7 @@ import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
 import { Scroller } from '@embedpdf/plugin-scroll/react';
-import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
-import { FilePicker } from '@embedpdf/plugin-loader/react';
+import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RenderLayer } from '@embedpdf/plugin-render/react';
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
@@ -21,15 +20,13 @@ import {
   GlobalPointerProvider,
   PagePointerProvider,
 } from '@embedpdf/plugin-interaction-manager/react';
-import { PanPluginPackage } from '@embedpdf/plugin-pan';
-import { PanMode } from '@embedpdf/plugin-pan/react';
+import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
 import { RotatePluginPackage } from '@embedpdf/plugin-rotate';
 import { Rotate } from '@embedpdf/plugin-rotate/react';
 import { SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen';
 import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/react';
-import { ExportPluginPackage } from '@embedpdf/plugin-export';
-import { Download } from '@embedpdf/plugin-export/react';
+import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 import { SelectionPluginPackage } from '@embedpdf/plugin-selection';
 import { SelectionLayer } from '@embedpdf/plugin-selection/react';
@@ -173,7 +170,6 @@ function App() {
                   }}
                 >
                   <GlobalPointerProvider>
-                    <PanMode />
                     <Viewport
                       style={{
                         width: '100%',
@@ -250,8 +246,6 @@ function App() {
                 <Drawer position="right" />
               </Box>
             </Box>
-            <Download />
-            <FilePicker />
           </FullscreenProvider>
         )}
       </EmbedPDF>
