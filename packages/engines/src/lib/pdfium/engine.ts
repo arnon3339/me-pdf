@@ -116,6 +116,7 @@ import {
   PdfRenderThumbnailOptions,
   PdfRenderPageOptions,
   PdfAnnotationsProgress,
+  PdfMetadataObject,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -671,20 +672,90 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    const metadata = {
+    const creationRaw = this.readMetaText(ctx.docPtr, 'CreationDate');
+    const modRaw = this.readMetaText(ctx.docPtr, 'ModDate');
+
+    const metadata: PdfMetadataObject = {
       title: this.readMetaText(ctx.docPtr, 'Title'),
       author: this.readMetaText(ctx.docPtr, 'Author'),
       subject: this.readMetaText(ctx.docPtr, 'Subject'),
       keywords: this.readMetaText(ctx.docPtr, 'Keywords'),
       producer: this.readMetaText(ctx.docPtr, 'Producer'),
       creator: this.readMetaText(ctx.docPtr, 'Creator'),
-      creationDate: this.readMetaText(ctx.docPtr, 'CreationDate'),
-      modificationDate: this.readMetaText(ctx.docPtr, 'ModDate'),
+      creationDate: creationRaw ? (pdfDateToDate(creationRaw) ?? null) : null,
+      modificationDate: modRaw ? (pdfDateToDate(modRaw) ?? null) : null,
     };
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `GetMetadata`, 'End', doc.id);
 
     return PdfTaskHelper.resolve(metadata);
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.setMetadata}
+   *
+   * @public
+   */
+  setMetadata(doc: PdfDocumentObject, meta: Partial<PdfMetadataObject>) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setMetadata', doc, meta);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SetMetadata', 'Begin', doc.id);
+
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SetMetadata', 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    // Field -> PDF Info key
+    const strMap: Array<[keyof PdfMetadataObject, string]> = [
+      ['title', 'Title'],
+      ['author', 'Author'],
+      ['subject', 'Subject'],
+      ['keywords', 'Keywords'],
+      ['producer', 'Producer'],
+      ['creator', 'Creator'],
+    ];
+
+    let ok = true;
+
+    // Write string fields (string|null|undefined)
+    for (const [field, key] of strMap) {
+      const v = meta[field];
+      if (v === undefined) continue;
+      const s = v === null ? null : (v as string);
+      if (!this.setMetaText(ctx.docPtr, key, s)) ok = false;
+    }
+
+    // Write date fields (Date|null|undefined)
+    const writeDate = (
+      field: 'creationDate' | 'modificationDate',
+      key: 'CreationDate' | 'ModDate',
+    ) => {
+      const v = meta[field];
+      if (v === undefined) return;
+      if (v === null) {
+        if (!this.setMetaText(ctx.docPtr, key, null)) ok = false;
+        return;
+      }
+      const d = v as Date;
+      const raw = dateToPdfDate(d);
+      if (!this.setMetaText(ctx.docPtr, key, raw)) ok = false;
+    };
+
+    writeDate('creationDate', 'CreationDate');
+    writeDate('modificationDate', 'ModDate');
+
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SetMetadata', 'End', doc.id);
+
+    return ok
+      ? PdfTaskHelper.resolve(true)
+      : PdfTaskHelper.reject({
+          code: PdfErrorCode.Unknown,
+          message: 'one or more metadata fields could not be written',
+        });
   }
 
   /**
@@ -2969,14 +3040,51 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @private
    */
-  readMetaText(docPtr: number, key: string) {
+  readMetaText(docPtr: number, key: string): string | null {
+    const exists = !!this.pdfiumModule.EPDF_HasMetaText(docPtr, key);
+    if (!exists) return null;
+
+    const len = this.pdfiumModule.FPDF_GetMetaText(docPtr, key, 0, 0);
+    if (len === 2) return '';
+
+    // Read with an exact buffer to avoid extra allocations.
     return readString(
       this.pdfiumModule.pdfium,
-      (buffer, bufferLength) => {
-        return this.pdfiumModule.FPDF_GetMetaText(docPtr, key, buffer, bufferLength);
-      },
+      (buffer, bufferLength) =>
+        this.pdfiumModule.FPDF_GetMetaText(docPtr, key, buffer, bufferLength),
       this.pdfiumModule.pdfium.UTF16ToString,
+      len,
     );
+  }
+
+  /**
+   * Write metadata into the PDF's Info dictionary.
+   * If `value` is null or empty string, the key is removed.
+   * @param docPtr - pointer to pdf document
+   * @param key - key of metadata field
+   * @param value - value of metadata field
+   * @returns whether metadata is written to the pdf document
+   *
+   * @private
+   */
+  setMetaText(docPtr: number, key: string, value: string | null | undefined): boolean {
+    // Remove key if value is null/undefined/empty
+    if (value == null || value.length === 0) {
+      // Pass nullptr for value → removal in our C++ implementation
+      const ok = this.pdfiumModule.EPDF_SetMetaText(docPtr, key, 0);
+      return !!ok;
+    }
+
+    // UTF-16LE buffer (+2 bytes for NUL)
+    const bytes = 2 * (value.length + 1);
+    const ptr = this.malloc(bytes);
+    try {
+      this.pdfiumModule.pdfium.stringToUTF16(value, ptr, bytes);
+      const ok = this.pdfiumModule.EPDF_SetMetaText(docPtr, key, ptr);
+      return !!ok;
+    } finally {
+      this.free(ptr);
+    }
   }
 
   /**
