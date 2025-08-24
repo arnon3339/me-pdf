@@ -1,41 +1,47 @@
-import { Fragment, useMemo, ComponentType } from '@framework';
-import type { PluginBatchRegistration } from '@embedpdf/core';
-import type { IPlugin } from '@embedpdf/core';
-
-/** Matches WithAutoMount shape used by plugins */
-type MaybeWithAutoMount = {
-  autoMountElements?: () => ComponentType[]; // React/Preact components
-};
+import { Fragment, useMemo, ComponentType, ReactNode } from '@framework';
+import { hasAutoMountElements } from '@embedpdf/core';
+import type { PluginBatchRegistration, IPlugin } from '@embedpdf/core';
 
 interface AutoMountProps {
   plugins: PluginBatchRegistration<IPlugin<any>, any>[];
+  children: ReactNode;
 }
 
-/**
- * Renders any auto-mount utility components declared by plugin packages
- * in a hidden off-layout container. Lives inside PDFContext.
- */
-export function AutoMount({ plugins }: AutoMountProps) {
-  const comps = useMemo(() => {
-    const out: ComponentType[] = [];
+export function AutoMount({ plugins, children }: AutoMountProps) {
+  const { utilities, wrappers } = useMemo(() => {
+    // React-specific types for internal use
+    const utilities: ComponentType[] = [];
+    const wrappers: ComponentType<{ children: ReactNode }>[] = [];
+
     for (const reg of plugins) {
-      const maybe = reg.package as unknown as MaybeWithAutoMount;
-      if (typeof maybe.autoMountElements === 'function') {
-        const arr = maybe.autoMountElements() || [];
-        out.push(...arr);
+      const pkg = reg.package;
+      if (hasAutoMountElements(pkg)) {
+        const elements = pkg.autoMountElements() || [];
+
+        for (const element of elements) {
+          if (element.type === 'utility') {
+            utilities.push(element.component);
+          } else if (element.type === 'wrapper') {
+            // In React context, we know wrappers need children
+            wrappers.push(element.component);
+          }
+        }
       }
     }
-    return out;
+    return { utilities, wrappers };
   }, [plugins]);
 
-  if (!comps.length) return null;
+  // React-specific wrapping logic
+  const wrappedContent = wrappers.reduce(
+    (content, Wrapper) => <Wrapper>{content}</Wrapper>,
+    children,
+  );
 
   return (
     <Fragment>
-      {comps.map((C, i) => (
-        <Fragment key={i}>
-          <C />
-        </Fragment>
+      {wrappedContent}
+      {utilities.map((Utility, i) => (
+        <Utility key={`utility-${i}`} />
       ))}
     </Fragment>
   );

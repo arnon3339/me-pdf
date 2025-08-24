@@ -14,21 +14,21 @@ import {
   uuidV4,
 } from '@embedpdf/models';
 import {
+  Viewport,
   VIEWPORT_PLUGIN_ID,
   ViewportPluginConfig,
   ViewportPluginPackage,
   ViewportState,
-} from '@embedpdf/plugin-viewport';
-import { Viewport } from '@embedpdf/plugin-viewport/preact';
+} from '@embedpdf/plugin-viewport/preact';
 import {
+  Scroller,
   SCROLL_PLUGIN_ID,
   ScrollPlugin,
   ScrollPluginConfig,
   ScrollPluginPackage,
   ScrollState,
   ScrollStrategy,
-} from '@embedpdf/plugin-scroll';
-import { Scroller } from '@embedpdf/plugin-scroll/preact';
+} from '@embedpdf/plugin-scroll/preact';
 import {
   SPREAD_PLUGIN_ID,
   SpreadMode,
@@ -36,13 +36,14 @@ import {
   SpreadPluginConfig,
   SpreadPluginPackage,
   SpreadState,
-} from '@embedpdf/plugin-spread';
+} from '@embedpdf/plugin-spread/preact';
 import {
   LOADER_PLUGIN_ID,
   LoaderPlugin,
   LoaderPluginPackage,
 } from '@embedpdf/plugin-loader/preact';
 import {
+  PluginUIProvider,
   MenuItem,
   defineComponent,
   GlobalStoreState,
@@ -54,7 +55,7 @@ import {
   UI_PLUGIN_ID,
   isDisabled,
   getIconProps,
-} from '@embedpdf/plugin-ui';
+} from '@embedpdf/plugin-ui/preact';
 import {
   attachmentsRenderer,
   commandMenuRenderer,
@@ -79,26 +80,30 @@ import {
   printModalRenderer,
 } from './renderers';
 import { leftPanelAnnotationStyleRenderer } from './annotation-sidebar';
-import { PluginUIProvider } from '@embedpdf/plugin-ui/preact';
 import {
+  PinchWrapper,
+  MarqueeZoom,
   ZOOM_PLUGIN_ID,
   ZoomMode,
   ZoomPlugin,
   ZoomPluginConfig,
   ZoomPluginPackage,
   ZoomState,
-} from '@embedpdf/plugin-zoom';
-import { RenderPluginPackage } from '@embedpdf/plugin-render';
-import { RenderLayer } from '@embedpdf/plugin-render/preact';
+} from '@embedpdf/plugin-zoom/preact';
+import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/preact';
 import {
+  Rotate,
   ROTATE_PLUGIN_ID,
   RotatePlugin,
   RotatePluginConfig,
   RotatePluginPackage,
-} from '@embedpdf/plugin-rotate';
-import { Rotate } from '@embedpdf/plugin-rotate/preact';
-import { SEARCH_PLUGIN_ID, SearchPluginPackage, SearchState } from '@embedpdf/plugin-search';
-import { SearchLayer } from '@embedpdf/plugin-search/preact';
+} from '@embedpdf/plugin-rotate/preact';
+import {
+  SearchLayer,
+  SEARCH_PLUGIN_ID,
+  SearchPluginPackage,
+  SearchState,
+} from '@embedpdf/plugin-search/preact';
 import {
   SelectionLayer,
   SELECTION_PLUGIN_ID,
@@ -106,10 +111,14 @@ import {
   SelectionPluginPackage,
   SelectionState,
 } from '@embedpdf/plugin-selection/preact';
-import { TilingPluginConfig, TilingPluginPackage } from '@embedpdf/plugin-tiling';
-import { TilingLayer } from '@embedpdf/plugin-tiling/preact';
-import { ThumbnailPluginConfig, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
 import {
+  TilingLayer,
+  TilingPluginConfig,
+  TilingPluginPackage,
+} from '@embedpdf/plugin-tiling/preact';
+import { ThumbnailPluginConfig, ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/preact';
+import {
+  AnnotationLayer,
   ANNOTATION_PLUGIN_ID,
   AnnotationPlugin,
   AnnotationPluginPackage,
@@ -118,34 +127,32 @@ import {
   getSidebarAnnotationsWithRepliesGroupedByPage,
   getToolDefaultsBySubtypeAndIntent,
   makeVariantKey,
-} from '@embedpdf/plugin-annotation';
-import { AnnotationLayer } from '@embedpdf/plugin-annotation/preact';
-import { PinchWrapper, MarqueeZoom } from '@embedpdf/plugin-zoom/preact';
+} from '@embedpdf/plugin-annotation/preact';
 import { LoadingIndicator } from './ui/loading-indicator';
-import { PrintPluginConfig, PrintPluginPackage } from '@embedpdf/plugin-print';
-import { PrintProvider } from '@embedpdf/plugin-print/preact';
+import {
+  PrintProvider,
+  PrintPluginConfig,
+  PrintPluginPackage,
+} from '@embedpdf/plugin-print/preact';
 import {
   FULLSCREEN_PLUGIN_ID,
   FullscreenPlugin,
   FullscreenPluginPackage,
   FullscreenState,
-} from '@embedpdf/plugin-fullscreen';
-import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/preact';
-import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
+} from '@embedpdf/plugin-fullscreen/preact';
+import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark/preact';
 import {
   EXPORT_PLUGIN_ID,
   ExportPlugin,
   ExportPluginPackage,
 } from '@embedpdf/plugin-export/preact';
 import {
+  GlobalPointerProvider,
+  PagePointerProvider,
   INTERACTION_MANAGER_PLUGIN_ID,
   InteractionManagerPlugin,
   InteractionManagerPluginPackage,
   InteractionManagerState,
-} from '@embedpdf/plugin-interaction-manager';
-import {
-  GlobalPointerProvider,
-  PagePointerProvider,
 } from '@embedpdf/plugin-interaction-manager/preact';
 import { PanPluginPackage } from '@embedpdf/plugin-pan/preact';
 import {
@@ -159,16 +166,16 @@ import {
   HistoryPlugin,
   HistoryPluginPackage,
   HistoryState,
-} from '@embedpdf/plugin-history';
+} from '@embedpdf/plugin-history/preact';
 import {
+  RedactionLayer,
   hasPendingRedactions,
   REDACTION_PLUGIN_ID,
   RedactionPlugin,
   RedactionPluginPackage,
   RedactionState,
-} from '@embedpdf/plugin-redaction';
-import { RedactionLayer } from '@embedpdf/plugin-redaction/preact';
-import { AttachmentPluginPackage } from '@embedpdf/plugin-attachment';
+} from '@embedpdf/plugin-redaction/preact';
+import { AttachmentPluginPackage } from '@embedpdf/plugin-attachment/preact';
 import { Capture } from './capture';
 import { HintLayer } from './hint-layer';
 import { AnnotationMenu } from './annotation-menu';
@@ -2965,159 +2972,157 @@ export function PDFViewer({ config }: PDFViewerProps) {
         {({ pluginsReady }) => (
           <PluginUIProvider>
             {({ headers, panels, floating, commandMenu }) => (
-              <FullscreenProvider>
-                <PrintProvider>
-                  <div className="@container relative flex h-full w-full select-none flex-col">
-                    {headers.top.length > 0 && <div>{headers.top}</div>}
-                    <div className="flex flex-1 flex-row overflow-hidden">
-                      <div className="flex flex-col">{headers.left}</div>
-                      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
-                        {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
-                        <div className="relative flex w-full flex-1 overflow-hidden">
-                          <GlobalPointerProvider>
-                            <Viewport
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                flexGrow: 1,
-                                backgroundColor: '#f1f3f5',
-                                overflow: 'auto',
-                              }}
-                            >
-                              {!pluginsReady && (
-                                <div className="flex h-full w-full items-center justify-center">
-                                  <LoadingIndicator size="lg" text="Loading PDF document..." />
-                                </div>
-                              )}
-                              {pluginsReady && (
-                                <PinchWrapper>
-                                  <Scroller
-                                    renderPage={({
-                                      pageIndex,
-                                      scale,
-                                      rotation,
-                                      width,
-                                      height,
-                                      rotatedHeight,
-                                      rotatedWidth,
-                                      document,
-                                    }) => (
-                                      <Rotate key={document?.id} pageSize={{ width, height }}>
-                                        <PagePointerProvider
-                                          rotation={rotation}
-                                          scale={scale}
-                                          pageWidth={rotatedWidth}
-                                          pageHeight={rotatedHeight}
+              <PrintProvider>
+                <div className="@container relative flex h-full w-full select-none flex-col">
+                  {headers.top.length > 0 && <div>{headers.top}</div>}
+                  <div className="flex flex-1 flex-row overflow-hidden">
+                    <div className="flex flex-col">{headers.left}</div>
+                    <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+                      {panels.left.length > 0 && <Fragment>{panels.left}</Fragment>}
+                      <div className="relative flex w-full flex-1 overflow-hidden">
+                        <GlobalPointerProvider>
+                          <Viewport
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              flexGrow: 1,
+                              backgroundColor: '#f1f3f5',
+                              overflow: 'auto',
+                            }}
+                          >
+                            {!pluginsReady && (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <LoadingIndicator size="lg" text="Loading PDF document..." />
+                              </div>
+                            )}
+                            {pluginsReady && (
+                              <PinchWrapper>
+                                <Scroller
+                                  renderPage={({
+                                    pageIndex,
+                                    scale,
+                                    rotation,
+                                    width,
+                                    height,
+                                    rotatedHeight,
+                                    rotatedWidth,
+                                    document,
+                                  }) => (
+                                    <Rotate key={document?.id} pageSize={{ width, height }}>
+                                      <PagePointerProvider
+                                        rotation={rotation}
+                                        scale={scale}
+                                        pageWidth={rotatedWidth}
+                                        pageHeight={rotatedHeight}
+                                        pageIndex={pageIndex}
+                                        style={{
+                                          width,
+                                          height,
+                                        }}
+                                      >
+                                        <RenderLayer
                                           pageIndex={pageIndex}
-                                          style={{
-                                            width,
-                                            height,
-                                          }}
-                                        >
-                                          <RenderLayer
-                                            pageIndex={pageIndex}
-                                            className="pointer-events-none"
-                                          />
-                                          <TilingLayer
-                                            pageIndex={pageIndex}
-                                            scale={scale}
-                                            className="pointer-events-none"
-                                          />
-                                          <SearchLayer
-                                            pageIndex={pageIndex}
-                                            scale={scale}
-                                            className="pointer-events-none"
-                                          />
-                                          <HintLayer />
-                                          <AnnotationLayer
-                                            pageIndex={pageIndex}
-                                            scale={scale}
-                                            pageWidth={width}
-                                            pageHeight={height}
-                                            rotation={rotation}
-                                            selectionMenu={({
-                                              selected,
-                                              rect,
-                                              annotation,
-                                              menuWrapperProps,
-                                            }) => (
-                                              <div
-                                                {...menuWrapperProps}
-                                                style={{
-                                                  ...menuWrapperProps.style,
-                                                  display: 'flex',
-                                                  justifyContent: 'center',
-                                                }}
-                                              >
-                                                {selected ? (
-                                                  <AnnotationMenu
-                                                    trackedAnnotation={annotation}
-                                                    style={{
-                                                      pointerEvents: 'auto',
-                                                      position: 'absolute',
-                                                      top: rect.size.height + 10,
-                                                    }}
-                                                  />
-                                                ) : null}
-                                              </div>
-                                            )}
-                                          />
-                                          <MarqueeZoom pageIndex={pageIndex} scale={scale} />
-                                          <MarqueeCapture pageIndex={pageIndex} scale={scale} />
-                                          <RedactionLayer
-                                            pageIndex={pageIndex}
-                                            scale={scale}
-                                            rotation={rotation}
-                                            selectionMenu={({
-                                              item,
-                                              selected,
-                                              rect,
-                                              menuWrapperProps,
-                                            }) => (
-                                              <div
-                                                {...menuWrapperProps}
-                                                style={{
-                                                  ...menuWrapperProps.style,
-                                                  display: 'flex',
-                                                  justifyContent: 'center',
-                                                }}
-                                              >
-                                                {selected ? (
-                                                  <RedactionMenu
-                                                    item={item}
-                                                    pageIndex={pageIndex}
-                                                    style={{
-                                                      pointerEvents: 'auto',
-                                                      position: 'absolute',
-                                                      top: rect.size.height + 10,
-                                                    }}
-                                                  />
-                                                ) : null}
-                                              </div>
-                                            )}
-                                          />
-                                          <SelectionLayer pageIndex={pageIndex} scale={scale} />
-                                        </PagePointerProvider>
-                                      </Rotate>
-                                    )}
-                                    overlayElements={floating.insideScroller}
-                                  />
-                                </PinchWrapper>
-                              )}
-                              {floating.outsideScroller}
-                            </Viewport>
-                          </GlobalPointerProvider>
-                        </div>
-                        {panels.right.length > 0 && <Fragment>{panels.right}</Fragment>}
+                                          className="pointer-events-none"
+                                        />
+                                        <TilingLayer
+                                          pageIndex={pageIndex}
+                                          scale={scale}
+                                          className="pointer-events-none"
+                                        />
+                                        <SearchLayer
+                                          pageIndex={pageIndex}
+                                          scale={scale}
+                                          className="pointer-events-none"
+                                        />
+                                        <HintLayer />
+                                        <AnnotationLayer
+                                          pageIndex={pageIndex}
+                                          scale={scale}
+                                          pageWidth={width}
+                                          pageHeight={height}
+                                          rotation={rotation}
+                                          selectionMenu={({
+                                            selected,
+                                            rect,
+                                            annotation,
+                                            menuWrapperProps,
+                                          }) => (
+                                            <div
+                                              {...menuWrapperProps}
+                                              style={{
+                                                ...menuWrapperProps.style,
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                              }}
+                                            >
+                                              {selected ? (
+                                                <AnnotationMenu
+                                                  trackedAnnotation={annotation}
+                                                  style={{
+                                                    pointerEvents: 'auto',
+                                                    position: 'absolute',
+                                                    top: rect.size.height + 10,
+                                                  }}
+                                                />
+                                              ) : null}
+                                            </div>
+                                          )}
+                                        />
+                                        <MarqueeZoom pageIndex={pageIndex} scale={scale} />
+                                        <MarqueeCapture pageIndex={pageIndex} scale={scale} />
+                                        <RedactionLayer
+                                          pageIndex={pageIndex}
+                                          scale={scale}
+                                          rotation={rotation}
+                                          selectionMenu={({
+                                            item,
+                                            selected,
+                                            rect,
+                                            menuWrapperProps,
+                                          }) => (
+                                            <div
+                                              {...menuWrapperProps}
+                                              style={{
+                                                ...menuWrapperProps.style,
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                              }}
+                                            >
+                                              {selected ? (
+                                                <RedactionMenu
+                                                  item={item}
+                                                  pageIndex={pageIndex}
+                                                  style={{
+                                                    pointerEvents: 'auto',
+                                                    position: 'absolute',
+                                                    top: rect.size.height + 10,
+                                                  }}
+                                                />
+                                              ) : null}
+                                            </div>
+                                          )}
+                                        />
+                                        <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                                      </PagePointerProvider>
+                                    </Rotate>
+                                  )}
+                                  overlayElements={floating.insideScroller}
+                                />
+                              </PinchWrapper>
+                            )}
+                            {floating.outsideScroller}
+                          </Viewport>
+                        </GlobalPointerProvider>
                       </div>
-                      <div className="flex flex-col">{headers.right}</div>
+                      {panels.right.length > 0 && <Fragment>{panels.right}</Fragment>}
                     </div>
-                    {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
-                    {commandMenu}
+                    <div className="flex flex-col">{headers.right}</div>
                   </div>
-                  <Capture />
-                </PrintProvider>
-              </FullscreenProvider>
+                  {headers.bottom.length > 0 && <div>{headers.bottom}</div>}
+                  {commandMenu}
+                </div>
+                <Capture />
+              </PrintProvider>
             )}
           </PluginUIProvider>
         )}

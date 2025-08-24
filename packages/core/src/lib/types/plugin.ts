@@ -51,19 +51,36 @@ export interface PluginPackage<
   initialState: TState | ((coreState: CoreState, config: TConfig) => TState);
 }
 
-/**
- * Enhanced plugin package that includes auto-mountable elements.
- * @template T - The base plugin package type
- * @template TElement - The type of elements that can be auto-mounted (React.FC, Preact.FC, Vue component, etc.)
- */
-export type WithAutoMount<T extends PluginPackage<any, any, any, any>, TElement = any> = T & {
+export type Component = any;
+
+// Use semantic names that describe PURPOSE, not implementation
+export type StandaloneComponent = Component; // Doesn't wrap content
+export type ContainerComponent = Component; // Wraps/contains content
+
+export type AutoMountElement =
+  | {
+      component: StandaloneComponent;
+      type: 'utility';
+    }
+  | {
+      component: ContainerComponent;
+      type: 'wrapper';
+    };
+
+export type WithAutoMount<T extends PluginPackage<any, any, any, any>> = T & {
   /**
-   * Returns an array of components/elements that should be automatically
-   * mounted in a hidden container when the plugin is initialized.
-   * Useful for non-visual DOM utilities like download anchors, print handlers, etc.
+   * Returns an array of components/elements with their mount type.
+   * - 'utility': Mounted as hidden DOM elements (file pickers, download anchors)
+   * - 'wrapper': Wraps the viewer content (fullscreen providers, theme providers)
    */
-  autoMountElements?: () => TElement[];
+  autoMountElements: () => AutoMountElement[];
 };
+
+export function hasAutoMountElements<T extends PluginPackage<any, any, any, any>>(
+  pkg: T,
+): pkg is WithAutoMount<T> {
+  return 'autoMountElements' in pkg && typeof pkg.autoMountElements === 'function';
+}
 
 export type PluginStatus =
   | 'registered' // Plugin is registered but not initialized

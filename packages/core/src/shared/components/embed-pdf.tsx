@@ -91,12 +91,18 @@ export function EmbedPDF({
     };
   }, [engine, plugins]);
 
+  const content =
+    typeof children === 'function'
+      ? children({ registry, isInitializing, pluginsReady })
+      : children;
+
   return (
     <PDFContext.Provider value={{ registry, isInitializing, pluginsReady }}>
-      {typeof children === 'function'
-        ? children({ registry, isInitializing, pluginsReady })
-        : children}
-      {pluginsReady && autoMountDomElements && <AutoMount plugins={plugins} />}
+      {pluginsReady && autoMountDomElements ? (
+        <AutoMount plugins={plugins}>{content}</AutoMount>
+      ) : (
+        content
+      )}
     </PDFContext.Provider>
   );
 }
