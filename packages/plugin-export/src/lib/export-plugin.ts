@@ -1,5 +1,5 @@
-import { BasePlugin, createEmitter, PluginRegistry } from '@embedpdf/core';
-import { PdfEngine, PdfErrorCode, PdfErrorReason, PdfTaskHelper, Task } from '@embedpdf/models';
+import { BasePlugin, createEmitter, Listener, PluginRegistry, Unsubscribe } from '@embedpdf/core';
+import { PdfErrorCode, PdfErrorReason, PdfTaskHelper, Task } from '@embedpdf/models';
 
 import { ExportCapability, ExportPluginConfig } from './types';
 
@@ -18,8 +18,11 @@ export class ExportPlugin extends BasePlugin<ExportPluginConfig, ExportCapabilit
     return {
       saveAsCopy: this.saveAsCopy.bind(this),
       download: this.download.bind(this),
-      onRequest: this.downloadRequest$.on,
     };
+  }
+
+  public onRequest(event: Listener<'download'>): Unsubscribe {
+    return this.downloadRequest$.on(event);
   }
 
   private download(): void {

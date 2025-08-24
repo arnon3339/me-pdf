@@ -1,20 +1,22 @@
 import { ignore } from '@embedpdf/models';
 import { useEffect, useRef } from '@framework';
 
-import { useExportCapability } from '../hooks';
+import { useExportCapability, useExportPlugin } from '../hooks';
 
 export interface DownloadProps {
-  fileName?: string
+  fileName?: string;
 }
 
 export function Download(props: DownloadProps) {
   const { provides: exportCapability } = useExportCapability();
+  const { plugin: exportPlugin } = useExportPlugin();
   const ref = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     if (!exportCapability) return;
+    if (!exportPlugin) return;
 
-    const unsub = exportCapability.onRequest(async (action) => {
+    const unsub = exportPlugin.onRequest((action) => {
       if (action === 'download') {
         const el = ref.current;
         if (!el) return;
@@ -31,7 +33,7 @@ export function Download(props: DownloadProps) {
     });
 
     return unsub;
-  }, [exportCapability]);
+  }, [exportCapability, exportPlugin]);
 
   return <a style={{ display: 'none' }} ref={ref} />;
 }

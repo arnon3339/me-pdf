@@ -658,7 +658,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @public
    */
-  getMetadata(doc: PdfDocumentObject) {
+  getMetadata(doc: PdfDocumentObject): PdfTask<PdfMetadataObject, PdfErrorReason> {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'getMetadata', doc);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `GetMetadata`, 'Begin', doc.id);
 

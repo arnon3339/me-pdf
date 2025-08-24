@@ -285,6 +285,22 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.setMetadata}
+   *
+   * @public
+   */
+  setMetadata(doc: PdfDocumentObject, metadata: Partial<PdfMetadataObject>) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setMetadata', doc, metadata);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+
+    const request: ExecuteRequest = createRequest(requestId, 'setMetadata', [doc, metadata]);
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
    * {@inheritDoc @embedpdf/models!PdfEngine.getDocPermissions}
    *
    * @public

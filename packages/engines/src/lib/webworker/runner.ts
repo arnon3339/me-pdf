@@ -293,6 +293,9 @@ export class EngineRunner {
       case 'getMetadata':
         task = this.engine[name]!(...args);
         break;
+      case 'setMetadata':
+        task = this.engine[name]!(...args);
+        break;
       case 'getBookmarks':
         task = this.engine[name]!(...args);
         break;
