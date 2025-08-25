@@ -9,8 +9,9 @@ export type PrintProgress =
   | { stage: 'iframe-ready'; message: string }
   | { stage: 'printing'; message: string };
 
-export interface PrintRequest {
+export interface PrintReadyEvent {
   options: PdfPrintOptions;
+  buffer: ArrayBuffer;
   task: Task<ArrayBuffer, PdfErrorReason, PrintProgress>;
 }
 

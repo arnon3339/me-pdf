@@ -1331,10 +1331,13 @@ export const printModalRenderer: ComponentRenderFunction<PrintModalProps> = (pro
     };
 
     try {
-      printCapability?.print(options).onProgress((progress) => {
-        console.log('progress', progress);
-      });
-      handleClose();
+      const task = printCapability?.print(options);
+
+      if (task) {
+        task.wait(() => {
+          handleClose();
+        }, ignore);
+      }
     } catch (err) {
       console.error('Print failed:', err);
     }

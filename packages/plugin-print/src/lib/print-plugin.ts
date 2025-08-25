@@ -7,12 +7,12 @@ import {
   Task,
 } from '@embedpdf/models';
 
-import { PrintCapability, PrintPluginConfig, PrintProgress, PrintRequest } from './types';
+import { PrintCapability, PrintPluginConfig, PrintProgress, PrintReadyEvent } from './types';
 
 export class PrintPlugin extends BasePlugin<PrintPluginConfig, PrintCapability> {
   static readonly id = 'print' as const;
 
-  private readonly printRequest$ = createEmitter<PrintRequest>();
+  private readonly printReady$ = createEmitter<PrintReadyEvent>();
 
   constructor(id: string, registry: PluginRegistry, _config: PrintPluginConfig) {
     super(id, registry);
@@ -26,24 +26,20 @@ export class PrintPlugin extends BasePlugin<PrintPluginConfig, PrintCapability> 
     };
   }
 
-  public onPrintRequest(listener: Listener<PrintRequest>): Unsubscribe {
-    return this.printRequest$.on(listener);
+  public onPrintRequest(listener: Listener<PrintReadyEvent>): Unsubscribe {
+    return this.printReady$.on(listener);
   }
 
   private print(options: PdfPrintOptions): Task<ArrayBuffer, PdfErrorReason, PrintProgress> {
     const task = new Task<ArrayBuffer, PdfErrorReason, PrintProgress>();
-
-    // Emit progress immediately
     task.progress({ stage: 'preparing', message: 'Preparing document...' });
 
-    // Create the print request with the task
-    const request: PrintRequest = {
-      options,
-      task,
-    };
-
-    // Emit the request
-    this.printRequest$.emit(request);
+    const prepare = this.preparePrintDocument(options);
+    prepare.wait((buffer) => {
+      task.progress({ stage: 'document-ready', message: 'Document prepared successfully' });
+      // Emit buffer + task for the framework layer to display & trigger print
+      this.printReady$.emit({ options, buffer, task });
+    }, task.fail);
 
     return task;
   }

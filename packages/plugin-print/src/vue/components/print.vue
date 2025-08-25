@@ -3,16 +3,12 @@
     ref="iframeRef"
     title="Print Document"
     src="about:blank"
-    :style="{
-      position: 'absolute',
-      display: 'none',
-    }"
+    :style="{ position: 'absolute', display: 'none' }"
   />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { PdfErrorCode } from '@embedpdf/models';
 import { usePrintCapability, usePrintPlugin } from '../hooks';
 
 const iframeRef = ref<HTMLIFrameElement | null>(null);
@@ -26,45 +22,29 @@ let unsubscribe: (() => void) | undefined;
 onMounted(() => {
   if (!printCapability.value || !printPlugin.value) return;
 
-  unsubscribe = printPlugin.value.onPrintRequest((request) => {
-    const { options, task } = request;
+  unsubscribe = printPlugin.value.onPrintRequest(({ buffer, task }) => {
     const iframe = iframeRef.value;
+    if (!iframe) return;
 
-    if (!iframe) {
-      task.reject({
-        code: PdfErrorCode.Cancelled,
-        message: 'Print iframe not available',
-      });
-      return;
-    }
-
-    // Cleanup previous URL
     if (urlRef.value) {
       URL.revokeObjectURL(urlRef.value);
       urlRef.value = null;
     }
 
-    iframe.src = 'about:blank';
+    const url = URL.createObjectURL(new Blob([buffer], { type: 'application/pdf' }));
+    urlRef.value = url;
 
-    const prepareTask = printPlugin.value!.preparePrintDocument(options);
-    prepareTask.wait((buffer) => {
-      task.progress({ stage: 'document-ready', message: 'Document prepared successfully' });
+    iframe.onload = () => {
+      if (iframe.src === url) {
+        task.progress({ stage: 'iframe-ready', message: 'Ready to print' });
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        task.progress({ stage: 'printing', message: 'Print dialog opened' });
+        task.resolve(buffer);
+      }
+    };
 
-      const url = URL.createObjectURL(new Blob([buffer], { type: 'application/pdf' }));
-      urlRef.value = url;
-
-      iframe.onload = () => {
-        if (iframe.src === url) {
-          task.progress({ stage: 'iframe-ready', message: 'Ready to print' });
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-          task.progress({ stage: 'printing', message: 'Print dialog opened' });
-          task.resolve(buffer);
-        }
-      };
-
-      iframe.src = url;
-    }, task.fail);
+    iframe.src = url;
   });
 });
 
