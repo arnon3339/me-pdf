@@ -129,11 +129,7 @@ import {
   makeVariantKey,
 } from '@embedpdf/plugin-annotation/preact';
 import { LoadingIndicator } from './ui/loading-indicator';
-import {
-  PrintProvider,
-  PrintPluginConfig,
-  PrintPluginPackage,
-} from '@embedpdf/plugin-print/preact';
+import { PrintPluginConfig, PrintPluginPackage } from '@embedpdf/plugin-print/preact';
 import {
   FULLSCREEN_PLUGIN_ID,
   FullscreenPlugin,
@@ -193,7 +189,6 @@ export interface PluginConfigs {
   rotate?: RotatePluginConfig;
   tiling?: TilingPluginConfig;
   thumbnail?: ThumbnailPluginConfig;
-  print?: PrintPluginConfig;
 }
 
 export interface PDFViewerConfig {
@@ -232,9 +227,6 @@ const DEFAULT_PLUGIN_CONFIGS: Required<PluginConfigs> = {
     buffer: 3,
     labelHeight: 30,
   },
-  print: {
-    batchSize: 3,
-  },
 };
 
 // **Utility function to merge configurations**
@@ -247,7 +239,6 @@ function mergePluginConfigs(userConfigs: PluginConfigs = {}): Required<PluginCon
     rotate: { ...DEFAULT_PLUGIN_CONFIGS.rotate, ...userConfigs.rotate },
     tiling: { ...DEFAULT_PLUGIN_CONFIGS.tiling, ...userConfigs.tiling },
     thumbnail: { ...DEFAULT_PLUGIN_CONFIGS.thumbnail, ...userConfigs.thumbnail },
-    print: { ...DEFAULT_PLUGIN_CONFIGS.print, ...userConfigs.print },
   };
 }
 
@@ -2946,34 +2937,34 @@ export function PDFViewer({ config }: PDFViewerProps) {
           createPluginRegistration(ScrollPluginPackage, pluginConfigs.scroll),
           createPluginRegistration(ZoomPluginPackage, pluginConfigs.zoom),
           createPluginRegistration(SpreadPluginPackage, pluginConfigs.spread),
-          createPluginRegistration(RenderPluginPackage, {}),
+          createPluginRegistration(RenderPluginPackage),
           createPluginRegistration(RotatePluginPackage, pluginConfigs.rotate),
-          createPluginRegistration(SearchPluginPackage, {}),
-          createPluginRegistration(SelectionPluginPackage, {}),
+          createPluginRegistration(SearchPluginPackage),
+          createPluginRegistration(SelectionPluginPackage),
           createPluginRegistration(TilingPluginPackage, pluginConfigs.tiling),
           createPluginRegistration(ThumbnailPluginPackage, pluginConfigs.thumbnail),
-          createPluginRegistration(AnnotationPluginPackage, {}),
-          createPluginRegistration(PrintPluginPackage, pluginConfigs.print),
-          createPluginRegistration(FullscreenPluginPackage, {}),
-          createPluginRegistration(BookmarkPluginPackage, {}),
-          createPluginRegistration(ExportPluginPackage, {}),
-          createPluginRegistration(InteractionManagerPluginPackage, {}),
-          createPluginRegistration(PanPluginPackage, {}),
+          createPluginRegistration(AnnotationPluginPackage),
+          createPluginRegistration(PrintPluginPackage),
+          createPluginRegistration(FullscreenPluginPackage),
+          createPluginRegistration(BookmarkPluginPackage),
+          createPluginRegistration(ExportPluginPackage),
+          createPluginRegistration(InteractionManagerPluginPackage),
+          createPluginRegistration(PanPluginPackage),
           createPluginRegistration(CapturePluginPackage, {
             scale: 2,
             imageType: 'image/png',
           }),
-          createPluginRegistration(HistoryPluginPackage, {}),
+          createPluginRegistration(HistoryPluginPackage),
           createPluginRegistration(RedactionPluginPackage, {
-            drawBlackBoxes: false,
+            drawBlackBoxes: true,
           }),
-          createPluginRegistration(AttachmentPluginPackage, {}),
+          createPluginRegistration(AttachmentPluginPackage),
         ]}
       >
         {({ pluginsReady }) => (
           <PluginUIProvider>
             {({ headers, panels, floating, commandMenu }) => (
-              <PrintProvider>
+              <>
                 <div className="@container relative flex h-full w-full select-none flex-col">
                   {headers.top.length > 0 && <div>{headers.top}</div>}
                   <div className="flex flex-1 flex-row overflow-hidden">
@@ -3123,7 +3114,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
                   {commandMenu}
                 </div>
                 <Capture />
-              </PrintProvider>
+              </>
             )}
           </PluginUIProvider>
         )}

@@ -36,6 +36,7 @@ import {
   uuidV4,
   PdfMetadataObject,
   PdfTask,
+  PdfPrintOptions,
 } from '@embedpdf/models';
 
 /**
@@ -317,6 +318,9 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
         id: 'id',
         content: new ArrayBuffer(0),
       });
+    },
+    preparePrintDocument: (doc: PdfDocumentObject, options?: PdfPrintOptions) => {
+      return PdfTaskHelper.resolve(new ArrayBuffer(0));
     },
     searchAllPages: (
       doc: PdfDocumentObject,

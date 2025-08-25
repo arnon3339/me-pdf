@@ -377,6 +377,9 @@ export class EngineRunner {
       case 'mergePages':
         task = this.engine[name]!(...args);
         break;
+      case 'preparePrintDocument':
+        task = this.engine[name]!(...args);
+        break;
     }
 
     this.tasks.set(request.id, task);
