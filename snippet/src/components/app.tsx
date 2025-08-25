@@ -2937,6 +2937,7 @@ export function PDFViewer({ config }: PDFViewerProps) {
               type: 'url',
               pdfFile: {
                 id: 'pdf',
+                name: 'embedpdf-ebook.pdf',
                 url: config.src,
               },
             },

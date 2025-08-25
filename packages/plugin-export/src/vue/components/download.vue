@@ -9,9 +9,7 @@ export interface DownloadProps {
   fileName?: string;
 }
 
-const props = withDefaults(defineProps<DownloadProps>(), {
-  fileName: 'document.pdf',
-});
+const props = defineProps<DownloadProps>();
 
 const { provides: exportCapabilityRef } = useExportCapability();
 const { plugin: exportPluginRef } = useExportPlugin();
@@ -30,11 +28,11 @@ onMounted(() => {
       const el = anchorRef.value;
       if (!el) return;
 
-      const task = exportCapability.saveAsCopy();
-      task.wait((buffer) => {
+      const task = exportPlugin.saveAsCopyAndGetBufferAndName();
+      task.wait(({ buffer, name }) => {
         const url = URL.createObjectURL(new Blob([buffer]));
         el.href = url;
-        el.download = props.fileName;
+        el.download = props.fileName ?? name;
         el.click();
         URL.revokeObjectURL(url);
       }, ignore);

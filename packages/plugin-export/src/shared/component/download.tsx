@@ -21,11 +21,11 @@ export function Download(props: DownloadProps) {
         const el = ref.current;
         if (!el) return;
 
-        const task = exportCapability.saveAsCopy();
-        task.wait((buffer) => {
+        const task = exportPlugin.saveAsCopyAndGetBufferAndName();
+        task.wait(({ buffer, name }) => {
           const url = URL.createObjectURL(new Blob([buffer]));
           el.href = url;
-          el.download = props.fileName ?? 'document.pdf';
+          el.download = props.fileName ?? name;
           el.click();
           URL.revokeObjectURL(url);
         }, ignore);

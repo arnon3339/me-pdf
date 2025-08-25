@@ -42,6 +42,11 @@ export interface PdfDocumentObject {
   id: string;
 
   /**
+   * Name of the document
+   */
+  name?: string;
+
+  /**
    * Count of pages in this document
    */
   pageCount: number;
@@ -2234,6 +2239,11 @@ export interface PdfFileWithoutContent {
    * id of file
    */
   id: string;
+
+  /**
+   * Name of the file
+   */
+  name?: string;
 }
 
 export interface PdfFileLoader extends PdfFileWithoutContent {
