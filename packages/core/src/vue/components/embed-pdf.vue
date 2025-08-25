@@ -3,13 +3,20 @@ import { ref, provide, onMounted, onBeforeUnmount, shallowRef } from 'vue';
 import { PluginRegistry, PluginBatchRegistration } from '@embedpdf/core';
 import { Logger, PdfEngine } from '@embedpdf/models';
 import { pdfKey, PDFContextState } from '../context';
+import AutoMount from './auto-mount.vue';
 
-const props = defineProps<{
-  engine: PdfEngine;
-  logger?: Logger;
-  plugins: PluginBatchRegistration<any, any>[];
-  onInitialized?: (registry: PluginRegistry) => Promise<void>;
-}>();
+const props = withDefaults(
+  defineProps<{
+    engine: PdfEngine;
+    logger?: Logger;
+    plugins: PluginBatchRegistration<any, any>[];
+    onInitialized?: (registry: PluginRegistry) => Promise<void>;
+    autoMountDomElements?: boolean;
+  }>(),
+  {
+    autoMountDomElements: true,
+  },
+);
 
 /* reactive state */
 const registry = shallowRef<PluginRegistry | null>(null);
@@ -35,6 +42,11 @@ onBeforeUnmount(() => registry.value?.destroy());
 </script>
 
 <template>
-  <!-- scoped slot keeps API parity with React version -->
-  <slot :registry="registry" :isInitializing="isInit" :pluginsReady="pluginsOk" />
+  <AutoMount v-if="pluginsOk && autoMountDomElements" :plugins="plugins">
+    <!-- scoped slot keeps API parity with React version -->
+    <slot :registry="registry" :isInitializing="isInit" :pluginsReady="pluginsOk" />
+  </AutoMount>
+
+  <!-- No auto-mount or not ready yet -->
+  <slot v-else :registry="registry" :isInitializing="isInit" :pluginsReady="pluginsOk" />
 </template>

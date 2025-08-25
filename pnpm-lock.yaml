@@ -301,6 +301,9 @@ importers:
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../../packages/models
+      '@embedpdf/plugin-fullscreen':
+        specifier: workspace:*
+        version: link:../../packages/plugin-fullscreen
       '@embedpdf/plugin-interaction-manager':
         specifier: workspace:*
         version: link:../../packages/plugin-interaction-manager
@@ -325,6 +328,9 @@ importers:
       '@embedpdf/plugin-viewport':
         specifier: workspace:*
         version: link:../../packages/plugin-viewport
+      '@embedpdf/plugin-zoom':
+        specifier: workspace:*
+        version: link:../../packages/plugin-zoom
       vue:
         specifier: ^3.5.0
         version: 3.5.17(typescript@5.8.3)
