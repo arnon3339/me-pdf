@@ -5,7 +5,7 @@ import { PdfDocumentObject, Rotation } from '@embedpdf/models';
 
 import { useScrollCapability, useScrollPlugin } from '../hooks';
 
-interface RenderPageProps extends PageLayout {
+export interface RenderPageProps extends PageLayout {
   rotation: Rotation;
   scale: number;
   document: PdfDocumentObject | null;
