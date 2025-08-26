@@ -66,37 +66,48 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
         ]"
       >
         <template #default="{ pluginsReady }">
-          <GlobalPointerProvider>
-            <Viewport class="h-full w-full select-none overflow-auto">
-              <Scroller v-if="pluginsReady">
-                <template #default="{ page }">
-                  <Rotate :page-size="{ width: page.width, height: page.height }">
-                    <PagePointerProvider
-                      :page-index="page.pageIndex"
-                      :page-width="page.width"
-                      :page-height="page.height"
-                      :rotation="page.rotation"
-                      :scale="page.scale"
-                      class="absolute"
-                      :style="{
-                        width: page.width + 'px',
-                        height: page.height + 'px',
-                      }"
-                    >
-                      <RenderLayer :page-index="page.pageIndex" class="pointer-events-none" />
-                      <TilingLayer
-                        :page-index="page.pageIndex"
-                        :scale="page.scale"
-                        class="pointer-events-none"
-                      />
-                      <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
-                    </PagePointerProvider>
-                  </Rotate>
-                </template>
-              </Scroller>
-              <div v-else class="flex h-full items-center justify-center">Loading plugins...</div>
-            </Viewport>
-          </GlobalPointerProvider>
+          <!-- Main container with flex column layout -->
+          <div class="relative flex h-full w-full select-none flex-col">
+            <!-- Main content area that grows to fill remaining space -->
+            <div class="flex flex-1 overflow-hidden">
+              <!-- Main Viewport -->
+              <div class="relative flex min-w-0 flex-1 flex-col">
+                <GlobalPointerProvider>
+                  <Viewport class="h-full w-full flex-1 overflow-auto bg-gray-100">
+                    <div v-if="!pluginsReady" class="flex h-full items-center justify-center">
+                      <div class="text-gray-500">Loading plugins...</div>
+                    </div>
+                    <Scroller v-if="pluginsReady">
+                      <template #default="{ page }">
+                        <Rotate :page-size="{ width: page.width, height: page.height }">
+                          <PagePointerProvider
+                            :page-index="page.pageIndex"
+                            :page-width="page.width"
+                            :page-height="page.height"
+                            :rotation="page.rotation"
+                            :scale="page.scale"
+                            class="absolute"
+                            :style="{
+                              width: page.width + 'px',
+                              height: page.height + 'px',
+                            }"
+                          >
+                            <RenderLayer :page-index="page.pageIndex" class="pointer-events-none" />
+                            <TilingLayer
+                              :page-index="page.pageIndex"
+                              :scale="page.scale"
+                              class="pointer-events-none"
+                            />
+                            <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
+                          </PagePointerProvider>
+                        </Rotate>
+                      </template>
+                    </Scroller>
+                  </Viewport>
+                </GlobalPointerProvider>
+              </div>
+            </div>
+          </div>
         </template>
       </EmbedPDF>
     </div>
