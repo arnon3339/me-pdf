@@ -7,6 +7,7 @@ import { useExportCapability } from '@embedpdf/plugin-export/vue';
 import { useLoaderCapability } from '@embedpdf/plugin-loader/vue';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/vue';
 import { useZoom, ZoomMode } from '@embedpdf/plugin-zoom/vue';
+import { useInteractionManager } from '@embedpdf/plugin-interaction-manager/vue';
 
 const { provides: fullscreenProvider, state: fullscreenState } = useFullscreen();
 const { provides: panProvider, isPanning } = usePan();
@@ -15,6 +16,7 @@ const { provides: exportProvider } = useExportCapability();
 const { provides: loaderProvider } = useLoaderCapability();
 const { spreadMode, provides: spreadProvider } = useSpread();
 const { provides: zoomProvider, state: zoomState } = useZoom();
+const { provides: pointerProvider, state: interactionManagerState } = useInteractionManager();
 
 // Menu state
 const mainMenuOpen = ref(false);
@@ -28,6 +30,10 @@ const handleFullscreenToggle = () => {
 
 const handlePanMode = () => {
   panProvider?.value?.togglePan();
+};
+
+const handlePointerMode = () => {
+  pointerProvider?.value?.activate('pointerMode');
 };
 
 const handleRotateForward = () => {
@@ -221,6 +227,20 @@ const handleZoomOut = () => {
           variant="text"
           size="small"
           :active="isPanning"
+        />
+      </template>
+    </v-tooltip>
+
+    <!-- Pan Mode -->
+    <v-tooltip text="Pointer Mode" location="bottom">
+      <template v-slot:activator="{ props }">
+        <v-btn
+          v-bind="props"
+          @click="handlePointerMode"
+          icon="mdi-cursor-default-outline"
+          variant="text"
+          size="small"
+          :active="interactionManagerState.activeMode === 'pointerMode'"
         />
       </template>
     </v-tooltip>
