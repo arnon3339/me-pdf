@@ -17,8 +17,8 @@
             pointerEvents: 'auto',
             cursor: 'pointer',
           }"
-          @pointerdown="(e) => select(e, item.id)"
-          @touchstart="(e) => select(e, item.id)"
+          @pointerdown="(e: PointerEvent) => select(e, item.id)"
+          @touchstart="(e: TouchEvent) => select(e, item.id)"
         />
         <CounterRotate
           :rect="{
@@ -62,7 +62,7 @@
             color="transparent"
             border="1px solid red"
             :scale="scale"
-            :on-click="(e) => select(e, item.id)"
+            :on-click="(e: PointerEvent | TouchEvent) => select(e, item.id)"
           />
         </div>
         <CounterRotate

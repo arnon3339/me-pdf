@@ -11,6 +11,7 @@ declare module 'vue' {
     Application: typeof import('./src/components/Application.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     PageControls: typeof import('./src/components/PageControls.vue')['default']
+    PrintDialog: typeof import('./src/components/PrintDialog.vue')['default']
     Toolbar: typeof import('./src/components/Toolbar.vue')['default']
   }
 }

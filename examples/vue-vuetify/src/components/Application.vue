@@ -20,6 +20,7 @@ import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom/vue';
 import { PanPluginPackage } from '@embedpdf/plugin-pan/vue';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/vue';
 import { SpreadPluginPackage } from '@embedpdf/plugin-spread/vue';
+import { PrintPluginPackage } from '@embedpdf/plugin-print/vue';
 import Toolbar from './Toolbar.vue';
 
 const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine();
@@ -80,10 +81,11 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
         createPluginRegistration(PanPluginPackage),
         createPluginRegistration(ExportPluginPackage),
         createPluginRegistration(SpreadPluginPackage),
+        createPluginRegistration(PrintPluginPackage),
       ]"
     >
       <template #default="{ pluginsReady }">
-        <v-layout class="fill-height">
+        <v-layout class="fill-height" id="pdf-app-layout">
           <!-- Toolbar -->
           <Toolbar />
 
@@ -146,6 +148,9 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
 </template>
 
 <style scoped>
+#pdf-app-layout {
+  user-select: none;
+}
 .flex-1-1-100 {
   flex: 1 1 100%;
 }

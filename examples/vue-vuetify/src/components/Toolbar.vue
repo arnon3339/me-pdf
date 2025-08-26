@@ -8,6 +8,7 @@ import { useLoaderCapability } from '@embedpdf/plugin-loader/vue';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/vue';
 import { useZoom, ZoomMode } from '@embedpdf/plugin-zoom/vue';
 import { useInteractionManager } from '@embedpdf/plugin-interaction-manager/vue';
+import PrintDialog from './PrintDialog.vue';
 
 const { provides: fullscreenProvider, state: fullscreenState } = useFullscreen();
 const { provides: panProvider, isPanning } = usePan();
@@ -21,6 +22,7 @@ const { provides: pointerProvider, state: interactionManagerState } = useInterac
 // Menu state
 const mainMenuOpen = ref(false);
 const pageSettingsMenuOpen = ref(false);
+const printDialogOpen = ref(false);
 
 const handleFullscreenToggle = () => {
   fullscreenProvider?.value?.toggleFullscreen();
@@ -68,12 +70,21 @@ const handleZoomIn = () => {
 const handleZoomOut = () => {
   zoomProvider?.value?.zoomOut();
 };
+
+const handlePrint = () => {
+  printDialogOpen.value = true;
+  mainMenuOpen.value = false;
+};
+
+const handlePrintDialogClose = () => {
+  printDialogOpen.value = false;
+};
 </script>
 
 <template>
   <v-app-bar elevation="0" density="compact" color="surface" class="toolbar">
     <!-- Main Menu -->
-    <v-menu v-model="mainMenuOpen" :close-on-content-click="false">
+    <v-menu v-model="mainMenuOpen" :close-on-content-click="false" attach="#pdf-app-layout">
       <template v-slot:activator="{ props }">
         <v-btn v-bind="props" icon="mdi-menu" variant="text" size="small" :active="mainMenuOpen" />
       </template>
@@ -89,6 +100,12 @@ const handleZoomOut = () => {
             <v-icon>mdi-download-outline</v-icon>
           </template>
           <v-list-item-title>Download</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="handlePrint">
+          <template v-slot:prepend>
+            <v-icon>mdi-printer-outline</v-icon>
+          </template>
+          <v-list-item-title>Print</v-list-item-title>
         </v-list-item>
         <v-list-item @click="handleFullscreenToggle">
           <template v-slot:prepend>
@@ -113,7 +130,7 @@ const handleZoomOut = () => {
     </v-tooltip>
 
     <!-- Page Settings Menu -->
-    <v-menu v-model="pageSettingsMenuOpen" :close-on-content-click="false">
+    <v-menu v-model="pageSettingsMenuOpen" :close-on-content-click="false" attach="#pdf-app-layout">
       <template v-slot:activator="{ props }">
         <v-btn
           v-bind="props"
@@ -186,7 +203,7 @@ const handleZoomOut = () => {
 
     <v-divider vertical class="mx-3 my-3"></v-divider>
 
-    <!-- Zoom Controls Placeholder -->
+    <!-- Zoom Controls -->
     <div class="toolbar-section">
       <v-tooltip text="Zoom Out" location="bottom">
         <template v-slot:activator="{ props }">
@@ -231,7 +248,7 @@ const handleZoomOut = () => {
       </template>
     </v-tooltip>
 
-    <!-- Pan Mode -->
+    <!-- Pointer Mode -->
     <v-tooltip text="Pointer Mode" location="bottom">
       <template v-slot:activator="{ props }">
         <v-btn
@@ -254,6 +271,9 @@ const handleZoomOut = () => {
       </template>
     </v-tooltip>
   </v-app-bar>
+
+  <!-- Print Dialog -->
+  <PrintDialog :open="printDialogOpen" @close="handlePrintDialogClose" />
 </template>
 
 <style scoped>

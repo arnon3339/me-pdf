@@ -27,6 +27,7 @@
     "@embedpdf/plugin-pan": "workspace:*",
     "@embedpdf/plugin-export": "workspace:*",
     "@embedpdf/plugin-spread": "workspace:*",
+    "@embedpdf/plugin-print": "workspace:*",
     "@fontsource/roboto": "5.2.6",
     "@mdi/font": "7.4.47",
     "vue": "^3.5.17",
@@ -43,7 +44,7 @@
     "unplugin-fonts": "^1.3.1",
     "unplugin-vue-components": "^28.8.0",
     "vite": "^6.3.5",
-    "vite-plugin-vuetify": "^2.1.1",
+    "vite-plugin-vuetify": "^2.1.2",
     "vue-tsc": "^3.0.1"
   }
 }
