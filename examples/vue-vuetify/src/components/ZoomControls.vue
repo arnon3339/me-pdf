@@ -31,7 +31,7 @@ const ZOOM_MODES: ZoomModeItem[] = [
 ];
 
 const { state: zoomState, provides: zoomProvider } = useZoom();
-const { state: interactionManagerState, provides: pointerProvider } = useInteractionManager();
+const { state: interactionManagerState } = useInteractionManager();
 
 const menuOpen = ref(false);
 

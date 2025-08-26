@@ -426,7 +426,7 @@ importers:
         specifier: 7.4.47
         version: 7.4.47
       vue:
-        specifier: ^3.5.17
+        specifier: ^3.5.0
         version: 3.5.17(typescript@5.9.2)
       vuetify:
         specifier: ^3.9.1

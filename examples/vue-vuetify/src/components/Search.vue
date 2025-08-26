@@ -108,14 +108,14 @@ const isWholeWordChecked = computed(() => state.value.flags.includes(MatchFlag.M
       <div class="mt-3">
         <v-checkbox
           :model-value="isMatchCaseChecked"
-          @update:model-value="(checked) => handleFlagChange(MatchFlag.MatchCase, checked)"
+          @update:model-value="(checked) => handleFlagChange(MatchFlag.MatchCase, !!checked)"
           label="Case sensitive"
           density="compact"
           hide-details
         />
         <v-checkbox
           :model-value="isWholeWordChecked"
-          @update:model-value="(checked) => handleFlagChange(MatchFlag.MatchWholeWord, checked)"
+          @update:model-value="(checked) => handleFlagChange(MatchFlag.MatchWholeWord, !!checked)"
           label="Whole word"
           density="compact"
           hide-details
