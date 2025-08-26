@@ -21,7 +21,31 @@ import { PanPluginPackage } from '@embedpdf/plugin-pan/vue';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/vue';
 import { SpreadPluginPackage } from '@embedpdf/plugin-spread/vue';
 import { PrintPluginPackage } from '@embedpdf/plugin-print/vue';
+import { SearchPluginPackage, SearchLayer } from '@embedpdf/plugin-search/vue';
+
 import Toolbar from './Toolbar.vue';
+import DrawerProvider from './drawer-system/DrawerProvider.vue';
+import Drawer from './drawer-system/Drawer.vue';
+import Search from './Search.vue';
+import Sidebar from './Sidebar.vue';
+
+// Define drawer components
+const drawerComponents = [
+  {
+    id: 'search',
+    component: Search,
+    icon: 'mdi-magnify',
+    label: 'Search',
+    position: 'right' as const,
+  },
+  {
+    id: 'sidebar',
+    component: Sidebar,
+    icon: 'mdi-dock-left',
+    label: 'Sidebar',
+    position: 'left' as const,
+  },
+];
 
 const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine();
 </script>
@@ -82,62 +106,81 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
         createPluginRegistration(ExportPluginPackage),
         createPluginRegistration(SpreadPluginPackage),
         createPluginRegistration(PrintPluginPackage),
+        createPluginRegistration(SearchPluginPackage, {
+          flags: [],
+          showAllResults: true,
+        }),
       ]"
     >
       <template #default="{ pluginsReady }">
-        <v-layout class="fill-height" id="pdf-app-layout">
-          <!-- Toolbar -->
-          <Toolbar />
+        <DrawerProvider :components="drawerComponents">
+          <v-layout class="fill-height" id="pdf-app-layout">
+            <!-- Toolbar -->
+            <Toolbar />
 
-          <!-- Main content -->
-          <v-main class="fill-height">
-            <div class="fill-height position-relative">
-              <GlobalPointerProvider>
-                <Viewport class="fill-height" style="background-color: #f5f5f5; overflow: auto">
-                  <div v-if="!pluginsReady" class="d-flex fill-height align-center justify-center">
-                    <div class="text-center">
-                      <v-progress-circular
-                        indeterminate
-                        color="primary"
-                        size="48"
-                      ></v-progress-circular>
-                      <div class="text-body-1 text-medium-emphasis mt-4">Loading plugins...</div>
+            <!-- Left Drawer -->
+            <Drawer position="left" />
+
+            <!-- Main content -->
+            <v-main class="fill-height">
+              <div class="fill-height position-relative">
+                <GlobalPointerProvider>
+                  <Viewport class="fill-height" style="background-color: #f5f5f5; overflow: auto">
+                    <div
+                      v-if="!pluginsReady"
+                      class="d-flex fill-height align-center justify-center"
+                    >
+                      <div class="text-center">
+                        <v-progress-circular
+                          indeterminate
+                          color="primary"
+                          size="48"
+                        ></v-progress-circular>
+                        <div class="text-body-1 text-medium-emphasis mt-4">Loading plugins...</div>
+                      </div>
                     </div>
-                  </div>
-                  <Scroller v-else>
-                    <template #default="{ page }">
-                      <Rotate :page-size="{ width: page.width, height: page.height }">
-                        <PagePointerProvider
-                          :page-index="page.pageIndex"
-                          :page-width="page.width"
-                          :page-height="page.height"
-                          :rotation="page.rotation"
-                          :scale="page.scale"
-                          class="position-absolute"
-                          :style="{
-                            width: page.width + 'px',
-                            height: page.height + 'px',
-                          }"
-                        >
-                          <RenderLayer :page-index="page.pageIndex" style="pointer-events: none" />
-                          <TilingLayer
+                    <Scroller v-else>
+                      <template #default="{ page }">
+                        <Rotate :page-size="{ width: page.width, height: page.height }">
+                          <PagePointerProvider
                             :page-index="page.pageIndex"
+                            :page-width="page.width"
+                            :page-height="page.height"
+                            :rotation="page.rotation"
                             :scale="page.scale"
-                            style="pointer-events: none"
-                          />
-                          <MarqueeZoom :page-index="page.pageIndex" :scale="page.scale" />
-                          <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
-                        </PagePointerProvider>
-                      </Rotate>
-                    </template>
-                  </Scroller>
-                  <!-- Page Controls Overlay -->
-                  <PageControls />
-                </Viewport>
-              </GlobalPointerProvider>
-            </div>
-          </v-main>
-        </v-layout>
+                            class="position-absolute"
+                            :style="{
+                              width: page.width + 'px',
+                              height: page.height + 'px',
+                            }"
+                          >
+                            <RenderLayer
+                              :page-index="page.pageIndex"
+                              style="pointer-events: none"
+                            />
+                            <TilingLayer
+                              :page-index="page.pageIndex"
+                              :scale="page.scale"
+                              style="pointer-events: none"
+                            />
+                            <MarqueeZoom :page-index="page.pageIndex" :scale="page.scale" />
+                            <SearchLayer :page-index="page.pageIndex" :scale="page.scale" />
+                            <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
+                          </PagePointerProvider>
+                        </Rotate>
+                      </template>
+                    </Scroller>
+                    <!-- Page Controls Overlay -->
+                    <PageControls />
+                  </Viewport>
+                </GlobalPointerProvider>
+              </div>
+            </v-main>
+
+            <!-- Right Drawer -->
+            <Drawer position="right" />
+          </v-layout>
+        </DrawerProvider>
       </template>
     </EmbedPDF>
   </div>

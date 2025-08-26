@@ -9,6 +9,7 @@ import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/vue';
 import { useInteractionManager } from '@embedpdf/plugin-interaction-manager/vue';
 import PrintDialog from './PrintDialog.vue';
 import ZoomControls from './ZoomControls.vue';
+import DrawerToggleButton from './drawer-system/DrawerToggleButton.vue';
 
 const { provides: fullscreenProvider, state: fullscreenState } = useFullscreen();
 const { provides: panProvider, isPanning } = usePan();
@@ -114,11 +115,7 @@ const handlePrintDialogClose = () => {
     <v-divider vertical class="mx-3 my-3"></v-divider>
 
     <!-- Sidebar Toggle (placeholder) -->
-    <v-tooltip text="Sidebar" location="bottom">
-      <template v-slot:activator="{ props }">
-        <v-btn v-bind="props" icon="mdi-dock-left" variant="text" size="small" />
-      </template>
-    </v-tooltip>
+    <DrawerToggleButton component-id="sidebar" />
 
     <!-- Page Settings Menu -->
     <v-menu v-model="pageSettingsMenuOpen" :close-on-content-click="false" attach="#pdf-app-layout">
@@ -229,12 +226,8 @@ const handlePrintDialogClose = () => {
 
     <v-spacer></v-spacer>
 
-    <!-- Search Toggle (placeholder) -->
-    <v-tooltip text="Search" location="bottom">
-      <template v-slot:activator="{ props }">
-        <v-btn v-bind="props" icon="mdi-magnify" variant="text" size="small" />
-      </template>
-    </v-tooltip>
+    <!-- Search Toggle -->
+    <DrawerToggleButton component-id="search" />
   </v-app-bar>
 
   <!-- Print Dialog -->
