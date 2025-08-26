@@ -5,15 +5,14 @@ import { EmbedPDF } from '@embedpdf/core/react'
 import { usePdfiumEngine } from '@embedpdf/engines/react'
 
 // Import the essential plugins
-import { ViewportPluginPackage } from '@embedpdf/plugin-viewport'
-import { Viewport } from '@embedpdf/plugin-viewport/react'
-import { ScrollPluginPackage } from '@embedpdf/plugin-scroll'
-import { Scroller } from '@embedpdf/plugin-scroll/react'
-import { LoaderPluginPackage } from '@embedpdf/plugin-loader'
-import { RenderPluginPackage } from '@embedpdf/plugin-render'
-import { RenderLayer } from '@embedpdf/plugin-render/react'
-import { ZoomPluginPackage } from '@embedpdf/plugin-zoom'
-import { useZoom, useZoomCapability } from '@embedpdf/plugin-zoom/react'
+import {
+  Viewport,
+  ViewportPluginPackage,
+} from '@embedpdf/plugin-viewport/react'
+import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/react'
+import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react'
+import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react'
+import { useZoom, ZoomPluginPackage } from '@embedpdf/plugin-zoom/react'
 
 // 1. Register the plugins you need
 const plugins = [
