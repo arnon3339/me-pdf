@@ -9,7 +9,11 @@ import {
   Viewport,
   ViewportPluginPackage,
 } from '@embedpdf/plugin-viewport/react'
-import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/react'
+import {
+  RenderPageProps,
+  Scroller,
+  ScrollPluginPackage,
+} from '@embedpdf/plugin-scroll/react'
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react'
 import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react'
 import { useZoom, ZoomPluginPackage } from '@embedpdf/plugin-zoom/react'
@@ -121,7 +125,12 @@ export const PDFViewer = () => {
             }}
           >
             <Scroller
-              renderPage={({ width, height, pageIndex, scale }) => (
+              renderPage={({
+                width,
+                height,
+                pageIndex,
+                scale,
+              }: RenderPageProps) => (
                 <div style={{ width, height }}>
                   {/* The RenderLayer is responsible for drawing the page */}
                   <RenderLayer pageIndex={pageIndex} scaleFactor={scale} />
