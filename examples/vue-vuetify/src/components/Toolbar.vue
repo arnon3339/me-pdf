@@ -6,9 +6,9 @@ import { useRotateCapability } from '@embedpdf/plugin-rotate/vue';
 import { useExportCapability } from '@embedpdf/plugin-export/vue';
 import { useLoaderCapability } from '@embedpdf/plugin-loader/vue';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/vue';
-import { useZoom, ZoomMode } from '@embedpdf/plugin-zoom/vue';
 import { useInteractionManager } from '@embedpdf/plugin-interaction-manager/vue';
 import PrintDialog from './PrintDialog.vue';
+import ZoomControls from './ZoomControls.vue';
 
 const { provides: fullscreenProvider, state: fullscreenState } = useFullscreen();
 const { provides: panProvider, isPanning } = usePan();
@@ -16,7 +16,6 @@ const { provides: rotateProvider } = useRotateCapability();
 const { provides: exportProvider } = useExportCapability();
 const { provides: loaderProvider } = useLoaderCapability();
 const { spreadMode, provides: spreadProvider } = useSpread();
-const { provides: zoomProvider, state: zoomState } = useZoom();
 const { provides: pointerProvider, state: interactionManagerState } = useInteractionManager();
 
 // Menu state
@@ -61,14 +60,6 @@ const handleOpenFilePicker = () => {
 const handleSpreadModeChange = (mode: SpreadMode) => {
   spreadProvider?.value?.setSpreadMode(mode);
   pageSettingsMenuOpen.value = false;
-};
-
-const handleZoomIn = () => {
-  zoomProvider?.value?.zoomIn();
-};
-
-const handleZoomOut = () => {
-  zoomProvider?.value?.zoomOut();
 };
 
 const handlePrint = () => {
@@ -204,33 +195,7 @@ const handlePrintDialogClose = () => {
     <v-divider vertical class="mx-3 my-3"></v-divider>
 
     <!-- Zoom Controls -->
-    <div class="toolbar-section">
-      <v-tooltip text="Zoom Out" location="bottom">
-        <template v-slot:activator="{ props }">
-          <v-btn
-            v-bind="props"
-            @click="handleZoomOut"
-            icon="mdi-minus-circle-outline"
-            variant="text"
-            size="small"
-          />
-        </template>
-      </v-tooltip>
-
-      <span class="zoom-level">{{ Math.round(zoomState.currentZoomLevel * 100) }}%</span>
-
-      <v-tooltip text="Zoom In" location="bottom">
-        <template v-slot:activator="{ props }">
-          <v-btn
-            v-bind="props"
-            @click="handleZoomIn"
-            icon="mdi-plus-circle-outline"
-            variant="text"
-            size="small"
-          />
-        </template>
-      </v-tooltip>
-    </div>
+    <ZoomControls />
 
     <v-divider vertical class="mx-3 my-3"></v-divider>
 
@@ -280,18 +245,5 @@ const handlePrintDialogClose = () => {
 .toolbar {
   border-bottom: 1px solid #cfd4da;
   padding: 0 12px;
-}
-
-.toolbar-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.zoom-level {
-  color: #6c757d;
-  font-size: 14px;
-  min-width: 40px;
-  text-align: center;
 }
 </style>

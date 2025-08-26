@@ -16,7 +16,7 @@ import {
 import { RotatePluginPackage } from '@embedpdf/plugin-rotate/vue';
 import { Rotate } from '@embedpdf/plugin-rotate/vue';
 import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen/vue';
-import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom/vue';
+import { ZoomMode, ZoomPluginPackage, MarqueeZoom } from '@embedpdf/plugin-zoom/vue';
 import { PanPluginPackage } from '@embedpdf/plugin-pan/vue';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/vue';
 import { SpreadPluginPackage } from '@embedpdf/plugin-spread/vue';
@@ -125,6 +125,7 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
                             :scale="page.scale"
                             style="pointer-events: none"
                           />
+                          <MarqueeZoom :page-index="page.pageIndex" :scale="page.scale" />
                           <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
                         </PagePointerProvider>
                       </Rotate>
