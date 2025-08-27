@@ -13,6 +13,7 @@ import {
   setViewportScrollMetrics,
   setViewportGap,
   setScrollActivity,
+  setSmoothScrollActivity,
 } from './actions';
 import {
   ViewportPluginConfig,
@@ -62,7 +63,7 @@ export class ViewportPlugin extends BasePlugin<
       this.dispatch(setViewportGap(config.viewportGap));
     }
 
-    this.scrollEndDelay = config.scrollEndDelay || 300;
+    this.scrollEndDelay = config.scrollEndDelay || 100;
   }
 
   protected buildCapability(): ViewportCapability {
@@ -112,10 +113,15 @@ export class ViewportPlugin extends BasePlugin<
 
   private bumpScrollActivity() {
     this.debouncedDispatch(setScrollActivity(false), this.scrollEndDelay);
+    this.debouncedDispatch(setSmoothScrollActivity(false), this.scrollEndDelay);
   }
 
   private scrollTo(pos: ScrollToPayload) {
     const { x, y, center, behavior = 'auto' } = pos;
+
+    if (behavior === 'smooth') {
+      this.dispatch(setSmoothScrollActivity(true));
+    }
 
     if (center) {
       const metrics = this.state.viewportMetrics;

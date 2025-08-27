@@ -48,7 +48,6 @@ function revoke() {
 function startRender() {
   abortCurrentTask();
   revoke();
-  imageUrl.value = null;
   currentTask = null;
 
   if (!renderProvides.value) return;

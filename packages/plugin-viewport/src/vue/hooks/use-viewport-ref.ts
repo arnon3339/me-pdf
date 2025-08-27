@@ -1,5 +1,5 @@
 import { Rect } from '@embedpdf/models';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 import { useViewportPlugin } from './use-viewport';
 
@@ -7,9 +7,11 @@ export function useViewportRef() {
   const { plugin: pluginRef } = useViewportPlugin();
   const containerRef = ref<HTMLDivElement | null>(null);
 
-  onMounted(() => {
+  // Setup function that runs when both plugin and container are available
+  const setupViewport = () => {
     const viewportPlugin = pluginRef.value;
     const container = containerRef.value;
+
     if (!container || !viewportPlugin) return;
 
     /* ---------- live rect provider --------------------------------- */
@@ -54,12 +56,53 @@ export function useViewportRef() {
       },
     );
 
-    onUnmounted(() => {
+    // Return cleanup function
+    return () => {
       viewportPlugin.registerBoundingRectProvider(null);
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
       unsubscribeScrollRequest();
-    });
+    };
+  };
+
+  let cleanup: (() => void) | null = null;
+
+  // Watch for changes in the plugin - this is the Vue equivalent of React's dependency array
+  watch(
+    pluginRef,
+    () => {
+      // Clean up previous setup if it exists
+      if (cleanup) {
+        cleanup();
+        cleanup = null;
+      }
+
+      // Setup new viewport if plugin is available
+      cleanup = setupViewport() || null;
+    },
+    { immediate: true }, // Run immediately if plugin is already available
+  );
+
+  // Also watch for container changes (though this is less likely to change)
+  watch(
+    containerRef,
+    () => {
+      // Clean up previous setup if it exists
+      if (cleanup) {
+        cleanup();
+        cleanup = null;
+      }
+
+      // Setup new viewport if both plugin and container are available
+      cleanup = setupViewport() || null;
+    },
+    { immediate: true },
+  );
+
+  onUnmounted(() => {
+    if (cleanup) {
+      cleanup();
+    }
   });
 
   // Return the ref so your Vue code can attach it to a div

@@ -140,6 +140,7 @@ export class AnnotationPlugin extends BasePlugin<
             segmentRects,
             color,
             opacity,
+            flags: ['print'],
             blendMode,
             pageIndex: selection.pageIndex,
             id: uuidV4(),
@@ -316,6 +317,7 @@ export class AnnotationPlugin extends BasePlugin<
         createAnnotation(pageIndex, {
           ...annotation,
           author: annotation.author ?? this.config.annotationAuthor,
+          flags: ['print'],
         }),
       );
       if (ctx) this.pendingContexts.set(id, ctx);

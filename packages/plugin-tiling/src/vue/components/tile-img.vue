@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, toRaw } from 'vue';
+import { ref, onMounted, onBeforeUnmount, toRaw, computed } from 'vue';
 import { ignore, PdfErrorCode, PdfErrorReason, Task } from '@embedpdf/models';
 import type { StyleValue } from 'vue';
 
@@ -74,7 +74,7 @@ onBeforeUnmount(() => {
 /* -------------------------------------------------- */
 /* helpers                                            */
 /* -------------------------------------------------- */
-const relScale = props.scale / props.tile.srcScale;
+const relScale = computed(() => props.scale / props.tile.srcScale);
 </script>
 
 <template>
