@@ -1,5 +1,11 @@
 # @embedpdf/plugin-interaction-manager
 
+## 1.0.22
+
+### Patch Changes
+
+- [`4ac0158`](https://github.com/embedpdf/embed-pdf-viewer/commit/4ac01585be8e6cb3592eb302f263fcf635948801) by [@bobsingor](https://github.com/bobsingor) – Change pageWidth and pageHeight to the non-rotated values for cleaner interface because we already pass the rotation
+
 ## 1.0.21
 
 ### Patch Changes

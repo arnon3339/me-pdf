@@ -1,5 +1,7 @@
 # @embedpdf/engines
 
+## 1.0.22
+
 ## 1.0.21
 
 ### Patch Changes
