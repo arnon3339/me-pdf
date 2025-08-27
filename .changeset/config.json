@@ -8,7 +8,8 @@
       "@embedpdf/engines",
       "@embedpdf/models",
       "@embedpdf/plugin-*",
-      "@embedpdf/pdfium"
+      "@embedpdf/pdfium",
+      "@embedpdf/utils"
     ]
   ],
   "linked": [],

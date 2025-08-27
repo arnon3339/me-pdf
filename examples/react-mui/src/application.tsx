@@ -185,21 +185,12 @@ function App() {
                     )}
                     {pluginsReady && (
                       <Scroller
-                        renderPage={({
-                          document,
-                          width,
-                          height,
-                          pageIndex,
-                          scale,
-                          rotatedHeight,
-                          rotatedWidth,
-                          rotation,
-                        }) => (
+                        renderPage={({ document, width, height, pageIndex, scale, rotation }) => (
                           <Rotate key={document?.id} pageSize={{ width, height }}>
                             <PagePointerProvider
                               pageIndex={pageIndex}
-                              pageWidth={rotatedWidth}
-                              pageHeight={rotatedHeight}
+                              pageWidth={width}
+                              pageHeight={height}
                               rotation={rotation}
                               scale={scale}
                               style={{

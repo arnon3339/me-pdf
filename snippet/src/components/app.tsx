@@ -2996,8 +2996,6 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                     rotation,
                                     width,
                                     height,
-                                    rotatedHeight,
-                                    rotatedWidth,
                                     document,
                                   }) => (
                                     <Rotate
@@ -3008,8 +3006,8 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                       <PagePointerProvider
                                         rotation={rotation}
                                         scale={scale}
-                                        pageWidth={rotatedWidth}
-                                        pageHeight={rotatedHeight}
+                                        pageWidth={width}
+                                        pageHeight={height}
                                         pageIndex={pageIndex}
                                         style={{
                                           width,
