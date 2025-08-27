@@ -6,6 +6,7 @@ export const SET_VIEWPORT_METRICS = 'SET_VIEWPORT_METRICS';
 export const SET_VIEWPORT_SCROLL_METRICS = 'SET_VIEWPORT_SCROLL_METRICS';
 export const SET_VIEWPORT_GAP = 'SET_VIEWPORT_GAP';
 export const SET_SCROLL_ACTIVITY = 'SET_SCROLL_ACTIVITY';
+export const SET_SMOOTH_SCROLL_ACTIVITY = 'SET_SMOOTH_SCROLL_ACTIVITY';
 
 export interface SetViewportMetricsAction extends Action {
   type: typeof SET_VIEWPORT_METRICS;
@@ -27,11 +28,17 @@ export interface SetScrollActivityAction extends Action {
   payload: boolean;
 }
 
+export interface SetSmoothScrollActivityAction extends Action {
+  type: typeof SET_SMOOTH_SCROLL_ACTIVITY;
+  payload: boolean;
+}
+
 export type ViewportAction =
   | SetViewportMetricsAction
   | SetViewportScrollMetricsAction
   | SetViewportGapAction
-  | SetScrollActivityAction;
+  | SetScrollActivityAction
+  | SetSmoothScrollActivityAction;
 
 export function setViewportGap(viewportGap: number): SetViewportGapAction {
   return {
@@ -60,4 +67,8 @@ export function setViewportScrollMetrics(
 
 export function setScrollActivity(isScrolling: boolean): SetScrollActivityAction {
   return { type: SET_SCROLL_ACTIVITY, payload: isScrolling };
+}
+
+export function setSmoothScrollActivity(isSmoothScrolling: boolean): SetSmoothScrollActivityAction {
+  return { type: SET_SMOOTH_SCROLL_ACTIVITY, payload: isSmoothScrolling };
 }

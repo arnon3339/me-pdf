@@ -6,6 +6,7 @@ import {
   SET_VIEWPORT_GAP,
   ViewportAction,
   SET_SCROLL_ACTIVITY,
+  SET_SMOOTH_SCROLL_ACTIVITY,
 } from './actions';
 import { ViewportState } from './types';
 
@@ -26,6 +27,7 @@ export const initialState: ViewportState = {
     },
   },
   isScrolling: false,
+  isSmoothScrolling: false,
 };
 
 export const viewportReducer: Reducer<ViewportState, ViewportAction> = (
@@ -73,6 +75,8 @@ export const viewportReducer: Reducer<ViewportState, ViewportAction> = (
       };
     case SET_SCROLL_ACTIVITY:
       return { ...state, isScrolling: action.payload };
+    case SET_SMOOTH_SCROLL_ACTIVITY:
+      return { ...state, isSmoothScrolling: action.payload };
     default:
       return state;
   }

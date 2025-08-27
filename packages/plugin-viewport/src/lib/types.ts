@@ -5,6 +5,7 @@ export interface ViewportState {
   viewportGap: number;
   viewportMetrics: ViewportMetrics;
   isScrolling: boolean;
+  isSmoothScrolling: boolean;
 }
 
 export interface ViewportPluginConfig extends BasePluginConfig {
@@ -56,5 +57,6 @@ export interface ViewportCapability {
   onScrollChange: EventHook<ViewportScrollMetrics>;
   onScrollActivity: EventHook<boolean>;
   isScrolling: () => boolean;
+  isSmoothScrolling: () => boolean;
   getBoundingRect(): Rect;
 }
