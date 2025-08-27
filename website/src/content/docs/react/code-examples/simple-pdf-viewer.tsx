@@ -7,10 +7,7 @@ import { usePdfiumEngine } from '@embedpdf/engines/react'
 // Import the essential plugins
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport/react'
 import { Viewport } from '@embedpdf/plugin-viewport/react'
-import {
-  RenderPageProps,
-  ScrollPluginPackage,
-} from '@embedpdf/plugin-scroll/react'
+import { ScrollPluginPackage } from '@embedpdf/plugin-scroll/react'
 import { Scroller } from '@embedpdf/plugin-scroll/react'
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react'
 import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react'
@@ -49,7 +46,7 @@ export const PDFViewer = () => {
           }}
         >
           <Scroller
-            renderPage={({ width, height, pageIndex }: RenderPageProps) => (
+            renderPage={({ width, height, pageIndex }) => (
               <div style={{ width, height }}>
                 {/* The RenderLayer is responsible for drawing the page */}
                 <RenderLayer pageIndex={pageIndex} />
