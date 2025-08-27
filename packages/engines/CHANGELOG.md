@@ -1,5 +1,19 @@
 # @embedpdf/engines
 
+## 1.0.21
+
+### Patch Changes
+
+- [#118](https://github.com/embedpdf/embed-pdf-viewer/pull/118) by [@bobsingor](https://github.com/bobsingor) – Add the option to setMetadata for a PDF document
+
+- [#115](https://github.com/embedpdf/embed-pdf-viewer/pull/115) by [@bobsingor](https://github.com/bobsingor) – Fix attachment issue
+
+- [#119](https://github.com/embedpdf/embed-pdf-viewer/pull/119) by [@bobsingor](https://github.com/bobsingor) – Add function EPDFPage_RemoveAnnotRaw so that we cheaply can remove an annotation
+
+- [#119](https://github.com/embedpdf/embed-pdf-viewer/pull/119) by [@bobsingor](https://github.com/bobsingor) – Properly save annotation flags
+
+- [#119](https://github.com/embedpdf/embed-pdf-viewer/pull/119) by [@bobsingor](https://github.com/bobsingor) – Add preparePrintDocument function to the engine
+
 ## 1.0.20
 
 ## 1.0.19
