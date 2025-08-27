@@ -29,7 +29,7 @@ Next, import `ZoomPluginPackage` and add it to the `plugins` array that you pass
 <script setup lang="ts">
 // ... other imports
 import { createPluginRegistration } from '@embedpdf/core';
-import { ZoomPluginPackage } from '@embedpdf/plugin-zoom';
+import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/vue';
 
 const plugins = [
   // ... other essential plugins
@@ -83,7 +83,8 @@ import ZoomToolbar from './ZoomToolbar.vue'; // 1. Import the toolbar
       <ZoomToolbar /> {/* 2. Add the component here */}
       <div style="flex: 1; overflow: 'hidden'">
         <Viewport>
-          </Viewport>
+          {/* ... Scroller and RenderLayer ... */}
+        </Viewport>
       </div>
     </EmbedPDF>
   </div>
