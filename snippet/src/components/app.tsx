@@ -3000,7 +3000,11 @@ export function PDFViewer({ config }: PDFViewerProps) {
                                     rotatedWidth,
                                     document,
                                   }) => (
-                                    <Rotate key={document?.id} pageSize={{ width, height }}>
+                                    <Rotate
+                                      key={document?.id}
+                                      pageSize={{ width, height }}
+                                      style={{ backgroundColor: '#fff' }}
+                                    >
                                       <PagePointerProvider
                                         rotation={rotation}
                                         scale={scale}
