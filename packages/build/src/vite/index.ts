@@ -55,6 +55,8 @@ export interface ConfigOptions {
   additionalPlugins?: any[];
   esbuildOptions?: UserConfig['esbuild'];
   dtsExclude?: string[];
+  dtsOptions?: Record<string, any>;
+
 }
 
 export function createConfig(opts: ConfigOptions): UserConfig {
@@ -66,6 +68,7 @@ export function createConfig(opts: ConfigOptions): UserConfig {
     additionalPlugins = [],
     esbuildOptions = {},
     dtsExclude = [],
+    dtsOptions = {},
   } = opts;
 
   const pkgRoot = process.cwd();
@@ -94,7 +97,8 @@ export function createConfig(opts: ConfigOptions): UserConfig {
       dts({ 
         tsconfigPath: tsconfigAbs,
         exclude: dtsExclude,
-        beforeWriteFile: beforeWriteFile(outputPrefix)
+        beforeWriteFile: beforeWriteFile(outputPrefix),
+        ...dtsOptions,
       })
     ],
     build: {
@@ -150,7 +154,7 @@ export function defineLibrary() {
           ],
           esbuildOptions: {                // ⚠️ tell esbuild the runtime
             jsx: 'automatic',
-            jsxImportSource: 'preact',
+            jsxImportSource: 'preact'
           },
         });
 
@@ -162,6 +166,7 @@ export function defineLibrary() {
           outputPrefix: 'vue',
           external: ['vue'],
           additionalPlugins: [vue()],
+          dtsOptions: { processor: 'vue' },
         });
 
       default: // base
