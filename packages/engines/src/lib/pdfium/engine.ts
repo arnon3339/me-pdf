@@ -2440,6 +2440,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     ) {
       return false;
     }
+    if (annotation.flags && !this.setAnnotationFlags(annotationPtr, annotation.flags)) {
+      return false;
+    }
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
       return false;
     }
@@ -2515,6 +2518,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     ) {
       return false;
     }
+    if (annotation.flags && !this.setAnnotationFlags(annotationPtr, annotation.flags)) {
+      return false;
+    }
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
       return false;
     }
@@ -2571,6 +2577,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       annotation.created &&
       !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
     ) {
+      return false;
+    }
+    if (annotation.flags && !this.setAnnotationFlags(annotationPtr, annotation.flags)) {
       return false;
     }
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
@@ -2666,6 +2675,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
+      return false;
+    }
+    if (annotation.flags && !this.setAnnotationFlags(annotationPtr, annotation.flags)) {
       return false;
     }
     if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
@@ -2829,6 +2841,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     ) {
       return false;
     }
+    if (annotation.flags && !this.setAnnotationFlags(annotationPtr, annotation.flags)) {
+      return false;
+    }
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
       return false;
     }
@@ -2884,6 +2899,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       annotation.created &&
       !this.setAnnotationDate(annotationPtr, 'CreationDate', annotation.created)
     ) {
+      return false;
+    }
+    if (annotation.flags && !this.setAnnotationFlags(annotationPtr, annotation.flags)) {
       return false;
     }
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
