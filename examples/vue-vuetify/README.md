@@ -1,82 +1,115 @@
-# Vuetify (Default)
+<div align="center">
+  <a href="https://www.embedpdf.com">
+    <img alt="EmbedPDF logo" src="https://www.embedpdf.com/logo-192.png" height="96">
+  </a>
 
-This is the official scaffolding tool for Vuetify, designed to give you a head start in building your new Vuetify application. It sets up a base template with all the necessary configurations and standard directory structure, enabling you to begin development without the hassle of setting up the project from scratch.
+  <h1>EmbedPDF</h1>
 
-## ❗️ Important Links
+  <!-- Badges -->
 
-- 📄 [Docs](https://vuetifyjs.com/)
-- 🚨 [Issues](https://issues.vuetifyjs.com/)
-- 🏬 [Store](https://store.vuetifyjs.com/)
-- 🎮 [Playground](https://play.vuetifyjs.com/)
-- 💬 [Discord](https://community.vuetifyjs.com)
+<a href="https://github.com/embedpdf/embed-pdf-viewer/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/@embedpdf/pdfium.svg?style=for-the-badge&labelColor=000000"></a>
+<a href="https://github.com/embedpdf/embed-pdf-viewer/discussions"><img alt="Join the community on GitHub" src="https://img.shields.io/badge/Join%20the%20community-blueviolet.svg?style=for-the-badge&labelColor=000000"></a>
 
-## 💿 Install
+</div>
 
-Set up your project using your preferred package manager. Use the corresponding command to install the dependencies:
+# Vue Vuetify PDF Viewer Example
 
-| Package Manager                                           | Command        |
-| --------------------------------------------------------- | -------------- |
-| [yarn](https://yarnpkg.com/getting-started)               | `yarn install` |
-| [npm](https://docs.npmjs.com/cli/v7/commands/npm-install) | `npm install`  |
-| [pnpm](https://pnpm.io/installation)                      | `pnpm install` |
-| [bun](https://bun.sh/#getting-started)                    | `bun install`  |
+This example shows how to build a fully‑featured PDF viewer with **EmbedPDF**, **Vue 3** and **Vuetify 3**. It demonstrates how to combine EmbedPDF’s plugin system with Vuetify components to create a polished reading experience that feels right at home in any Vue + Vuetify project.
 
-After completing the installation, your environment is ready for Vuetify development.
+- **Live demo:** [https://vuetify.embedpdf.com/](https://www.google.com/url?sa=E&source=gmail&q=https://vuetify.embedpdf.com/)
+- **Docs:** [https://www.embedpdf.com](https://www.embedpdf.com)
 
-## ✨ Features
+---
 
-- 🖼️ **Optimized Front-End Stack**: Leverage the latest Vue 3 and Vuetify 3 for a modern, reactive UI development experience. [Vue 3](https://v3.vuejs.org/) | [Vuetify 3](https://vuetifyjs.com/en/)
-- 🗃️ **State Management**: Integrated with [Pinia](https://pinia.vuejs.org/), the intuitive, modular state management solution for Vue.
-- 🚦 **Routing and Layouts**: Utilizes Vue Router for SPA navigation and vite-plugin-vue-layouts-next for organizing Vue file layouts. [Vue Router](https://router.vuejs.org/) | [vite-plugin-vue-layouts-next](https://github.com/loicduong/vite-plugin-vue-layouts-next)
-- 💻 **Enhanced Development Experience**: Benefit from TypeScript's static type checking and the ESLint plugin suite for Vue, ensuring code quality and consistency. [TypeScript](https://www.typescriptlang.org/) | [ESLint Plugin Vue](https://eslint.vuejs.org/)
-- ⚡ **Next-Gen Tooling**: Powered by Vite, experience fast cold starts and instant HMR (Hot Module Replacement). [Vite](https://vitejs.dev/)
-- 🧩 **Automated Component Importing**: Streamline your workflow with unplugin-vue-components, automatically importing components as you use them. [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
-- 🛠️ **Strongly-Typed Vue**: Use vue-tsc for type-checking your Vue components, and enjoy a robust development experience. [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc)
+## Key features on display
 
-These features are curated to provide a seamless development experience from setup to deployment, ensuring that your Vuetify application is both powerful and maintainable.
+| Feature                                                    | Plugin(s)                                                                         |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Virtualised scrolling with smooth page rendering           | `@embedpdf/plugin-scroll` + `@embedpdf/plugin-render` + `@embedpdf/plugin-tiling` |
+| Zoom controls (fit page, fit width, marquee zoom, presets) | `@embedpdf/plugin-zoom`                                                           |
+| Pan/hand tool                                              | `@embedpdf/plugin-pan`                                                            |
+| Rotate pages                                               | `@embedpdf/plugin-rotate`                                                         |
+| Single and spread layouts                                  | `@embedpdf/plugin-spread`                                                         |
+| In‑document text search                                    | `@embedpdf/plugin-search`                                                         |
+| File picker, download & print                              | `@embedpdf/plugin-loader`, `@embedpdf/plugin-export`, `@embedpdf/plugin-print`    |
+| Fullscreen support                                         | `@embedpdf/plugin-fullscreen`                                                     |
 
-## 💡 Usage
+The UI around these plugins is built with Vuetify’s `VAppBar`, `VNavigationDrawer`, `VMenu`, `VBtn`, and other components. On mobile, the side drawers collapse into a `VBottomSheet` for a more native feel.
 
-This section covers how to start the development server and build your project for production.
+---
 
-### Starting the Development Server
+## Quick start
 
-To start the development server with hot-reload, run the following command. The server will be accessible at [http://localhost:3000](http://localhost:3000):
+> **Prerequisites**
+>
+> - Node 18 or newer
+> - **pnpm** 10 (recommended) or a recent pnpm 8/9
+
+1.  **Clone the repo** (or your fork) and install dependencies:
+
+    ```bash
+    git clone https://github.com/embedpdf/embed-pdf-viewer.git
+    cd embed-pdf-viewer
+    pnpm install
+    ```
+
+2.  **Build the core packages** once so that the example can import them:
+
+    ```bash
+    pnpm run build --filter "./packages/*"
+    # or keep them rebuilt automatically while you work:
+    pnpm watch build --filter "./packages/*"
+    ```
+
+3.  **Run the example dev server**:
+
+    ```bash
+    pnpm --filter @embedpdf/example-vue-vuetify run dev
+    ```
+
+    Vite will start on [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) and open the browser automatically.
+
+---
+
+## Building a production bundle
+
+To create an optimized build (under `examples/vue-vuetify/dist`):
 
 ```bash
-yarn dev
+pnpm --filter @embedpdf/example-vue-vuetify run build
 ```
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+The output is a static site you can deploy to any CDN or static host.
 
-> Add NODE_OPTIONS='--no-warnings' to suppress the JSON import warnings that happen as part of the Vuetify import mapping. If you are on Node [v21.3.0](https://nodejs.org/en/blog/release/v21.3.0) or higher, you can change this to NODE_OPTIONS='--disable-warning=5401'. If you don't mind the warning, you can remove this from your package.json dev script.
+---
 
-### Building for Production
+## Folder layout
 
-To build your project for production, use:
-
-```bash
-yarn build
+```
+examples/vue-vuetify
+├── public/              # Static assets (favicon)
+└── src/
+    ├── components/      # Vuetify‑based UI parts (Toolbar, Search, …)
+    │   └── drawer-system/ # Reusable logic for side drawers/bottom sheets
+    ├── plugins/         # Vuetify plugin setup
+    ├── App.vue          # Root Vue component
+    ├── Application.vue  # Main viewer shell and plugin wiring
+    └── main.ts          # Vue entry + theming
 ```
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+The PDFium WebAssembly bundle is loaded automatically by the `usePdfiumEngine` hook in `src/Application.vue`, which passes it to EmbedPDF’s **WebWorkerEngine**.
 
-Once the build process is completed, your application will be ready for deployment in a production environment.
+---
 
-## 💪 Support Vuetify Development
+## Customisation tips
 
-This project is built with [Vuetify](https://vuetifyjs.com/en/), a UI Library with a comprehensive collection of Vue components. Vuetify is an MIT licensed Open Source project that has been made possible due to the generous contributions by our [sponsors and backers](https://vuetifyjs.com/introduction/sponsors-and-backers/). If you are interested in supporting this project, please consider:
+- **Swap icons or colours:** The UI uses standard Vuetify components and props, so styling tweaks are straightforward.
+- **Add or remove plugins:** Open `src/Application.vue` and edit the `plugins` array.
 
-- [Requesting Enterprise Support](https://support.vuetifyjs.com/)
-- [Sponsoring John on Github](https://github.com/users/johnleider/sponsorship)
-- [Sponsoring Kael on Github](https://github.com/users/kaelwd/sponsorship)
-- [Supporting the team on Open Collective](https://opencollective.com/vuetify)
-- [Becoming a sponsor on Patreon](https://www.patreon.com/vuetify)
-- [Becoming a subscriber on Tidelift](https://tidelift.com/subscription/npm/vuetify)
-- [Making a one-time donation with Paypal](https://paypal.me/vuetify)
+For deep dives, check the [EmbedPDF documentation](https://www.embedpdf.com) and the source of this example.
 
-## 📑 License
+---
 
-[MIT](http://opensource.org/licenses/MIT)
+## License
 
-Copyright (c) 2016-present Vuetify, LLC
+Example code is released under the MIT license, the same as EmbedPDF itself.
