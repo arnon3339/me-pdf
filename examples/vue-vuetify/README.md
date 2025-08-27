@@ -16,7 +16,7 @@
 
 This example shows how to build a fully‑featured PDF viewer with **EmbedPDF**, **Vue 3** and **Vuetify 3**. It demonstrates how to combine EmbedPDF’s plugin system with Vuetify components to create a polished reading experience that feels right at home in any Vue + Vuetify project.
 
-- **Live demo:** [https://vuetify.embedpdf.com/](https://www.google.com/url?sa=E&source=gmail&q=https://vuetify.embedpdf.com/)
+- **Live demo:** [https://vuetify.embedpdf.com/](https://vuetify.embedpdf.com/)
 - **Docs:** [https://www.embedpdf.com](https://www.embedpdf.com)
 
 ---
@@ -67,7 +67,7 @@ The UI around these plugins is built with Vuetify’s `VAppBar`, `VNavigationDra
     pnpm --filter @embedpdf/example-vue-vuetify run dev
     ```
 
-    Vite will start on [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) and open the browser automatically.
+    Vite will start on [http://localhost:3000](http://localhost:3000) and open the browser automatically.
 
 ---
 
