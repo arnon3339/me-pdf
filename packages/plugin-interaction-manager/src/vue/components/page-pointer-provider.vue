@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watchEffect, computed, StyleValue } from 'vue';
-import { Position, restorePosition } from '@embedpdf/models';
+import { ref, watchEffect, computed } from 'vue';
+import { Position, restorePosition, Size, transformSize } from '@embedpdf/models';
 import { createPointerProvider } from '../../shared/utils';
 import { useInteractionManagerCapability, useIsPageExclusive } from '../hooks';
 
@@ -26,12 +26,14 @@ const defaultConvertEventToPoint = computed(() => {
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
     };
-    return restorePosition(
+
+    const displaySize: Size = transformSize(
       { width: props.pageWidth, height: props.pageHeight },
-      displayPoint,
       props.rotation,
-      props.scale,
+      1,
     );
+
+    return restorePosition(displaySize, displayPoint, props.rotation, props.scale);
   };
 });
 

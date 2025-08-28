@@ -27,7 +27,7 @@ async function runExample() {
   const pdfPath = process.argv[2] || join(__dirname, 'sample.pdf');
   const pdfBuffer = await readFile(pdfPath);
   const document = await engine
-    .openDocumentFromBuffer({
+    .openDocumentBuffer({
       id: 'sample',
       content: pdfBuffer,
     })

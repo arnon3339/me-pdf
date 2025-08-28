@@ -25,12 +25,14 @@ import {
   ZoomRangeStep,
   VerticalZoomFocus,
   ZoomRequest,
+  RegisterMarqueeOnPageOptions,
 } from './types';
 import {
   InteractionManagerCapability,
   InteractionManagerPlugin,
 } from '@embedpdf/plugin-interaction-manager';
 import { Rect, rotateRect } from '@embedpdf/models';
+import { createMarqueeHandler } from './handlers';
 
 export class ZoomPlugin extends BasePlugin<
   ZoomPluginConfig,
@@ -94,15 +96,9 @@ export class ZoomPlugin extends BasePlugin<
     return {
       onZoomChange: this.zoom$.on,
       onStateChange: this.state$.on,
-      zoomIn: () => {
-        const cur = this.state.currentZoomLevel;
-        return this.handleRequest({ level: cur, delta: this.stepFor(cur) });
-      },
-      zoomOut: () => {
-        const cur = this.state.currentZoomLevel;
-        return this.handleRequest({ level: cur, delta: -this.stepFor(cur) });
-      },
-      zoomToArea: (pageIndex, rect) => this.handleZoomToArea(pageIndex, rect),
+      zoomIn: () => this.zoomIn(),
+      zoomOut: () => this.zoomOut(),
+      zoomToArea: (pageIndex, rect) => this.zoomToArea(pageIndex, rect),
       requestZoom: (level, c) => this.handleRequest({ level, center: c }),
       requestZoomBy: (d, c) => {
         const cur = this.state.currentZoomLevel;
@@ -123,9 +119,24 @@ export class ZoomPlugin extends BasePlugin<
         }
       },
       isMarqueeZoomActive: () => this.interactionManager?.getActiveMode() === 'marqueeZoom',
+      registerMarqueeOnPage: (opts) => this.registerMarqueeOnPage(opts),
       getState: () => this.state,
       getPresets: () => this.presets,
     };
+  }
+
+  private zoomOut() {
+    const cur = this.state.currentZoomLevel;
+    return this.handleRequest({ level: cur, delta: -this.stepFor(cur) });
+  }
+
+  private zoomIn() {
+    const cur = this.state.currentZoomLevel;
+    return this.handleRequest({ level: cur, delta: this.stepFor(cur) });
+  }
+
+  private zoomToArea(pageIndex: number, rect: Rect) {
+    this.handleZoomToArea(pageIndex, rect);
   }
 
   /* ------------------------------------------------------------------ */
@@ -427,5 +438,52 @@ export class ZoomPlugin extends BasePlugin<
 
   override onStoreUpdated(_prevState: ZoomState, newState: ZoomState): void {
     this.state$.emit(newState);
+  }
+
+  public registerMarqueeOnPage(opts: RegisterMarqueeOnPageOptions) {
+    if (!this.interactionManager) {
+      this.logger.warn(
+        'ZoomPlugin',
+        'MissingDependency',
+        'Interaction manager plugin not loaded, marquee zoom disabled',
+      );
+      return () => {};
+    }
+
+    const document = this.coreState.core.document;
+    if (!document) {
+      this.logger.warn('ZoomPlugin', 'DocumentNotFound', 'Document not found');
+      return () => {};
+    }
+
+    const page = document.pages[opts.pageIndex];
+    if (!page) {
+      this.logger.warn('ZoomPlugin', 'PageNotFound', `Page ${opts.pageIndex} not found`);
+      return () => {};
+    }
+
+    const handlers = createMarqueeHandler({
+      pageSize: page.size,
+      scale: opts.scale,
+      onPreview: opts.callback.onPreview,
+      onCommit: (rect) => {
+        // Large drag → zoom to the selected area
+        this.zoomToArea(opts.pageIndex, rect);
+        opts.callback.onCommit?.(rect);
+      },
+      onSmallDrag: () => {
+        // Small drag → simple zoom in
+        this.zoomIn();
+        opts.callback.onSmallDrag?.();
+      },
+    });
+
+    const off = this.interactionManager.registerHandlers({
+      modeId: 'marqueeZoom',
+      handlers,
+      pageIndex: opts.pageIndex,
+    });
+
+    return off;
   }
 }

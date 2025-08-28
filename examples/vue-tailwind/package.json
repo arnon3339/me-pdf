@@ -21,6 +21,8 @@
     "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@embedpdf/plugin-selection": "workspace:*",
     "@embedpdf/plugin-rotate": "workspace:*",
+    "@embedpdf/plugin-fullscreen": "workspace:*",
+    "@embedpdf/plugin-zoom": "workspace:*",
     "vue": "^3.5.0"
   },
   "devDependencies": {

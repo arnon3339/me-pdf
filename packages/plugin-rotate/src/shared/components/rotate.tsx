@@ -1,14 +1,15 @@
-import { ReactNode, HTMLAttributes } from '@framework';
+import { ReactNode, HTMLAttributes, CSSProperties } from '@framework';
 import { Size } from '@embedpdf/models';
 
 import { useRotateCapability } from '../hooks';
 
-type RotateProps = HTMLAttributes<HTMLDivElement> & {
+type RotateProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
   children: ReactNode;
   pageSize: Size;
+  style?: CSSProperties;
 };
 
-export function Rotate({ children, pageSize, ...props }: RotateProps) {
+export function Rotate({ children, pageSize, style, ...props }: RotateProps) {
   const { provides: rotate } = useRotateCapability();
   const matrix =
     (rotate?.getMatrix({
@@ -23,6 +24,7 @@ export function Rotate({ children, pageSize, ...props }: RotateProps) {
         position: 'absolute',
         transformOrigin: '0 0',
         transform: matrix,
+        ...style,
       }}
     >
       {children}

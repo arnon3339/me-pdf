@@ -1,5 +1,19 @@
 # @embedpdf/plugin-redaction
 
+## 1.0.22
+
+## 1.0.21
+
+### Patch Changes
+
+- [#119](https://github.com/embedpdf/embed-pdf-viewer/pull/119) by [@bobsingor](https://github.com/bobsingor) – Add and fix Vue packages!
+
+## 1.0.20
+
+### Patch Changes
+
+- [#98](https://github.com/embedpdf/embed-pdf-viewer/pull/98) by [@bobsingor](https://github.com/bobsingor) – Move interaction manager handlers to the plugin for smaller and cleaner framework layers
+
 ## 1.0.19
 
 ### Patch Changes

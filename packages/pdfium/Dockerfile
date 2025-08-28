@@ -60,7 +60,7 @@ FROM pdfium-bootstrap AS pdfium-deps
 RUN  bash -x ./pdfium/build/install-build-deps.sh --no-prompt
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl build-essential pkg-config && \
+        curl build-essential pkg-config rsync && \
     \
     curl -sSf https://sh.rustup.rs | bash -s -- -y && \
     . "$HOME/.cargo/env" && \

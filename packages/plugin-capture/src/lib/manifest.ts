@@ -8,8 +8,8 @@ export const manifest: PluginManifest<CapturePluginConfig> = {
   name: 'Capture Plugin',
   version: '1.0.0',
   provides: ['capture'],
-  requires: ['render', 'interaction-manager'],
-  optional: [],
+  requires: ['render'],
+  optional: ['interaction-manager'],
   defaultConfig: {
     enabled: true,
     scale: 1,

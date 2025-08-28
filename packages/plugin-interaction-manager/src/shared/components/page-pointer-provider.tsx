@@ -6,7 +6,7 @@ import {
   HTMLAttributes,
   CSSProperties,
 } from '@framework';
-import { Position, restorePosition } from '@embedpdf/models';
+import { Position, restorePosition, Size, transformSize } from '@embedpdf/models';
 import { createPointerProvider } from '../utils';
 
 import { useInteractionManagerCapability, useIsPageExclusive } from '../hooks';
@@ -45,12 +45,14 @@ export const PagePointerProvider = ({
         x: event.clientX - rect.left,
         y: event.clientY - rect.top,
       };
-      return restorePosition(
+
+      const displaySize: Size = transformSize(
         { width: pageWidth, height: pageHeight },
-        displayPoint,
         rotation,
-        scale,
+        1,
       );
+
+      return restorePosition(displaySize, displayPoint, rotation, scale);
     },
     [pageWidth, pageHeight, rotation, scale],
   );

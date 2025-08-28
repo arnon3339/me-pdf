@@ -27,7 +27,9 @@ var createPdfium = (() => {
       readyPromiseReject = reject;
     });
     [
+      '_EPDF_HasMetaText',
       '_EPDF_RenderAnnotBitmap',
+      '_EPDF_SetMetaText',
       '_EPDFAnnot_ClearColor',
       '_EPDFAnnot_GenerateAppearance',
       '_EPDFAnnot_GenerateAppearanceWithBlend',
@@ -64,6 +66,7 @@ var createPdfium = (() => {
       '_EPDFPage_GetAnnotCountRaw',
       '_EPDFPage_GetAnnotRaw',
       '_EPDFPage_RemoveAnnotByName',
+      '_EPDFPage_RemoveAnnotRaw',
       '_EPDFText_RedactInQuads',
       '_EPDFText_RedactInRect',
       '_FORM_CanRedo',
@@ -6074,6 +6077,10 @@ var createPdfium = (() => {
       'EPDFPage_GetAnnotRaw',
       3,
     ));
+    var _EPDFPage_RemoveAnnotRaw = (Module['_EPDFPage_RemoveAnnotRaw'] = createExportWrapper(
+      'EPDFPage_RemoveAnnotRaw',
+      3,
+    ));
     var _EPDFAnnot_SetIcon = (Module['_EPDFAnnot_SetIcon'] = createExportWrapper(
       'EPDFAnnot_SetIcon',
       2,
@@ -6271,6 +6278,14 @@ var createPdfium = (() => {
     var _FPDF_GetPageLabel = (Module['_FPDF_GetPageLabel'] = createExportWrapper(
       'FPDF_GetPageLabel',
       4,
+    ));
+    var _EPDF_SetMetaText = (Module['_EPDF_SetMetaText'] = createExportWrapper(
+      'EPDF_SetMetaText',
+      3,
+    ));
+    var _EPDF_HasMetaText = (Module['_EPDF_HasMetaText'] = createExportWrapper(
+      'EPDF_HasMetaText',
+      2,
     ));
     var _FPDFPageObj_NewImageObj = (Module['_FPDFPageObj_NewImageObj'] = createExportWrapper(
       'FPDFPageObj_NewImageObj',
