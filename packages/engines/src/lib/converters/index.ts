@@ -1,37 +1,6 @@
+import { PdfImage } from '@embedpdf/models';
 import { toArrayBuffer } from '../utils';
-
-/**
- * Function type for converting ImageData to Blob
- * In browser: uses OffscreenCanvas
- * In Node.js: can use Sharp or other image processing libraries
- */
-export type ImageDataConverter<T = Blob> = (
-  imageData: ImageData,
-  imageType?: ImageConversionTypes,
-) => Promise<T>;
-
-export type ImageConversionTypes = 'image/webp' | 'image/png' | 'image/jpeg';
-/**
- * Browser implementation using OffscreenCanvas
- * This is the default implementation used in browser environments
- */
-export const browserImageDataToBlobConverter: ImageDataConverter = (
-  imageData: ImageData,
-  imageType: ImageConversionTypes = 'image/webp',
-): Promise<Blob> => {
-  // Check if we're in a browser environment
-  if (typeof OffscreenCanvas === 'undefined') {
-    throw new Error(
-      'OffscreenCanvas is not available in this environment. ' +
-        'This converter is intended for browser use only. ' +
-        'Please use createNodeImageDataToBlobConverter() or createNodeCanvasImageDataToBlobConverter() for Node.js.',
-    );
-  }
-
-  const off = new OffscreenCanvas(imageData.width, imageData.height);
-  off.getContext('2d')!.putImageData(imageData, 0, 0);
-  return off.convertToBlob({ type: imageType });
-};
+import { ImageDataConverter, ImageConversionTypes, LazyImageData } from './types';
 
 /**
  * Node.js implementation using Sharp
@@ -50,9 +19,11 @@ export function createNodeImageDataToBufferConverter(
   sharp: any, // Using 'any' to avoid requiring sharp as a dependency
 ): ImageDataConverter<Buffer> {
   return async (
-    imageData: ImageData,
+    getImageData: LazyImageData,
     imageType: ImageConversionTypes = 'image/webp',
+    imageQuality?: number,
   ): Promise<Buffer> => {
+    const imageData = getImageData();
     const { width, height, data } = imageData;
 
     // Convert ImageData to Sharp format
@@ -69,7 +40,11 @@ export function createNodeImageDataToBufferConverter(
     let buffer: Buffer;
     switch (imageType) {
       case 'image/webp':
-        buffer = await sharpInstance.webp().toBuffer();
+        buffer = await sharpInstance
+          .webp({
+            quality: imageQuality,
+          })
+          .toBuffer();
         break;
       case 'image/png':
         buffer = await sharpInstance.png().toBuffer();
@@ -78,7 +53,9 @@ export function createNodeImageDataToBufferConverter(
         // JPEG doesn't support transparency, so we need to composite onto a white background
         buffer = await sharpInstance
           .flatten({ background: { r: 255, g: 255, b: 255 } }) // Remove alpha channel with white background
-          .jpeg()
+          .jpeg({
+            quality: imageQuality,
+          })
           .toBuffer();
         break;
       default:
@@ -106,9 +83,11 @@ export function createNodeCanvasImageDataToBlobConverter(
   createCanvas: any, // Using 'any' to avoid requiring canvas as a dependency
 ): ImageDataConverter<Buffer> {
   return async (
-    imageData: ImageData,
+    getImageData: LazyImageData,
     imageType: ImageConversionTypes = 'image/webp',
+    _imageQuality?: number,
   ): Promise<Buffer> => {
+    const imageData = getImageData();
     const { width, height } = imageData;
 
     // Create a canvas and put the image data
@@ -150,10 +129,19 @@ export function createNodeCanvasImageDataToBlobConverter(
  * ```
  */
 export function createCustomImageDataToBlobConverter(
-  processor: (imageData: ImageData) => Promise<Buffer>,
+  processor: (
+    imageData: PdfImage,
+    imageType?: ImageConversionTypes,
+    imageQuality?: number,
+  ) => Promise<Buffer>,
 ): ImageDataConverter {
-  return async (imageData, imageType = 'image/webp') => {
-    const bytes = await processor(imageData);
+  return async (
+    getImageData: LazyImageData,
+    imageType: ImageConversionTypes = 'image/webp',
+    imageQuality?: number,
+  ) => {
+    const imageData = getImageData();
+    const bytes = await processor(imageData, imageType, imageQuality);
     return new Blob([toArrayBuffer(bytes)], { type: imageType });
   };
 }
@@ -165,12 +153,18 @@ export function createCustomImageDataToBlobConverter(
  * @returns ImageDataToBlobConverter<Buffer>
  */
 export function createCustomImageDataToBufferConverter(
-  processor: (imageData: ImageData, imageType: ImageConversionTypes) => Promise<Buffer>,
+  processor: (
+    imageData: PdfImage,
+    imageType: ImageConversionTypes,
+    imageQuality?: number,
+  ) => Promise<Buffer>,
 ): ImageDataConverter<Buffer> {
   return async (
-    imageData: ImageData,
+    getImageData: LazyImageData,
     imageType: ImageConversionTypes = 'image/webp',
+    imageQuality?: number,
   ): Promise<Buffer> => {
-    return await processor(imageData, imageType);
+    const imageData = getImageData();
+    return await processor(imageData, imageType, imageQuality);
   };
 }

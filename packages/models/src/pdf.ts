@@ -324,7 +324,7 @@ export enum PdfActionType {
 }
 
 export type PdfImage = {
-  data: Uint8ClampedArray;
+  data: Uint8ClampedArray<ArrayBuffer>;
   width: number;
   height: number;
 };
@@ -2411,6 +2411,21 @@ export interface PdfRenderOptions {
    * Image type
    */
   imageType?: ImageConversionTypes;
+  /**
+   * Image quality (0-1) for webp and jpeg and png
+   */
+  imageQuality?: number;
+}
+
+export interface ConvertToBlobOptions {
+  /**
+   * Image type
+   */
+  type: ImageConversionTypes;
+  /**
+   * Image quality (0-1) for webp and jpeg and png
+   */
+  quality?: number;
 }
 
 export interface PdfRenderPageOptions extends PdfRenderOptions {

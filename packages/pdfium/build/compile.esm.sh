@@ -10,7 +10,6 @@ em++ $(ls ./code/cpp/*.cpp) \
   -sALLOW_TABLE_GROWTH=1 \
   -sEXPORT_NAME=createPdfium \
   -sUSE_ZLIB=1 \
-  -sUSE_LIBJPEG=1 \
   -sASSERTIONS=1 \
   -sEXPORTED_RUNTIME_METHODS=$(cat ./wasm/exported-runtime-methods.txt) \
   -sEXPORTED_FUNCTIONS=$(cat ./wasm/exported-functions.txt) \
