@@ -39,7 +39,6 @@ import {
   PdfSquigglyAnnoObject,
   PdfStrikeOutAnnoObject,
   PdfUnderlineAnnoObject,
-  transformSize,
   PdfFile,
   PdfSegmentObject,
   AppearanceMode,
@@ -73,12 +72,10 @@ import {
   PdfPageGeometry,
   PdfRun,
   toIntRect,
-  toIntSize,
   Quad,
   PdfAnnotationState,
   PdfAnnotationStateModel,
   quadToRect,
-  PdfImage,
   ImageConversionTypes,
   PageTextSlice,
   stripPdfUnwantedMarkers,
@@ -89,7 +86,6 @@ import {
   PdfAnnotationBorderStyle,
   flagsToNames,
   PdfAnnotationFlagName,
-  makeMatrix,
   namesToFlags,
   PdfAnnotationLineEnding,
   LinePoints,
@@ -117,10 +113,12 @@ import {
   PdfRenderPageOptions,
   PdfAnnotationsProgress,
   ConvertToBlobOptions,
+  buildUserToDeviceMatrix,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { DocumentContext, PageContext, PdfCache } from './cache';
+import { ImageDataConverter, LazyImageData } from '../converters/types';
 
 /**
  * Format of bitmap
@@ -184,42 +182,40 @@ export enum PdfiumErrorCode {
   XFALayout = 8,
 }
 
-/**
- * Function type for converting ImageData to Blob
- * In browser: uses OffscreenCanvas
- * In Node.js: can use Sharp or other image processing libraries
- */
-export type ImageDataConverter<T = Blob> = (
-  imageData: PdfImage,
-  imageType?: ImageConversionTypes,
-  quality?: number,
-) => Promise<T>;
+interface PdfiumEngineOptions<T> {
+  logger?: Logger;
+  imageDataConverter?: ImageDataConverter<T>;
+}
+
+export class OffscreenCanvasError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'OffscreenCanvasError';
+  }
+}
 
 export const browserImageDataToBlobConverter: ImageDataConverter<Blob> = (
-  pdfImageData: PdfImage,
+  getImageData: LazyImageData,
   imageType: ImageConversionTypes = 'image/webp',
   quality?: number,
 ): Promise<Blob> => {
   // Check if we're in a browser environment
   if (typeof OffscreenCanvas === 'undefined') {
-    throw new Error(
-      'OffscreenCanvas is not available in this environment. ' +
-        'This converter is intended for browser use only. ' +
-        'Please use createNodeImageDataToBlobConverter() or createNodeCanvasImageDataToBlobConverter() for Node.js.',
+    return Promise.reject(
+      new OffscreenCanvasError(
+        'OffscreenCanvas is not available in this environment. ' +
+          'This converter is intended for browser use only. ' +
+          'Falling back to WASM-based image encoding.',
+      ),
     );
   }
 
-  const rgba = new Uint8ClampedArray(pdfImageData.data);
-  const imageData = new ImageData(rgba, pdfImageData.width, pdfImageData.height);
+  const pdfImage = getImageData();
+  const imageData = new ImageData(pdfImage.data, pdfImage.width, pdfImage.height);
   const off = new OffscreenCanvas(imageData.width, imageData.height);
   off.getContext('2d')!.putImageData(imageData, 0, 0);
   return off.convertToBlob({ type: imageType, quality });
 };
-
-interface PdfiumEngineOptions<T> {
-  logger?: Logger;
-  imageDataConverter?: ImageDataConverter<T>;
-}
 
 /**
  * Pdf engine that based on pdfium wasm
@@ -238,7 +234,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   /**
    * function to convert ImageData to Blob
    */
-  private readonly imageDataConverter?: ImageDataConverter<T>;
+  private readonly imageDataConverter: ImageDataConverter<T>;
 
   /**
    * Create an instance of PdfiumEngine
@@ -6076,6 +6072,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       dpr = 1,
       mode = AppearanceMode.Normal,
       imageType = 'image/webp',
+      imageQuality,
     } = options ?? {};
 
     this.logger.debug(
@@ -6094,9 +6091,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       'Begin',
       `${doc.id}-${page.index}-${annotation.id}`,
     );
+
     const task = new Task<T, PdfErrorReason>();
     const ctx = this.cache.getContext(doc.id);
-
     if (!ctx) {
       this.logger.perf(
         LOG_SOURCE,
@@ -6111,11 +6108,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    /* ── 1. grab native handles ───────────────────────────────────────── */
+    // 1) native handles
     const pageCtx = ctx.acquirePage(page.index);
     const annotPtr = this.getAnnotationByName(pageCtx.pagePtr, annotation.id);
     if (!annotPtr) {
-      pageCtx.release();
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -6123,64 +6119,61 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         'End',
         `${doc.id}-${page.index}-${annotation.id}`,
       );
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.NotFound,
-        message: 'annotation not found',
-      });
+      pageCtx.release();
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'annotation not found' });
     }
 
-    const finalScale = scaleFactor * dpr;
-    /* ── 2. decide bitmap size (integer pixels) ──────────────────────── */
-    const annotRect = annotation.rect;
-    const bitmapRect = toIntRect(transformRect(page.size, annotRect, rotation, finalScale));
+    // 2) device size (rotation-aware) → integer pixels
+    const finalScale = Math.max(0.01, scaleFactor * dpr);
+    const devRect = toIntRect(transformRect(page.size, annotation.rect, rotation, finalScale));
+    const wDev = Math.max(1, devRect.size.width);
+    const hDev = Math.max(1, devRect.size.height);
+    const stride = wDev * 4;
+    const bytes = stride * hDev;
 
-    const format = BitmapFormat.Bitmap_BGRA;
-    const bytesPerPixel = 4;
-    const bitmapHeapLength = bitmapRect.size.width * bitmapRect.size.height * bytesPerPixel;
-    const bitmapHeapPtr = this.malloc(bitmapHeapLength);
+    // 3) bitmap backing store in WASM
+    const heapPtr = this.malloc(bytes);
     const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
-      bitmapRect.size.width,
-      bitmapRect.size.height,
-      format,
-      bitmapHeapPtr,
-      bitmapRect.size.width * bytesPerPixel,
+      wDev,
+      hDev,
+      BitmapFormat.Bitmap_BGRA,
+      heapPtr,
+      stride,
     );
-    this.pdfiumModule.FPDFBitmap_FillRect(
-      bitmapPtr,
-      0,
-      0,
-      bitmapRect.size.width,
-      bitmapRect.size.height,
-      0x00000000,
+    this.pdfiumModule.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
+
+    // 4) user matrix (no Y-flip; includes -origin translate)
+    const M = buildUserToDeviceMatrix(
+      annotation.rect, // {origin:{L,B}, size:{W,H}}
+      rotation,
+      wDev,
+      hDev,
     );
+    const mPtr = this.malloc(6 * 4);
+    const mView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, mPtr, 6);
+    mView.set([M.a, M.b, M.c, M.d, M.e, M.f]);
 
-    const matrix = makeMatrix(annotation.rect, rotation, finalScale);
-
-    // Allocate memory for the matrix on the wasm heap and write to it
-    const matrixSize = 6 * 4;
-    const matrixPtr = this.malloc(matrixSize);
-    const matrixView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, matrixPtr, 6);
-    matrixView.set([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f]);
-
-    /* ── 5. call the native helper with the new matrix ───────────────── */
+    // 5) render (DisplayMatrix is applied inside EPDF_RenderAnnotBitmap)
     const FLAGS = RenderFlag.REVERSE_BYTE_ORDER;
-    const ok = !!this.pdfiumModule.EPDF_RenderAnnotBitmap(
-      bitmapPtr,
-      pageCtx.pagePtr,
-      annotPtr,
-      mode,
-      matrixPtr,
-      FLAGS,
-    );
-
-    /* ── 6. tear down native resources ───────────────────────────────── */
-    this.free(matrixPtr); // Free the matrix memory
-    this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-    this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
-    pageCtx.release();
+    let ok = false;
+    try {
+      ok = !!this.pdfiumModule.EPDF_RenderAnnotBitmap(
+        bitmapPtr,
+        pageCtx.pagePtr,
+        annotPtr,
+        mode,
+        mPtr,
+        FLAGS,
+      );
+    } finally {
+      this.free(mPtr);
+      this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr); // frees wrapper, not our heapPtr
+      this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
+      pageCtx.release();
+    }
 
     if (!ok) {
-      this.free(bitmapHeapPtr);
+      this.free(heapPtr);
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -6194,38 +6187,42 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    /* ── 6. copy out + convert to Blob (reuse existing converter) ─────── */
-    const data = this.pdfiumModule.pdfium.HEAPU8.subarray(
-      bitmapHeapPtr,
-      bitmapHeapPtr + bitmapHeapLength,
-    );
+    // 6) encode
+    const dispose = () => this.free(heapPtr);
 
-    const imageData: PdfImage = {
-      data: new Uint8ClampedArray(data),
-      width: bitmapRect.size.width,
-      height: bitmapRect.size.height,
-    };
-
-    this.free(bitmapHeapPtr);
-
-    this.logger.perf(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      `RenderPageAnnotation`,
-      'End',
-      `${doc.id}-${page.index}-${annotation.id}`,
-    );
-
-    if (!this.imageDataConverter) {
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.Unknown,
-        message: 'imageDataConverter is not set',
-      });
-    }
-
-    this.imageDataConverter(imageData, imageType)
-      .then((blob) => task.resolve(blob))
-      .catch((err) => task.reject({ code: PdfErrorCode.Unknown, message: String(err) }));
+    this.imageDataConverter(
+      () => {
+        const rgba = new Uint8ClampedArray(
+          this.pdfiumModule.pdfium.HEAPU8.subarray(heapPtr, heapPtr + bytes),
+        );
+        return {
+          width: wDev,
+          height: hDev,
+          data: rgba,
+        };
+      },
+      imageType,
+      imageQuality,
+    )
+      .then((out) => task.resolve(out))
+      .catch((e) => {
+        // Check if it's an OffscreenCanvas error and we haven't copied data yet
+        if (e instanceof OffscreenCanvasError) {
+          // Fallback to WASM encoding without wasting the copy
+          try {
+            const blob = this.encodeViaWasm(
+              { ptr: heapPtr, width: wDev, height: hDev, stride },
+              { type: imageType, quality: imageQuality },
+            );
+            task.resolve(blob as T);
+          } catch (wasmError) {
+            task.reject({ code: PdfErrorCode.Unknown, message: String(wasmError) });
+          }
+        } else {
+          task.reject({ code: PdfErrorCode.Unknown, message: String(e) });
+        }
+      })
+      .finally(dispose);
 
     return task;
   }
@@ -6247,17 +6244,18 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     // Map OffscreenCanvas "quality 0..1" to encoders:
     //  • WebP: 0..100 (float), default ~0.82 → 82
     //  • JPEG: 1..100 (int),   default ~0.92 → 92
-    const q = opts.quality;
-    const webpQ = q == null ? 82 : Math.round(q * 100);
-    const jpegQ = q == null ? 92 : Math.max(1, Math.round(q * 100));
+    //const q = opts.quality;
+    //const webpQ = q == null ? 82 : Math.round(q * 100);
+    //const jpegQ = q == null ? 92 : Math.max(1, Math.round(q * 100));
     // PNG ignores quality (same as OffscreenCanvas). Use libpng default (6).
     const pngLevel = 6;
 
     const outPtrPtr = this.malloc(4);
     try {
       switch (opts.type) {
+        /*
         case 'image/webp': {
-          const size = (this.pdfiumModule as any).EPDF_WebP_EncodeRGBA(
+          const size = this.pdfiumModule.EPDF_WebP_EncodeRGBA(
             buf.ptr,
             buf.width,
             buf.height,
@@ -6269,7 +6267,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           return blobFrom(outPtr, size, 'image/webp');
         }
         case 'image/jpeg': {
-          const size = (this.pdfiumModule as any).EPDF_JPEG_EncodeRGBA(
+          const size = this.pdfiumModule.EPDF_JPEG_EncodeRGBA(
             buf.ptr,
             buf.width,
             buf.height,
@@ -6280,9 +6278,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           const outPtr = pdf.getValue(outPtrPtr, 'i32');
           return blobFrom(outPtr, size, 'image/jpeg');
         }
+        */
         case 'image/png':
         default: {
-          const size = (this.pdfiumModule as any).EPDF_PNG_EncodeRGBA(
+          const size = this.pdfiumModule.EPDF_PNG_EncodeRGBA(
             buf.ptr,
             buf.width,
             buf.height,
@@ -6305,15 +6304,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     rect: Rect,
     options?: PdfRenderPageOptions,
   ): PdfTask<T> {
-    const {
-      scaleFactor = 1,
-      rotation = Rotation.Degree0,
-      dpr = 1,
-      imageType = 'image/webp',
-    } = options ?? {};
-
     const task = new Task<T, PdfErrorReason>();
+
+    const imageType: ImageConversionTypes = options?.imageType ?? 'image/webp';
     const quality = options?.imageQuality;
+    const rotation: Rotation = options?.rotation ?? Rotation.Degree0;
 
     const ctx = this.cache.getContext(doc.id);
     if (!ctx) {
@@ -6323,189 +6318,104 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    const finalScale = scaleFactor * dpr;
-    const bitmapRect = toIntRect(transformRect(page.size, rect, rotation, finalScale));
+    // ---- 1) decide device size (scale × dpr, swap for 90/270)
+    const scale = Math.max(0.01, options?.scaleFactor ?? 1);
+    const dpr = Math.max(1, options?.dpr ?? 1);
+    const finalScale = scale * dpr;
 
-    const format = BitmapFormat.Bitmap_BGRA;
-    const bytesPerPixel = 4;
-    const bitmapHeapLength = bitmapRect.size.width * bitmapRect.size.height * bytesPerPixel;
-    const bitmapHeapPtr = this.malloc(bitmapHeapLength);
+    const baseW = rect.size.width;
+    const baseH = rect.size.height;
+    const swap = (rotation & 1) === 1; // 90 or 270
+
+    const wDev = Math.max(1, Math.round((swap ? baseH : baseW) * finalScale));
+    const hDev = Math.max(1, Math.round((swap ? baseW : baseH) * finalScale));
+    const stride = wDev * 4;
+    const bytes = stride * hDev;
+
+    // ---- 2) allocate a BGRA bitmap in WASM
+    const heapPtr = this.malloc(bytes);
     const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
-      bitmapRect.size.width,
-      bitmapRect.size.height,
-      format,
-      bitmapHeapPtr,
-      bitmapRect.size.width * bytesPerPixel,
+      wDev,
+      hDev,
+      BitmapFormat.Bitmap_BGRA,
+      heapPtr,
+      stride,
     );
-    this.pdfiumModule.FPDFBitmap_FillRect(
-      bitmapPtr,
-      0,
-      0,
-      bitmapRect.size.width,
-      bitmapRect.size.height,
-      0x00000000,
-    );
+    // white background like page renderers typically do
+    this.pdfiumModule.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0xffffffff);
 
-    const matrix = makeMatrix(rect, rotation, finalScale);
+    const M = buildUserToDeviceMatrix(rect, rotation, wDev, hDev);
 
-    // Allocate memory for the matrix on the wasm heap and write to it
-    const matrixSize = 6 * 4;
-    const matrixPtr = this.malloc(matrixSize);
-    const matrixView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, matrixPtr, 6);
-    matrixView.set([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f]);
+    const mPtr = this.malloc(6 * 4); // FS_MATRIX
+    const mView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, mPtr, 6);
+    mView.set([M.a, M.b, M.c, M.d, M.e, M.f]);
 
-    // ---- 2) render page-rect into that bitmap (with REVERSE_BYTE_ORDER → RGBA)
-    let flags = 0;
-    if (options?.withAnnotations ?? true) flags |= RenderFlag.ANNOT;
-    flags |= RenderFlag.LCD_TEXT | RenderFlag.REVERSE_BYTE_ORDER;
+    // Clip to the whole bitmap (device space)
+    const clipPtr = this.malloc(4 * 4); // FS_RECTF {left,bottom,right,top}
+    const clipView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, clipPtr, 4);
+    clipView.set([0, 0, wDev, hDev]);
 
-    const clipPtr = this.malloc(16); // FS_RECTF l,b,r,t in device space
-    this.pdfiumModule.pdfium.setValue(clipPtr + 0, 0, 'float');
-    this.pdfiumModule.pdfium.setValue(clipPtr + 4, 0, 'float');
-    this.pdfiumModule.pdfium.setValue(clipPtr + 8, bitmapRect.size.width, 'float');
-    this.pdfiumModule.pdfium.setValue(clipPtr + 12, bitmapRect.size.height, 'float');
+    // Rendering flags: swap byte order to present RGBA to JS; include LCD_TEXT and ANNOT if asked
+    let flags = RenderFlag.LCD_TEXT | RenderFlag.REVERSE_BYTE_ORDER;
+    if (options?.withAnnotations ?? false) flags |= RenderFlag.ANNOT;
 
     const pageCtx = ctx.acquirePage(page.index);
     try {
       this.pdfiumModule.FPDF_RenderPageBitmapWithMatrix(
         bitmapPtr,
         pageCtx.pagePtr,
-        matrixPtr,
+        mPtr,
         clipPtr,
         flags,
       );
     } finally {
       pageCtx.release();
-      this.free(matrixPtr);
+      this.free(mPtr);
       this.free(clipPtr);
     }
 
     const dispose = () => {
       this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-      this.free(bitmapHeapPtr);
+      this.free(heapPtr);
     };
 
-    try {
-      // ---- 3a) If a converter was provided → copy once & call it
-      if (this.imageDataConverter) {
-        const src = this.pdfiumModule.pdfium.HEAPU8.subarray(
-          bitmapHeapPtr,
-          bitmapHeapPtr + bitmapHeapLength,
+    this.imageDataConverter(
+      () => {
+        const rgba = new Uint8ClampedArray(
+          this.pdfiumModule.pdfium.HEAPU8.subarray(heapPtr, heapPtr + bytes),
         );
-        const rgba = new Uint8ClampedArray(src); // copy out of WASM
-        const pdfImage: PdfImage = {
+        return {
+          width: wDev,
+          height: hDev,
           data: rgba,
-          width: bitmapRect.size.width,
-          height: bitmapRect.size.height,
         };
-
-        this.imageDataConverter(pdfImage, imageType, quality)
-          .then((out) => task.resolve(out))
-          .catch((e) => task.reject({ code: PdfErrorCode.Unknown, message: String(e) }))
-          .finally(dispose);
-        return task;
-      }
-
-      // ---- 3b) No converter → encode inside WASM (no JS pixel round-trip)
-      const blob = this.encodeViaWasm(
-        {
-          ptr: bitmapHeapPtr,
-          width: bitmapRect.size.width,
-          height: bitmapRect.size.height,
-          stride: bitmapRect.size.width * bytesPerPixel,
-        },
-        { type: imageType, quality },
-      );
-      dispose();
-      task.resolve(blob as T);
-    } catch (e) {
-      dispose();
-      task.reject({ code: PdfErrorCode.Unknown, message: String(e) });
-    }
+      },
+      imageType,
+      quality,
+    )
+      .then((out) => task.resolve(out))
+      .catch((e) => {
+        this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'Error', e);
+        // Check if it's an OffscreenCanvas error and we haven't copied data yet
+        if (e instanceof OffscreenCanvasError) {
+          // Fallback to WASM encoding without wasting the copy
+          this.logger.info(LOG_SOURCE, LOG_CATEGORY, 'Fallback to WASM encoding');
+          try {
+            const blob = this.encodeViaWasm(
+              { ptr: heapPtr, width: wDev, height: hDev, stride },
+              { type: imageType, quality },
+            );
+            task.resolve(blob as T);
+          } catch (wasmError) {
+            task.reject({ code: PdfErrorCode.Unknown, message: String(wasmError) });
+          }
+        } else {
+          task.reject({ code: PdfErrorCode.Unknown, message: String(e) });
+        }
+      })
+      .finally(dispose);
 
     return task;
-  }
-
-  /**
-   * render rectangle of pdf page to image
-   * @param docPtr - pointer to pdf document object
-   * @param page  - pdf page infor
-   * @param rect - rectangle info
-   * @param scaleFactor  - factor of scalling
-   * @param rotation  - rotation angle
-   * @param options - render options
-   * @returns image data
-   *
-   * @private
-   */
-  private renderPageRectToImageData(
-    ctx: DocumentContext,
-    page: PdfPageObject,
-    rect: Rect,
-    options?: PdfRenderPageOptions,
-  ) {
-    const { scaleFactor = 1, rotation = Rotation.Degree0, dpr = 1 } = options ?? {};
-    const format = BitmapFormat.Bitmap_BGRA;
-    const bytesPerPixel = 4;
-
-    // Round the transformed dimensions to whole pixels
-    const rectSize = toIntRect(transformRect(page.size, rect, rotation, scaleFactor * dpr));
-    const pageSize = toIntSize(transformSize(page.size, rotation, scaleFactor * dpr));
-
-    const bitmapHeapLength = rectSize.size.width * rectSize.size.height * bytesPerPixel;
-    const bitmapHeapPtr = this.malloc(bitmapHeapLength);
-    const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
-      rectSize.size.width,
-      rectSize.size.height,
-      format,
-      bitmapHeapPtr,
-      rectSize.size.width * bytesPerPixel,
-    );
-
-    this.pdfiumModule.FPDFBitmap_FillRect(
-      bitmapPtr,
-      0,
-      0,
-      rectSize.size.width,
-      rectSize.size.height,
-      0xffffffff,
-    );
-
-    let flags = RenderFlag.REVERSE_BYTE_ORDER;
-    if (options?.withAnnotations) {
-      flags = flags | RenderFlag.ANNOT;
-    }
-
-    const pageCtx = ctx.acquirePage(page.index);
-
-    this.pdfiumModule.FPDF_RenderPageBitmap(
-      bitmapPtr,
-      pageCtx.pagePtr,
-      -rectSize.origin.x,
-      -rectSize.origin.y,
-      pageSize.width,
-      pageSize.height,
-      rotation,
-      flags,
-    );
-
-    this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-    pageCtx.release();
-
-    const data = this.pdfiumModule.pdfium.HEAPU8.subarray(
-      bitmapHeapPtr,
-      bitmapHeapPtr + bitmapHeapLength,
-    );
-
-    const imageData = {
-      data: new Uint8ClampedArray(data),
-      width: rectSize.size.width,
-      height: rectSize.size.height,
-    };
-
-    this.free(bitmapHeapPtr);
-
-    return imageData;
   }
 
   /**

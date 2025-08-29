@@ -1,9 +1,15 @@
 /* AUTO-GENERATED — DO NOT EDIT BY HAND */
 export const functions = {
+  EPDF_HasMetaText: [['number', 'string'] as const, 'boolean'] as const,
+  EPDF_PNG_EncodeRGBA: [
+    ['number', 'number', 'number', 'number', 'number', 'number'] as const,
+    'number',
+  ] as const,
   EPDF_RenderAnnotBitmap: [
     ['number', 'number', 'number', 'number', 'number', 'number'] as const,
     'boolean',
   ] as const,
+  EPDF_SetMetaText: [['number', 'string', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_ClearColor: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_GenerateAppearance: [['number'] as const, 'boolean'] as const,
   EPDFAnnot_GenerateAppearanceWithBlend: [['number', 'number'] as const, 'boolean'] as const,
@@ -55,6 +61,7 @@ export const functions = {
   EPDFPage_GetAnnotCountRaw: [['number', 'number'] as const, 'number'] as const,
   EPDFPage_GetAnnotRaw: [['number', 'number', 'number'] as const, 'number'] as const,
   EPDFPage_RemoveAnnotByName: [['number', 'number'] as const, 'boolean'] as const,
+  EPDFPage_RemoveAnnotRaw: [['number', 'number', 'number'] as const, 'boolean'] as const,
   EPDFText_RedactInQuads: [
     ['number', 'number', 'number', 'boolean', 'boolean'] as const,
     'boolean',

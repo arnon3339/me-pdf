@@ -6,7 +6,8 @@
   "type": "module",
   "main": "basic-example.js",
   "scripts": {
-    "start": "node basic-example.js"
+    "start": "node basic-example.js",
+    "start:annotation-render": "node annotation-render-example.js"
   },
   "dependencies": {
     "@embedpdf/engines": "workspace:*",

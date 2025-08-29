@@ -27,7 +27,10 @@ var createPdfium = (() => {
       readyPromiseReject = reject;
     });
     [
+      '_EPDF_HasMetaText',
+      '_EPDF_PNG_EncodeRGBA',
       '_EPDF_RenderAnnotBitmap',
+      '_EPDF_SetMetaText',
       '_EPDFAnnot_ClearColor',
       '_EPDFAnnot_GenerateAppearance',
       '_EPDFAnnot_GenerateAppearanceWithBlend',
@@ -64,6 +67,7 @@ var createPdfium = (() => {
       '_EPDFPage_GetAnnotCountRaw',
       '_EPDFPage_GetAnnotRaw',
       '_EPDFPage_RemoveAnnotByName',
+      '_EPDFPage_RemoveAnnotRaw',
       '_EPDFText_RedactInQuads',
       '_EPDFText_RedactInRect',
       '_FORM_CanRedo',
@@ -5703,9 +5707,13 @@ var createPdfium = (() => {
       /** @export */
       invoke_v,
       /** @export */
+      invoke_vii,
+      /** @export */
       invoke_viii,
       /** @export */
       invoke_viiii,
+      /** @export */
+      invoke_viiiiiiiii,
     };
     var wasmExports = createWasm();
     var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors', 0);
@@ -5745,6 +5753,10 @@ var createPdfium = (() => {
       createExportWrapper('PDFiumExt_ExitFormFillEnvironment', 1));
     var _FPDFDOC_ExitFormFillEnvironment = (Module['_FPDFDOC_ExitFormFillEnvironment'] =
       createExportWrapper('FPDFDOC_ExitFormFillEnvironment', 1));
+    var _EPDF_PNG_EncodeRGBA = (Module['_EPDF_PNG_EncodeRGBA'] = createExportWrapper(
+      'EPDF_PNG_EncodeRGBA',
+      6,
+    ));
     var _FPDFAnnot_IsSupportedSubtype = (Module['_FPDFAnnot_IsSupportedSubtype'] =
       createExportWrapper('FPDFAnnot_IsSupportedSubtype', 1));
     var _FPDFPage_CreateAnnot = (Module['_FPDFPage_CreateAnnot'] = createExportWrapper(
@@ -6074,6 +6086,10 @@ var createPdfium = (() => {
       'EPDFPage_GetAnnotRaw',
       3,
     ));
+    var _EPDFPage_RemoveAnnotRaw = (Module['_EPDFPage_RemoveAnnotRaw'] = createExportWrapper(
+      'EPDFPage_RemoveAnnotRaw',
+      3,
+    ));
     var _EPDFAnnot_SetIcon = (Module['_EPDFAnnot_SetIcon'] = createExportWrapper(
       'EPDFAnnot_SetIcon',
       2,
@@ -6271,6 +6287,14 @@ var createPdfium = (() => {
     var _FPDF_GetPageLabel = (Module['_FPDF_GetPageLabel'] = createExportWrapper(
       'FPDF_GetPageLabel',
       4,
+    ));
+    var _EPDF_SetMetaText = (Module['_EPDF_SetMetaText'] = createExportWrapper(
+      'EPDF_SetMetaText',
+      3,
+    ));
+    var _EPDF_HasMetaText = (Module['_EPDF_HasMetaText'] = createExportWrapper(
+      'EPDF_HasMetaText',
+      2,
     ));
     var _FPDFPageObj_NewImageObj = (Module['_FPDFPageObj_NewImageObj'] = createExportWrapper(
       'FPDFPageObj_NewImageObj',
@@ -7478,6 +7502,28 @@ var createPdfium = (() => {
       var sp = stackSave();
       try {
         getWasmTableEntry(index)();
+      } catch (e) {
+        stackRestore(sp);
+        if (e !== e + 0) throw e;
+        _setThrew(1, 0);
+      }
+    }
+
+    function invoke_vii(index, a1, a2) {
+      var sp = stackSave();
+      try {
+        getWasmTableEntry(index)(a1, a2);
+      } catch (e) {
+        stackRestore(sp);
+        if (e !== e + 0) throw e;
+        _setThrew(1, 0);
+      }
+    }
+
+    function invoke_viiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+      var sp = stackSave();
+      try {
+        getWasmTableEntry(index)(a1, a2, a3, a4, a5, a6, a7, a8, a9);
       } catch (e) {
         stackRestore(sp);
         if (e !== e + 0) throw e;
