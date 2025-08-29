@@ -1,5 +1,7 @@
 # @embedpdf/plugin-interaction-manager
 
+## 1.0.23
+
 ## 1.0.22
 
 ### Patch Changes

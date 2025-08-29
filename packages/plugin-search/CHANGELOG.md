@@ -1,5 +1,7 @@
 # @embedpdf/plugin-search
 
+## 1.0.23
+
 ## 1.0.22
 
 ## 1.0.21
