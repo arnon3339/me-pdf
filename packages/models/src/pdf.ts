@@ -42,6 +42,11 @@ export interface PdfDocumentObject {
   id: string;
 
   /**
+   * Name of the document
+   */
+  name?: string;
+
+  /**
    * Count of pages in this document
    */
   pageCount: number;
@@ -61,35 +66,35 @@ export interface PdfMetadataObject {
   /**
    * title of the document
    */
-  title: string;
+  title: string | null;
   /**
    * author of the document
    */
-  author: string;
+  author: string | null;
   /**
    * subject of the document
    */
-  subject: string;
+  subject: string | null;
   /**
    * keywords of the document
    */
-  keywords: string;
+  keywords: string | null;
   /**
    * producer of the document
    */
-  producer: string;
+  producer: string | null;
   /**
    * creator of the document
    */
-  creator: string;
+  creator: string | null;
   /**
    * creation date of the document
    */
-  creationDate: string;
+  creationDate: Date | null;
   /**
    * modification date of the document
    */
-  modificationDate: string;
+  modificationDate: Date | null;
 }
 
 /**
@@ -2234,6 +2239,11 @@ export interface PdfFileWithoutContent {
    * id of file
    */
   id: string;
+
+  /**
+   * Name of the file
+   */
+  name?: string;
 }
 
 export interface PdfFileLoader extends PdfFileWithoutContent {
@@ -2465,6 +2475,25 @@ export interface PdfFlattenPageOptions {
 }
 
 /**
+ * Options for preparing a PDF document for printing
+ */
+export interface PdfPrintOptions {
+  /**
+   * Whether to include annotations in the printed document
+   * @default true
+   */
+  includeAnnotations?: boolean;
+
+  /**
+   * Page range string defining which pages to include
+   * Examples: "1,3,5-7" or "1-10,15,20-25"
+   * If not specified, all pages are included
+   * @default null (all pages)
+   */
+  pageRange?: string;
+}
+
+/**
  * Pdf engine
  *
  * @public
@@ -2512,6 +2541,13 @@ export interface PdfEngine<T = Blob> {
    * @returns task that contains the metadata or error
    */
   getMetadata: (doc: PdfDocumentObject) => PdfTask<PdfMetadataObject>;
+  /**
+   * Set the metadata of the file
+   * @param doc - pdf document
+   * @param metadata - metadata to set
+   * @returns task that contains the metadata or error
+   */
+  setMetadata: (doc: PdfDocumentObject, metadata: Partial<PdfMetadataObject>) => PdfTask<boolean>;
   /**
    * Get permissions of the file
    * @param doc - pdf document
@@ -2768,6 +2804,13 @@ export interface PdfEngine<T = Blob> {
    * @public
    */
   mergePages: (mergeConfigs: Array<{ docId: string; pageIndices: number[] }>) => PdfTask<PdfFile>;
+  /**
+   * Prepare a PDF document for printing
+   * @param doc - pdf document
+   * @param options - options for preparing the document for printing
+   * @returns task contains the prepared pdf file content
+   */
+  preparePrintDocument: (doc: PdfDocumentObject, options?: PdfPrintOptions) => PdfTask<ArrayBuffer>;
   /**
    * Save a copy of pdf document
    * @param doc - pdf document

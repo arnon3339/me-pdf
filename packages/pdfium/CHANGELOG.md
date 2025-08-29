@@ -1,5 +1,21 @@
 # @embedpdf/pdfium
 
+## 1.0.22
+
+## 1.0.21
+
+### Patch Changes
+
+- [#118](https://github.com/embedpdf/embed-pdf-viewer/pull/118) by [@bobsingor](https://github.com/bobsingor) – Add the option to setMetadata for a PDF document
+
+- [#119](https://github.com/embedpdf/embed-pdf-viewer/pull/119) by [@bobsingor](https://github.com/bobsingor) – Add function EPDFPage_RemoveAnnotRaw so that we cheaply can remove an annotation
+
+## 1.0.20
+
+### Patch Changes
+
+- [#114](https://github.com/embedpdf/embed-pdf-viewer/pull/114) by [@bobsingor](https://github.com/bobsingor) – Fix issue with redaction as described in issue #109
+
 ## 1.0.19
 
 ## 1.0.18

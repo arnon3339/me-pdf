@@ -27,11 +27,9 @@ import { createPluginRegistration } from '@embedpdf/core';
 
 // Import the essential plugins and their components
 import { ViewportPluginPackage, Viewport } from '@embedpdf/plugin-viewport/vue';
-import { ScrollPluginPackage } from '@embedpdf/plugin-scroll';
-import { Scroller } from '@embedpdf/plugin-scroll/vue';
-import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
-import { RenderPluginPackage } from '@embedpdf/plugin-render';
-import { RenderLayer } from '@embedpdf/plugin-render/vue';
+import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/vue';
+import { LoaderPluginPackage } from '@embedpdf/plugin-loader/vue';
+import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/vue';
 
 // 1. Initialize the engine with the Vue composable
 const { engine, isLoading } = usePdfiumEngine();

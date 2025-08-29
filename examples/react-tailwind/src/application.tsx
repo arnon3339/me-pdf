@@ -2,34 +2,24 @@ import { useRef } from 'react';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
 import { createPluginRegistration } from '@embedpdf/core';
-import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
-import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
-import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll';
-import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
-import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
-import { RotatePluginPackage } from '@embedpdf/plugin-rotate';
-import { SpreadPluginPackage } from '@embedpdf/plugin-spread';
-import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen';
-import { ExportPluginPackage } from '@embedpdf/plugin-export';
-import { RenderPluginPackage } from '@embedpdf/plugin-render';
-import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager';
-import { SelectionPluginPackage } from '@embedpdf/plugin-selection';
-import { FilePicker } from '@embedpdf/plugin-loader/react';
-import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail';
-import { Viewport } from '@embedpdf/plugin-viewport/react';
-import { Scroller } from '@embedpdf/plugin-scroll/react';
-import { TilingLayer } from '@embedpdf/plugin-tiling/react';
-import { Rotate } from '@embedpdf/plugin-rotate/react';
-import { FullscreenProvider } from '@embedpdf/plugin-fullscreen/react';
-import { Download } from '@embedpdf/plugin-export/react';
-import { RenderLayer } from '@embedpdf/plugin-render/react';
+import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
+import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
+import { SpreadPluginPackage } from '@embedpdf/plugin-spread/react';
+import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen/react';
+import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
+import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
+import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
+import { ViewportPluginPackage, Viewport } from '@embedpdf/plugin-viewport/react';
+import { ScrollPluginPackage, ScrollStrategy, Scroller } from '@embedpdf/plugin-scroll/react';
+import { TilingPluginPackage, TilingLayer } from '@embedpdf/plugin-tiling/react';
+import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
+import { RenderPluginPackage, RenderLayer } from '@embedpdf/plugin-render/react';
 import {
+  InteractionManagerPluginPackage,
   GlobalPointerProvider,
   PagePointerProvider,
 } from '@embedpdf/plugin-interaction-manager/react';
-import { PanMode } from '@embedpdf/plugin-pan/react';
-import { PanPluginPackage } from '@embedpdf/plugin-pan';
-import { SelectionLayer } from '@embedpdf/plugin-selection/react';
+import { SelectionPluginPackage, SelectionLayer } from '@embedpdf/plugin-selection/react';
 
 export default function DocumentViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -87,53 +77,48 @@ export default function DocumentViewer() {
           ]}
         >
           {({ pluginsReady }) => (
-            <FullscreenProvider>
-              <GlobalPointerProvider>
-                <PanMode />
-                <Viewport className="h-full w-full flex-1 select-none overflow-auto bg-gray-100">
-                  {pluginsReady ? (
-                    <Scroller
-                      renderPage={({
-                        pageIndex,
-                        scale,
-                        width,
-                        height,
-                        document,
-                        rotation,
-                        rotatedWidth,
-                        rotatedHeight,
-                      }) => (
-                        <Rotate key={document?.id} pageSize={{ width, height }}>
-                          <PagePointerProvider
-                            rotation={rotation}
-                            scale={scale}
-                            pageWidth={rotatedWidth}
-                            pageHeight={rotatedHeight}
+            <GlobalPointerProvider>
+              <Viewport className="h-full w-full flex-1 select-none overflow-auto bg-gray-100">
+                {pluginsReady ? (
+                  <Scroller
+                    renderPage={({
+                      pageIndex,
+                      scale,
+                      width,
+                      height,
+                      document,
+                      rotation,
+                      rotatedWidth,
+                      rotatedHeight,
+                    }) => (
+                      <Rotate key={document?.id} pageSize={{ width, height }}>
+                        <PagePointerProvider
+                          rotation={rotation}
+                          scale={scale}
+                          pageWidth={rotatedWidth}
+                          pageHeight={rotatedHeight}
+                          pageIndex={pageIndex}
+                          style={{
+                            width,
+                            height,
+                          }}
+                        >
+                          <RenderLayer pageIndex={pageIndex} className="pointer-events-none" />
+                          <TilingLayer
                             pageIndex={pageIndex}
-                            style={{
-                              width,
-                              height,
-                            }}
-                          >
-                            <RenderLayer pageIndex={pageIndex} className="pointer-events-none" />
-                            <TilingLayer
-                              pageIndex={pageIndex}
-                              scale={scale}
-                              className="pointer-events-none"
-                            />
-                            <SelectionLayer pageIndex={pageIndex} scale={scale} />
-                          </PagePointerProvider>
-                        </Rotate>
-                      )}
-                    />
-                  ) : (
-                    <div>Loading plugins...</div>
-                  )}
-                </Viewport>
-                <Download />
-                <FilePicker />
-              </GlobalPointerProvider>
-            </FullscreenProvider>
+                            scale={scale}
+                            className="pointer-events-none"
+                          />
+                          <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                        </PagePointerProvider>
+                      </Rotate>
+                    )}
+                  />
+                ) : (
+                  <div>Loading plugins...</div>
+                )}
+              </Viewport>
+            </GlobalPointerProvider>
           )}
         </EmbedPDF>
       </div>
