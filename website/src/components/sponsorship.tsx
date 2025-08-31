@@ -105,30 +105,40 @@ const Sponsorship2: React.FC = () => {
               the industry shocked me:
             </p>
 
-            <div className="mb-10 rounded-2xl border border-gray-100 bg-white p-8 shadow-lg">
-              <div className="grid gap-6 md:grid-cols-3">
+            <div className="relative mb-10 overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 p-8 shadow-2xl">
+              {/* Background effects */}
+              <div className="absolute right-0 top-0 h-32 w-32 -translate-y-1/2 translate-x-1/2 transform rounded-full bg-gradient-to-br from-red-400 to-orange-500 opacity-20 blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 h-24 w-24 -translate-x-1/2 translate-y-1/2 transform rounded-full bg-gradient-to-br from-blue-400 to-purple-500 opacity-20 blur-2xl"></div>
+
+              <div className="relative z-10 grid gap-6 md:grid-cols-3">
                 <div className="text-center">
-                  <div className="mb-2 text-3xl font-bold text-red-600">
+                  <div className="mb-2 text-3xl font-bold text-red-400">
                     Apryse
                   </div>
-                  <div className="text-xl">$30K-$700K/year</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xl font-semibold text-white">
+                    $30K-$700K/year
+                  </div>
+                  <div className="text-sm text-gray-400">
                     Enterprise pricing
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="mb-2 text-3xl font-bold text-orange-600">
+                  <div className="mb-2 text-3xl font-bold text-orange-400">
                     Nutrient
                   </div>
-                  <div className="text-xl">$25K-$400K/year</div>
-                  <div className="text-sm text-gray-600">Per platform</div>
+                  <div className="text-xl font-semibold text-white">
+                    $25K-$400K/year
+                  </div>
+                  <div className="text-sm text-gray-400">Per platform</div>
                 </div>
                 <div className="text-center">
-                  <div className="mb-2 text-3xl font-bold text-yellow-600">
+                  <div className="mb-2 text-3xl font-bold text-yellow-400">
                     ComPDF
                   </div>
-                  <div className="text-xl">$15K-$100K/year</div>
-                  <div className="text-sm text-gray-600">Annual license</div>
+                  <div className="text-xl font-semibold text-white">
+                    $15K-$100K/year
+                  </div>
+                  <div className="text-sm text-gray-400">Annual license</div>
                 </div>
               </div>
             </div>
