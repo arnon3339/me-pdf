@@ -144,7 +144,7 @@ const Sponsorship2: React.FC = () => {
             </div>
 
             <p className="mb-6 text-xl leading-relaxed">
-              These weren't just expensive licenses. They were{' '}
+              These weren&apos;t just expensive licenses. They were{' '}
               <strong>&quot;black boxes&quot;</strong> — closed source code you
               can&apos;t inspect, modify, or truly own. Your entire product
               depends on software you can&apos;t see, from vendors who can
@@ -302,8 +302,8 @@ const Sponsorship2: React.FC = () => {
                 FinTech Startup, Series B
               </div>
               <p className="mb-3 text-gray-700">
-                "We're paying Apryse $85,000/year. Our CFO nearly had a heart
-                attack at renewal."
+                &quot;We&apos;re paying Apryse $85,000/year. Our CFO nearly had
+                a heart attack at renewal.&quot;
               </p>
               <div className="text-sm text-gray-500">— CTO, via email</div>
             </div>
@@ -314,7 +314,7 @@ const Sponsorship2: React.FC = () => {
               </div>
               <p className="mb-3 text-gray-700">
                 &quot;Nutrient wants $120,000 for features we&apos;ll barely
-                use. We have no alternatives."
+                use. We have no alternatives.&quot;
               </p>
               <div className="text-sm text-gray-500">
                 — Head of Engineering, Zoom call
@@ -326,8 +326,8 @@ const Sponsorship2: React.FC = () => {
                 EdTech Platform
               </div>
               <p className="mb-3 text-gray-700">
-                "The vendor lock-in terrifies me. One price hike could kill our
-                margins."
+                &quot;The vendor lock-in terrifies me. One price hike could kill
+                our margins.&quot;
               </p>
               <div className="text-sm text-gray-500">— Founder, Discord DM</div>
             </div>
@@ -391,13 +391,13 @@ const Sponsorship2: React.FC = () => {
           <div className="rounded-3xl bg-gradient-to-br from-gray-900 to-blue-900 px-6 py-20 md:px-10">
             <div className="text-center text-white">
               <h2 className="mb-6 text-4xl font-black md:text-5xl">
-                Let's Build the Alternative Together
+                Let&apos;s Build the Alternative Together
               </h2>
 
               <p className="mx-auto mb-12 max-w-3xl text-2xl leading-relaxed">
                 Instead of paying $50K-$700K/year to vendors, invest a fraction
                 of that to build an{' '}
-                <strong>open-source SDK you'll own forever.</strong>
+                <strong>open-source SDK you&apos;ll own forever.</strong>
               </p>
 
               <div className="mb-12 rounded-3xl bg-white/10 p-10 backdrop-blur">
@@ -926,10 +926,10 @@ const Sponsorship2: React.FC = () => {
               </h3>
               <p className="text-gray-700">
                 Fair question. Look at our track record: 1,800+ GitHub stars and
-                a working Web SDK in just 7 months with zero funding. I've been
-                building PDF technology for years and understand the ecosystem
-                deeply. The project has real momentum, active community
-                engagement, and proven development velocity.
+                a working Web SDK in just 7 months with zero funding. I&apos;ve
+                been building PDF technology for years and understand the
+                ecosystem deeply. The project has real momentum, active
+                community engagement, and proven development velocity.
               </p>
             </div>
 
@@ -951,20 +951,20 @@ const Sponsorship2: React.FC = () => {
                 ($15-18K/month) and hiring a senior mobile developer
                 ($12-15K/month). Two experienced developers working full-time
                 can deliver what normally takes a team of 5-10 at a big company.
-                We're lean, focused, and motivated.
+                We&apos;re lean, focused, and motivated.
               </p>
             </div>
 
             <div className="rounded-xl bg-white p-6 shadow-lg">
               <h3 className="mb-3 text-xl font-bold">
-                What if we need features you haven't built yet?
+                What if we need features you haven&apos;t built yet?
               </h3>
               <p className="text-gray-700">
                 That&apos;s the beauty of open source with active development.
                 Gold sponsors get custom feature development. Silver sponsors
                 influence the roadmap. And since it&apos;s MIT licensed, you can
                 always hire your own developers to add features. Try doing that
-                with Apryse's closed source code.
+                with Apryse&apos;s closed source code.
               </p>
             </div>
 
@@ -1021,8 +1021,8 @@ const Sponsorship2: React.FC = () => {
             </h2>
 
             <p className="mb-8 text-xl leading-relaxed">
-              Let's have a real conversation about breaking free from vendor
-              lock-in. I personally respond to every message.
+              Let&apos;s have a real conversation about breaking free from
+              vendor lock-in. I personally respond to every message.
             </p>
 
             <div className="mx-auto max-w-2xl rounded-2xl bg-white/10 p-8 backdrop-blur">
@@ -1087,7 +1087,7 @@ const Sponsorship2: React.FC = () => {
 
               <p className="mt-6 text-sm text-gray-300">
                 Or find me on LinkedIn, Twitter (@bobsingor), or wherever you
-                prefer. Let's discuss how to save your company hundreds of
+                prefer. Let&apos;s discuss how to save your company hundreds of
                 thousands per year.
               </p>
             </div>
@@ -1097,7 +1097,7 @@ const Sponsorship2: React.FC = () => {
                 Join the open-source PDF revolution.
               </p>
               <p className="text-xl">
-                Let's build technology that nobody can take away.
+                Let&apos;s build technology that nobody can take away.
               </p>
             </div>
           </div>

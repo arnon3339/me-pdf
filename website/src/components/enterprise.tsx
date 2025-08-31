@@ -210,7 +210,7 @@ const ContactCTA = () => {
 
               <h2 className="mb-6 text-4xl font-black leading-tight md:text-5xl">
                 <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent">
-                  Let's Discuss Your
+                  Let&apos;s Discuss Your
                 </span>
                 <br />
                 <span className="bg-gradient-to-r from-purple-300 via-pink-300 to-red-300 bg-clip-text text-transparent">
@@ -708,8 +708,8 @@ export default function Enterprise() {
 
               <div className="mt-12 rounded-2xl bg-gradient-to-r from-gray-50 to-blue-50 p-8">
                 <p className="text-xl font-medium text-gray-900">
-                  "Join the movement. Break free from black-box PDF SDKs and
-                  move to a platform you can trust."
+                  &quot;Join the movement. Break free from black-box PDF SDKs
+                  and move to a platform you can trust.&quot;
                 </p>
               </div>
             </div>
