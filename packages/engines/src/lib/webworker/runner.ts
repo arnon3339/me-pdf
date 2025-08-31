@@ -145,6 +145,15 @@ export class EngineRunner {
   private tasks = new Map<string, Task<any, any>>();
 
   /**
+   * Last time we yielded to the event loop
+   */
+  private lastYield = 0;
+  /**
+   * Ids of tasks that have been cancelled
+   */
+  private cancelledIds = new Set<string>();
+
+  /**
    * Create instance of EngineRunnder
    * @param logger - logger instance
    */
@@ -202,6 +211,10 @@ export class EngineRunner {
 
   private abort(request: AbortRequest) {
     const t = this.tasks.get(request.id);
+
+    // Always record the abort id
+    this.cancelledIds.add(request.id);
+
     if (!t) {
       // nothing to cancel (already finished or wrong id) – just ignore
       return;
@@ -216,6 +229,15 @@ export class EngineRunner {
     this.tasks.delete(request.id);
   }
 
+  private async maybeYield() {
+    const now = performance.now();
+    // give the event loop a breath roughly every ~8ms (tune as you like)
+    if (now - this.lastYield > 8) {
+      await new Promise((r) => setTimeout(r, 0));
+      this.lastYield = performance.now();
+    }
+  }
+
   /**
    * Execute the request
    * @param request - request that represent the pdf engine call
@@ -223,7 +245,7 @@ export class EngineRunner {
    *
    * @protected
    */
-  execute = (request: ExecuteRequest) => {
+  execute = async (request: ExecuteRequest) => {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'runner start exeucte request');
     if (!this.engine) {
       const error: PdfEngineError = {
@@ -242,6 +264,24 @@ export class EngineRunner {
         },
       };
       this.respond(response);
+      return;
+    }
+
+    // let AbortRequest messages land and pre-cancel flags get set
+    await this.maybeYield();
+
+    if (this.cancelledIds.has(request.id)) {
+      this.respond({
+        id: request.id,
+        type: 'ExecuteResponse',
+        data: {
+          type: 'error',
+          value: {
+            type: 'reject',
+            reason: { code: PdfErrorCode.Cancelled, message: 'aborted by client (pre-cancelled)' },
+          },
+        },
+      });
       return;
     }
 
@@ -405,6 +445,7 @@ export class EngineRunner {
         };
         this.respond(response);
         this.tasks.delete(request.id);
+        this.cancelledIds.delete(request.id);
       },
       (error) => {
         const response: ExecuteResponse = {
@@ -417,6 +458,7 @@ export class EngineRunner {
         };
         this.respond(response);
         this.tasks.delete(request.id);
+        this.cancelledIds.delete(request.id);
       },
     );
   };

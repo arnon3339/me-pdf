@@ -5,6 +5,15 @@
  */
 export interface Logger {
   /**
+   * Check if a log level is enabled
+   * @param level - log level to check
+   * @returns true if the level is enabled
+   *
+   * @public
+   */
+  isEnabled: (level: 'debug' | 'info' | 'warn' | 'error') => boolean;
+
+  /**
    * Log debug message
    * @param source - source of log
    * @param category - category of log
@@ -73,6 +82,11 @@ export interface Logger {
  * @public
  */
 export class NoopLogger implements Logger {
+  /** {@inheritDoc Logger.isEnabled} */
+  isEnabled(): boolean {
+    return false;
+  }
+
   /** {@inheritDoc Logger.debug} */
   debug() {}
   /** {@inheritDoc Logger.info} */
@@ -91,6 +105,11 @@ export class NoopLogger implements Logger {
  * @public
  */
 export class ConsoleLogger implements Logger {
+  /** {@inheritDoc Logger.isEnabled} */
+  isEnabled(): boolean {
+    return true;
+  }
+
   /** {@inheritDoc Logger.debug} */
   debug(source: string, category: string, ...args: any) {
     console.debug(`${source}.${category}`, ...args);
@@ -145,6 +164,17 @@ export class LevelLogger implements Logger {
     private level: LogLevel,
   ) {}
 
+  /** {@inheritDoc Logger.isEnabled} */
+  isEnabled(level: 'debug' | 'info' | 'warn' | 'error'): boolean {
+    const levelMap = {
+      debug: LogLevel.Debug,
+      info: LogLevel.Info,
+      warn: LogLevel.Warn,
+      error: LogLevel.Error,
+    };
+    return this.level <= levelMap[level];
+  }
+
   /** {@inheritDoc Logger.debug} */
   debug(source: string, category: string, ...args: any) {
     if (this.level <= LogLevel.Debug) {
@@ -189,6 +219,11 @@ export class PerfLogger implements Logger {
    * create new PerfLogger
    */
   constructor() {}
+
+  /** {@inheritDoc Logger.isEnabled} */
+  isEnabled(): boolean {
+    return false;
+  }
 
   /** {@inheritDoc Logger.debug} */
   debug(source: string, category: string, ...args: any) {}
@@ -241,6 +276,11 @@ export class AllLogger implements Logger {
    * create new PerfLogger
    */
   constructor(private loggers: Logger[]) {}
+
+  /** {@inheritDoc Logger.isEnabled} */
+  isEnabled(level: 'debug' | 'info' | 'warn' | 'error'): boolean {
+    return this.loggers.some((logger) => logger.isEnabled(level));
+  }
 
   /** {@inheritDoc Logger.debug} */
   debug(source: string, category: string, ...args: any) {
