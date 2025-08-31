@@ -45,7 +45,7 @@ export class TilingPlugin extends BasePlugin<TilingPluginConfig, TilingCapabilit
 
     this.scrollCapability.onScroll((scrollMetrics) => this.calculateVisibleTiles(scrollMetrics), {
       mode: 'throttle',
-      wait: 500,
+      wait: 50,
       throttleMode: 'trailing',
     });
 
