@@ -66,6 +66,13 @@ export default function Navbar() {
                 <span className="relative z-10">Tools</span>
                 <span className="absolute inset-0 scale-0 rounded-full bg-orange-100 transition-transform group-hover:scale-100"></span>
               </Link>
+              <Link
+                href="/open-source-pdf-sdk-alternative"
+                className="group relative px-4 py-2 text-gray-600 transition-colors"
+              >
+                <span className="relative z-10">Sponsorship</span>
+                <span className="absolute inset-0 scale-0 rounded-full bg-purple-100 transition-transform group-hover:scale-100"></span>
+              </Link>
               {/* <Link href="/blog" className="group text-gray-600 transition-colors relative py-2 px-4">
               <span className="relative z-10">Blog</span>
               <span className="absolute inset-0 bg-orange-100 rounded-full scale-0 group-hover:scale-100 transition-transform"></span>
@@ -118,6 +125,14 @@ export default function Navbar() {
                   <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
                   <span>Features</span>
                 </a>*/}
+                  <Link
+                    href="/open-source-pdf-sdk-alternative"
+                    className="block flex items-center space-x-2 px-4 py-3 text-base font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                    onClick={() => setMenu(false)}
+                  >
+                    <div className="h-6 w-1 rounded-full bg-purple-500"></div>
+                    <span>Sponsorship</span>
+                  </Link>
                   <Link
                     href="/docs"
                     className="block flex items-center space-x-2 px-4 py-3 text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600"

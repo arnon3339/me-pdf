@@ -20,6 +20,13 @@ export default {
       timestamp: false,
     },
   },
+  ['open-source-pdf-sdk-alternative']: {
+    title: 'Open Source PDF SDK Alternative',
+    type: 'page',
+    theme: {
+      timestamp: false,
+    },
+  },
   docs: {
     title: 'Docs',
     type: 'page',

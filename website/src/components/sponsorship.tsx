@@ -1,439 +1,380 @@
 'use client'
-import React, { useState } from 'react'
-import {
-  ArrowRight,
-  Shield,
-  Lock,
-  Unlock,
-  DollarSign,
-  Eye,
-  GitBranch,
-  Users,
-  Zap,
-  TrendingUp,
-  CheckCircle,
-  X,
-  Building2,
-  Code,
-  Github,
-  ExternalLink,
-  Mail,
-  Phone,
-  Calendar,
-  Star,
-  Heart,
-  Target,
-  Lightbulb,
-  Crown,
-  Handshake,
-  Clock,
-  Infinity,
-} from 'lucide-react'
-import Link from 'next/link'
-import { Scribble2 } from './icons/scribble2'
+import React from 'react'
 
-// Animated background for enterprise feel
-const EnterpriseBackground = () => {
+const Sponsorship2: React.FC = () => {
   return (
-    <div className="absolute inset-0 -z-10">
-      {/* Professional gradient orbs */}
-      <div className="animate-blob absolute left-10 top-20 h-96 w-96 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 opacity-10 mix-blend-multiply blur-3xl filter"></div>
-      <div className="animate-blob animation-delay-2000 absolute right-10 top-40 h-80 w-80 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 opacity-10 mix-blend-multiply blur-3xl filter"></div>
-      <div className="animate-blob animation-delay-4000 absolute bottom-32 left-1/2 h-72 w-72 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 opacity-10 mix-blend-multiply blur-3xl filter"></div>
+    <div className="">
+      <style jsx>{`
+        @keyframes float {
+          0% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+          100% {
+            transform: translateY(0px);
+          }
+        }
+        .float-animation {
+          animation: float 6s ease-in-out infinite;
+        }
+        .gradient-text {
+          background: linear-gradient(to right, #3b82f6, #8b5cf6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        @keyframes progress {
+          0% {
+            width: 0%;
+          }
+          100% {
+            width: var(--progress);
+          }
+        }
+        .progress-animation {
+          animation: progress 2s ease-out forwards;
+        }
+        @keyframes blob {
+          0% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(20px, -20px) scale(1.1);
+          }
+          66% {
+            transform: translate(-15px, 15px) scale(0.95);
+          }
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
+        }
+        .animate-blob {
+          animation: blob 12s infinite alternate;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+        .bg-grid-pattern {
+          background-image:
+            linear-gradient(
+              to right,
+              rgba(24, 24, 100, 0.07) 1px,
+              transparent 1px
+            ),
+            linear-gradient(
+              to bottom,
+              rgba(24, 24, 100, 0.07) 1px,
+              transparent 1px
+            );
+          background-size: 24px 24px;
+        }
+      `}</style>
 
-      {/* Subtle enterprise grid */}
-      <div className="bg-grid-pattern opacity-3 absolute inset-0"></div>
-    </div>
-  )
-}
-
-// Comparison table component
-const ComparisonTable = () => {
-  const features = [
-    {
-      feature: 'License Cost',
-      apryse: '$50K-700K+/year',
-      nutrient: '$25K-400K+/year',
-      embedpdf: 'Free (MIT)',
-    },
-    {
-      feature: 'Source Code Access',
-      apryse: 'Closed',
-      nutrient: 'Closed',
-      embedpdf: 'Full Access',
-    },
-    {
-      feature: 'Customization',
-      apryse: 'Limited',
-      nutrient: 'Limited',
-      embedpdf: 'Unlimited',
-    },
-    {
-      feature: 'Vendor Lock-in',
-      apryse: 'High',
-      nutrient: 'High',
-      embedpdf: 'None',
-    },
-    {
-      feature: 'Community Support',
-      apryse: 'Paid Only',
-      nutrient: 'Paid Only',
-      embedpdf: 'Free + Sponsored Options',
-    },
-    {
-      feature: 'Feature Requests',
-      apryse: 'Enterprise Only',
-      nutrient: 'Enterprise Only',
-      embedpdf: 'Community + Sponsored Options',
-    },
-  ]
-
-  return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-2xl">
-      <div className="bg-gradient-to-r from-gray-900 to-blue-900 px-8 py-6">
-        <h3 className="text-2xl font-bold text-white">
-          Side-by-Side Comparison
-        </h3>
-        <p className="text-blue-200">
-          See how EmbedPDF stacks up against the competition
-        </p>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-4 text-left font-bold text-gray-900">
-                Feature
-              </th>
-              <th className="px-6 py-4 text-center font-bold text-red-600">
-                Apryse
-              </th>
-              <th className="px-6 py-4 text-center font-bold text-orange-600">
-                Nutrient
-              </th>
-              <th className="px-6 py-4 text-center font-bold text-green-600">
-                EmbedPDF
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {features.map((row, index) => (
-              <tr
-                key={index}
-                className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-              >
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  {row.feature}
-                </td>
-                <td className="px-6 py-4 text-center text-red-600">
-                  {row.apryse}
-                </td>
-                <td className="px-6 py-4 text-center text-orange-600">
-                  {row.nutrient}
-                </td>
-                <td className="px-6 py-4 text-center font-bold text-green-600">
-                  {row.embedpdf}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-// Feature card for enterprise benefits
-const EnterpriseFeatureCard = ({
-  icon,
-  title,
-  description,
-  gradient,
-}: {
-  icon: React.ReactNode
-  title: string
-  description: string
-  gradient: string
-}) => {
-  return (
-    <div className="group relative h-full">
-      <div
-        className={`absolute -inset-0.5 rounded-2xl bg-gradient-to-r ${gradient} opacity-20 blur transition duration-300 group-hover:opacity-40`}
-      ></div>
-      <div
-        className={`relative flex h-full flex-col overflow-hidden rounded-2xl bg-white p-8 shadow-lg transition-transform group-hover:scale-105`}
-      >
-        <div
-          className={`mb-6 h-16 w-16 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}
-        >
-          {icon}
+      {/* Hero Section - The Story */}
+      <section className="relative">
+        {/* Animated background */}
+        <div className="absolute inset-0 -z-10">
+          <div className="top-70 animate-blob absolute left-8 h-64 w-64 rounded-full bg-purple-500 opacity-10 mix-blend-multiply blur-3xl filter"></div>
+          <div className="animate-blob animation-delay-2000 absolute -right-8 top-32 h-80 w-80 rounded-full bg-blue-500 opacity-10 mix-blend-multiply blur-3xl filter"></div>
+          <div className="animate-blob animation-delay-4000 absolute bottom-24 left-20 h-72 w-72 rounded-full bg-orange-400 opacity-10 mix-blend-multiply blur-3xl filter"></div>
+          <div className="bg-grid-pattern absolute inset-0 opacity-5"></div>
         </div>
-        <h3 className="mb-4 text-2xl font-bold text-gray-900">{title}</h3>
-        <p className="flex-grow text-lg leading-relaxed text-gray-600">
-          {description}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// Contact CTA component
-const ContactCTA = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    message: '',
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle form submission
-    console.log('Form submitted:', formData)
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 text-white">
-      {/* Background effects */}
-      <div className="absolute right-0 top-0 h-80 w-80 -translate-y-1/2 translate-x-1/2 transform rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 opacity-20 blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 h-64 w-64 -translate-x-1/2 translate-y-1/2 transform rounded-full bg-gradient-to-br from-purple-400 to-pink-500 opacity-20 blur-3xl"></div>
-
-      <div className="relative z-10 p-8 md:p-12 lg:p-16">
-        <div className="mx-auto max-w-4xl">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-            {/* Left side - Content */}
-            <div>
-              <div className="mb-6 inline-block rounded-full border border-cyan-400/30 bg-cyan-400/10 px-6 py-2 text-sm font-bold text-slate-300 backdrop-blur-sm">
-                🚀 Ready to Switch?
-              </div>
-
-              <h2 className="mb-6 text-4xl font-black leading-tight md:text-5xl">
-                <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent">
-                  Let's Discuss Your
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-purple-300 via-pink-300 to-red-300 bg-clip-text text-transparent">
-                  Migration Strategy
-                </span>
-              </h2>
-
-              <p className="mb-8 text-xl leading-relaxed text-gray-300">
-                Join enterprise teams already making the switch. We'll help you
-                plan a smooth migration from Apryse or Nutrient to EmbedPDF.
-              </p>
-
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <CheckCircle className="mr-3 h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">
-                    Free migration consultation
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="mr-3 h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">
-                    Custom development support
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="mr-3 h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">
-                    Priority feature development
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="mr-3 h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">
-                    Long-term partnership options
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side - Contact form */}
-            <div className="rounded-2xl bg-white/10 p-8 backdrop-blur-sm">
-              <h3 className="mb-6 text-2xl font-bold">Get Started Today</h3>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Your Name"
-                    className="w-full rounded-lg bg-white/20 px-4 py-3 text-white placeholder-gray-300 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <input
-                    type="email"
-                    placeholder="Work Email"
-                    className="w-full rounded-lg bg-white/20 px-4 py-3 text-white placeholder-gray-300 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Company Name"
-                    className="w-full rounded-lg bg-white/20 px-4 py-3 text-white placeholder-gray-300 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                    value={formData.company}
-                    onChange={(e) =>
-                      setFormData({ ...formData, company: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <textarea
-                    placeholder="Tell us about your current PDF solution and challenges..."
-                    rows={4}
-                    className="w-full rounded-lg bg-white/20 px-4 py-3 text-white placeholder-gray-300 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                    value={formData.message}
-                    onChange={(e) =>
-                      setFormData({ ...formData, message: e.target.value })
-                    }
-                  ></textarea>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-                >
-                  Schedule a Call
-                  <Calendar className="ml-2 inline h-5 w-5" />
-                </button>
-              </form>
-
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-400">
-                  Or reach out directly at{' '}
-                  <a
-                    href="mailto:enterprise@embedpdf.com"
-                    className="text-cyan-400 hover:text-cyan-300"
-                  >
-                    enterprise@embedpdf.com
-                  </a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function Enterprise() {
-  return (
-    <>
-      <section className="bg-white">
-        <div className="mx-auto max-w-6xl px-6 py-20">
+        <div className="relative mx-auto max-w-4xl px-6 py-20">
           {/* Personal Badge */}
-          <div className="mb-8">
-            <span className="inline-block rounded-full bg-red-100 px-4 py-2 text-sm font-semibold text-red-800">
-              🔓 A message from Bob Singor, Founder of CloudPDF & EmbedPDF
+          <div className="mb-8 text-center">
+            <span className="inline-block rounded-full border border-purple-200 bg-purple-50 px-6 py-2 text-sm font-medium text-purple-800">
+              💜 A message from Bob Singor, Founder of EmbedPDF
             </span>
           </div>
 
-          <h1 className="mb-8 text-5xl font-black leading-tight md:text-6xl">
-            I Was Quoted <span className="text-red-600">$180,000/year</span>
-            <br />
-            For a PDF SDK.
-            <br />
+          <h1 className="mb-12 text-center text-4xl font-black leading-tight md:text-5xl lg:text-6xl">
+            I Did Not Want to Pay{' '}
+            <span className="text-red-600">$180,000/year</span>
+            <br /> For a PDF SDK. <br />
             <span className="gradient-text">So I Built My Own.</span>
           </h1>
 
           <div className="prose prose-xl mb-12 max-w-none text-gray-700">
-            <p className="mb-6 text-2xl font-light leading-relaxed">
-              Three years ago, I was running CloudPDF and needed a PDF SDK for
-              our platform. The quotes I received made my jaw drop:
+            <p className="mb-8 text-xl leading-relaxed">
+              When I needed a PDF SDK for my project, what I discovered about
+              the industry shocked me:
             </p>
 
-            <div className="mb-8 rounded-xl bg-gray-100 p-8">
+            <div className="mb-10 rounded-2xl border border-gray-100 bg-white p-8 shadow-lg">
               <div className="grid gap-6 md:grid-cols-3">
                 <div className="text-center">
                   <div className="mb-2 text-3xl font-bold text-red-600">
                     Apryse
                   </div>
-                  <div className="text-xl">$180,000/year</div>
+                  <div className="text-xl">$30K-$700K/year</div>
+                  <div className="text-sm text-gray-600">
+                    Enterprise pricing
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="mb-2 text-3xl font-bold text-orange-600">
                     Nutrient
                   </div>
-                  <div className="text-xl">$95,000/year</div>
+                  <div className="text-xl">$25K-$400K/year</div>
+                  <div className="text-sm text-gray-600">Per platform</div>
                 </div>
                 <div className="text-center">
                   <div className="mb-2 text-3xl font-bold text-yellow-600">
                     ComPDF
                   </div>
-                  <div className="text-xl">$65,000/year</div>
+                  <div className="text-xl">$15K-$100K/year</div>
+                  <div className="text-sm text-gray-600">Annual license</div>
                 </div>
               </div>
             </div>
 
             <p className="mb-6 text-xl leading-relaxed">
-              But it wasn't just the price that frustrated me. It was the{' '}
-              <strong>"black box" nature</strong> of these SDKs. Zero code
-              transparency. Complete vendor lock-in. One price hike away from
-              killing our business.
+              These weren't just expensive licenses. They were{' '}
+              <strong>"black boxes"</strong> — closed source code you can't
+              inspect, modify, or truly own. Your entire product depends on
+              software you can't see, from vendors who can change pricing at any
+              time.
             </p>
 
             <p className="text-xl font-semibold leading-relaxed">
-              That's when I decided:{' '}
               <span className="text-blue-600">
-                If the PDF SDK industry won't change, I'll change it myself.
-              </span>
+                So I started building an open-source alternative.
+              </span>{' '}
+              No vendor lock-in. No black boxes. Just great PDF technology that
+              developers can trust.
             </p>
           </div>
 
-          <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
             <a
               href="#join-movement"
-              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-700"
+              className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-gray-900 px-8 py-4 text-base font-medium text-white shadow-xl lg:w-auto"
             >
-              Join the Movement
-              <svg
-                className="ml-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                ></path>
-              </svg>
+              <span className="absolute left-0 top-0 h-full w-full bg-gradient-to-r from-purple-600 via-blue-500 to-orange-400 opacity-0 transition-opacity group-hover:opacity-100"></span>
+              <span className="relative z-10 flex items-center">
+                Become a Founding Sponsor
+                <svg
+                  className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  ></path>
+                </svg>
+              </span>
+            </a>
+            <a
+              href="https://app.embedpdf.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-purple-600 via-blue-500 to-orange-400 px-8 py-4 text-base font-medium text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl lg:w-auto"
+            >
+              <span className="absolute left-0 top-0 h-full w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 opacity-0 transition-opacity group-hover:opacity-100"></span>
+              <span className="relative z-10 flex items-center">
+                <div className="mr-3 rounded-full bg-white/20 p-1.5 backdrop-blur-sm">
+                  <svg
+                    className="h-4 w-4 fill-current transition-transform group-hover:scale-110"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M15 14h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                </div>
+                Try Live Demo
+              </span>
+              <div className="absolute inset-0 rounded-full border-2 border-white/30 transition-all group-hover:scale-110 group-hover:border-white/50"></div>
             </a>
             <a
               href="https://github.com/embedpdf/embed-pdf-viewer"
               target="_blank"
-              className="inline-flex items-center justify-center rounded-lg border-2 border-gray-800 px-8 py-4 text-lg font-bold text-gray-800 transition hover:bg-gray-800 hover:text-white"
+              rel="noopener noreferrer"
+              className="group inline-flex w-full items-center justify-center px-5 py-3 text-base font-medium text-gray-700 transition-all hover:text-gray-900 lg:w-auto"
             >
-              <svg
-                className="mr-2 h-5 w-5"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"></path>
-              </svg>
-              1,800+ Stars on GitHub
+              <div className="flex items-center space-x-2 border-b border-dashed border-gray-300 group-hover:border-gray-600">
+                <svg
+                  className="h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"></path>
+                </svg>
+                <span>1,800+ Stars on GitHub</span>
+              </div>
             </a>
           </div>
         </div>
       </section>
+
+      {/* Our Progress in 7 Months */}
+      <section className="py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="rounded-3xl bg-gradient-to-br from-blue-50 to-purple-50 px-6 py-20 md:px-10">
+            <h2 className="mb-8 text-center text-4xl font-black">
+              What We Built in 7 Months{' '}
+              <span className="text-gray-500">(With Zero Funding)</span>
+            </h2>
+
+            <div className="mb-12 rounded-2xl bg-white p-8 shadow-xl">
+              <div className="grid gap-8 text-center md:grid-cols-3">
+                <div>
+                  <div className="mb-2 text-5xl font-black text-blue-600">
+                    1,800+
+                  </div>
+                  <div className="text-xl font-semibold">GitHub Stars</div>
+                  <div className="text-gray-600">
+                    Organic developer interest
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-2 text-5xl font-black text-green-600">
+                    Web SDK
+                  </div>
+                  <div className="text-xl font-semibold">Production Ready</div>
+                  <div className="text-gray-600">Used by real companies</div>
+                </div>
+                <div>
+                  <div className="mb-2 text-5xl font-black text-purple-600">
+                    100%
+                  </div>
+                  <div className="text-xl font-semibold">Open Source</div>
+                  <div className="text-gray-600">MIT licensed forever</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <h3 className="mb-6 text-3xl font-bold">
+                <span className="gradient-text">
+                  Our Vision: A Complete Multi-Platform PDF SDK
+                </span>
+              </h3>
+
+              <div className="mx-auto max-w-4xl rounded-xl bg-white p-8 shadow-lg">
+                <div className="space-y-4 text-left">
+                  <div className="flex items-start">
+                    <div className="mr-4 mt-1 rounded-full bg-blue-100 p-2">
+                      <svg
+                        className="h-4 w-4 text-blue-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold">
+                        Universal Platform Support
+                      </div>
+                      <div className="text-gray-600">
+                        Native Web, Mobile, Desktop, Server-side - everywhere
+                        your users are
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="mr-4 mt-1 rounded-full bg-green-100 p-2">
+                      <svg
+                        className="h-4 w-4 text-green-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold">
+                        Enterprise-Grade Performance
+                      </div>
+                      <div className="text-gray-600">
+                        Advanced rendering, annotations, forms, and digital
+                        signatures
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="mr-4 mt-1 rounded-full bg-purple-100 p-2">
+                      <svg
+                        className="h-4 w-4 text-purple-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold">
+                        Sponsor-Driven Development
+                      </div>
+                      <div className="text-gray-600">
+                        Your needs determine our priorities - we build what you
+                        need first
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="mr-4 mt-1 rounded-full bg-orange-100 p-2">
+                      <svg
+                        className="h-4 w-4 text-orange-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold">
+                        100% Open Source Forever
+                      </div>
+                      <div className="text-gray-600">
+                        MIT licensed - you own it, customize it, never worry
+                        about vendor lock-in
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* The Problem Section */}
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="mb-12 text-center text-4xl font-black">
-            This Week Alone, I've Heard Your Stories
+            This Week, Companies Told Me Their Horror Stories
           </h2>
 
           <div className="mb-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -443,7 +384,7 @@ export default function Enterprise() {
               </div>
               <p className="mb-3 text-gray-700">
                 "We're paying Apryse $85,000/year. Our CFO nearly had a heart
-                attack at renewal time."
+                attack at renewal."
               </p>
               <div className="text-sm text-gray-500">— CTO, via email</div>
             </div>
@@ -510,301 +451,230 @@ export default function Enterprise() {
             </div>
           </div>
 
-          <div className="rounded-lg border-l-4 border-blue-600 bg-blue-50 p-6">
-            <p className="text-xl font-semibold text-blue-900">
-              The pattern is clear: The PDF SDK industry is broken.
+          <div className="mt-12 text-center">
+            <p className="mb-4 text-2xl font-bold text-gray-900">
+              Every story is the same: trapped by expensive, closed-source
+              vendors.
             </p>
-            <p className="mt-2 text-lg text-blue-800">
-              Companies are being held hostage by closed-source vendors charging
-              whatever they want.
+            <p className="text-xl text-gray-600">
+              It's time for an open-source alternative that companies can
+              actually own.
             </p>
           </div>
         </div>
       </section>
-      <section className="bg-white py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="mb-8 text-center text-4xl font-black">
-            So I'm Building <span className="gradient-text">EmbedPDF</span>
-          </h2>
 
-          <div className="mb-12 text-center">
-            <p className="mx-auto max-w-3xl text-2xl text-gray-700">
-              A <strong>100% open-source, MIT-licensed</strong> PDF SDK that
-              will be owned by the community forever. No vendor lock-in. No
-              black boxes. No surprises.
-            </p>
-          </div>
-
-          <div className="mb-12 grid gap-8 md:grid-cols-3">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                <svg
-                  className="h-10 w-10 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-bold">Save 90%+ on Costs</h3>
-              <p className="text-gray-600">
-                Stop paying $50K-$700K/year. Support only what you need.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
-                <svg
-                  className="h-10 w-10 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                  ></path>
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-bold">100% Open Source</h3>
-              <p className="text-gray-600">
-                Full code transparency. Audit, modify, and extend as needed.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-purple-100">
-                <svg
-                  className="h-10 w-10 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  ></path>
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-bold">Built on PDFium</h3>
-              <p className="text-gray-600">
-                The same engine that powers Chrome. Battle-tested by billions.
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 p-8">
-            <h3 className="mb-4 text-2xl font-bold">What's Already Built:</h3>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <div className="mb-3 flex items-center">
-                  <svg
-                    className="mr-2 h-6 w-6 text-green-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
-                  <span className="font-semibold">
-                    Web SDK (Live & Working)
-                  </span>
-                </div>
-                <div className="mb-3 flex items-center">
-                  <svg
-                    className="mr-2 h-6 w-6 text-green-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
-                  <span className="font-semibold">1,800+ GitHub Stars</span>
-                </div>
-                <div className="mb-3 flex items-center">
-                  <svg
-                    className="mr-2 h-6 w-6 text-green-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
-                  <span className="font-semibold">
-                    Core Viewing & Annotation
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div className="mb-3 flex items-center">
-                  <div className="mr-2 h-6 w-6 rounded border-2 border-gray-400"></div>
-                  <span className="text-gray-600">
-                    Native iOS SDK (Planned)
-                  </span>
-                </div>
-                <div className="mb-3 flex items-center">
-                  <div className="mr-2 h-6 w-6 rounded border-2 border-gray-400"></div>
-                  <span className="text-gray-600">
-                    Native Android SDK (Planned)
-                  </span>
-                </div>
-                <div className="mb-3 flex items-center">
-                  <div className="mr-2 h-6 w-6 rounded border-2 border-gray-400"></div>
-                  <span className="text-gray-600">
-                    Advanced Form Filling (Planned)
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* The Ask */}
       <section className="py-20" id="join-movement">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-purple-600 p-12 text-center text-white">
-            <h2 className="mb-6 text-4xl font-black">Here's My Proposal:</h2>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="rounded-3xl bg-gradient-to-br from-gray-900 to-blue-900 px-6 py-20 md:px-10">
+            <div className="text-center text-white">
+              <h2 className="mb-6 text-4xl font-black md:text-5xl">
+                Let's Build the Alternative Together
+              </h2>
 
-            <p className="mb-8 text-2xl leading-relaxed">
-              Instead of paying $50K-$700K/year to a vendor who doesn't care
-              about you, become a <strong>founding sponsor</strong> of an
-              open-source alternative that you'll own forever.
-            </p>
-
-            <div className="mb-8 rounded-xl bg-white/20 p-8 backdrop-blur">
-              <h3 className="mb-4 text-3xl font-bold">
-                The Goal: $10,000/month
-              </h3>
-              <p className="mb-6 text-xl">
-                This allows me to work full-time on EmbedPDF and ensures the
-                project's sustainability.
+              <p className="mx-auto mb-12 max-w-3xl text-2xl leading-relaxed">
+                Instead of paying $50K-$700K/year to vendors, invest a fraction
+                of that to build an{' '}
+                <strong>open-source SDK you'll own forever.</strong>
               </p>
 
-              <div className="mb-4 h-6 rounded-full bg-white/30">
-                <div className="flex h-6 w-1/4 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600">
-                  25%
+              <div className="mb-12 rounded-3xl bg-white/10 p-10 backdrop-blur">
+                <h3 className="mb-8 text-3xl font-bold">
+                  Our Funding Goal: $30,000/month
+                </h3>
+
+                <div className="mb-8 grid gap-8 text-left md:grid-cols-2">
+                  <div>
+                    <h4 className="mb-4 text-xl font-bold text-yellow-300">
+                      This Enables:
+                    </h4>
+                    <ul className="space-y-3">
+                      <li className="flex items-start">
+                        <svg
+                          className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                        <span>Me working full-time as lead developer</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg
+                          className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                        <span>Hiring a senior mobile SDK developer</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg
+                          className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                        <span>Accelerated development timeline</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg
+                          className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                        <span>Professional project sustainability</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="mb-4 text-xl font-bold text-yellow-300">
+                      You Get:
+                    </h4>
+                    <ul className="space-y-3">
+                      <li className="flex items-start">
+                        <svg
+                          className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                        <span>Multi-platform SDKs in 12 months</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg
+                          className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                        <span>Direct influence on the roadmap</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg
+                          className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                        <span>No vendor lock-in ever again</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg
+                          className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                        <span>80-95% cost savings forever</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="mb-2">
+                  <div className="mb-2 flex justify-between text-sm">
+                    <span>Current Progress</span>
+                    <span className="font-bold">$100 / $30,000 per month</span>
+                  </div>
+                  <div className="h-8 overflow-hidden rounded-full bg-white/20">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-1000 ease-out"
+                      style={{ width: '0.33%' }}
+                    ></div>
+                  </div>
                 </div>
               </div>
-              <p className="text-lg">
-                Current: $2,500/month from early sponsors
-              </p>
-            </div>
 
-            <div className="mb-8 rounded-xl bg-white/10 p-6 text-left">
-              <h4 className="mb-3 text-xl font-bold">
-                When we hit $10,000/month:
-              </h4>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <svg
-                    className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
-                  <span>I go full-time on EmbedPDF development</span>
-                </li>
-                <li className="flex items-start">
-                  <svg
-                    className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
-                  <span>Complete PDFium integration goes open source</span>
-                </li>
-                <li className="flex items-start">
-                  <svg
-                    className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
-                  <span>Mobile SDK development begins</span>
-                </li>
-                <li className="flex items-start">
-                  <svg
-                    className="mr-2 mt-0.5 h-6 w-6 flex-shrink-0 text-green-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
-                  <span>Regular releases and community support</span>
-                </li>
-              </ul>
-            </div>
-
-            <a
-              href="#contact"
-              className="inline-flex items-center justify-center rounded-lg bg-white px-10 py-5 text-xl font-bold text-blue-600 transition hover:shadow-2xl"
-            >
-              Let's Talk About Sponsorship
-              <svg
-                className="ml-2 h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <a
+                href="#sponsorship-tiers"
+                className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-10 py-5 text-xl font-bold text-gray-900 shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                ></path>
-              </svg>
-            </a>
+                <span className="absolute left-0 top-0 h-full w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 opacity-0 transition-opacity group-hover:opacity-100"></span>
+                <span className="relative z-10 flex items-center">
+                  View Sponsorship Options
+                  <svg
+                    className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    ></path>
+                  </svg>
+                </span>
+              </a>
+            </div>
           </div>
         </div>
       </section>
-      <section className="bg-white py-20">
+
+      {/* Sponsorship Tiers */}
+      <section className="bg-white py-20" id="sponsorship-tiers">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="mb-12 text-center text-4xl font-black">
-            Sponsorship Options
+          <h2 className="mb-6 text-center text-4xl font-black">
+            Become a Founding Sponsor
           </h2>
+          <p className="mx-auto mb-12 max-w-3xl text-center text-xl text-gray-600">
+            The first 10 sponsors that commit for 1 year will be permanently
+            recognized as founding sponsors who made this project possible.
+          </p>
 
           <div className="grid gap-8 md:grid-cols-3">
-            <div className="rounded-2xl border-2 border-gray-200 p-8 transition hover:border-blue-500">
+            {/* Bronze */}
+            <div className="rounded-2xl border-2 border-gray-200 p-8 transition hover:scale-105 hover:transform hover:border-blue-500">
               <div className="mb-6 text-center">
-                <h3 className="mb-2 text-2xl font-bold">Bronze Sponsor</h3>
-                <div className="text-4xl font-black text-gray-600">$500</div>
+                <h3 className="mb-2 text-2xl font-bold">Bronze</h3>
+                <div className="text-4xl font-black text-gray-600">
+                  $500-1,500
+                </div>
                 <div className="text-gray-500">per month</div>
               </div>
               <ul className="mb-8 space-y-3">
@@ -815,9 +685,9 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
                   <span>Logo on website & README</span>
@@ -829,12 +699,12 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span>Priority issue response</span>
+                  <span>Monthly roadmap input calls</span>
                 </li>
                 <li className="flex items-start">
                   <svg
@@ -843,24 +713,61 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span>Sponsor newsletter</span>
+                  <span>Private Discord sponsor channel</span>
+                </li>
+                <li className="flex items-start">
+                  <svg
+                    className="mr-2 mt-0.5 h-5 w-5 text-green-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <span>Priority GitHub issue response</span>
+                </li>
+                <li className="flex items-start">
+                  <svg
+                    className="mr-2 mt-0.5 h-5 w-5 text-green-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <span>Sponsor updates & newsletter</span>
                 </li>
               </ul>
+              <div className="text-center">
+                <a
+                  href="#contact"
+                  className="inline-flex w-full items-center justify-center rounded-full bg-gray-100 py-3 font-semibold transition hover:bg-gray-200"
+                >
+                  Get Started
+                </a>
+              </div>
             </div>
 
+            {/* Silver - Most Popular */}
             <div className="relative scale-105 transform rounded-2xl border-2 border-blue-500 p-8 shadow-xl">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 transform">
                 <span className="rounded-full bg-blue-500 px-4 py-1 text-sm font-bold text-white">
-                  MOST POPULAR
+                  SWEET SPOT
                 </span>
               </div>
               <div className="mb-6 text-center">
-                <h3 className="mb-2 text-2xl font-bold">Silver Sponsor</h3>
+                <h3 className="mb-2 text-2xl font-bold">Silver</h3>
                 <div className="text-4xl font-black text-blue-600">$2,500</div>
                 <div className="text-gray-500">per month</div>
               </div>
@@ -872,9 +779,9 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
                   <span>Everything in Bronze</span>
@@ -886,9 +793,9 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
                   <span>Prominent logo placement</span>
@@ -900,12 +807,12 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span>Monthly roadmap calls</span>
+                  <span>Bi-weekly 1:1 founder calls</span>
                 </li>
                 <li className="flex items-start">
                   <svg
@@ -914,19 +821,42 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
                   <span>Feature request priority</span>
                 </li>
+                <li className="flex items-start">
+                  <svg
+                    className="mr-2 mt-0.5 h-5 w-5 text-green-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <span>Technical support & integration help</span>
+                </li>
               </ul>
+              <div className="text-center">
+                <a
+                  href="#contact"
+                  className="inline-flex w-full items-center justify-center rounded-full bg-blue-600 py-3 font-semibold text-white shadow-lg transition hover:bg-blue-700 hover:shadow-xl"
+                >
+                  Become a Silver Sponsor
+                </a>
+              </div>
             </div>
 
-            <div className="rounded-2xl border-2 border-gray-200 p-8 transition hover:border-blue-500">
+            {/* Gold */}
+            <div className="rounded-2xl border-2 border-gray-200 p-8 transition hover:scale-105 hover:transform hover:border-yellow-500">
               <div className="mb-6 text-center">
-                <h3 className="mb-2 text-2xl font-bold">Gold Sponsor</h3>
+                <h3 className="mb-2 text-2xl font-bold">Gold</h3>
                 <div className="text-4xl font-black text-yellow-600">
                   $5,000+
                 </div>
@@ -940,9 +870,9 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
                   <span>Everything in Silver</span>
@@ -954,12 +884,12 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span>Direct access to founder</span>
+                  <span>Weekly direct founder access</span>
                 </li>
                 <li className="flex items-start">
                   <svg
@@ -968,12 +898,12 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span>Custom feature development</span>
+                  <span>Custom feature development priority</span>
                 </li>
                 <li className="flex items-start">
                   <svg
@@ -982,38 +912,90 @@ export default function Enterprise() {
                     viewBox="0 0 20 20"
                   >
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span>Migration support</span>
+                  <span>Full migration assistance & consulting</span>
+                </li>
+                <li className="flex items-start">
+                  <svg
+                    className="mr-2 mt-0.5 h-5 w-5 text-green-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <span>Co-marketing & case study opportunities</span>
                 </li>
               </ul>
+              <div className="text-center">
+                <a
+                  href="#contact"
+                  className="inline-flex w-full items-center justify-center rounded-full bg-yellow-100 py-3 font-semibold transition hover:bg-yellow-200"
+                >
+                  Discuss Gold Sponsorship
+                </a>
+              </div>
             </div>
           </div>
 
-          <div className="mt-12 text-center">
-            <p className="mb-4 text-gray-600">
-              Still paying annual licenses? Compare the cost:
+          <div className="mt-12 rounded-xl border border-gray-700 bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-center text-white shadow-2xl">
+            <p className="mb-4 text-2xl font-bold text-yellow-400">
+              🔓 Own Your Code Forever
             </p>
-            <p className="text-2xl font-bold">
-              Silver sponsorship ($2,500/mo) ={' '}
-              <span className="text-green-600">$30,000/year</span>
+            <p className="text-lg leading-relaxed">
+              Stop paying endless licensing fees for software black boxes.
               <br />
-              <span className="text-lg text-gray-500">
-                vs Apryse at $180,000/year ={' '}
-                <span className="text-red-600">83% savings</span>
+              <span className="font-semibold text-yellow-300">
+                Sponsor open-source development once, own the technology
+                forever.
+              </span>
+              <br />
+              <span className="mt-2 block text-base text-gray-300">
+                No vendor lock-in. No surprise price hikes. No limitations.
               </span>
             </p>
+          </div>
+
+          {/* Community Support Section */}
+          <div className="mt-8 rounded-xl bg-gray-100 p-6 text-center">
+            <h3 className="mb-3 text-xl font-bold text-gray-800">
+              Can't commit to a big sponsorship?
+            </h3>
+            <p className="mb-4 text-gray-600">
+              Every contribution helps! Support with any amount starting from
+              $5/month.
+            </p>
+            <a
+              href="https://github.com/sponsors/embedpdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-lg bg-gray-800 px-6 py-3 font-semibold text-white transition hover:bg-gray-900"
+            >
+              <svg
+                className="mr-2 h-5 w-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+              </svg>
+              Support on GitHub Sponsors
+            </a>
           </div>
         </div>
       </section>
 
+      {/* FAQ Section */}
       <section className="py-20">
         <div className="mx-auto max-w-4xl px-6">
           <h2 className="mb-12 text-center text-4xl font-black">
-            Common Questions
+            Questions I'm Hearing
           </h2>
 
           <div className="space-y-6">
@@ -1022,10 +1004,11 @@ export default function Enterprise() {
                 Why should I trust this will succeed?
               </h3>
               <p className="text-gray-700">
-                I've already built CloudPDF, a successful PDF platform. The Web
-                SDK is live with 1,800+ GitHub stars. This isn't a concept—it's
-                a working product that needs funding to reach its full
-                potential.
+                Fair question. Look at our track record: 1,800+ GitHub stars and
+                a working Web SDK in just 7 months with zero funding. I've been
+                building PDF technology for years and understand the ecosystem
+                deeply. The project has real momentum, active community
+                engagement, and proven development velocity.
               </p>
             </div>
 
@@ -1041,127 +1024,164 @@ export default function Enterprise() {
             </div>
 
             <div className="rounded-xl bg-white p-6 shadow-lg">
-              <h3 className="mb-3 text-xl font-bold">
-                How is this different from other open-source PDF libraries?
-              </h3>
+              <h3 className="mb-3 text-xl font-bold">Why $30,000/month?</h3>
               <p className="text-gray-700">
-                Most open-source PDF libraries are either abandoned,
-                feature-incomplete, or have restrictive licenses. EmbedPDF is
-                built on PDFium (Chrome's PDF engine), actively maintained, and
-                MIT licensed.
+                Transparency: This covers my salary as lead developer
+                ($15-18K/month) and hiring a senior mobile developer
+                ($12-15K/month). Two experienced developers working full-time
+                can deliver what normally takes a team of 5-10 at a big company.
+                We're lean, focused, and motivated.
               </p>
             </div>
 
             <div className="rounded-xl bg-white p-6 shadow-lg">
               <h3 className="mb-3 text-xl font-bold">
-                Can I try it before sponsoring?
+                What if we need features you haven't built yet?
               </h3>
               <p className="text-gray-700">
-                Absolutely! The Web SDK is already open source. Check it out on
-                GitHub, star it if you like it, and reach out when you're ready
-                to help us build the mobile SDKs.
+                That's the beauty of open source with active development. Gold
+                sponsors get custom feature development. Silver sponsors
+                influence the roadmap. And since it's MIT licensed, you can
+                always hire your own developers to add features. Try doing that
+                with Apryse's closed source code.
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-white p-6 shadow-lg">
+              <h3 className="mb-3 text-xl font-bold">
+                How do I justify this to my CFO?
+              </h3>
+              <p className="text-gray-700">
+                Simple ROI: If you're paying $150K+/year for a PDF SDK,
+                sponsoring at $30K/year saves you $120K annually. Plus you
+                eliminate vendor risk, gain code ownership, and can customize
+                anything. It's a no-brainer financially. I'm happy to jump on a
+                call with your finance team to walk through the numbers.
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-white p-6 shadow-lg">
+              <h3 className="mb-3 text-xl font-bold">Can we try it first?</h3>
+              <p className="text-gray-700">
+                Absolutely! Try it right now: &nbsp;
+                <a
+                  href="https://app.embedpdf.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-600 hover:text-blue-800"
+                >
+                  Live demo →
+                </a>{' '}
+                or &nbsp;
+                <a
+                  href="https://github.com/embedpdf/embed-pdf-viewer"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-600 hover:text-blue-800"
+                >
+                  browse the code →
+                </a>{' '}
+                Use it, test it, deploy it in production if you want. See for
+                yourself how it performs before making any sponsorship
+                decisions.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section
-        className="bg-gradient-to-br from-gray-900 to-blue-900 py-20 text-white"
-        id="contact"
-      >
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <h2 className="mb-6 text-4xl font-black md:text-5xl">
-            Are You Ready to Break Free?
-          </h2>
+      {/* Final CTA */}
+      <section className="py-20" id="contact">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="rounded-3xl bg-gradient-to-br from-gray-900 to-blue-900 px-6 py-20 text-center text-white md:px-10">
+            <h2 className="mb-6 text-4xl font-black md:text-5xl">
+              Ready to Own Your PDF Technology?
+            </h2>
 
-          <p className="mb-8 text-xl leading-relaxed">
-            If you're tired of being held hostage by closed-source PDF SDK
-            vendors, let's talk. Whether you want to sponsor, contribute code,
-            or just learn more, I want to hear from you.
-          </p>
+            <p className="mb-8 text-xl leading-relaxed">
+              Let's have a real conversation about breaking free from vendor
+              lock-in. I personally respond to every message.
+            </p>
 
-          <div className="mx-auto max-w-2xl rounded-2xl bg-white/10 p-8 backdrop-blur">
-            <h3 className="mb-6 text-2xl font-bold">Reach Out Directly</h3>
+            <div className="mx-auto max-w-2xl rounded-2xl bg-white/10 p-8 backdrop-blur">
+              <h3 className="mb-6 text-2xl font-bold">
+                Direct Line to the Founder
+              </h3>
 
-            <div className="space-y-4 text-lg">
-              <a
-                href="mailto:bob@embedpdf.com"
-                className="flex items-center justify-center hover:text-blue-300"
-              >
-                <svg
-                  className="mr-3 h-6 w-6"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+              <div className="space-y-4 text-lg">
+                <a
+                  href="mailto:bob.singor@embedpdf.com"
+                  className="flex items-center justify-center hover:text-blue-300"
                 >
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                </svg>
-                bob@embedpdf.com
-              </a>
+                  <svg
+                    className="mr-3 h-6 w-6"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                  </svg>
+                  bob.singor@embedpdf.com
+                </a>
 
-              <a
-                href="https://twitter.com/bobsingor"
-                target="_blank"
-                className="flex items-center justify-center hover:text-blue-300"
-              >
-                <svg
-                  className="mr-3 h-6 w-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
+                <a
+                  href="https://cal.com/embedpdf/30min"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center rounded-lg bg-blue-600 py-3 font-bold hover:bg-blue-700"
                 >
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                </svg>
-                @bobsingor on Twitter
-              </a>
+                  <svg
+                    className="mr-3 h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    ></path>
+                  </svg>
+                  Book a 30-min Call
+                </a>
 
-              <a
-                href="https://calendly.com/embedpdf"
-                target="_blank"
-                className="flex items-center justify-center rounded-lg bg-blue-600 py-3 font-bold hover:bg-blue-700"
-              >
-                <svg
-                  className="mr-3 h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <a
+                  href="https://discord.gg/mHHABmmuVU"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center hover:text-purple-300"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  ></path>
-                </svg>
-                Schedule a Call
-              </a>
+                  <svg
+                    className="mr-3 h-6 w-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
+                  </svg>
+                  Join our Discord
+                </a>
+              </div>
+
+              <p className="mt-6 text-sm text-gray-300">
+                Or find me on LinkedIn, Twitter (@bobsingor), or wherever you
+                prefer. Let's discuss how to save your company hundreds of
+                thousands per year.
+              </p>
             </div>
 
-            <p className="mt-6 text-sm text-gray-300">
-              Or just DM me on Discord, LinkedIn, or wherever you prefer. I
-              personally respond to every message.
-            </p>
-          </div>
-
-          <div className="mt-12">
-            <p className="mb-4 text-2xl font-bold">
-              Together, we can break the PDF SDK monopoly.
-            </p>
-            <p className="text-xl">
-              Let's build something the community owns. Forever.
-            </p>
+            <div className="mt-12">
+              <p className="mb-4 text-2xl font-bold">
+                Join the open-source PDF revolution.
+              </p>
+              <p className="text-xl">
+                Let's build technology that nobody can take away.
+              </p>
+            </div>
           </div>
         </div>
       </section>
-
-      <footer className="bg-gray-900 py-8 text-gray-400">
-        <div className="mx-auto max-w-6xl px-6 text-center">
-          <p>
-            © 2024 EmbedPDF. MIT Licensed. Built with frustration, maintained
-            with passion.
-          </p>
-        </div>
-      </footer>
-    </>
+    </div>
   )
 }
+export default Sponsorship2
