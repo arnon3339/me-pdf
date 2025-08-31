@@ -219,8 +219,8 @@ const ContactCTA = () => {
               </h2>
 
               <p className="mb-8 text-xl leading-relaxed text-gray-300">
-                Join enterprise teams already making the switch. We'll help you
-                plan a smooth migration from Apryse or Nutrient to EmbedPDF.
+                Join enterprise teams already making the switch. We&apos;ll help
+                you plan a smooth migration from Apryse or Nutrient to EmbedPDF.
               </p>
 
               <div className="space-y-4">
@@ -404,7 +404,7 @@ export default function Enterprise() {
                 {' '}
                 EmbedPDF changes that.
               </span>{' '}
-              It's an MIT-licensed, open-source PDF SDK built on the proven
+              It&apos;s an MIT-licensed, open-source PDF SDK built on the proven
               PDFium engine.
             </p>
 
@@ -442,7 +442,8 @@ export default function Enterprise() {
               </h2>
               <p className="mx-auto max-w-3xl text-xl text-gray-600">
                 Companies are tired of paying premium prices for black-box
-                solutions. Here's why they're choosing EmbedPDF instead.
+                solutions. Here&apos;s why they&apos;re choosing EmbedPDF
+                instead.
               </p>
             </div>
 
@@ -474,7 +475,7 @@ export default function Enterprise() {
           <div className="mb-24">
             <div className="mb-12 text-center">
               <h2 className="mb-6 text-4xl font-black text-gray-900 md:text-5xl">
-                The Numbers Don't Lie
+                The Numbers Don&apos;t Lie
               </h2>
               <p className="mx-auto max-w-2xl text-xl text-gray-600">
                 See exactly how EmbedPDF compares to the competition

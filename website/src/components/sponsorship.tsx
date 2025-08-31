@@ -145,10 +145,10 @@ const Sponsorship2: React.FC = () => {
 
             <p className="mb-6 text-xl leading-relaxed">
               These weren't just expensive licenses. They were{' '}
-              <strong>"black boxes"</strong> — closed source code you can't
-              inspect, modify, or truly own. Your entire product depends on
-              software you can't see, from vendors who can change pricing at any
-              time.
+              <strong>&quot;black boxes&quot;</strong> — closed source code you
+              can&apos;t inspect, modify, or truly own. Your entire product
+              depends on software you can&apos;t see, from vendors who can
+              change pricing at any time.
             </p>
 
             <p className="text-xl font-semibold leading-relaxed">
@@ -313,8 +313,8 @@ const Sponsorship2: React.FC = () => {
                 Healthcare SaaS
               </div>
               <p className="mb-3 text-gray-700">
-                "Nutrient wants $120,000 for features we'll barely use. We have
-                no alternatives."
+                &quot;Nutrient wants $120,000 for features we&apos;ll barely
+                use. We have no alternatives."
               </p>
               <div className="text-sm text-gray-500">
                 — Head of Engineering, Zoom call
@@ -337,8 +337,8 @@ const Sponsorship2: React.FC = () => {
                 Legal Tech Company
               </div>
               <p className="mb-3 text-gray-700">
-                "We can't audit the code. For a security-critical application,
-                that's insane."
+                &quot;We can&apos;t audit the code. For a security-critical
+                application, that&apos;s insane.&quot;
               </p>
               <div className="text-sm text-gray-500">
                 — Security Lead, LinkedIn
@@ -350,7 +350,8 @@ const Sponsorship2: React.FC = () => {
                 Enterprise Software
               </div>
               <p className="mb-3 text-gray-700">
-                "We're quoted $350,000/year. That's 3 engineer salaries."
+                &quot;We&apos;re quoted $350,000/year. That&apos;s 3 engineer
+                salaries.&quot;
               </p>
               <div className="text-sm text-gray-500">
                 — VP Engineering, Phone call
@@ -362,7 +363,8 @@ const Sponsorship2: React.FC = () => {
                 Startup (Pre-seed)
               </div>
               <p className="mb-3 text-gray-700">
-                "$25,000 minimum? That's our entire tools budget for the year."
+                &quot;$25,000 minimum? That&apos;s our entire tools budget for
+                the year.&quot;
               </p>
               <div className="text-sm text-gray-500">
                 — Solo founder, Twitter
@@ -376,7 +378,7 @@ const Sponsorship2: React.FC = () => {
               vendors.
             </p>
             <p className="text-xl text-gray-600">
-              It's time for an open-source alternative that companies can
+              It&apos;s time for an open-source alternative that companies can
               actually own.
             </p>
           </div>
@@ -885,7 +887,7 @@ const Sponsorship2: React.FC = () => {
           {/* Community Support Section */}
           <div className="mt-8 rounded-xl bg-gray-100 p-6 text-center">
             <h3 className="mb-3 text-xl font-bold text-gray-800">
-              Can't commit to a big sponsorship?
+              Can&apos;t commit to a big sponsorship?
             </h3>
             <p className="mb-4 text-gray-600">
               Every contribution helps! Support with any amount starting from
@@ -914,7 +916,7 @@ const Sponsorship2: React.FC = () => {
       <section className="py-20">
         <div className="mx-auto max-w-4xl px-6">
           <h2 className="mb-12 text-center text-4xl font-black">
-            Questions I'm Hearing
+            Questions I&apos;m Hearing
           </h2>
 
           <div className="space-y-6">
@@ -937,8 +939,8 @@ const Sponsorship2: React.FC = () => {
               </h3>
               <p className="text-gray-700">
                 The code is MIT licensed forever. Even if I get hit by a bus
-                tomorrow, the community owns the code. That's the beauty of open
-                source—no single entity can take it away.
+                tomorrow, the community owns the code. That&apos;s the beauty of
+                open source—no single entity can take it away.
               </p>
             </div>
 
@@ -958,9 +960,9 @@ const Sponsorship2: React.FC = () => {
                 What if we need features you haven't built yet?
               </h3>
               <p className="text-gray-700">
-                That's the beauty of open source with active development. Gold
-                sponsors get custom feature development. Silver sponsors
-                influence the roadmap. And since it's MIT licensed, you can
+                That&apos;s the beauty of open source with active development.
+                Gold sponsors get custom feature development. Silver sponsors
+                influence the roadmap. And since it&apos;s MIT licensed, you can
                 always hire your own developers to add features. Try doing that
                 with Apryse's closed source code.
               </p>
@@ -971,11 +973,12 @@ const Sponsorship2: React.FC = () => {
                 How do I justify this to my CFO?
               </h3>
               <p className="text-gray-700">
-                Simple ROI: If you're paying $150K+/year for a PDF SDK,
+                Simple ROI: If you&apos;re paying $150K+/year for a PDF SDK,
                 sponsoring at $30K/year saves you $120K annually. Plus you
                 eliminate vendor risk, gain code ownership, and can customize
-                anything. It's a no-brainer financially. I'm happy to jump on a
-                call with your finance team to walk through the numbers.
+                anything. It&apos;s a no-brainer financially. I&apos;m happy to
+                jump on a call with your finance team to walk through the
+                numbers.
               </p>
             </div>
 
