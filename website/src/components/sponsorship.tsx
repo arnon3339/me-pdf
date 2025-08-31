@@ -232,148 +232,57 @@ const Sponsorship2: React.FC = () => {
       </section>
 
       {/* Our Progress in 7 Months */}
-      <section className="py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="rounded-3xl bg-gradient-to-br from-blue-50 to-purple-50 px-6 py-20 md:px-10">
-            <h2 className="mb-8 text-center text-4xl font-black">
+      <section className="bg-gray-50 py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="text-center">
+            <h2 className="mb-6 text-3xl font-bold text-gray-900 md:text-4xl">
               What We Built in 7 Months{' '}
               <span className="text-gray-500">(With Zero Funding)</span>
             </h2>
 
-            <div className="mb-12 rounded-2xl bg-white p-8 shadow-xl">
-              <div className="grid gap-8 text-center md:grid-cols-3">
+            <div className="mb-12 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="grid gap-6 text-center md:grid-cols-3">
                 <div>
-                  <div className="mb-2 text-5xl font-black text-blue-600">
+                  <div className="mb-1 text-3xl font-black text-blue-600">
                     1,800+
                   </div>
-                  <div className="text-xl font-semibold">GitHub Stars</div>
-                  <div className="text-gray-600">
+                  <div className="text-lg font-semibold">GitHub Stars</div>
+                  <div className="text-sm text-gray-500">
                     Organic developer interest
                   </div>
                 </div>
                 <div>
-                  <div className="mb-2 text-5xl font-black text-green-600">
+                  <div className="mb-1 text-3xl font-black text-green-600">
                     Web SDK
                   </div>
-                  <div className="text-xl font-semibold">Production Ready</div>
-                  <div className="text-gray-600">Used by real companies</div>
+                  <div className="text-lg font-semibold">Production Ready</div>
+                  <div className="text-sm text-gray-500">
+                    Used by real companies
+                  </div>
                 </div>
                 <div>
-                  <div className="mb-2 text-5xl font-black text-purple-600">
+                  <div className="mb-1 text-3xl font-black text-purple-600">
                     100%
                   </div>
-                  <div className="text-xl font-semibold">Open Source</div>
-                  <div className="text-gray-600">MIT licensed forever</div>
+                  <div className="text-lg font-semibold">Open Source</div>
+                  <div className="text-sm text-gray-500">
+                    MIT licensed forever
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="text-center">
-              <h3 className="mb-6 text-3xl font-bold">
-                <span className="gradient-text">
-                  Our Vision: A Complete Multi-Platform PDF SDK
-                </span>
+              <h3 className="mb-6 text-2xl font-bold text-gray-900">
+                Our Vision: A Complete Multi-Platform PDF SDK
               </h3>
 
-              <div className="mx-auto max-w-4xl rounded-xl bg-white p-8 shadow-lg">
-                <div className="space-y-4 text-left">
-                  <div className="flex items-start">
-                    <div className="mr-4 mt-1 rounded-full bg-blue-100 p-2">
-                      <svg
-                        className="h-4 w-4 text-blue-600"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                          clipRule="evenodd"
-                        ></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold">
-                        Universal Platform Support
-                      </div>
-                      <div className="text-gray-600">
-                        Native Web, Mobile, Desktop, Server-side - everywhere
-                        your users are
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="mr-4 mt-1 rounded-full bg-green-100 p-2">
-                      <svg
-                        className="h-4 w-4 text-green-600"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-                          clipRule="evenodd"
-                        ></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold">
-                        Enterprise-Grade Performance
-                      </div>
-                      <div className="text-gray-600">
-                        Advanced rendering, annotations, forms, and digital
-                        signatures
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="mr-4 mt-1 rounded-full bg-purple-100 p-2">
-                      <svg
-                        className="h-4 w-4 text-purple-600"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                          clipRule="evenodd"
-                        ></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold">
-                        Sponsor-Driven Development
-                      </div>
-                      <div className="text-gray-600">
-                        Your needs determine our priorities - we build what you
-                        need first
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="mr-4 mt-1 rounded-full bg-orange-100 p-2">
-                      <svg
-                        className="h-4 w-4 text-orange-600"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
-                          clipRule="evenodd"
-                        ></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold">
-                        100% Open Source Forever
-                      </div>
-                      <div className="text-gray-600">
-                        MIT licensed - you own it, customize it, never worry
-                        about vendor lock-in
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="mx-auto max-w-3xl text-center">
+                <p className="text-lg leading-relaxed text-gray-600">
+                  Universal platform support, enterprise-grade performance,
+                  sponsor-driven development, and 100% open source forever —
+                  building the PDF SDK developers deserve.
+                </p>
               </div>
             </div>
           </div>
