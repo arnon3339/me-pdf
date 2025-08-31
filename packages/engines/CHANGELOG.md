@@ -1,5 +1,13 @@
 # @embedpdf/engines
 
+## 1.0.24
+
+### Patch Changes
+
+- [#127](https://github.com/embedpdf/embed-pdf-viewer/pull/127) by [@bobsingor](https://github.com/bobsingor) – Add yield function to check for abortions before executing
+
+- [#127](https://github.com/embedpdf/embed-pdf-viewer/pull/127) by [@bobsingor](https://github.com/bobsingor) – Add Memory Manager to the engine for better memory safety
+
 ## 1.0.23
 
 ### Patch Changes

@@ -1,5 +1,7 @@
 # @embedpdf/plugin-thumbnail
 
+## 1.0.24
+
 ## 1.0.23
 
 ## 1.0.22
