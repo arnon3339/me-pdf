@@ -94,7 +94,7 @@ export class ScrollPlugin extends BasePlugin<
     // Subscribe to viewport and page manager events
     this.viewport.onViewportChange((vp) => this.commitMetrics(this.computeMetrics(vp)), {
       mode: 'throttle',
-      wait: 250,
+      wait: 100,
     });
     this.coreStore.onAction(SET_DOCUMENT, (_action, state) => {
       const totalPages = state.core.pages.length;

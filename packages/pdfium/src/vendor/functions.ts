@@ -1,6 +1,10 @@
 /* AUTO-GENERATED — DO NOT EDIT BY HAND */
 export const functions = {
   EPDF_HasMetaText: [['number', 'string'] as const, 'boolean'] as const,
+  EPDF_PNG_EncodeRGBA: [
+    ['number', 'number', 'number', 'number', 'number', 'number'] as const,
+    'number',
+  ] as const,
   EPDF_RenderAnnotBitmap: [
     ['number', 'number', 'number', 'number', 'number', 'number'] as const,
     'boolean',

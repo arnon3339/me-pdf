@@ -77,6 +77,7 @@ export class ViewportPlugin extends BasePlugin<
         },
       scrollTo: (pos: ScrollToPayload) => this.scrollTo(pos),
       isScrolling: () => this.state.isScrolling,
+      isSmoothScrolling: () => this.state.isSmoothScrolling,
       onScrollChange: this.scrollMetrics$.on,
       onViewportChange: this.viewportMetrics$.on,
       onViewportResize: this.viewportResize$.on,

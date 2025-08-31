@@ -3,7 +3,7 @@ import { Size } from '@embedpdf/models';
 
 import { useRotateCapability } from '../hooks';
 
-type RotateProps = Omit<HTMLAttributes<HTMLImageElement>, 'style'> & {
+type RotateProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   children: ReactNode;
   pageSize: Size;
   style?: CSSProperties;

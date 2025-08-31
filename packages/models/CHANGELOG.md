@@ -1,5 +1,17 @@
 # @embedpdf/models
 
+## 1.0.24
+
+### Patch Changes
+
+- [#127](https://github.com/embedpdf/embed-pdf-viewer/pull/127) by [@bobsingor](https://github.com/bobsingor) – Add isEnabled function to the logger to check if in what mode we are in
+
+## 1.0.23
+
+### Patch Changes
+
+- [#125](https://github.com/embedpdf/embed-pdf-viewer/pull/125) by [@bobsingor](https://github.com/bobsingor) – Add fallback if offscreen canvas is not supported (this will solve #50)
+
 ## 1.0.22
 
 ## 1.0.21

@@ -6,7 +6,7 @@ import sharp from 'sharp';
 import { init } from '@embedpdf/pdfium';
 import { PdfiumEngine } from '@embedpdf/engines/pdfium';
 import { createNodeImageDataToBufferConverter } from '@embedpdf/engines/converters';
-import { ConsoleLogger } from '@embedpdf/models';
+import { ConsoleLogger, Rotation } from '@embedpdf/models';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -33,8 +33,13 @@ async function runExample() {
     })
     .toPromise();
 
-  const pdfImage = await engine.renderPage(document, document.pages[0]).toPromise();
-  await writeFile(join(__dirname, 'output.webp'), pdfImage);
+  const pdfImage = await engine
+    .renderPage(document, document.pages[0], {
+      rotation: Rotation.Degree0,
+      imageType: 'image/png',
+    })
+    .toPromise();
+  await writeFile(join(__dirname, 'output.png'), pdfImage);
 
   await engine.closeDocument(document).toPromise();
 

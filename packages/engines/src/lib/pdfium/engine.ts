@@ -39,7 +39,6 @@ import {
   PdfSquigglyAnnoObject,
   PdfStrikeOutAnnoObject,
   PdfUnderlineAnnoObject,
-  transformSize,
   PdfFile,
   PdfSegmentObject,
   AppearanceMode,
@@ -73,12 +72,10 @@ import {
   PdfPageGeometry,
   PdfRun,
   toIntRect,
-  toIntSize,
   Quad,
   PdfAnnotationState,
   PdfAnnotationStateModel,
   quadToRect,
-  PdfImage,
   ImageConversionTypes,
   PageTextSlice,
   stripPdfUnwantedMarkers,
@@ -89,7 +86,6 @@ import {
   PdfAnnotationBorderStyle,
   flagsToNames,
   PdfAnnotationFlagName,
-  makeMatrix,
   namesToFlags,
   PdfAnnotationLineEnding,
   LinePoints,
@@ -116,12 +112,17 @@ import {
   PdfRenderThumbnailOptions,
   PdfRenderPageOptions,
   PdfAnnotationsProgress,
+  ConvertToBlobOptions,
+  buildUserToDeviceMatrix,
   PdfMetadataObject,
   PdfPrintOptions,
 } from '@embedpdf/models';
 import { readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { DocumentContext, PageContext, PdfCache } from './cache';
+import { ImageDataConverter, LazyImageData } from '../converters/types';
+import { MemoryManager } from './core/memory-manager';
+import { WasmPointer } from './types/branded';
 
 /**
  * Format of bitmap
@@ -185,40 +186,40 @@ export enum PdfiumErrorCode {
   XFALayout = 8,
 }
 
-/**
- * Function type for converting ImageData to Blob
- * In browser: uses OffscreenCanvas
- * In Node.js: can use Sharp or other image processing libraries
- */
-export type ImageDataConverter<T = Blob> = (
-  imageData: PdfImage,
-  imageType?: ImageConversionTypes,
-) => Promise<T>;
-
-export const browserImageDataToBlobConverter: ImageDataConverter<Blob> = (
-  pdfImageData: PdfImage,
-  imageType: ImageConversionTypes = 'image/webp',
-): Promise<Blob> => {
-  // Check if we're in a browser environment
-  if (typeof OffscreenCanvas === 'undefined') {
-    throw new Error(
-      'OffscreenCanvas is not available in this environment. ' +
-        'This converter is intended for browser use only. ' +
-        'Please use createNodeImageDataToBlobConverter() or createNodeCanvasImageDataToBlobConverter() for Node.js.',
-    );
-  }
-
-  const rgba = new Uint8ClampedArray(pdfImageData.data);
-  const imageData = new ImageData(rgba, pdfImageData.width, pdfImageData.height);
-  const off = new OffscreenCanvas(imageData.width, imageData.height);
-  off.getContext('2d')!.putImageData(imageData, 0, 0);
-  return off.convertToBlob({ type: imageType });
-};
-
 interface PdfiumEngineOptions<T> {
   logger?: Logger;
   imageDataConverter?: ImageDataConverter<T>;
 }
+
+export class OffscreenCanvasError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'OffscreenCanvasError';
+  }
+}
+
+export const browserImageDataToBlobConverter: ImageDataConverter<Blob> = (
+  getImageData: LazyImageData,
+  imageType: ImageConversionTypes = 'image/webp',
+  quality?: number,
+): Promise<Blob> => {
+  // Check if we're in a browser environment
+  if (typeof OffscreenCanvas === 'undefined') {
+    return Promise.reject(
+      new OffscreenCanvasError(
+        'OffscreenCanvas is not available in this environment. ' +
+          'This converter is intended for browser use only. ' +
+          'Falling back to WASM-based image encoding.',
+      ),
+    );
+  }
+
+  const pdfImage = getImageData();
+  const imageData = new ImageData(pdfImage.data, pdfImage.width, pdfImage.height);
+  const off = new OffscreenCanvas(imageData.width, imageData.height);
+  off.getContext('2d')!.putImageData(imageData, 0, 0);
+  return off.convertToBlob({ type: imageType, quality });
+};
 
 /**
  * Pdf engine that based on pdfium wasm
@@ -228,6 +229,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * pdf documents that opened
    */
   private readonly cache: PdfCache;
+
+  /**
+   * memory manager instance
+   */
+  private readonly memoryManager: MemoryManager;
 
   /**
    * logger instance
@@ -257,6 +263,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.cache = new PdfCache(this.pdfiumModule);
     this.logger = logger;
     this.imageDataConverter = imageDataConverter;
+    this.memoryManager = new MemoryManager(this.pdfiumModule, this.logger);
+
+    if (this.logger.isEnabled('debug')) {
+      setInterval(() => {
+        this.memoryManager.checkLeaks();
+      }, 10000);
+    }
   }
   /**
    * {@inheritDoc @embedpdf/models!PdfEngine.initialize}
@@ -480,7 +493,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentBuffer`, 'Begin', file.id);
     const array = new Uint8Array(file.content);
     const length = array.length;
-    const filePtr = this.malloc(length);
+    const filePtr = this.memoryManager.malloc(length);
     this.pdfiumModule.pdfium.HEAPU8.set(array, filePtr);
 
     const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, options?.password ?? '');
@@ -488,7 +501,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (!docPtr) {
       const lastError = this.pdfiumModule.FPDF_GetLastError();
       this.logger.error(LOG_SOURCE, LOG_CATEGORY, `FPDF_LoadMemDocument failed with ${lastError}`);
-      this.free(filePtr);
+      this.memoryManager.free(filePtr);
       this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentBuffer`, 'End', file.id);
 
       return PdfTaskHelper.reject<PdfDocumentObject>({
@@ -500,7 +513,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const pageCount = this.pdfiumModule.FPDF_GetPageCount(docPtr);
 
     const pages: PdfPageObject[] = [];
-    const sizePtr = this.malloc(8);
+    const sizePtr = this.memoryManager.malloc(8);
     for (let index = 0; index < pageCount; index++) {
       const result = this.pdfiumModule.FPDF_GetPageSizeByIndexF(docPtr, index, sizePtr);
       if (!result) {
@@ -510,9 +523,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           LOG_CATEGORY,
           `FPDF_GetPageSizeByIndexF failed with ${lastError}`,
         );
-        this.free(sizePtr);
+        this.memoryManager.free(sizePtr);
         this.pdfiumModule.FPDF_CloseDocument(docPtr);
-        this.free(filePtr);
+        this.memoryManager.free(filePtr);
         this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentBuffer`, 'End', file.id);
         return PdfTaskHelper.reject<PdfDocumentObject>({
           code: lastError,
@@ -530,7 +543,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
       pages.push(page);
     }
-    this.free(sizePtr);
+    this.memoryManager.free(sizePtr);
 
     const pdfDoc: PdfDocumentObject = {
       id: file.id,
@@ -583,7 +596,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     // Create FPDF_FILEACCESS struct
     const structSize = 12;
-    const fileAccessPtr = this.malloc(structSize);
+    const fileAccessPtr = this.memoryManager.malloc(structSize);
 
     // Set up struct fields
     this.pdfiumModule.pdfium.setValue(fileAccessPtr, fileLength, 'i32');
@@ -600,7 +613,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         LOG_CATEGORY,
         `FPDF_LoadCustomDocument failed with ${lastError}`,
       );
-      this.free(fileAccessPtr);
+      this.memoryManager.free(fileAccessPtr);
       this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromLoader`, 'End', file.id);
 
       return PdfTaskHelper.reject<PdfDocumentObject>({
@@ -612,7 +625,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const pageCount = this.pdfiumModule.FPDF_GetPageCount(docPtr);
 
     const pages: PdfPageObject[] = [];
-    const sizePtr = this.malloc(8);
+    const sizePtr = this.memoryManager.malloc(8);
     for (let index = 0; index < pageCount; index++) {
       const result = this.pdfiumModule.FPDF_GetPageSizeByIndexF(docPtr, index, sizePtr);
       if (!result) {
@@ -622,9 +635,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           LOG_CATEGORY,
           `FPDF_GetPageSizeByIndexF failed with ${lastError}`,
         );
-        this.free(sizePtr);
+        this.memoryManager.free(sizePtr);
         this.pdfiumModule.FPDF_CloseDocument(docPtr);
-        this.free(fileAccessPtr);
+        this.memoryManager.free(fileAccessPtr);
         this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `OpenDocumentFromLoader`, 'End', file.id);
         return PdfTaskHelper.reject<PdfDocumentObject>({
           code: lastError,
@@ -642,7 +655,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
       pages.push(page);
     }
-    this.free(sizePtr);
+    this.memoryManager.free(sizePtr);
 
     const pdfDoc: PdfDocumentObject = {
       id: file.id,
@@ -923,34 +936,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     page: PdfPageObject,
     options?: PdfRenderPageOptions,
   ): PdfTask<T> {
-    const { imageType = 'image/webp' } = options ?? {};
-    const task = new Task<T, PdfErrorReason>();
-
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'renderPage', doc, page, options);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPage`, 'Begin', `${doc.id}-${page.index}`);
 
-    const ctx = this.cache.getContext(doc.id);
-
-    if (!ctx) {
-      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPage`, 'End', `${doc.id}-${page.index}`);
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    const imageData = this.renderPageRectToImageData(
-      ctx,
-      page,
-      {
-        origin: { x: 0, y: 0 },
-        size: page.size,
-      },
-      options,
-    );
+    const rect = { origin: { x: 0, y: 0 }, size: page.size };
+    const task = this.renderRectEncoded(doc, page, rect, options);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPage`, 'End', `${doc.id}-${page.index}`);
-
-    this.imageDataConverter(imageData, imageType).then((blob) => task.resolve(blob));
 
     return task;
   }
@@ -966,9 +957,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     rect: Rect,
     options?: PdfRenderPageOptions,
   ): PdfTask<T> {
-    const { imageType = 'image/webp' } = options ?? {};
-    const task = new Task<T, PdfErrorReason>();
-
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'renderPageRect', doc, page, rect, options);
     this.logger.perf(
       LOG_SOURCE,
@@ -978,26 +966,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       `${doc.id}-${page.index}`,
     );
 
-    const ctx = this.cache.getContext(doc.id);
-
-    if (!ctx) {
-      this.logger.perf(
-        LOG_SOURCE,
-        LOG_CATEGORY,
-        `RenderPageRect`,
-        'End',
-        `${doc.id}-${page.index}`,
-      );
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.DocNotOpen,
-        message: 'document does not open',
-      });
-    }
-
-    const imageData = this.renderPageRectToImageData(ctx, page, rect, options);
+    const task = this.renderRectEncoded(doc, page, rect, options);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderPageRect`, 'End', `${doc.id}-${page.index}`);
-
-    this.imageDataConverter(imageData, imageType).then((blob) => task.resolve(blob));
 
     return task;
   }
@@ -1672,9 +1642,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     const attachmentPtr = this.pdfiumModule.FPDFDoc_GetAttachment(ctx.docPtr, attachment.index);
-    const sizePtr = this.malloc(4);
+    const sizePtr = this.memoryManager.malloc(4);
     if (!this.pdfiumModule.FPDFAttachment_GetFile(attachmentPtr, 0, 0, sizePtr)) {
-      this.free(sizePtr);
+      this.memoryManager.free(sizePtr);
       this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `ReadAttachmentContent`, 'End', doc.id);
       return PdfTaskHelper.reject({
         code: PdfErrorCode.CantReadAttachmentSize,
@@ -1683,10 +1653,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
     const size = this.pdfiumModule.pdfium.getValue(sizePtr, 'i32') >>> 0;
 
-    const contentPtr = this.malloc(size);
+    const contentPtr = this.memoryManager.malloc(size);
     if (!this.pdfiumModule.FPDFAttachment_GetFile(attachmentPtr, contentPtr, size, sizePtr)) {
-      this.free(sizePtr);
-      this.free(contentPtr);
+      this.memoryManager.free(sizePtr);
+      this.memoryManager.free(contentPtr);
       this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `ReadAttachmentContent`, 'End', doc.id);
 
       return PdfTaskHelper.reject({
@@ -1701,8 +1671,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       view.setInt8(i, this.pdfiumModule.pdfium.getValue(contentPtr + i, 'i8'));
     }
 
-    this.free(sizePtr);
-    this.free(contentPtr);
+    this.memoryManager.free(sizePtr);
+    this.memoryManager.free(contentPtr);
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `ReadAttachmentContent`, 'End', doc.id);
 
     return PdfTaskHelper.resolve(buffer);
@@ -1825,10 +1795,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
             });
           }
           const length = 2 * (value.text.length + 1);
-          const textPtr = this.malloc(length);
+          const textPtr = this.memoryManager.malloc(length);
           this.pdfiumModule.pdfium.stringToUTF16(value.text, textPtr, length);
           this.pdfiumModule.FORM_ReplaceSelection(formHandle, pageCtx.pagePtr, textPtr);
-          this.free(textPtr);
+          this.memoryManager.free(textPtr);
         }
         break;
       case 'selection':
@@ -1974,7 +1944,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    const pageIndexesPtr = this.malloc(pageIndexes.length * 4);
+    const pageIndexesPtr = this.memoryManager.malloc(pageIndexes.length * 4);
     for (let i = 0; i < pageIndexes.length; i++) {
       this.pdfiumModule.pdfium.setValue(pageIndexesPtr + i * 4, pageIndexes[i], 'i32');
     }
@@ -2028,10 +1998,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const pageCtx = ctx.acquirePage(pageIndexes[i]);
       const textPagePtr = this.pdfiumModule.FPDFText_LoadPage(pageCtx.pagePtr);
       const charCount = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
-      const bufferPtr = this.malloc((charCount + 1) * 2);
+      const bufferPtr = this.memoryManager.malloc((charCount + 1) * 2);
       this.pdfiumModule.FPDFText_GetText(textPagePtr, 0, charCount, bufferPtr);
       const text = this.pdfiumModule.pdfium.UTF16ToString(bufferPtr);
-      this.free(bufferPtr);
+      this.memoryManager.free(bufferPtr);
       strings.push(text);
       this.pdfiumModule.FPDFText_ClosePage(textPagePtr);
       pageCtx.release();
@@ -2085,10 +2055,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         const textPagePtr = pageCtx.getTextPage();
 
         for (const { slice, pos } of list) {
-          const bufPtr = this.malloc(2 * (slice.charCount + 1)); // UTF-16 + NIL
+          const bufPtr = this.memoryManager.malloc(2 * (slice.charCount + 1)); // UTF-16 + NIL
           this.pdfiumModule.FPDFText_GetText(textPagePtr, slice.charIndex, slice.charCount, bufPtr);
           out[pos] = stripPdfUnwantedMarkers(this.pdfiumModule.pdfium.UTF16ToString(bufPtr));
-          this.free(bufPtr);
+          this.memoryManager.free(bufPtr);
         }
         pageCtx.release();
       }
@@ -2124,11 +2094,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    const ptrs: { docPtr: number; filePtr: number }[] = [];
+    const ptrs: { docPtr: number; filePtr: WasmPointer }[] = [];
     for (const file of files.reverse()) {
       const array = new Uint8Array(file.content);
       const length = array.length;
-      const filePtr = this.malloc(length);
+      const filePtr = this.memoryManager.malloc(length);
       this.pdfiumModule.pdfium.HEAPU8.set(array, filePtr);
 
       const docPtr = this.pdfiumModule.FPDF_LoadMemDocument(filePtr, length, '');
@@ -2139,11 +2109,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           LOG_CATEGORY,
           `FPDF_LoadMemDocument failed with ${lastError}`,
         );
-        this.free(filePtr);
+        this.memoryManager.free(filePtr);
 
         for (const ptr of ptrs) {
           this.pdfiumModule.FPDF_CloseDocument(ptr.docPtr);
-          this.free(ptr.filePtr);
+          this.memoryManager.free(ptr.filePtr);
         }
 
         this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `Merge`, 'End', fileIds);
@@ -2159,7 +2129,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
         for (const ptr of ptrs) {
           this.pdfiumModule.FPDF_CloseDocument(ptr.docPtr);
-          this.free(ptr.filePtr);
+          this.memoryManager.free(ptr.filePtr);
         }
 
         this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `Merge`, 'End', fileIds);
@@ -2175,7 +2145,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     for (const ptr of ptrs) {
       this.pdfiumModule.FPDF_CloseDocument(ptr.docPtr);
-      this.free(ptr.filePtr);
+      this.memoryManager.free(ptr.filePtr);
     }
 
     const file: PdfFile = {
@@ -2330,32 +2300,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     ctx.dispose();
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `CloseDocument`, 'End', doc.id);
     return PdfTaskHelper.resolve(true);
-  }
-
-  /**
-   * Memory allocation
-   * @param size - size of memory space
-   * @returns pointer to memory space
-   *
-   * @public
-   */
-  malloc(size: number) {
-    const ptr = this.pdfiumModule.pdfium.wasmExports.malloc(size);
-    for (let i = 0; i < size; i++) {
-      this.pdfiumModule.pdfium.HEAP8[ptr + i] = 0;
-    }
-
-    return ptr;
-  }
-
-  /**
-   * Free memory space
-   * @param ptr pointer to memory space
-   *
-   * @public
-   */
-  free(ptr: number) {
-    this.pdfiumModule.pdfium.wasmExports.free(ptr);
   }
 
   /**
@@ -2951,7 +2895,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const bytesPerPixel = 4;
     const pixelCount = imageData.width * imageData.height;
 
-    const bitmapBufferPtr = this.malloc(bytesPerPixel * pixelCount);
+    const bitmapBufferPtr = this.memoryManager.malloc(bytesPerPixel * pixelCount);
     if (!bitmapBufferPtr) {
       return false;
     }
@@ -2977,25 +2921,25 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       0,
     );
     if (!bitmapPtr) {
-      this.free(bitmapBufferPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
 
     const imageObjectPtr = this.pdfiumModule.FPDFPageObj_NewImageObj(docPtr);
     if (!imageObjectPtr) {
       this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-      this.free(bitmapBufferPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
 
     if (!this.pdfiumModule.FPDFImageObj_SetBitmap(pagePtr, 0, imageObjectPtr, bitmapPtr)) {
       this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
       this.pdfiumModule.FPDFPageObj_Destroy(imageObjectPtr);
-      this.free(bitmapBufferPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
 
-    const matrixPtr = this.malloc(6 * 4);
+    const matrixPtr = this.memoryManager.malloc(6 * 4);
     this.pdfiumModule.pdfium.setValue(matrixPtr, imageData.width, 'float');
     this.pdfiumModule.pdfium.setValue(matrixPtr + 4, 0, 'float');
     this.pdfiumModule.pdfium.setValue(matrixPtr + 8, 0, 'float');
@@ -3003,13 +2947,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.pdfiumModule.pdfium.setValue(matrixPtr + 16, 0, 'float');
     this.pdfiumModule.pdfium.setValue(matrixPtr + 20, 0, 'float');
     if (!this.pdfiumModule.FPDFPageObj_SetMatrix(imageObjectPtr, matrixPtr)) {
-      this.free(matrixPtr);
+      this.memoryManager.free(matrixPtr);
       this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
       this.pdfiumModule.FPDFPageObj_Destroy(imageObjectPtr);
-      this.free(bitmapBufferPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
-    this.free(matrixPtr);
+    this.memoryManager.free(matrixPtr);
 
     const pagePos = this.convertDevicePointToPagePoint(page, {
       x: position.x,
@@ -3020,12 +2964,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (!this.pdfiumModule.FPDFAnnot_AppendObject(annotationPtr, imageObjectPtr)) {
       this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
       this.pdfiumModule.FPDFPageObj_Destroy(imageObjectPtr);
-      this.free(bitmapBufferPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
 
     this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-    this.free(bitmapBufferPtr);
+    this.memoryManager.free(bitmapBufferPtr);
 
     return true;
   }
@@ -3041,14 +2985,14 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const writerPtr = this.pdfiumModule.PDFiumExt_OpenFileWriter();
     this.pdfiumModule.PDFiumExt_SaveAsCopy(docPtr, writerPtr);
     const size = this.pdfiumModule.PDFiumExt_GetFileWriterSize(writerPtr);
-    const dataPtr = this.malloc(size);
+    const dataPtr = this.memoryManager.malloc(size);
     this.pdfiumModule.PDFiumExt_GetFileWriterData(writerPtr, dataPtr, size);
     const buffer = new ArrayBuffer(size);
     const view = new DataView(buffer);
     for (let i = 0; i < size; i++) {
       view.setInt8(i, this.pdfiumModule.pdfium.getValue(dataPtr + i, 'i8'));
     }
-    this.free(dataPtr);
+    this.memoryManager.free(dataPtr);
     this.pdfiumModule.PDFiumExt_CloseFileWriter(writerPtr);
 
     return buffer;
@@ -3099,13 +3043,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     // UTF-16LE buffer (+2 bytes for NUL)
     const bytes = 2 * (value.length + 1);
-    const ptr = this.malloc(bytes);
+    const ptr = this.memoryManager.malloc(bytes);
     try {
       this.pdfiumModule.pdfium.stringToUTF16(value, ptr, bytes);
       const ok = this.pdfiumModule.EPDF_SetMetaText(docPtr, key, ptr);
       return !!ok;
     } finally {
-      this.free(ptr);
+      this.memoryManager.free(ptr);
     }
   }
 
@@ -3189,10 +3133,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     const textRects: PdfTextRectObject[] = [];
     for (let i = 0; i < rectsCount; i++) {
-      const topPtr = this.malloc(8);
-      const leftPtr = this.malloc(8);
-      const rightPtr = this.malloc(8);
-      const bottomPtr = this.malloc(8);
+      const topPtr = this.memoryManager.malloc(8);
+      const leftPtr = this.memoryManager.malloc(8);
+      const rightPtr = this.memoryManager.malloc(8);
+      const bottomPtr = this.memoryManager.malloc(8);
       const isSucceed = this.pdfiumModule.FPDFText_GetRect(
         textPagePtr,
         i,
@@ -3202,10 +3146,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         bottomPtr,
       );
       if (!isSucceed) {
-        this.free(leftPtr);
-        this.free(topPtr);
-        this.free(rightPtr);
-        this.free(bottomPtr);
+        this.memoryManager.free(leftPtr);
+        this.memoryManager.free(topPtr);
+        this.memoryManager.free(rightPtr);
+        this.memoryManager.free(bottomPtr);
         continue;
       }
 
@@ -3214,13 +3158,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const right = this.pdfiumModule.pdfium.getValue(rightPtr, 'double');
       const bottom = this.pdfiumModule.pdfium.getValue(bottomPtr, 'double');
 
-      this.free(leftPtr);
-      this.free(topPtr);
-      this.free(rightPtr);
-      this.free(bottomPtr);
+      this.memoryManager.free(leftPtr);
+      this.memoryManager.free(topPtr);
+      this.memoryManager.free(rightPtr);
+      this.memoryManager.free(bottomPtr);
 
-      const deviceXPtr = this.malloc(4);
-      const deviceYPtr = this.malloc(4);
+      const deviceXPtr = this.memoryManager.malloc(4);
+      const deviceYPtr = this.memoryManager.malloc(4);
       this.pdfiumModule.FPDF_PageToDevice(
         pagePtr,
         0,
@@ -3235,8 +3179,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       );
       const x = this.pdfiumModule.pdfium.getValue(deviceXPtr, 'i32');
       const y = this.pdfiumModule.pdfium.getValue(deviceYPtr, 'i32');
-      this.free(deviceXPtr);
-      this.free(deviceYPtr);
+      this.memoryManager.free(deviceXPtr);
+      this.memoryManager.free(deviceYPtr);
 
       const rect = {
         origin: {
@@ -3259,7 +3203,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         0,
       );
       const bytesCount = (utf16Length + 1) * 2; // include NIL
-      const textBuffer = this.malloc(bytesCount);
+      const textBuffer = this.memoryManager.malloc(bytesCount);
       this.pdfiumModule.FPDFText_GetBoundedText(
         textPagePtr,
         left,
@@ -3270,7 +3214,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         utf16Length,
       );
       const content = this.pdfiumModule.pdfium.UTF16ToString(textBuffer);
-      this.free(textBuffer);
+      this.memoryManager.free(textBuffer);
 
       const charIndex = this.pdfiumModule.FPDFText_GetCharIndexAtPos(textPagePtr, left, top, 2, 2);
       let fontFamily = '';
@@ -3287,8 +3231,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         );
 
         const bytesCount = fontNameLength + 1; // include NIL
-        const textBufferPtr = this.malloc(bytesCount);
-        const flagsPtr = this.malloc(4);
+        const textBufferPtr = this.memoryManager.malloc(bytesCount);
+        const flagsPtr = this.memoryManager.malloc(4);
         this.pdfiumModule.FPDFText_GetFontInfo(
           textPagePtr,
           charIndex,
@@ -3297,8 +3241,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           flagsPtr,
         );
         fontFamily = this.pdfiumModule.pdfium.UTF8ToString(textBufferPtr);
-        this.free(textBufferPtr);
-        this.free(flagsPtr);
+        this.memoryManager.free(textBufferPtr);
+        this.memoryManager.free(flagsPtr);
       }
 
       const textRect: PdfTextRectObject = {
@@ -3449,11 +3393,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     charIndex: number,
   ): PdfGlyphObject {
     // ── native stack temp pointers ──────────────────────────────
-    const dx1Ptr = this.malloc(4);
-    const dy1Ptr = this.malloc(4);
-    const dx2Ptr = this.malloc(4);
-    const dy2Ptr = this.malloc(4);
-    const rectPtr = this.malloc(16); // 4 floats = 16 bytes
+    const dx1Ptr = this.memoryManager.malloc(4);
+    const dy1Ptr = this.memoryManager.malloc(4);
+    const dx2Ptr = this.memoryManager.malloc(4);
+    const dy2Ptr = this.memoryManager.malloc(4);
+    const rectPtr = this.memoryManager.malloc(16); // 4 floats = 16 bytes
 
     let x = 0,
       y = 0,
@@ -3469,6 +3413,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const bottom = this.pdfiumModule.pdfium.getValue(rectPtr + 12, 'float');
 
       if (left === right || top === bottom) {
+        [rectPtr, dx1Ptr, dy1Ptr, dx2Ptr, dy2Ptr].forEach((p) => this.memoryManager.free(p));
+
         return {
           origin: { x: 0, y: 0 },
           size: { width: 0, height: 0 },
@@ -3518,7 +3464,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     // ── free tmps ───────────────────────────────────────────────
-    [rectPtr, dx1Ptr, dy1Ptr, dx2Ptr, dy2Ptr].forEach((p) => this.free(p));
+    [rectPtr, dx1Ptr, dy1Ptr, dx2Ptr, dy2Ptr].forEach((p) => this.memoryManager.free(p));
 
     return {
       origin: { x, y },
@@ -3591,10 +3537,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     textPagePtr: number,
     charIndex: number,
   ): Rect {
-    const topPtr = this.malloc(8);
-    const leftPtr = this.malloc(8);
-    const bottomPtr = this.malloc(8);
-    const rightPtr = this.malloc(8);
+    const topPtr = this.memoryManager.malloc(8);
+    const leftPtr = this.memoryManager.malloc(8);
+    const bottomPtr = this.memoryManager.malloc(8);
+    const rightPtr = this.memoryManager.malloc(8);
     let x = 0;
     let y = 0;
     let width = 0;
@@ -3614,8 +3560,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const bottom = this.pdfiumModule.pdfium.getValue(bottomPtr, 'double');
       const right = this.pdfiumModule.pdfium.getValue(rightPtr, 'double');
 
-      const deviceXPtr = this.malloc(4);
-      const deviceYPtr = this.malloc(4);
+      const deviceXPtr = this.memoryManager.malloc(4);
+      const deviceYPtr = this.memoryManager.malloc(4);
       this.pdfiumModule.FPDF_PageToDevice(
         pagePtr,
         0,
@@ -3630,16 +3576,16 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       );
       x = this.pdfiumModule.pdfium.getValue(deviceXPtr, 'i32');
       y = this.pdfiumModule.pdfium.getValue(deviceYPtr, 'i32');
-      this.free(deviceXPtr);
-      this.free(deviceYPtr);
+      this.memoryManager.free(deviceXPtr);
+      this.memoryManager.free(deviceYPtr);
 
       width = Math.ceil(Math.abs(right - left));
       height = Math.ceil(Math.abs(top - bottom));
     }
-    this.free(topPtr);
-    this.free(leftPtr);
-    this.free(bottomPtr);
-    this.free(rightPtr);
+    this.memoryManager.free(topPtr);
+    this.memoryManager.free(leftPtr);
+    this.memoryManager.free(bottomPtr);
+    this.memoryManager.free(rightPtr);
 
     return {
       origin: {
@@ -3841,9 +3787,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotationPtr: number,
     colorType: PdfAnnotationColorType = PdfAnnotationColorType.Color,
   ): PdfColor | undefined {
-    const rPtr = this.malloc(4);
-    const gPtr = this.malloc(4);
-    const bPtr = this.malloc(4);
+    const rPtr = this.memoryManager.malloc(4);
+    const gPtr = this.memoryManager.malloc(4);
+    const bPtr = this.memoryManager.malloc(4);
 
     // colourType 0 = "colour" (stroke/fill); other types are interior/border
     const ok = this.pdfiumModule.EPDFAnnot_GetColor(annotationPtr, colorType, rPtr, gPtr, bPtr);
@@ -3858,9 +3804,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       };
     }
 
-    this.free(rPtr);
-    this.free(gPtr);
-    this.free(bPtr);
+    this.memoryManager.free(rPtr);
+    this.memoryManager.free(gPtr);
+    this.memoryManager.free(bPtr);
 
     return colour;
   }
@@ -3919,10 +3865,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private getAnnotationOpacity(annotationPtr: number): number {
-    const opacityPtr = this.malloc(4);
+    const opacityPtr = this.memoryManager.malloc(4);
     const ok = this.pdfiumModule.EPDFAnnot_GetOpacity(annotationPtr, opacityPtr);
     const opacity = ok ? this.pdfiumModule.pdfium.getValue(opacityPtr, 'i32') : 255;
-    this.free(opacityPtr);
+    this.memoryManager.free(opacityPtr);
     return pdfAlphaToWebOpacity(opacity);
   }
 
@@ -4000,11 +3946,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private getAnnotationDefaultAppearance(
     annotationPtr: number,
   ): { fontFamily: PdfStandardFont; fontSize: number; fontColor: WebColor } | undefined {
-    const fontPtr = this.malloc(4);
-    const sizePtr = this.malloc(4);
-    const rPtr = this.malloc(4);
-    const gPtr = this.malloc(4);
-    const bPtr = this.malloc(4);
+    const fontPtr = this.memoryManager.malloc(4);
+    const sizePtr = this.memoryManager.malloc(4);
+    const rPtr = this.memoryManager.malloc(4);
+    const gPtr = this.memoryManager.malloc(4);
+    const bPtr = this.memoryManager.malloc(4);
 
     const ok = !!this.pdfiumModule.EPDFAnnot_GetDefaultAppearance(
       annotationPtr,
@@ -4016,7 +3962,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     );
 
     if (!ok) {
-      [fontPtr, sizePtr, rPtr, gPtr, bPtr].forEach((p) => this.free(p));
+      [fontPtr, sizePtr, rPtr, gPtr, bPtr].forEach((p) => this.memoryManager.free(p));
       return; // undefined – caller decides what to do
     }
 
@@ -4027,7 +3973,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const green = pdf.getValue(gPtr, 'i32') & 0xff;
     const blue = pdf.getValue(bPtr, 'i32') & 0xff;
 
-    [fontPtr, sizePtr, rPtr, gPtr, bPtr].forEach((p) => this.free(p));
+    [fontPtr, sizePtr, rPtr, gPtr, bPtr].forEach((p) => this.memoryManager.free(p));
 
     return {
       fontFamily: font,
@@ -4081,7 +4027,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     width: number;
   } {
     /* 1 ── allocate tmp storage for the returned width ─────────────── */
-    const widthPtr = this.malloc(4);
+    const widthPtr = this.memoryManager.malloc(4);
     let width = 0;
     let style: PdfAnnotationBorderStyle = PdfAnnotationBorderStyle.UNKNOWN;
     let ok = false;
@@ -4089,7 +4035,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     style = this.pdfiumModule.EPDFAnnot_GetBorderStyle(annotationPtr, widthPtr);
     width = this.pdfiumModule.pdfium.getValue(widthPtr, 'float');
     ok = style !== PdfAnnotationBorderStyle.UNKNOWN;
-    this.free(widthPtr);
+    this.memoryManager.free(widthPtr);
     return { ok, style, width };
   }
 
@@ -4134,13 +4080,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *          • `intensity` – radius/intensity value (0 when `ok` is false)
    */
   private getBorderEffect(annotationPtr: number): { ok: boolean; intensity: number } {
-    const intensityPtr = this.malloc(4);
+    const intensityPtr = this.memoryManager.malloc(4);
 
     const ok = !!this.pdfiumModule.EPDFAnnot_GetBorderEffect(annotationPtr, intensityPtr);
 
     const intensity = ok ? this.pdfiumModule.pdfium.getValue(intensityPtr, 'float') : 0;
 
-    this.free(intensityPtr);
+    this.memoryManager.free(intensityPtr);
     return { ok, intensity };
   }
 
@@ -4162,10 +4108,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     bottom: number;
   } {
     /* tmp storage ─────────────────────────────────────────── */
-    const lPtr = this.malloc(4);
-    const tPtr = this.malloc(4);
-    const rPtr = this.malloc(4);
-    const bPtr = this.malloc(4);
+    const lPtr = this.memoryManager.malloc(4);
+    const tPtr = this.memoryManager.malloc(4);
+    const rPtr = this.memoryManager.malloc(4);
+    const bPtr = this.memoryManager.malloc(4);
 
     const ok = !!this.pdfiumModule.EPDFAnnot_GetRectangleDifferences(
       annotationPtr,
@@ -4182,10 +4128,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const bottom = pdf.getValue(bPtr, 'float');
 
     /* cleanup ─────────────────────────────────────────────── */
-    this.free(lPtr);
-    this.free(tPtr);
-    this.free(rPtr);
-    this.free(bPtr);
+    this.memoryManager.free(lPtr);
+    this.memoryManager.free(tPtr);
+    this.memoryManager.free(rPtr);
+    this.memoryManager.free(bPtr);
 
     return { ok, left, top, right, bottom };
   }
@@ -4235,7 +4181,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     /* allocate `count` floats on the WASM heap */
-    const arrPtr = this.malloc(4 * count);
+    const arrPtr = this.memoryManager.malloc(4 * count);
     const okNative = !!this.pdfiumModule.EPDFAnnot_GetBorderDashPattern(
       annotationPtr,
       arrPtr,
@@ -4251,7 +4197,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       }
     }
 
-    this.free(arrPtr);
+    this.memoryManager.free(arrPtr);
     return { ok: okNative, pattern };
   }
 
@@ -4279,7 +4225,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     }
 
     const bytes = 4 * clean.length;
-    const bufPtr = this.malloc(bytes);
+    const bufPtr = this.memoryManager.malloc(bytes);
     for (let i = 0; i < clean.length; i++) {
       this.pdfiumModule.pdfium.setValue(bufPtr + 4 * i, clean[i], 'float');
     }
@@ -4290,7 +4236,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       clean.length,
     );
 
-    this.free(bufPtr);
+    this.memoryManager.free(bufPtr);
     return ok;
   }
 
@@ -4303,21 +4249,21 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private getLineEndings(annotationPtr: number): LineEndings | undefined {
-    const startPtr = this.malloc(4);
-    const endPtr = this.malloc(4);
+    const startPtr = this.memoryManager.malloc(4);
+    const endPtr = this.memoryManager.malloc(4);
 
     const ok = !!this.pdfiumModule.EPDFAnnot_GetLineEndings(annotationPtr, startPtr, endPtr);
     if (!ok) {
-      this.free(startPtr);
-      this.free(endPtr);
+      this.memoryManager.free(startPtr);
+      this.memoryManager.free(endPtr);
       return undefined;
     }
 
     const start = this.pdfiumModule.pdfium.getValue(startPtr, 'i32');
     const end = this.pdfiumModule.pdfium.getValue(endPtr, 'i32');
 
-    this.free(startPtr);
-    this.free(endPtr);
+    this.memoryManager.free(startPtr);
+    this.memoryManager.free(endPtr);
 
     return { start, end };
   }
@@ -4344,8 +4290,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @returns `{ start, end }` or `undefined` when PDFium can't read them
    */
   private getLinePoints(annotationPtr: number, page: PdfPageObject): LinePoints | undefined {
-    const startPointPtr = this.malloc(8);
-    const endPointPtr = this.malloc(8);
+    const startPointPtr = this.memoryManager.malloc(8);
+    const endPointPtr = this.memoryManager.malloc(8);
 
     this.pdfiumModule.FPDFAnnot_GetLine(annotationPtr, startPointPtr, endPointPtr);
 
@@ -4363,8 +4309,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       y: endPointY,
     });
 
-    this.free(startPointPtr);
-    this.free(endPointPtr);
+    this.memoryManager.free(startPointPtr);
+    this.memoryManager.free(endPointPtr);
 
     return { start, end };
   }
@@ -4384,7 +4330,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     start: Position,
     end: Position,
   ): boolean {
-    const buf = this.malloc(16); // 2 × (float x, float y)
+    const buf = this.memoryManager.malloc(16); // 2 × (float x, float y)
 
     // --- convert to page coordinates -----------------------------------------
     const p1 = this.convertDevicePointToPagePoint(page, start);
@@ -4399,7 +4345,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     // --- call the native API --------------------------------------------------
     const ok = this.pdfiumModule.EPDFAnnot_SetLine(annotPtr, buf, buf + 8);
 
-    this.free(buf);
+    this.memoryManager.free(buf);
     return ok;
   }
 
@@ -4426,7 +4372,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const quads: Quad[] = [];
 
     for (let qi = 0; qi < quadCount; qi++) {
-      const quadPtr = this.malloc(FS_QUADPOINTSF_SIZE);
+      const quadPtr = this.memoryManager.malloc(FS_QUADPOINTSF_SIZE);
 
       const ok = this.pdfiumModule.FPDFAnnot_GetAttachmentPoints(annotationPtr, qi, quadPtr);
 
@@ -4449,7 +4395,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         quads.push({ p1, p2, p3, p4 });
       }
 
-      this.free(quadPtr);
+      this.memoryManager.free(quadPtr);
     }
 
     return quads.map(quadToRect);
@@ -4469,7 +4415,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const FS_QUADPOINTSF_SIZE = 8 * 4; // eight floats, 32 bytes
     const pdf = this.pdfiumModule.pdfium;
     const count = this.pdfiumModule.FPDFAnnot_CountAttachmentPoints(annotPtr);
-    const buf = this.malloc(FS_QUADPOINTSF_SIZE);
+    const buf = this.memoryManager.malloc(FS_QUADPOINTSF_SIZE);
 
     /** write one quad into `buf` in annotation space */
     const writeQuad = (r: Rect) => {
@@ -4499,7 +4445,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     for (let i = 0; i < min; i++) {
       writeQuad(rects[i]);
       if (!this.pdfiumModule.FPDFAnnot_SetAttachmentPoints(annotPtr, i, buf)) {
-        this.free(buf);
+        this.memoryManager.free(buf);
         return false;
       }
     }
@@ -4508,12 +4454,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     for (let i = count; i < rects.length; i++) {
       writeQuad(rects[i]);
       if (!this.pdfiumModule.FPDFAnnot_AppendAttachmentPoints(annotPtr, buf)) {
-        this.free(buf);
+        this.memoryManager.free(buf);
         return false;
       }
     }
 
-    this.free(buf);
+    this.memoryManager.free(buf);
     return true;
   }
 
@@ -4581,7 +4527,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         drawBlackBoxes ? true : false,
       );
     } finally {
-      this.free(ptr);
+      this.memoryManager.free(ptr);
     }
 
     if (ok) {
@@ -4598,7 +4544,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private allocFSQuadsBufferFromRects(page: PdfPageObject, rects: Rect[]) {
     const STRIDE = 32; // 8 floats × 4 bytes
     const count = rects.length;
-    const ptr = this.malloc(STRIDE * count);
+    const ptr = this.memoryManager.malloc(STRIDE * count);
     const pdf = this.pdfiumModule.pdfium;
 
     for (let i = 0; i < count; i++) {
@@ -4643,7 +4589,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const pointsCount = this.pdfiumModule.FPDFAnnot_GetInkListPath(annotationPtr, i, 0, 0);
       if (pointsCount > 0) {
         const pointMemorySize = 8;
-        const pointsPtr = this.malloc(pointsCount * pointMemorySize);
+        const pointsPtr = this.memoryManager.malloc(pointsCount * pointMemorySize);
         this.pdfiumModule.FPDFAnnot_GetInkListPath(annotationPtr, i, pointsPtr, pointsCount);
 
         for (let j = 0; j < pointsCount; j++) {
@@ -4656,7 +4602,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           points.push({ x, y });
         }
 
-        this.free(pointsPtr);
+        this.memoryManager.free(pointsPtr);
       }
 
       inkList.push({ points });
@@ -4679,7 +4625,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   ): boolean {
     for (const inkStroke of inkList) {
       const inkPointsCount = inkStroke.points.length;
-      const inkPointsPtr = this.malloc(inkPointsCount * 8);
+      const inkPointsPtr = this.memoryManager.malloc(inkPointsCount * 8);
       for (let i = 0; i < inkPointsCount; i++) {
         const point = inkStroke.points[i];
         const { x, y } = this.convertDevicePointToPagePoint(page, point);
@@ -4691,11 +4637,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       if (
         this.pdfiumModule.FPDFAnnot_AddInkStroke(annotationPtr, inkPointsPtr, inkPointsCount) === -1
       ) {
-        this.free(inkPointsPtr);
+        this.memoryManager.free(inkPointsPtr);
         return false;
       }
 
-      this.free(inkPointsPtr);
+      this.memoryManager.free(inkPointsPtr);
     }
 
     return true;
@@ -5457,20 +5403,20 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private readPathObject(pathObjectPtr: number): PdfPathObject {
     const segmentCount = this.pdfiumModule.FPDFPath_CountSegments(pathObjectPtr);
 
-    const leftPtr = this.malloc(4);
-    const bottomPtr = this.malloc(4);
-    const rightPtr = this.malloc(4);
-    const topPtr = this.malloc(4);
+    const leftPtr = this.memoryManager.malloc(4);
+    const bottomPtr = this.memoryManager.malloc(4);
+    const rightPtr = this.memoryManager.malloc(4);
+    const topPtr = this.memoryManager.malloc(4);
     this.pdfiumModule.FPDFPageObj_GetBounds(pathObjectPtr, leftPtr, bottomPtr, rightPtr, topPtr);
     const left = this.pdfiumModule.pdfium.getValue(leftPtr, 'float');
     const bottom = this.pdfiumModule.pdfium.getValue(bottomPtr, 'float');
     const right = this.pdfiumModule.pdfium.getValue(rightPtr, 'float');
     const top = this.pdfiumModule.pdfium.getValue(topPtr, 'float');
     const bounds = { left, bottom, right, top };
-    this.free(leftPtr);
-    this.free(bottomPtr);
-    this.free(rightPtr);
-    this.free(topPtr);
+    this.memoryManager.free(leftPtr);
+    this.memoryManager.free(bottomPtr);
+    this.memoryManager.free(rightPtr);
+    this.memoryManager.free(topPtr);
     const segments: PdfSegmentObject[] = [];
     for (let i = 0; i < segmentCount; i++) {
       const segment = this.readPdfSegment(pathObjectPtr, i);
@@ -5499,13 +5445,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const segmentPtr = this.pdfiumModule.FPDFPath_GetPathSegment(annotationObjectPtr, segmentIndex);
     const segmentType = this.pdfiumModule.FPDFPathSegment_GetType(segmentPtr);
     const isClosed = this.pdfiumModule.FPDFPathSegment_GetClose(segmentPtr);
-    const pointXPtr = this.malloc(4);
-    const pointYPtr = this.malloc(4);
+    const pointXPtr = this.memoryManager.malloc(4);
+    const pointYPtr = this.memoryManager.malloc(4);
     this.pdfiumModule.FPDFPathSegment_GetPoint(segmentPtr, pointXPtr, pointYPtr);
     const pointX = this.pdfiumModule.pdfium.getValue(pointXPtr, 'float');
     const pointY = this.pdfiumModule.pdfium.getValue(pointYPtr, 'float');
-    this.free(pointXPtr);
-    this.free(pointYPtr);
+    this.memoryManager.free(pointXPtr);
+    this.memoryManager.free(pointYPtr);
 
     return {
       type: segmentType,
@@ -5591,7 +5537,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private readPdfPageObjectTransformMatrix(pageObjectPtr: number): PdfTransformMatrix {
-    const matrixPtr = this.malloc(4 * 6);
+    const matrixPtr = this.memoryManager.malloc(4 * 6);
     if (this.pdfiumModule.FPDFPageObj_GetMatrix(pageObjectPtr, matrixPtr)) {
       const a = this.pdfiumModule.pdfium.getValue(matrixPtr, 'float');
       const b = this.pdfiumModule.pdfium.getValue(matrixPtr + 4, 'float');
@@ -5599,12 +5545,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const d = this.pdfiumModule.pdfium.getValue(matrixPtr + 12, 'float');
       const e = this.pdfiumModule.pdfium.getValue(matrixPtr + 16, 'float');
       const f = this.pdfiumModule.pdfium.getValue(matrixPtr + 20, 'float');
-      this.free(matrixPtr);
+      this.memoryManager.free(matrixPtr);
 
       return { a, b, c, d, e, f };
     }
 
-    this.free(matrixPtr);
+    this.memoryManager.free(matrixPtr);
 
     return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   }
@@ -5643,16 +5589,16 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private getStrokeWidth(annotationPtr: number): number {
     // FPDFAnnot_GetBorder(annot, &hRadius, &vRadius, &borderWidth)
-    const hPtr = this.malloc(4);
-    const vPtr = this.malloc(4);
-    const wPtr = this.malloc(4);
+    const hPtr = this.memoryManager.malloc(4);
+    const vPtr = this.memoryManager.malloc(4);
+    const wPtr = this.memoryManager.malloc(4);
 
     const ok = this.pdfiumModule.FPDFAnnot_GetBorder(annotationPtr, hPtr, vPtr, wPtr);
     const width = ok ? this.pdfiumModule.pdfium.getValue(wPtr, 'float') : 1; // default 1 pt
 
-    this.free(hPtr);
-    this.free(vPtr);
-    this.free(wPtr);
+    this.memoryManager.free(hPtr);
+    this.memoryManager.free(vPtr);
+    this.memoryManager.free(wPtr);
 
     return width;
   }
@@ -5871,11 +5817,11 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (len === 0) return;
 
     const bytes = (len + 1) * 2;
-    const ptr = this.malloc(bytes);
+    const ptr = this.memoryManager.malloc(bytes);
 
     this.pdfiumModule.FPDFAnnot_GetStringValue(annotationPtr, key, ptr, bytes);
     const value = this.pdfiumModule.pdfium.UTF16ToString(ptr);
-    this.free(ptr);
+    this.memoryManager.free(ptr);
 
     return value || undefined;
   }
@@ -5932,12 +5878,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     const codeUnits = len + 1;
     const bytes = codeUnits * 2;
-    const ptr = this.malloc(bytes);
+    const ptr = this.memoryManager.malloc(bytes);
 
     this.pdfiumModule.EPDFAnnot_GetIntent(annotationPtr, ptr, bytes);
     const value = this.pdfiumModule.pdfium.UTF16ToString(ptr);
 
-    this.free(ptr);
+    this.memoryManager.free(ptr);
 
     return value && value !== 'undefined' ? value : undefined;
   }
@@ -5970,12 +5916,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     // +1 for the implicit NUL added by PDFium → bytes = 2 × code units
     const codeUnits = len + 1;
     const bytes = codeUnits * 2;
-    const ptr = this.malloc(bytes);
+    const ptr = this.memoryManager.malloc(bytes);
 
     this.pdfiumModule.EPDFAnnot_GetRichContent(annotationPtr, ptr, bytes);
     const value = this.pdfiumModule.pdfium.UTF16ToString(ptr);
 
-    this.free(ptr);
+    this.memoryManager.free(ptr);
 
     return value || undefined;
   }
@@ -5990,10 +5936,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private getAnnotationByName(pagePtr: number, name: string): number | undefined {
     const bytes = 2 * (name.length + 1);
-    const ptr = this.malloc(bytes);
+    const ptr = this.memoryManager.malloc(bytes);
     this.pdfiumModule.pdfium.stringToUTF16(name, ptr, bytes);
     const ok = this.pdfiumModule.EPDFPage_GetAnnotByName(pagePtr, ptr);
-    this.free(ptr);
+    this.memoryManager.free(ptr);
     return ok;
   }
 
@@ -6007,10 +5953,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private removeAnnotationByName(pagePtr: number, name: string): boolean {
     const bytes = 2 * (name.length + 1);
-    const ptr = this.malloc(bytes);
+    const ptr = this.memoryManager.malloc(bytes);
     this.pdfiumModule.pdfium.stringToUTF16(name, ptr, bytes);
     const ok = this.pdfiumModule.EPDFPage_RemoveAnnotByName(pagePtr, ptr);
-    this.free(ptr);
+    this.memoryManager.free(ptr);
     return ok;
   }
 
@@ -6023,10 +5969,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    */
   private setAnnotString(annotationPtr: number, key: string, value: string): boolean {
     const bytes = 2 * (value.length + 1);
-    const ptr = this.malloc(bytes);
+    const ptr = this.memoryManager.malloc(bytes);
     this.pdfiumModule.pdfium.stringToUTF16(value, ptr, bytes);
     const ok = this.pdfiumModule.FPDFAnnot_SetStringValue(annotationPtr, key, ptr);
-    this.free(ptr);
+    this.memoryManager.free(ptr);
     return ok;
   }
 
@@ -6042,7 +5988,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const vertices: Position[] = [];
     const count = this.pdfiumModule.FPDFAnnot_GetVertices(annotationPtr, 0, 0);
     const pointMemorySize = 8;
-    const pointsPtr = this.malloc(count * pointMemorySize);
+    const pointsPtr = this.memoryManager.malloc(count * pointMemorySize);
     this.pdfiumModule.FPDFAnnot_GetVertices(annotationPtr, pointsPtr, count);
     for (let i = 0; i < count; i++) {
       const pointX = this.pdfiumModule.pdfium.getValue(pointsPtr + i * pointMemorySize, 'float');
@@ -6060,7 +6006,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         vertices.push({ x, y });
       }
     }
-    this.free(pointsPtr);
+    this.memoryManager.free(pointsPtr);
 
     return vertices;
   }
@@ -6079,7 +6025,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const pdf = this.pdfiumModule.pdfium;
     const FS_POINTF_SIZE = 8;
 
-    const buf = this.malloc(FS_POINTF_SIZE * vertices.length);
+    const buf = this.memoryManager.malloc(FS_POINTF_SIZE * vertices.length);
     vertices.forEach((v, i) => {
       const pagePt = this.convertDevicePointToPagePoint(page, v);
       pdf.setValue(buf + i * FS_POINTF_SIZE + 0, pagePt.x, 'float');
@@ -6087,7 +6033,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     });
 
     const ok = this.pdfiumModule.EPDFAnnot_SetVertices(annotPtr, buf, vertices.length);
-    this.free(buf);
+    this.memoryManager.free(buf);
     return ok;
   }
 
@@ -6246,6 +6192,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       dpr = 1,
       mode = AppearanceMode.Normal,
       imageType = 'image/webp',
+      imageQuality,
     } = options ?? {};
 
     this.logger.debug(
@@ -6264,9 +6211,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       'Begin',
       `${doc.id}-${page.index}-${annotation.id}`,
     );
+
     const task = new Task<T, PdfErrorReason>();
     const ctx = this.cache.getContext(doc.id);
-
     if (!ctx) {
       this.logger.perf(
         LOG_SOURCE,
@@ -6281,11 +6228,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    /* ── 1. grab native handles ───────────────────────────────────────── */
+    // 1) native handles
     const pageCtx = ctx.acquirePage(page.index);
     const annotPtr = this.getAnnotationByName(pageCtx.pagePtr, annotation.id);
     if (!annotPtr) {
-      pageCtx.release();
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -6293,64 +6239,61 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         'End',
         `${doc.id}-${page.index}-${annotation.id}`,
       );
-      return PdfTaskHelper.reject({
-        code: PdfErrorCode.NotFound,
-        message: 'annotation not found',
-      });
+      pageCtx.release();
+      return PdfTaskHelper.reject({ code: PdfErrorCode.NotFound, message: 'annotation not found' });
     }
 
-    const finalScale = scaleFactor * dpr;
-    /* ── 2. decide bitmap size (integer pixels) ──────────────────────── */
-    const annotRect = annotation.rect;
-    const bitmapRect = toIntRect(transformRect(page.size, annotRect, rotation, finalScale));
+    // 2) device size (rotation-aware) → integer pixels
+    const finalScale = Math.max(0.01, scaleFactor * dpr);
+    const devRect = toIntRect(transformRect(page.size, annotation.rect, rotation, finalScale));
+    const wDev = Math.max(1, devRect.size.width);
+    const hDev = Math.max(1, devRect.size.height);
+    const stride = wDev * 4;
+    const bytes = stride * hDev;
 
-    const format = BitmapFormat.Bitmap_BGRA;
-    const bytesPerPixel = 4;
-    const bitmapHeapLength = bitmapRect.size.width * bitmapRect.size.height * bytesPerPixel;
-    const bitmapHeapPtr = this.malloc(bitmapHeapLength);
+    // 3) bitmap backing store in WASM
+    const heapPtr = this.memoryManager.malloc(bytes);
     const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
-      bitmapRect.size.width,
-      bitmapRect.size.height,
-      format,
-      bitmapHeapPtr,
-      bitmapRect.size.width * bytesPerPixel,
+      wDev,
+      hDev,
+      BitmapFormat.Bitmap_BGRA,
+      heapPtr,
+      stride,
     );
-    this.pdfiumModule.FPDFBitmap_FillRect(
-      bitmapPtr,
-      0,
-      0,
-      bitmapRect.size.width,
-      bitmapRect.size.height,
-      0x00000000,
+    this.pdfiumModule.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
+
+    // 4) user matrix (no Y-flip; includes -origin translate)
+    const M = buildUserToDeviceMatrix(
+      annotation.rect, // {origin:{L,B}, size:{W,H}}
+      rotation,
+      wDev,
+      hDev,
     );
+    const mPtr = this.memoryManager.malloc(6 * 4);
+    const mView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, mPtr, 6);
+    mView.set([M.a, M.b, M.c, M.d, M.e, M.f]);
 
-    const matrix = makeMatrix(annotation.rect, rotation, finalScale);
-
-    // Allocate memory for the matrix on the wasm heap and write to it
-    const matrixSize = 6 * 4;
-    const matrixPtr = this.malloc(matrixSize);
-    const matrixView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, matrixPtr, 6);
-    matrixView.set([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f]);
-
-    /* ── 5. call the native helper with the new matrix ───────────────── */
+    // 5) render (DisplayMatrix is applied inside EPDF_RenderAnnotBitmap)
     const FLAGS = RenderFlag.REVERSE_BYTE_ORDER;
-    const ok = !!this.pdfiumModule.EPDF_RenderAnnotBitmap(
-      bitmapPtr,
-      pageCtx.pagePtr,
-      annotPtr,
-      mode,
-      matrixPtr,
-      FLAGS,
-    );
-
-    /* ── 6. tear down native resources ───────────────────────────────── */
-    this.free(matrixPtr); // Free the matrix memory
-    this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-    this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
-    pageCtx.release();
+    let ok = false;
+    try {
+      ok = !!this.pdfiumModule.EPDF_RenderAnnotBitmap(
+        bitmapPtr,
+        pageCtx.pagePtr,
+        annotPtr,
+        mode,
+        mPtr,
+        FLAGS,
+      );
+    } finally {
+      this.memoryManager.free(mPtr);
+      this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr); // frees wrapper, not our heapPtr
+      this.pdfiumModule.FPDFPage_CloseAnnot(annotPtr);
+      pageCtx.release();
+    }
 
     if (!ok) {
-      this.free(bitmapHeapPtr);
+      this.memoryManager.free(heapPtr);
       this.logger.perf(
         LOG_SOURCE,
         LOG_CATEGORY,
@@ -6364,115 +6307,235 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       });
     }
 
-    /* ── 6. copy out + convert to Blob (reuse existing converter) ─────── */
-    const data = this.pdfiumModule.pdfium.HEAPU8.subarray(
-      bitmapHeapPtr,
-      bitmapHeapPtr + bitmapHeapLength,
-    );
+    // 6) encode
+    const dispose = () => this.memoryManager.free(heapPtr);
 
-    const imageData: PdfImage = {
-      data: new Uint8ClampedArray(data),
-      width: bitmapRect.size.width,
-      height: bitmapRect.size.height,
-    };
-
-    this.free(bitmapHeapPtr);
-
-    this.logger.perf(
-      LOG_SOURCE,
-      LOG_CATEGORY,
-      `RenderPageAnnotation`,
-      'End',
-      `${doc.id}-${page.index}-${annotation.id}`,
-    );
-
-    this.imageDataConverter(imageData, imageType)
-      .then((blob) => task.resolve(blob))
-      .catch((err) => task.reject({ code: PdfErrorCode.Unknown, message: String(err) }));
+    this.imageDataConverter(
+      () => {
+        const rgba = new Uint8ClampedArray(
+          this.pdfiumModule.pdfium.HEAPU8.subarray(heapPtr, heapPtr + bytes),
+        );
+        return {
+          width: wDev,
+          height: hDev,
+          data: rgba,
+        };
+      },
+      imageType,
+      imageQuality,
+    )
+      .then((out) => task.resolve(out))
+      .catch((e) => {
+        // Check if it's an OffscreenCanvas error and we haven't copied data yet
+        if (e instanceof OffscreenCanvasError) {
+          // Fallback to WASM encoding without wasting the copy
+          try {
+            const blob = this.encodeViaWasm(
+              { ptr: heapPtr, width: wDev, height: hDev, stride },
+              { type: imageType, quality: imageQuality },
+            );
+            task.resolve(blob as T);
+          } catch (wasmError) {
+            task.reject({ code: PdfErrorCode.Unknown, message: String(wasmError) });
+          }
+        } else {
+          task.reject({ code: PdfErrorCode.Unknown, message: String(e) });
+        }
+      })
+      .finally(dispose);
 
     return task;
   }
 
-  /**
-   * render rectangle of pdf page to image
-   * @param docPtr - pointer to pdf document object
-   * @param page  - pdf page infor
-   * @param rect - rectangle info
-   * @param scaleFactor  - factor of scalling
-   * @param rotation  - rotation angle
-   * @param options - render options
-   * @returns image data
-   *
-   * @private
-   */
-  private renderPageRectToImageData(
-    ctx: DocumentContext,
+  private encodeViaWasm(
+    buf: { ptr: number; width: number; height: number; stride: number },
+    opts: ConvertToBlobOptions,
+  ): Blob {
+    const pdf = this.pdfiumModule.pdfium;
+
+    // Helper to copy out and free a payload allocated in WASM
+    const blobFrom = (outPtr: WasmPointer, size: number, mime: string) => {
+      const view = pdf.HEAPU8.subarray(outPtr, outPtr + size);
+      const copy = new Uint8Array(view); // detach from WASM before free
+      this.memoryManager.free(outPtr);
+      return new Blob([copy], { type: mime });
+    };
+
+    // Map OffscreenCanvas "quality 0..1" to encoders:
+    //  • WebP: 0..100 (float), default ~0.82 → 82
+    //  • JPEG: 1..100 (int),   default ~0.92 → 92
+    //const q = opts.quality;
+    //const webpQ = q == null ? 82 : Math.round(q * 100);
+    //const jpegQ = q == null ? 92 : Math.max(1, Math.round(q * 100));
+    // PNG ignores quality (same as OffscreenCanvas). Use libpng default (6).
+    const pngLevel = 6;
+
+    const outPtrPtr = this.memoryManager.malloc(4);
+    try {
+      switch (opts.type) {
+        /*
+        case 'image/webp': {
+          const size = this.pdfiumModule.EPDF_WebP_EncodeRGBA(
+            buf.ptr,
+            buf.width,
+            buf.height,
+            buf.stride,
+            webpQ,
+            outPtrPtr,
+          );
+          const outPtr = pdf.getValue(outPtrPtr, 'i32');
+          return blobFrom(outPtr, size, 'image/webp');
+        }
+        case 'image/jpeg': {
+          const size = this.pdfiumModule.EPDF_JPEG_EncodeRGBA(
+            buf.ptr,
+            buf.width,
+            buf.height,
+            buf.stride,
+            jpegQ,
+            outPtrPtr,
+          );
+          const outPtr = pdf.getValue(outPtrPtr, 'i32');
+          return blobFrom(outPtr, size, 'image/jpeg');
+        }
+        */
+        case 'image/png':
+        default: {
+          const size = this.pdfiumModule.EPDF_PNG_EncodeRGBA(
+            buf.ptr,
+            buf.width,
+            buf.height,
+            buf.stride,
+            pngLevel,
+            outPtrPtr,
+          );
+          const outPtr = pdf.getValue(outPtrPtr, 'i32');
+          return blobFrom(WasmPointer(outPtr), size, 'image/png');
+        }
+      }
+    } finally {
+      this.memoryManager.free(outPtrPtr);
+    }
+  }
+
+  private renderRectEncoded(
+    doc: PdfDocumentObject,
     page: PdfPageObject,
     rect: Rect,
     options?: PdfRenderPageOptions,
-  ) {
-    const { scaleFactor = 1, rotation = Rotation.Degree0, dpr = 1 } = options ?? {};
-    const format = BitmapFormat.Bitmap_BGRA;
-    const bytesPerPixel = 4;
+  ): PdfTask<T> {
+    const task = new Task<T, PdfErrorReason>();
 
-    // Round the transformed dimensions to whole pixels
-    const rectSize = toIntRect(transformRect(page.size, rect, rotation, scaleFactor * dpr));
-    const pageSize = toIntSize(transformSize(page.size, rotation, scaleFactor * dpr));
+    const imageType: ImageConversionTypes = options?.imageType ?? 'image/webp';
+    const quality = options?.imageQuality;
+    const rotation: Rotation = options?.rotation ?? Rotation.Degree0;
 
-    const bitmapHeapLength = rectSize.size.width * rectSize.size.height * bytesPerPixel;
-    const bitmapHeapPtr = this.malloc(bitmapHeapLength);
-    const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
-      rectSize.size.width,
-      rectSize.size.height,
-      format,
-      bitmapHeapPtr,
-      rectSize.size.width * bytesPerPixel,
-    );
-
-    this.pdfiumModule.FPDFBitmap_FillRect(
-      bitmapPtr,
-      0,
-      0,
-      rectSize.size.width,
-      rectSize.size.height,
-      0xffffffff,
-    );
-
-    let flags = RenderFlag.REVERSE_BYTE_ORDER;
-    if (options?.withAnnotations) {
-      flags = flags | RenderFlag.ANNOT;
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
     }
 
+    // ---- 1) decide device size (scale × dpr, swap for 90/270)
+    const scale = Math.max(0.01, options?.scaleFactor ?? 1);
+    const dpr = Math.max(1, options?.dpr ?? 1);
+    const finalScale = scale * dpr;
+
+    const baseW = rect.size.width;
+    const baseH = rect.size.height;
+    const swap = (rotation & 1) === 1; // 90 or 270
+
+    const wDev = Math.max(1, Math.round((swap ? baseH : baseW) * finalScale));
+    const hDev = Math.max(1, Math.round((swap ? baseW : baseH) * finalScale));
+    const stride = wDev * 4;
+    const bytes = stride * hDev;
+
+    // ---- 2) allocate a BGRA bitmap in WASM
+    const heapPtr = this.memoryManager.malloc(bytes);
+    const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
+      wDev,
+      hDev,
+      BitmapFormat.Bitmap_BGRA,
+      heapPtr,
+      stride,
+    );
+    // white background like page renderers typically do
+    this.pdfiumModule.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0xffffffff);
+
+    const M = buildUserToDeviceMatrix(rect, rotation, wDev, hDev);
+
+    const mPtr = this.memoryManager.malloc(6 * 4); // FS_MATRIX
+    const mView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, mPtr, 6);
+    mView.set([M.a, M.b, M.c, M.d, M.e, M.f]);
+
+    // Clip to the whole bitmap (device space)
+    const clipPtr = this.memoryManager.malloc(4 * 4); // FS_RECTF {left,bottom,right,top}
+    const clipView = new Float32Array(this.pdfiumModule.pdfium.HEAPF32.buffer, clipPtr, 4);
+    clipView.set([0, 0, wDev, hDev]);
+
+    // Rendering flags: swap byte order to present RGBA to JS; include LCD_TEXT and ANNOT if asked
+    let flags = RenderFlag.LCD_TEXT | RenderFlag.REVERSE_BYTE_ORDER;
+    if (options?.withAnnotations ?? false) flags |= RenderFlag.ANNOT;
+
     const pageCtx = ctx.acquirePage(page.index);
+    try {
+      this.pdfiumModule.FPDF_RenderPageBitmapWithMatrix(
+        bitmapPtr,
+        pageCtx.pagePtr,
+        mPtr,
+        clipPtr,
+        flags,
+      );
+    } finally {
+      pageCtx.release();
+      this.memoryManager.free(mPtr);
+      this.memoryManager.free(clipPtr);
+    }
 
-    this.pdfiumModule.FPDF_RenderPageBitmap(
-      bitmapPtr,
-      pageCtx.pagePtr,
-      -rectSize.origin.x,
-      -rectSize.origin.y,
-      pageSize.width,
-      pageSize.height,
-      rotation,
-      flags,
-    );
-
-    this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-    pageCtx.release();
-
-    const data = this.pdfiumModule.pdfium.HEAPU8.subarray(
-      bitmapHeapPtr,
-      bitmapHeapPtr + bitmapHeapLength,
-    );
-
-    const imageData = {
-      data: new Uint8ClampedArray(data),
-      width: rectSize.size.width,
-      height: rectSize.size.height,
+    const dispose = () => {
+      this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
+      this.memoryManager.free(heapPtr);
     };
 
-    this.free(bitmapHeapPtr);
+    this.imageDataConverter(
+      () => {
+        const rgba = new Uint8ClampedArray(
+          this.pdfiumModule.pdfium.HEAPU8.subarray(heapPtr, heapPtr + bytes),
+        );
+        return {
+          width: wDev,
+          height: hDev,
+          data: rgba,
+        };
+      },
+      imageType,
+      quality,
+    )
+      .then((out) => task.resolve(out))
+      .catch((e) => {
+        this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'Error', e);
+        // Check if it's an OffscreenCanvas error and we haven't copied data yet
+        if (e instanceof OffscreenCanvasError) {
+          // Fallback to WASM encoding without wasting the copy
+          this.logger.info(LOG_SOURCE, LOG_CATEGORY, 'Fallback to WASM encoding');
+          try {
+            const blob = this.encodeViaWasm(
+              { ptr: heapPtr, width: wDev, height: hDev, stride },
+              { type: imageType, quality },
+            );
+            task.resolve(blob as T);
+          } catch (wasmError) {
+            task.reject({ code: PdfErrorCode.Unknown, message: String(wasmError) });
+          }
+        } else {
+          task.reject({ code: PdfErrorCode.Unknown, message: String(e) });
+        }
+      })
+      .finally(dispose);
 
-    return imageData;
+    return task;
   }
 
   /**
@@ -6608,8 +6671,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const pageIndex = this.pdfiumModule.FPDFDest_GetDestPageIndex(docPtr, destinationPtr);
     // Every params is a float value
     const maxParmamsCount = 4;
-    const paramsCountPtr = this.malloc(maxParmamsCount);
-    const paramsPtr = this.malloc(maxParmamsCount * 4);
+    const paramsCountPtr = this.memoryManager.malloc(maxParmamsCount);
+    const paramsPtr = this.memoryManager.malloc(maxParmamsCount * 4);
     const zoomMode = this.pdfiumModule.FPDFDest_GetView(
       destinationPtr,
       paramsCountPtr,
@@ -6621,16 +6684,16 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const paramPtr = paramsPtr + i * 4;
       view.push(this.pdfiumModule.pdfium.getValue(paramPtr, 'float'));
     }
-    this.free(paramsCountPtr);
-    this.free(paramsPtr);
+    this.memoryManager.free(paramsCountPtr);
+    this.memoryManager.free(paramsPtr);
 
     if (zoomMode === PdfZoomMode.XYZ) {
-      const hasXPtr = this.malloc(1);
-      const hasYPtr = this.malloc(1);
-      const hasZPtr = this.malloc(1);
-      const xPtr = this.malloc(4);
-      const yPtr = this.malloc(4);
-      const zPtr = this.malloc(4);
+      const hasXPtr = this.memoryManager.malloc(1);
+      const hasYPtr = this.memoryManager.malloc(1);
+      const hasZPtr = this.memoryManager.malloc(1);
+      const xPtr = this.memoryManager.malloc(4);
+      const yPtr = this.memoryManager.malloc(4);
+      const zPtr = this.memoryManager.malloc(4);
 
       const isSucceed = this.pdfiumModule.FPDFDest_GetLocationInPage(
         destinationPtr,
@@ -6650,12 +6713,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         const y = hasY ? this.pdfiumModule.pdfium.getValue(yPtr, 'float') : 0;
         const zoom = hasZ ? this.pdfiumModule.pdfium.getValue(zPtr, 'float') : 0;
 
-        this.free(hasXPtr);
-        this.free(hasYPtr);
-        this.free(hasZPtr);
-        this.free(xPtr);
-        this.free(yPtr);
-        this.free(zPtr);
+        this.memoryManager.free(hasXPtr);
+        this.memoryManager.free(hasYPtr);
+        this.memoryManager.free(hasZPtr);
+        this.memoryManager.free(xPtr);
+        this.memoryManager.free(yPtr);
+        this.memoryManager.free(zPtr);
 
         return {
           pageIndex,
@@ -6671,12 +6734,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         };
       }
 
-      this.free(hasXPtr);
-      this.free(hasYPtr);
-      this.free(hasZPtr);
-      this.free(xPtr);
-      this.free(yPtr);
-      this.free(zPtr);
+      this.memoryManager.free(hasXPtr);
+      this.memoryManager.free(hasYPtr);
+      this.memoryManager.free(hasZPtr);
+      this.memoryManager.free(xPtr);
+      this.memoryManager.free(yPtr);
+      this.memoryManager.free(zPtr);
 
       return {
         pageIndex,
@@ -6844,10 +6907,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private readPageAnnoAppearanceStream(annotationPtr: number, mode = AppearanceMode.Normal) {
     const utf16Length = this.pdfiumModule.FPDFAnnot_GetAP(annotationPtr, mode, 0, 0);
     const bytesCount = (utf16Length + 1) * 2; // include NIL
-    const bufferPtr = this.malloc(bytesCount);
+    const bufferPtr = this.memoryManager.malloc(bytesCount);
     this.pdfiumModule.FPDFAnnot_GetAP(annotationPtr, mode, bufferPtr, bytesCount);
     const ap = this.pdfiumModule.pdfium.UTF16ToString(bufferPtr);
-    this.free(bufferPtr);
+    this.memoryManager.free(bufferPtr);
 
     return ap;
   }
@@ -6863,8 +6926,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   setPageAnnoRect(page: PdfPageObject, pagePtr: number, annotationPtr: number, rect: Rect) {
-    const pageXPtr = this.malloc(8);
-    const pageYPtr = this.malloc(8);
+    const pageXPtr = this.memoryManager.malloc(8);
+    const pageYPtr = this.memoryManager.malloc(8);
     if (
       !this.pdfiumModule.FPDF_DeviceToPage(
         pagePtr,
@@ -6879,26 +6942,26 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         pageYPtr,
       )
     ) {
-      this.free(pageXPtr);
-      this.free(pageYPtr);
+      this.memoryManager.free(pageXPtr);
+      this.memoryManager.free(pageYPtr);
       return false;
     }
     const pageX = this.pdfiumModule.pdfium.getValue(pageXPtr, 'double');
     const pageY = this.pdfiumModule.pdfium.getValue(pageYPtr, 'double');
-    this.free(pageXPtr);
-    this.free(pageYPtr);
+    this.memoryManager.free(pageXPtr);
+    this.memoryManager.free(pageYPtr);
 
-    const pageRectPtr = this.malloc(4 * 4);
+    const pageRectPtr = this.memoryManager.malloc(4 * 4);
     this.pdfiumModule.pdfium.setValue(pageRectPtr, pageX, 'float');
     this.pdfiumModule.pdfium.setValue(pageRectPtr + 4, pageY, 'float');
     this.pdfiumModule.pdfium.setValue(pageRectPtr + 8, pageX + rect.size.width, 'float');
     this.pdfiumModule.pdfium.setValue(pageRectPtr + 12, pageY - rect.size.height, 'float');
 
     if (!this.pdfiumModule.FPDFAnnot_SetRect(annotationPtr, pageRectPtr)) {
-      this.free(pageRectPtr);
+      this.memoryManager.free(pageRectPtr);
       return false;
     }
-    this.free(pageRectPtr);
+    this.memoryManager.free(pageRectPtr);
 
     return true;
   }
@@ -6911,7 +6974,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private readPageAnnoRect(annotationPtr: number) {
-    const pageRectPtr = this.malloc(4 * 4);
+    const pageRectPtr = this.memoryManager.malloc(4 * 4);
     const pageRect = {
       left: 0,
       top: 0,
@@ -6924,7 +6987,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       pageRect.right = this.pdfiumModule.pdfium.getValue(pageRectPtr + 8, 'float');
       pageRect.bottom = this.pdfiumModule.pdfium.getValue(pageRectPtr + 12, 'float');
     }
-    this.free(pageRectPtr);
+    this.memoryManager.free(pageRectPtr);
 
     return pageRect;
   }
@@ -6951,10 +7014,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     const highlightRects: Rect[] = [];
     for (let i = 0; i < rectsCount; i++) {
-      const topPtr = this.malloc(8);
-      const leftPtr = this.malloc(8);
-      const rightPtr = this.malloc(8);
-      const bottomPtr = this.malloc(8);
+      const topPtr = this.memoryManager.malloc(8);
+      const leftPtr = this.memoryManager.malloc(8);
+      const rightPtr = this.memoryManager.malloc(8);
+      const bottomPtr = this.memoryManager.malloc(8);
       const isSucceed = this.pdfiumModule.FPDFText_GetRect(
         textPagePtr,
         i,
@@ -6964,10 +7027,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         bottomPtr,
       );
       if (!isSucceed) {
-        this.free(leftPtr);
-        this.free(topPtr);
-        this.free(rightPtr);
-        this.free(bottomPtr);
+        this.memoryManager.free(leftPtr);
+        this.memoryManager.free(topPtr);
+        this.memoryManager.free(rightPtr);
+        this.memoryManager.free(bottomPtr);
         continue;
       }
 
@@ -6976,13 +7039,13 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       const right = this.pdfiumModule.pdfium.getValue(rightPtr, 'double');
       const bottom = this.pdfiumModule.pdfium.getValue(bottomPtr, 'double');
 
-      this.free(leftPtr);
-      this.free(topPtr);
-      this.free(rightPtr);
-      this.free(bottomPtr);
+      this.memoryManager.free(leftPtr);
+      this.memoryManager.free(topPtr);
+      this.memoryManager.free(rightPtr);
+      this.memoryManager.free(bottomPtr);
 
-      const deviceXPtr = this.malloc(4);
-      const deviceYPtr = this.malloc(4);
+      const deviceXPtr = this.memoryManager.malloc(4);
+      const deviceYPtr = this.memoryManager.malloc(4);
       this.pdfiumModule.FPDF_PageToDevice(
         pagePtr,
         0,
@@ -6997,8 +7060,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       );
       const x = this.pdfiumModule.pdfium.getValue(deviceXPtr, 'i32');
       const y = this.pdfiumModule.pdfium.getValue(deviceYPtr, 'i32');
-      this.free(deviceXPtr);
-      this.free(deviceYPtr);
+      this.memoryManager.free(deviceXPtr);
+      this.memoryManager.free(deviceYPtr);
 
       // Convert the bottom-right coordinates to width/height
       const width = Math.ceil(Math.abs(right - left));
@@ -7041,7 +7104,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     // Build UTF-16 keyword buffer
     const length = 2 * (keyword.length + 1);
-    const keywordPtr = this.malloc(length);
+    const keywordPtr = this.memoryManager.malloc(length);
     this.pdfiumModule.pdfium.stringToUTF16(keyword, keywordPtr, length);
 
     // Fold flags
@@ -7079,7 +7142,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         }
       } catch (e) {
         if (!cancelled) {
-          this.free(keywordPtr);
+          this.memoryManager.free(keywordPtr);
           this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SearchAllPages', 'End', doc.id);
           task.reject({
             code: PdfErrorCode.Unknown,
@@ -7092,7 +7155,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       if (cancelled) return;
 
       if (endIdx >= doc.pageCount) {
-        this.free(keywordPtr);
+        this.memoryManager.free(keywordPtr);
         this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SearchAllPages', 'End', doc.id);
         task.resolve({ results: allResults, total: allResults.length });
         return;
@@ -7111,7 +7174,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       (err) => {
         if (err.type === 'abort') {
           try {
-            this.free(keywordPtr);
+            this.memoryManager.free(keywordPtr);
           } catch {}
         }
       },
@@ -7230,10 +7293,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
       // Load the full text of the page once
       const total = this.pdfiumModule.FPDFText_CountChars(textPagePtr);
-      const bufPtr = this.malloc(2 * (total + 1));
+      const bufPtr = this.memoryManager.malloc(2 * (total + 1));
       this.pdfiumModule.FPDFText_GetText(textPagePtr, 0, total, bufPtr);
       const fullText = this.pdfiumModule.pdfium.UTF16ToString(bufPtr);
-      this.free(bufPtr);
+      this.memoryManager.free(bufPtr);
 
       const pageResults: SearchResult[] = [];
 
