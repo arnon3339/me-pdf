@@ -864,19 +864,19 @@ const Sponsorship2: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-12 rounded-xl border border-gray-700 bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-center text-white shadow-2xl">
-            <p className="mb-4 text-2xl font-bold text-yellow-400">
+          <div className="mt-12 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-8 text-center">
+            <p className="mb-4 text-2xl font-bold text-blue-600">
               🔓 Own Your Code Forever
             </p>
-            <p className="text-lg leading-relaxed">
+            <p className="text-lg leading-relaxed text-gray-700">
               Stop paying endless licensing fees for software black boxes.
               <br />
-              <span className="font-semibold text-yellow-300">
+              <span className="font-semibold text-blue-600">
                 Sponsor open-source development once, own the technology
                 forever.
               </span>
               <br />
-              <span className="mt-2 block text-base text-gray-300">
+              <span className="mt-2 block text-base text-gray-600">
                 No vendor lock-in. No surprise price hikes. No limitations.
               </span>
             </p>
