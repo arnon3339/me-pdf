@@ -118,9 +118,6 @@ const Sponsorship2: React.FC = () => {
                   <div className="text-xl font-semibold text-white">
                     $30K-$700K/year
                   </div>
-                  <div className="text-sm text-gray-400">
-                    Enterprise pricing
-                  </div>
                 </div>
                 <div className="text-center">
                   <div className="mb-2 text-3xl font-bold text-orange-400">
@@ -129,7 +126,6 @@ const Sponsorship2: React.FC = () => {
                   <div className="text-xl font-semibold text-white">
                     $25K-$400K/year
                   </div>
-                  <div className="text-sm text-gray-400">Per platform</div>
                 </div>
                 <div className="text-center">
                   <div className="mb-2 text-3xl font-bold text-yellow-400">
@@ -138,7 +134,6 @@ const Sponsorship2: React.FC = () => {
                   <div className="text-xl font-semibold text-white">
                     $15K-$100K/year
                   </div>
-                  <div className="text-sm text-gray-400">Annual license</div>
                 </div>
               </div>
             </div>
