@@ -67,7 +67,7 @@ export default function Navbar() {
                 <span className="absolute inset-0 scale-0 rounded-full bg-orange-100 transition-transform group-hover:scale-100"></span>
               </Link>
               <Link
-                href="/open-source-pdf-sdk-alternative"
+                href="/sponsorship"
                 className="group relative px-4 py-2 text-gray-600 transition-colors"
               >
                 <span className="relative z-10">Sponsorship</span>
@@ -126,7 +126,7 @@ export default function Navbar() {
                   <span>Features</span>
                 </a>*/}
                   <Link
-                    href="/open-source-pdf-sdk-alternative"
+                    href="/sponsorship"
                     className="block flex items-center space-x-2 px-4 py-3 text-base font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                     onClick={() => setMenu(false)}
                   >

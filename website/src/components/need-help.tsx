@@ -35,7 +35,7 @@ export const NeedHelp: React.FC = () => {
               <span>Discord Community</span>
             </a>
             <Link
-              href="/open-source-pdf-sdk-alternative"
+              href="/sponsorship"
               className="inline-flex items-center space-x-2 rounded-full bg-purple-600 px-5 py-2 font-medium text-white transition-colors hover:bg-purple-700"
             >
               <Heart className="h-4 w-4" />

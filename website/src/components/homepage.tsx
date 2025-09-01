@@ -388,7 +388,7 @@ const HeaderAndHero = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
                 <Link
-                  href="/open-source-pdf-sdk-alternative"
+                  href="/sponsorship"
                   className="inline-flex items-center justify-center rounded-full border-2 border-purple-600 bg-transparent px-6 py-3 font-medium text-purple-600 shadow-lg transition-all hover:bg-purple-600 hover:text-white"
                 >
                   <Heart className="mr-2 h-5 w-5" />

@@ -288,82 +288,43 @@ const Sponsorship2: React.FC = () => {
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="mb-12 text-center text-4xl font-black">
-            This Week, Companies Told Me Their Horror Stories
+            Real Conversations from This Week
           </h2>
 
-          <div className="mb-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mb-12 grid gap-8 md:grid-cols-3">
             <div className="rounded-xl bg-white p-6 shadow-lg">
-              <div className="mb-3 font-bold text-red-600">
-                FinTech Startup, Series B
-              </div>
+              <div className="mb-3 font-bold text-red-600">SaaS Founder</div>
               <p className="mb-3 text-gray-700">
-                &quot;We&apos;re paying Apryse $85,000/year. Our CFO nearly had
-                a heart attack at renewal.&quot;
+                &quot;We&apos;re using Nutrient and I&apos;m terrified they
+                might double the price. We couldn&apos;t afford it and our whole
+                business depends on their software.&quot;
               </p>
-              <div className="text-sm text-gray-500">— CTO, via email</div>
+              <div className="text-sm text-gray-500">— CEO, phone call</div>
             </div>
 
             <div className="rounded-xl bg-white p-6 shadow-lg">
               <div className="mb-3 font-bold text-orange-600">
-                Healthcare SaaS
+                Small Startup
               </div>
               <p className="mb-3 text-gray-700">
-                &quot;Nutrient wants $120,000 for features we&apos;ll barely
-                use. We have no alternatives.&quot;
+                &quot;They told us $25,000/year is their minimum. That&apos;s
+                our entire tools budget for the year.&quot;
               </p>
               <div className="text-sm text-gray-500">
-                — Head of Engineering, Zoom call
+                — Startup founder, phone call
               </div>
-            </div>
-
-            <div className="rounded-xl bg-white p-6 shadow-lg">
-              <div className="mb-3 font-bold text-yellow-600">
-                EdTech Platform
-              </div>
-              <p className="mb-3 text-gray-700">
-                &quot;The vendor lock-in terrifies me. One price hike could kill
-                our margins.&quot;
-              </p>
-              <div className="text-sm text-gray-500">— Founder, Discord DM</div>
             </div>
 
             <div className="rounded-xl bg-white p-6 shadow-lg">
               <div className="mb-3 font-bold text-blue-600">
-                Legal Tech Company
+                Construction Software
               </div>
               <p className="mb-3 text-gray-700">
-                &quot;We can&apos;t audit the code. For a security-critical
-                application, that&apos;s insane.&quot;
+                &quot;We need multi-platform support and would much rather
+                invest in open-source than pay Apryse or Nutrient tens of
+                thousands for a black box.&quot;
               </p>
-              <div className="text-sm text-gray-500">
-                — Security Lead, LinkedIn
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-white p-6 shadow-lg">
-              <div className="mb-3 font-bold text-purple-600">
-                Enterprise Software
-              </div>
-              <p className="mb-3 text-gray-700">
-                &quot;We&apos;re quoted $350,000/year. That&apos;s 3 engineer
-                salaries.&quot;
-              </p>
-              <div className="text-sm text-gray-500">
-                — VP Engineering, Phone call
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-white p-6 shadow-lg">
-              <div className="mb-3 font-bold text-green-600">
-                Startup (Pre-seed)
-              </div>
-              <p className="mb-3 text-gray-700">
-                &quot;$25,000 minimum? That&apos;s our entire tools budget for
-                the year.&quot;
-              </p>
-              <div className="text-sm text-gray-500">
-                — Solo founder, Twitter
-              </div>
+              <div className="text-sm text-gray-500">— Founder, phone call</div>
             </div>
           </div>
 

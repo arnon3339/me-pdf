@@ -20,8 +20,8 @@ export default {
       timestamp: false,
     },
   },
-  ['open-source-pdf-sdk-alternative']: {
-    title: 'Open Source PDF SDK Alternative',
+  ['sponsorship']: {
+    title: 'Sponsorship',
     type: 'page',
     theme: {
       timestamp: false,
