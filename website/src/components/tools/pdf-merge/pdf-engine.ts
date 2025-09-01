@@ -1,44 +1,9 @@
-import { PdfiumEngine } from '@embedpdf/engines'
-import { init } from '@embedpdf/pdfium'
 import {
   PdfDocumentObject,
   PdfEngine,
   PdfFile,
-  PdfTaskHelper,
   Rotation,
 } from '@embedpdf/models'
-
-// Singleton instance of the engine
-let engineInstance: PdfiumEngine | null = null
-
-/**
- * Initialize the PDF engine and return it
- * Uses a singleton pattern to avoid multiple initializations
- */
-export async function initializeEngine(): Promise<PdfEngine> {
-  if (engineInstance) return engineInstance
-
-  const response = await fetch('/wasm/pdfium.wasm')
-  const wasmBinary = await response.arrayBuffer()
-
-  const wasmModule = await init({ wasmBinary })
-  const engine = new PdfiumEngine(wasmModule)
-
-  // Initialize the engine using the task pattern
-  const task = engine.initialize
-    ? engine.initialize()
-    : PdfTaskHelper.resolve(true)
-
-  await new Promise<void>((resolve, reject) => {
-    task.wait(
-      () => resolve(),
-      (error) => reject(error),
-    )
-  })
-
-  engineInstance = engine
-  return engine
-}
 
 /**
  * Open a PDF document using the engine

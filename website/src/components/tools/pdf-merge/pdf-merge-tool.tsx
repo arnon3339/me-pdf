@@ -3,29 +3,27 @@
 import React, { useEffect, useState } from 'react'
 import { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { PdfEngine } from '@embedpdf/models'
 import { DocumentPage, DocumentWithPages, MergeDocPage } from './types'
-import {
-  initializeEngine,
-  openPdfDocument,
-  mergePdfPages,
-  closePdfDocument,
-} from './pdf-engine'
+import { openPdfDocument, mergePdfPages, closePdfDocument } from './pdf-engine'
 import { DocumentView } from './document-view'
 import { MergeView } from './merge-view'
 import { MergeResult } from './merge-result'
+import { usePdfiumEngine } from '@embedpdf/engines/react'
+import { ignore } from '@embedpdf/models'
 
 export const PdfMergeTool = () => {
-  const [engine, setEngine] = useState<PdfEngine | null>(null)
+  const { engine } = usePdfiumEngine()
+  const [isInitialized, setIsInitialized] = useState(false)
   const [docs, setDocs] = useState<Record<string, DocumentWithPages>>({})
   const [mergePages, setMergePages] = useState<MergeDocPage[]>([])
   const [isMerging, setIsMerging] = useState(false)
   const [mergedPdf, setMergedPdf] = useState<string | null>(null)
 
-  // Initialize the PDF engine
   useEffect(() => {
-    initializeEngine().then(setEngine)
-  }, [])
+    if (engine && !isInitialized) {
+      engine.initialize?.().wait(() => setIsInitialized(true), ignore)
+    }
+  }, [engine])
 
   // Handle file upload
   const handleFileUpload = async (
@@ -237,7 +235,7 @@ export const PdfMergeTool = () => {
           </p>
         </div>
 
-        {!engine ? (
+        {!engine || !isInitialized ? (
           // Loading state
           <div className="mb-12 text-center">
             <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>

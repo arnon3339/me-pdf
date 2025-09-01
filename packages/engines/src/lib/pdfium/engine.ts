@@ -1554,7 +1554,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     page: PdfPageObject,
     options?: PdfRenderThumbnailOptions,
   ): PdfTask<T> {
-    const { scaleFactor = 1, rotation = Rotation.Degree0, dpr = 1 } = options ?? {};
+    const { scaleFactor = 1, ...rest } = options ?? {};
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'renderThumbnail', doc, page, options);
     this.logger.perf(
       LOG_SOURCE,
@@ -1582,9 +1582,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     const result = this.renderPage(doc, page, {
       scaleFactor: Math.max(scaleFactor, 0.5),
-      rotation,
-      dpr,
-      withAnnotations: true,
+      ...rest,
     });
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `RenderThumbnail`, 'End', `${doc.id}-${page.index}`);
 
