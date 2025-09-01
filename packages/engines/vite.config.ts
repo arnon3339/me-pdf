@@ -71,7 +71,7 @@ export default defineConfig((env) => {
       tsconfigPath: './tsconfig.json',
       entryPath: baseEntries,
       dtsExclude: ['**/react/**', '**/preact/**', '**/vue/**', '**/shared/**'],
-      additionalPlugins: [workerReplacer()],
+      additionalPlugins: [workerReplacer(), versionReplacer()],
     });
   }
 
