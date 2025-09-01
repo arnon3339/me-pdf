@@ -1,5 +1,5 @@
 import React from 'react'
-import { Github } from 'lucide-react'
+import { Github, Heart } from 'lucide-react'
 import DiscordIcon from './icons/discord'
 
 export const NeedHelp: React.FC = () => {
@@ -32,6 +32,13 @@ export const NeedHelp: React.FC = () => {
             >
               <DiscordIcon size={22} strokeColor="white" />
               <span>Discord Community</span>
+            </a>
+            <a
+              href="/open-source-pdf-sdk-alternative"
+              className="inline-flex items-center space-x-2 rounded-full bg-purple-600 px-5 py-2 font-medium text-white transition-colors hover:bg-purple-700"
+            >
+              <Heart className="h-4 w-4" />
+              <span>Support Development</span>
             </a>
           </div>
         </div>
