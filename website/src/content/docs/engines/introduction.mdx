@@ -13,12 +13,10 @@ The best way to use the engine in a browser is with a Web Worker to keep the mai
 
 **1. Create your worker (`webworker.ts`):**
 ```typescript
-import { PdfiumEngineRunner } from '@embedpdf/engines';
+import { PdfiumEngineRunner, DEFAULT_PDFIUM_WASM_URL } from '@embedpdf/engines';
 
 async function init() {
-  const response = await fetch(
-    'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm'
-  );
+  const response = await fetch(DEFAULT_PDFIUM_WASM_URL);
   const wasmBinary = await response.arrayBuffer();
   const runner = new PdfiumEngineRunner(wasmBinary);
   runner.prepare();
@@ -92,12 +90,10 @@ While a Web Worker is recommended for browsers, the engine is flexible and suppo
 For simpler use cases, you can run the engine directly on the main thread.
 
 ```typescript
-import { init } from '@embedpdf/pdfium';
+import { init, DEFAULT_PDFIUM_WASM_URL } from '@embedpdf/pdfium';
 import { PdfiumEngine } from '@embedpdf/engines/pdfium';
 
-const response = await fetch(
-  'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium/dist/pdfium.wasm'
-);
+const response = await fetch(DEFAULT_PDFIUM_WASM_URL);
 const wasmBinary = await response.arrayBuffer();
 const pdfium = await init({ wasmBinary });
 
