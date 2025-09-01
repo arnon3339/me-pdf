@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.0.25
+
+### Patch Changes
+
+- [`b741036`](https://github.com/embedpdf/embed-pdf-viewer/commit/b7410368e5bbe00dca339c9c31b380e913d4e52c) by [@bobsingor](https://github.com/bobsingor) – Export DEFAULT_PDFIUM_WASM_URL for easy way to get the PDFium URL
+
 ## 1.0.24
 
 ### Patch Changes
