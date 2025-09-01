@@ -387,7 +387,7 @@ const Sponsorship2: React.FC = () => {
 
       {/* The Ask */}
       <section className="py-20" id="join-movement">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl">
           <div className="rounded-3xl bg-gradient-to-br from-gray-900 to-blue-900 px-6 py-20 md:px-10">
             <div className="text-center text-white">
               <h2 className="mb-6 text-4xl font-black md:text-5xl">
@@ -400,7 +400,7 @@ const Sponsorship2: React.FC = () => {
                 <strong>open-source SDK you&apos;ll own forever.</strong>
               </p>
 
-              <div className="mb-12 rounded-3xl bg-white/10 p-10 backdrop-blur">
+              <div className="mb-12 rounded-3xl bg-white/10 p-6 backdrop-blur sm:p-8 md:p-10">
                 <h3 className="mb-8 text-3xl font-bold">
                   Our Funding Goal: $30,000/month
                 </h3>
@@ -537,26 +537,36 @@ const Sponsorship2: React.FC = () => {
 
                 {/* Progress Bar */}
                 <div className="mb-2">
-                  <div className="mb-2 flex justify-between text-sm">
-                    <span>Current Progress</span>
-                    <span className="font-bold">$100 / $30,000 per month</span>
+                  <div className="mb-3 text-center sm:text-left">
+                    <div className="text-sm text-white/80">
+                      Current Progress
+                    </div>
+                    <div className="text-lg font-bold sm:text-xl">
+                      $100 / $30,000 per month
+                    </div>
                   </div>
-                  <div className="h-8 overflow-hidden rounded-full bg-white/20">
+                  <div className="h-6 overflow-hidden rounded-full bg-white/20 sm:h-8">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-1000 ease-out"
-                      style={{ width: '0.33%' }}
+                      style={{ width: 'max(3%, 0.33%)' }}
                     ></div>
+                  </div>
+                  <div className="mt-2 text-center text-xs text-white/70 sm:text-left sm:text-sm">
+                    0.33% funded
                   </div>
                 </div>
               </div>
 
               <a
                 href="#sponsorship-tiers"
-                className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-10 py-5 text-xl font-bold text-gray-900 shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
+                className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-8 py-4 text-lg font-bold text-gray-900 shadow-xl transition-all hover:scale-105 hover:shadow-2xl sm:px-10 sm:py-5 sm:text-xl"
               >
                 <span className="absolute left-0 top-0 h-full w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 opacity-0 transition-opacity group-hover:opacity-100"></span>
-                <span className="relative z-10 flex items-center">
-                  View Sponsorship Options
+                <span className="relative z-10 flex items-center whitespace-nowrap">
+                  <span className="sm:hidden">Join Movement</span>
+                  <span className="hidden sm:inline">
+                    View Sponsorship Options
+                  </span>
                   <svg
                     className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-1"
                     fill="none"
@@ -583,7 +593,7 @@ const Sponsorship2: React.FC = () => {
           <h2 className="mb-6 text-center text-4xl font-black">
             Become a Founding Sponsor
           </h2>
-          <p className="mx-auto mb-12 max-w-3xl text-center text-xl text-gray-600">
+          <p className="mx-auto mb-20 max-w-3xl text-center text-xl text-gray-600">
             The first 10 sponsors that commit for 1 year will be permanently
             recognized as founding sponsors who made this project possible.
           </p>
@@ -667,7 +677,7 @@ const Sponsorship2: React.FC = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span>Sponsor updates & newsletter</span>
+                  <span>Sponsor updates</span>
                 </li>
               </ul>
               <div className="text-center">
@@ -866,7 +876,7 @@ const Sponsorship2: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-12 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-8 text-center">
+          <div className="mt-20 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-8 text-center">
             <p className="mb-4 text-2xl font-bold text-blue-600">
               🔓 Own Your Code Forever
             </p>
@@ -938,9 +948,9 @@ const Sponsorship2: React.FC = () => {
                 What happens to my sponsorship if you get acquired?
               </h3>
               <p className="text-gray-700">
-                The code is MIT licensed forever. Even if I get hit by a bus
-                tomorrow, the community owns the code. That&apos;s the beauty of
-                open source—no single entity can take it away.
+                The code is MIT licensed forever. The community owns the code.
+                That&apos;s the beauty of open source—no single entity can take
+                it away.
               </p>
             </div>
 
@@ -1014,7 +1024,7 @@ const Sponsorship2: React.FC = () => {
 
       {/* Final CTA */}
       <section className="py-20" id="contact">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl">
           <div className="rounded-3xl bg-gradient-to-br from-gray-900 to-blue-900 px-6 py-20 text-center text-white md:px-10">
             <h2 className="mb-6 text-4xl font-black md:text-5xl">
               Ready to Own Your PDF Technology?
@@ -1025,7 +1035,7 @@ const Sponsorship2: React.FC = () => {
               vendor lock-in. I personally respond to every message.
             </p>
 
-            <div className="mx-auto max-w-2xl rounded-2xl bg-white/10 p-8 backdrop-blur">
+            <div className="mx-auto max-w-2xl rounded-2xl bg-white/10 p-6 backdrop-blur md:p-8">
               <h3 className="mb-6 text-2xl font-bold">
                 Direct Line to the Founder
               </h3>
