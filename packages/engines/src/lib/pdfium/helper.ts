@@ -66,3 +66,29 @@ export function readArrayBuffer(
 
   return arrayBuffer;
 }
+
+const RESERVED_INFO_KEYS = new Set([
+  'Title',
+  'Author',
+  'Subject',
+  'Keywords',
+  'Producer',
+  'Creator',
+  'CreationDate',
+  'ModDate',
+  'Trapped',
+]);
+
+export function isValidCustomKey(key: string): boolean {
+  // PDF Name object rules are looser than strings here, but keep it sane:
+  // - non-empty ASCII, no embedded NULs, avoid leading slash
+  if (!key || key.length > 127) return false;
+  if (RESERVED_INFO_KEYS.has(key)) return false;
+  if (key[0] === '/') return false;
+  // Keep ASCII-ish to avoid surprises; relax if you need.
+  for (let i = 0; i < key.length; i++) {
+    const c = key.charCodeAt(i);
+    if (c < 0x20 || c > 0x7e) return false;
+  }
+  return true;
+}

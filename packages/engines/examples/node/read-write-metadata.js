@@ -6,7 +6,7 @@ import sharp from 'sharp';
 import { init } from '@embedpdf/pdfium';
 import { PdfiumEngine } from '@embedpdf/engines/pdfium';
 import { createNodeImageDataToBufferConverter } from '@embedpdf/engines/converters';
-import { ConsoleLogger } from '@embedpdf/models';
+import { ConsoleLogger, PdfTrappedStatus } from '@embedpdf/models';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -43,6 +43,7 @@ async function runExample() {
       producer: 'EmbedPDF',
       creator: 'EmbedPDF',
       modificationDate: new Date(),
+      trapped: PdfTrappedStatus.True,
     })
     .toPromise();
 

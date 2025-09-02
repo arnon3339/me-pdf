@@ -27,10 +27,14 @@ var createPdfium = (() => {
       readyPromiseReject = reject;
     });
     [
+      '_EPDF_GetMetaKeyCount',
+      '_EPDF_GetMetaKeyName',
+      '_EPDF_GetMetaTrapped',
       '_EPDF_HasMetaText',
       '_EPDF_PNG_EncodeRGBA',
       '_EPDF_RenderAnnotBitmap',
       '_EPDF_SetMetaText',
+      '_EPDF_SetMetaTrapped',
       '_EPDFAnnot_ClearColor',
       '_EPDFAnnot_GenerateAppearance',
       '_EPDFAnnot_GenerateAppearanceWithBlend',
@@ -6295,6 +6299,22 @@ var createPdfium = (() => {
     var _EPDF_HasMetaText = (Module['_EPDF_HasMetaText'] = createExportWrapper(
       'EPDF_HasMetaText',
       2,
+    ));
+    var _EPDF_GetMetaTrapped = (Module['_EPDF_GetMetaTrapped'] = createExportWrapper(
+      'EPDF_GetMetaTrapped',
+      1,
+    ));
+    var _EPDF_SetMetaTrapped = (Module['_EPDF_SetMetaTrapped'] = createExportWrapper(
+      'EPDF_SetMetaTrapped',
+      2,
+    ));
+    var _EPDF_GetMetaKeyCount = (Module['_EPDF_GetMetaKeyCount'] = createExportWrapper(
+      'EPDF_GetMetaKeyCount',
+      2,
+    ));
+    var _EPDF_GetMetaKeyName = (Module['_EPDF_GetMetaKeyName'] = createExportWrapper(
+      'EPDF_GetMetaKeyName',
+      5,
     ));
     var _FPDFPageObj_NewImageObj = (Module['_FPDFPageObj_NewImageObj'] = createExportWrapper(
       'FPDFPageObj_NewImageObj',

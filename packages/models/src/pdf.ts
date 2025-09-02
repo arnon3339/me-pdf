@@ -95,6 +95,15 @@ export interface PdfMetadataObject {
    * modification date of the document
    */
   modificationDate: Date | null;
+  /**
+   * trapped status of the document
+   */
+  trapped: PdfTrappedStatus | null;
+
+  /**
+   * Non-predefined Info dictionary entries.
+   */
+  custom?: Record<string, string | null>;
 }
 
 /**
@@ -200,6 +209,30 @@ export enum PdfZoomMode {
    * Fit a specific rectangle area within the window.
    */
   FitRectangle = 5,
+}
+
+/**
+ * Trapped status of the document.
+ *
+ * @public
+ */
+export enum PdfTrappedStatus {
+  /**
+   * No /Trapped key
+   */
+  NotSet = 0,
+  /**
+   * Explicitly /Trapped /True
+   */
+  True = 1,
+  /**
+   * Explicitly /Trapped /False
+   */
+  False = 2,
+  /**
+   * Explicitly /Trapped /Unknown or invalid
+   */
+  Unknown = 3,
 }
 
 /**
