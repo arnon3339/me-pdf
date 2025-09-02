@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.0.26
+
+### Patch Changes
+
+- [#132](https://github.com/embedpdf/embed-pdf-viewer/pull/132) by [@bobsingor](https://github.com/bobsingor) – Update PDF meta data to include trapped and custom values
+
 ## 1.0.25
 
 ### Patch Changes

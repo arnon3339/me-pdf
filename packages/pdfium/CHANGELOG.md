@@ -1,5 +1,13 @@
 # @embedpdf/pdfium
 
+## 1.0.26
+
+### Patch Changes
+
+- [#134](https://github.com/embedpdf/embed-pdf-viewer/pull/134) by [@bobsingor](https://github.com/bobsingor) – Add DEFAULT_PDFIUM_WASM_URL also to the pdfium package
+
+- [#132](https://github.com/embedpdf/embed-pdf-viewer/pull/132) by [@bobsingor](https://github.com/bobsingor) – Update PDF meta data to include trapped and custom values
+
 ## 1.0.25
 
 ## 1.0.24
