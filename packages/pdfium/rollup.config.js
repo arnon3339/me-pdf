@@ -5,6 +5,9 @@ import dts from 'rollup-plugin-dts';
 import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
 import MagicString from 'magic-string';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
 const SRC = 'src';
 const DIST = 'dist';
@@ -14,6 +17,19 @@ const ENTRY_CJS = `${SRC}/index.cjs.ts`;
 
 const EXTERNAL_NODE_PACKAGES = ['fs', 'path', 'crypto'];
 
+// Read version from package.json
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf8'));
+
+function versionReplacer() {
+  return rollupReplace({
+    preventAssignment: true,
+    values: {
+      __PDFIUM_VERSION__: version,
+    },
+  });
+}
+
 const common = {
   treeshake: true,
   external: (id) => id === 'module' || id.endsWith(`/${WASM}`),
@@ -21,6 +37,7 @@ const common = {
     typescript(),
     nodeResolve({ extensions: ['.js', '.ts'] }),
     copy({ targets: [{ src: `${SRC}/vendor/${WASM}`, dest: DIST }] }),
+    versionReplacer(), // Add version replacement to all builds
   ],
 };
 
@@ -79,7 +96,7 @@ const neutral = {
     sourcemap: true,
   },
   plugins: [...common.plugins, patchEsmPath()],
-  // keeps ENVIRONMENT_IS_NODE, doesn’t patch import('module')
+  // keeps ENVIRONMENT_IS_NODE, doesn't patch import('module')
 };
 
 /* -------- 3.  CommonJS bundle ----------------------------------- */
