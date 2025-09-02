@@ -116,8 +116,9 @@ import {
   buildUserToDeviceMatrix,
   PdfMetadataObject,
   PdfPrintOptions,
+  PdfTrappedStatus,
 } from '@embedpdf/models';
-import { readArrayBuffer, readString } from './helper';
+import { isValidCustomKey, readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { DocumentContext, PageContext, PdfCache } from './cache';
 import { ImageDataConverter, LazyImageData } from '../converters/types';
@@ -701,6 +702,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       creator: this.readMetaText(ctx.docPtr, 'Creator'),
       creationDate: creationRaw ? (pdfDateToDate(creationRaw) ?? null) : null,
       modificationDate: modRaw ? (pdfDateToDate(modRaw) ?? null) : null,
+      trapped: this.getMetaTrapped(ctx.docPtr),
+      custom: this.readAllMeta(ctx.docPtr, true),
     };
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `GetMetadata`, 'End', doc.id);
@@ -764,6 +767,20 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     writeDate('creationDate', 'CreationDate');
     writeDate('modificationDate', 'ModDate');
+
+    if (meta.trapped !== undefined) {
+      if (!this.setMetaTrapped(ctx.docPtr, meta.trapped ?? null)) ok = false;
+    }
+
+    if (meta.custom !== undefined) {
+      for (const [key, value] of Object.entries(meta.custom)) {
+        if (!isValidCustomKey(key)) {
+          this.logger.warn(LOG_SOURCE, LOG_CATEGORY, 'Invalid custom metadata key skipped', key);
+          continue;
+        }
+        if (!this.setMetaText(ctx.docPtr, key, value ?? null)) ok = false;
+      }
+    }
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, 'SetMetadata', 'End', doc.id);
 
@@ -3004,7 +3021,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @private
    */
-  readMetaText(docPtr: number, key: string): string | null {
+  private readMetaText(docPtr: number, key: string): string | null {
     const exists = !!this.pdfiumModule.EPDF_HasMetaText(docPtr, key);
     if (!exists) return null;
 
@@ -3031,7 +3048,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    *
    * @private
    */
-  setMetaText(docPtr: number, key: string, value: string | null | undefined): boolean {
+  private setMetaText(docPtr: number, key: string, value: string | null | undefined): boolean {
     // Remove key if value is null/undefined/empty
     if (value == null || value.length === 0) {
       // Pass nullptr for value → removal in our C++ implementation
@@ -3049,6 +3066,100 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     } finally {
       this.memoryManager.free(ptr);
     }
+  }
+
+  /**
+   * Read the document's trapped status via PDFium.
+   * Falls back to `Unknown` on unexpected values.
+   *
+   * @private
+   */
+  private getMetaTrapped(docPtr: number): PdfTrappedStatus {
+    const raw = Number(this.pdfiumModule.EPDF_GetMetaTrapped(docPtr));
+    switch (raw) {
+      case PdfTrappedStatus.NotSet:
+      case PdfTrappedStatus.True:
+      case PdfTrappedStatus.False:
+      case PdfTrappedStatus.Unknown:
+        return raw;
+      default:
+        return PdfTrappedStatus.Unknown;
+    }
+  }
+
+  /**
+   * Write (or clear) the document's trapped status via PDFium.
+   * Pass `null`/`undefined` to remove the `/Trapped` key.
+   *
+   * @private
+   */
+  private setMetaTrapped(docPtr: number, status: PdfTrappedStatus | null | undefined): boolean {
+    // Treat null/undefined as “remove key” — the C++ side handles NotSet by
+    // deleting /Trapped from the Info dictionary.
+    const toSet = status == null || status === undefined ? PdfTrappedStatus.NotSet : status;
+
+    // Guard against unexpected values.
+    const valid =
+      toSet === PdfTrappedStatus.NotSet ||
+      toSet === PdfTrappedStatus.True ||
+      toSet === PdfTrappedStatus.False ||
+      toSet === PdfTrappedStatus.Unknown;
+
+    if (!valid) return false;
+
+    return !!this.pdfiumModule.EPDF_SetMetaTrapped(docPtr, toSet);
+  }
+
+  /**
+   * Get the number of keys in the document's Info dictionary.
+   * @param docPtr - pointer to pdf document
+   * @param customOnly - if true, only count non-reserved (custom) keys; if false, count all keys.
+   * @returns the number of keys (possibly 0). On error, returns 0.
+   *
+   * @private
+   */
+  private getMetaKeyCount(docPtr: number, customOnly: boolean): number {
+    return Number(this.pdfiumModule.EPDF_GetMetaKeyCount(docPtr, customOnly)) | 0;
+  }
+
+  /**
+   * Get the name of the Info dictionary key at |index|.
+   * @param docPtr - pointer to pdf document
+   * @param index - 0-based key index in the order returned by PDFium.
+   * @param customOnly - if true, indexes only over non-reserved (custom) keys; if false, indexes over all keys.
+   * @returns the name of the key, or null if the key is not found.
+   *
+   * @private
+   */
+  private getMetaKeyName(docPtr: number, index: number, customOnly: boolean): string | null {
+    const len = this.pdfiumModule.EPDF_GetMetaKeyName(docPtr, index, customOnly, 0, 0);
+    if (!len) return null;
+    return readString(
+      this.pdfiumModule.pdfium,
+      (buffer, buflen) =>
+        this.pdfiumModule.EPDF_GetMetaKeyName(docPtr, index, customOnly, buffer, buflen),
+      this.pdfiumModule.pdfium.UTF8ToString,
+      len,
+    );
+  }
+
+  /**
+   * Read all metadata from the document's Info dictionary.
+   * @param docPtr - pointer to pdf document
+   * @param customOnly - if true, only read non-reserved (custom) keys; if false, read all keys.
+   * @returns all metadata
+   *
+   * @private
+   */
+  private readAllMeta(docPtr: number, customOnly: boolean = true): Record<string, string | null> {
+    const n = this.getMetaKeyCount(docPtr, customOnly);
+    const out: Record<string, string | null> = {};
+    for (let i = 0; i < n; i++) {
+      const key = this.getMetaKeyName(docPtr, i, customOnly);
+      if (!key) continue;
+      out[key] = this.readMetaText(docPtr, key); // returns null if not present
+    }
+    return out;
   }
 
   /**

@@ -7,6 +7,7 @@
   "main": "basic-example.js",
   "scripts": {
     "start": "node basic-example.js",
+    "start:read-write-metadata": "node read-write-metadata.js",
     "start:annotation-render": "node annotation-render-example.js"
   },
   "dependencies": {

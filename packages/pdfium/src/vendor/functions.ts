@@ -1,5 +1,11 @@
 /* AUTO-GENERATED — DO NOT EDIT BY HAND */
 export const functions = {
+  EPDF_GetMetaKeyCount: [['number', 'boolean'] as const, 'number'] as const,
+  EPDF_GetMetaKeyName: [
+    ['number', 'number', 'boolean', 'number', 'number'] as const,
+    'number',
+  ] as const,
+  EPDF_GetMetaTrapped: [['number'] as const, 'number'] as const,
   EPDF_HasMetaText: [['number', 'string'] as const, 'boolean'] as const,
   EPDF_PNG_EncodeRGBA: [
     ['number', 'number', 'number', 'number', 'number', 'number'] as const,
@@ -10,6 +16,7 @@ export const functions = {
     'boolean',
   ] as const,
   EPDF_SetMetaText: [['number', 'string', 'number'] as const, 'boolean'] as const,
+  EPDF_SetMetaTrapped: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_ClearColor: [['number', 'number'] as const, 'boolean'] as const,
   EPDFAnnot_GenerateAppearance: [['number'] as const, 'boolean'] as const,
   EPDFAnnot_GenerateAppearanceWithBlend: [['number', 'number'] as const, 'boolean'] as const,
