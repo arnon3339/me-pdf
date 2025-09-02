@@ -5,6 +5,9 @@ import { functions } from './vendor/functions';
 export type { PdfiumModule } from './vendor/pdfium';
 export type { PdfiumRuntimeMethods } from './vendor/runtime-methods';
 
+export const DEFAULT_PDFIUM_WASM_URL: string =
+  'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium@__PDFIUM_VERSION__/dist/pdfium.wasm';
+
 /**
  * Name of JavaScript type
  */
