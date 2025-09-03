@@ -1,8 +1,19 @@
 'use client'
 
 import React from 'react'
-import { ArrowRight, MergeIcon } from 'lucide-react'
+import {
+  ArrowRight,
+  MergeIcon,
+  EditIcon,
+  Shield,
+  Github,
+  Lock,
+  Eye,
+  Server,
+  Cookie,
+} from 'lucide-react'
 import { Scribble3 } from './icons/scribble3'
+import { PrivacyStatement } from './tools/shared/privacy-statement'
 import Link from 'next/link'
 
 const tools = [
@@ -13,6 +24,14 @@ const tools = [
     icon: <MergeIcon className="h-6 w-6 text-white" />,
     href: '/tools/pdf-merge',
     color: 'from-purple-600 to-blue-700',
+  },
+  {
+    title: 'PDF Metadata Editor',
+    description:
+      'Edit PDF document properties, title, author, and other metadata fields',
+    icon: <EditIcon className="h-6 w-6 text-white" />,
+    href: '/tools/pdf-metadata-editor',
+    color: 'from-purple-600 to-pink-700',
   },
   // Add more tools here as they are created
 ]
@@ -37,7 +56,7 @@ export default function ToolsOverview() {
       <div className="pb-16 pt-20 sm:pt-24 lg:pt-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Header Section */}
-          <div className="mb-24 text-center">
+          <div className="mb-16 text-center">
             <div className="mb-6 inline-block rounded-full border border-blue-200 bg-blue-50 px-6 py-2 text-sm font-medium text-blue-800">
               PDF Tools
             </div>
@@ -52,10 +71,13 @@ export default function ToolsOverview() {
                 for your PDF documents
               </span>
             </h1>
-            <p className="mx-auto max-w-2xl text-xl text-gray-600">
-              Simple and powerful tools to help you work with PDF files directly
-              in your browser
-            </p>
+            <div className="mx-auto max-w-4xl">
+              <p className="mb-4 text-xl text-gray-600">
+                Simple and powerful tools to help you work with PDF files
+                directly in your browser
+              </p>
+              <PrivacyStatement className="mt-6" />
+            </div>
           </div>
 
           {/* Tools Grid */}

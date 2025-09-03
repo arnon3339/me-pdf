@@ -2856,6 +2856,11 @@ export interface PdfEngine<T = Blob> {
    * @returns task that file is closed or not
    */
   closeDocument: (doc: PdfDocumentObject) => PdfTask<boolean>;
+  /**
+   * Close all documents
+   * @returns task that all documents are closed or not
+   */
+  closeAllDocuments: () => PdfTask<boolean>;
 }
 
 /**

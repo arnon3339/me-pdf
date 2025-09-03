@@ -237,9 +237,14 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   private readonly memoryManager: MemoryManager;
 
   /**
+   * interval to check memory leaks
+   */
+  private memoryLeakCheckInterval: number | null = null;
+
+  /**
    * logger instance
    */
-  private readonly logger: Logger;
+  private logger: Logger;
 
   /**
    * function to convert ImageData to Blob
@@ -267,9 +272,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.memoryManager = new MemoryManager(this.pdfiumModule, this.logger);
 
     if (this.logger.isEnabled('debug')) {
-      setInterval(() => {
+      this.memoryLeakCheckInterval = setInterval(() => {
         this.memoryManager.checkLeaks();
-      }, 10000);
+      }, 10000) as unknown as number;
     }
   }
   /**
@@ -294,6 +299,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'destroy');
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `Destroy`, 'Begin', 'General');
     this.pdfiumModule.FPDF_DestroyLibrary();
+    if (this.memoryLeakCheckInterval) {
+      clearInterval(this.memoryLeakCheckInterval);
+      this.memoryLeakCheckInterval = null;
+    }
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `Destroy`, 'End', 'General');
     return PdfTaskHelper.resolve(true);
   }
@@ -2314,6 +2323,19 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     ctx.dispose();
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `CloseDocument`, 'End', doc.id);
+    return PdfTaskHelper.resolve(true);
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.closeAllDocuments}
+   *
+   * @public
+   */
+  closeAllDocuments() {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'closeAllDocuments');
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `CloseAllDocuments`, 'Begin');
+    this.cache.closeAllDocuments();
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `CloseAllDocuments`, 'End');
     return PdfTaskHelper.resolve(true);
   }
 
