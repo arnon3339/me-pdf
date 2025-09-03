@@ -36,32 +36,6 @@ const tools = [
   // Add more tools here as they are created
 ]
 
-const privacyFeatures = [
-  {
-    icon: <Server className="h-5 w-5" />,
-    title: 'No File Uploads',
-    description:
-      'All processing happens locally in your browser - files never leave your device',
-  },
-  {
-    icon: <Eye className="h-5 w-5" />,
-    title: 'Zero Tracking',
-    description:
-      'No analytics, no tracking scripts, no data collection whatsoever',
-  },
-  {
-    icon: <Cookie className="h-5 w-5" />,
-    title: 'No Cookies',
-    description: "We don't store any cookies or persistent data on your device",
-  },
-  {
-    icon: <Github className="h-5 w-5" />,
-    title: 'Open Source',
-    description:
-      'Full transparency - inspect our code and verify our privacy claims',
-  },
-]
-
 // Animated background component from documentation-overview
 const AnimatedBackground = () => {
   return (
@@ -70,68 +44,6 @@ const AnimatedBackground = () => {
       <div className="animate-blob animation-delay-2000 absolute right-10 top-40 h-72 w-72 rounded-full bg-blue-500 opacity-10 mix-blend-multiply blur-3xl filter"></div>
       <div className="animate-blob animation-delay-4000 absolute bottom-32 left-20 h-80 w-80 rounded-full bg-teal-500 opacity-10 mix-blend-multiply blur-3xl filter"></div>
       <div className="bg-grid-pattern opacity-3 absolute inset-0"></div>
-    </div>
-  )
-}
-
-// Privacy banner component
-const PrivacyBanner = ({ className }: { className?: string }) => {
-  return (
-    <div
-      className={`relative mb-16 overflow-hidden rounded-3xl border border-green-200 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-8 shadow-xl ${className}`}
-    >
-      {/* Decorative elements */}
-      <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-green-200 opacity-20"></div>
-      <div className="absolute -bottom-16 -left-16 h-32 w-32 rounded-full bg-emerald-300 opacity-15"></div>
-
-      <div className="relative">
-        <div className="mb-6 flex items-center justify-center">
-          <div className="rounded-full bg-green-100 p-3">
-            <Shield className="h-8 w-8 text-green-600" />
-          </div>
-        </div>
-
-        <div className="text-center">
-          <h2 className="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">
-            Your Privacy is Our Priority
-          </h2>
-          <p className="mb-8 text-lg text-gray-700">
-            Complete privacy and transparency - that's our promise to you
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {privacyFeatures.map((feature, index) => (
-            <div key={index} className="flex flex-col items-center text-center">
-              <div className="mb-3 rounded-full bg-white p-3 shadow-sm">
-                <div className="text-green-600">{feature.icon}</div>
-              </div>
-              <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                {feature.title}
-              </h3>
-              <p className="text-xs text-gray-600">{feature.description}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Lock className="h-4 w-4 text-green-600" />
-            <span>100% Client-Side Processing</span>
-          </div>
-          <div className="hidden h-4 w-px bg-gray-300 sm:block"></div>
-          <a
-            href="https://github.com/embedpdf/embed-pdf-viewer"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center space-x-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-all hover:scale-105 hover:bg-gray-800"
-          >
-            <Github className="h-4 w-4" />
-            <span>View Source Code</span>
-            <ArrowRight className="h-3 w-3" />
-          </a>
-        </div>
-      </div>
     </div>
   )
 }
