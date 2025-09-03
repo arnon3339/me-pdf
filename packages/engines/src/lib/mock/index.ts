@@ -37,6 +37,7 @@ import {
   PdfMetadataObject,
   PdfTask,
   PdfPrintOptions,
+  PdfTrappedStatus,
 } from '@embedpdf/models';
 
 /**
@@ -64,6 +65,7 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
         creator: 'creator',
         creationDate: new Date(),
         modificationDate: new Date(),
+        trapped: PdfTrappedStatus.NotSet,
       };
       return PdfTaskHelper.resolve(metadata);
     },
@@ -274,6 +276,9 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
       return PdfTaskHelper.resolve(textRects);
     }),
     closeDocument: (pdf: PdfDocumentObject) => {
+      return PdfTaskHelper.resolve(true);
+    },
+    closeAllDocuments: () => {
       return PdfTaskHelper.resolve(true);
     },
     saveAsCopy: (pdf: PdfDocumentObject) => {

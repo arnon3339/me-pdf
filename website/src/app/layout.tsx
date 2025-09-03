@@ -23,11 +23,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body>
-        <ConfigProvider navbar={<Navbar />} pageMap={pageMap}>
-          {children}
-        </ConfigProvider>
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

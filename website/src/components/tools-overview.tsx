@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ArrowRight, MergeIcon } from 'lucide-react'
+import { ArrowRight, MergeIcon, EditIcon } from 'lucide-react'
 import { Scribble3 } from './icons/scribble3'
 import Link from 'next/link'
 
@@ -13,6 +13,14 @@ const tools = [
     icon: <MergeIcon className="h-6 w-6 text-white" />,
     href: '/tools/pdf-merge',
     color: 'from-purple-600 to-blue-700',
+  },
+  {
+    title: 'PDF Metadata Editor',
+    description:
+      'Edit PDF document properties, title, author, and other metadata fields',
+    icon: <EditIcon className="h-6 w-6 text-white" />, // You'll need to import EditIcon or use another icon
+    href: '/tools/pdf-metadata-editor',
+    color: 'from-purple-600 to-pink-700',
   },
   // Add more tools here as they are created
 ]

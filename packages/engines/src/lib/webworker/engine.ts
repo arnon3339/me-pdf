@@ -878,6 +878,21 @@ export class WebWorkerEngine implements PdfEngine {
   }
 
   /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.closeAllDocuments}
+   *
+   * @public
+   */
+  closeAllDocuments() {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'closeAllDocuments');
+    const requestId = this.generateRequestId('closeAllDocuments');
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+    const request: ExecuteRequest = createRequest(requestId, 'closeAllDocuments', []);
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
    * Send the request to webworker inside and register the task
    * @param task - task that waiting for the response
    * @param request - request that needs send to web worker

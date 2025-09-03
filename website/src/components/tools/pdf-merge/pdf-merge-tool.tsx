@@ -8,20 +8,21 @@ import { openPdfDocument, mergePdfPages, closePdfDocument } from './pdf-engine'
 import { DocumentView } from './document-view'
 import { MergeView } from './merge-view'
 import { MergeResult } from './merge-result'
-import { usePdfiumEngine } from '@embedpdf/engines/react'
-import { ignore } from '@embedpdf/models'
+import { useEngine } from '@embedpdf/engines/react'
 
 export const PdfMergeTool = () => {
-  const { engine } = usePdfiumEngine()
-  const [isInitialized, setIsInitialized] = useState(false)
+  const engine = useEngine()
   const [docs, setDocs] = useState<Record<string, DocumentWithPages>>({})
   const [mergePages, setMergePages] = useState<MergeDocPage[]>([])
   const [isMerging, setIsMerging] = useState(false)
   const [mergedPdf, setMergedPdf] = useState<string | null>(null)
 
   useEffect(() => {
-    if (engine && !isInitialized) {
-      engine.initialize?.().wait(() => setIsInitialized(true), ignore)
+    // Cleanup on unmount
+    return () => {
+      if (engine) {
+        engine.closeAllDocuments()
+      }
     }
   }, [engine])
 
@@ -235,7 +236,7 @@ export const PdfMergeTool = () => {
           </p>
         </div>
 
-        {!engine || !isInitialized ? (
+        {!engine ? (
           // Loading state
           <div className="mb-12 text-center">
             <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>

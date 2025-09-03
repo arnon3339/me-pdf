@@ -27,6 +27,14 @@ export class PdfCache {
     this.docs.delete(docId);
     return true;
   }
+
+  /** Close all documents */
+  closeAllDocuments(): void {
+    for (const ctx of this.docs.values()) {
+      ctx.dispose();
+    }
+    this.docs.clear();
+  }
 }
 
 export class DocumentContext {

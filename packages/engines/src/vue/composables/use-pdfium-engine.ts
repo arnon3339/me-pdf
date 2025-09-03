@@ -1,5 +1,5 @@
 import { ref, onMounted, onBeforeUnmount, watch, Ref } from 'vue';
-import type { Logger, PdfEngine } from '@embedpdf/models';
+import { ignore, type Logger, type PdfEngine } from '@embedpdf/models';
 
 const defaultWasmUrl =
   'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium@__PDFIUM_VERSION__/dist/pdfium.wasm';
@@ -46,7 +46,17 @@ export function usePdfiumEngine(props: UsePdfiumEngineProps = {}): UsePdfiumEngi
         ? await import('@embedpdf/engines/pdfium-worker-engine')
         : await import('@embedpdf/engines/pdfium-direct-engine');
 
-      engine.value = await createPdfiumEngine(wasmUrl, logger);
+      const pdfEngine = await createPdfiumEngine(wasmUrl, logger);
+      pdfEngine.initialize().wait(
+        () => {
+          isLoading.value = false;
+          engine.value = pdfEngine;
+        },
+        (e) => {
+          error.value = new Error(e.reason.message);
+          isLoading.value = false;
+        },
+      );
       isLoading.value = false;
     } catch (e) {
       error.value = e as Error;
@@ -55,10 +65,10 @@ export function usePdfiumEngine(props: UsePdfiumEngineProps = {}): UsePdfiumEngi
   }
 
   function destroyEngine() {
-    engine.value?.destroy?.();
-    engine.value = null;
-    isLoading.value = true;
-    error.value = null;
+    engine.value?.closeAllDocuments?.().wait(() => {
+      engine.value?.destroy?.();
+      engine.value = null;
+    }, ignore);
   }
 
   return { engine, isLoading, error };
