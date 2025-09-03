@@ -128,9 +128,10 @@ export const PdfMetadataEditorTool = () => {
     <ToolLayout
       title="Edit PDF Metadata"
       subtitle="right in your browser"
-      description="Securely edit PDF document properties and metadata - your files never leave your device."
+      description="Securely edit PDF document properties and metadata"
       badgeText="PDF Metadata Editor"
       badgeColor="border-purple-200 bg-purple-50 text-purple-800"
+      gradientColor="from-purple-600 to-pink-700"
     >
       {!engine ? (
         <LoadingState />
@@ -159,6 +160,7 @@ export const PdfMetadataEditorTool = () => {
           buttonText="Choose PDF File"
           helperText="Select a PDF file to view and edit its metadata."
           disabled={isLoading}
+          gradientColor="from-purple-600 to-pink-700"
         />
       ) : (
         <MetadataForm

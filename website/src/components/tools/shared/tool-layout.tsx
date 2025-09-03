@@ -1,6 +1,7 @@
 'use client'
 
 import React, { ReactNode } from 'react'
+import { PrivacyStatement } from './privacy-statement'
 
 interface ToolLayoutProps {
   title: string
@@ -8,6 +9,8 @@ interface ToolLayoutProps {
   description: string
   badgeText: string
   badgeColor?: string
+  gradientColor?: string // New prop for gradient colors
+  showPrivacyStatement?: boolean
   children: ReactNode
 }
 
@@ -17,6 +20,8 @@ export const ToolLayout = ({
   description,
   badgeText,
   badgeColor = 'border-blue-200 bg-blue-50 text-blue-800',
+  gradientColor = 'from-blue-600 to-teal-500', // Default gradient
+  showPrivacyStatement = true,
   children,
 }: ToolLayoutProps) => {
   return (
@@ -31,13 +36,21 @@ export const ToolLayout = ({
           </div>
           <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight text-gray-900 md:text-5xl">
             {title}
-            <span className="block bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
+            <span
+              className={`block bg-gradient-to-r ${gradientColor} bg-clip-text text-transparent`}
+            >
               {subtitle}
             </span>
           </h1>
-          <p className="mx-auto max-w-2xl text-xl text-gray-600">
-            {description}
-          </p>
+          <div className="mx-auto max-w-4xl">
+            <p className="mb-4 text-xl text-gray-600">{description}</p>
+            {showPrivacyStatement && (
+              <PrivacyStatement
+                className="mt-6"
+                gradientColor={gradientColor}
+              />
+            )}
+          </div>
         </div>
 
         {children}
