@@ -239,7 +239,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   /**
    * interval to check memory leaks
    */
-  private memoryLeakCheckInterval: NodeJS.Timeout | null = null;
+  private memoryLeakCheckInterval: number | null = null;
 
   /**
    * logger instance
@@ -274,7 +274,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (this.logger.isEnabled('debug')) {
       this.memoryLeakCheckInterval = setInterval(() => {
         this.memoryManager.checkLeaks();
-      }, 10000);
+      }, 10000) as unknown as number;
     }
   }
   /**
