@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useEngine } from '@embedpdf/engines/react'
-import { PdfDocumentObject, PdfMetadataObject } from '@embedpdf/models'
+import { PdfDocumentObject, PdfMetadataObject, uuidV4 } from '@embedpdf/models'
 import { ToolLayout } from '../shared/tool-layout'
 import { FilePicker } from '../shared/file-picker'
 import { LoadingState } from '../shared/loading-state'
@@ -48,7 +48,7 @@ export const PdfMetadataEditorTool = () => {
       // Load document
       const doc = await engine
         .openDocumentBuffer({
-          id: 'sample',
+          id: uuidV4(),
           content: arrayBuffer,
         })
         .toPromise()
@@ -79,7 +79,12 @@ export const PdfMetadataEditorTool = () => {
 
     try {
       // Update metadata
-      await engine.setMetadata(document.doc, updatedMetadata).toPromise()
+      await engine
+        .setMetadata(document.doc, {
+          ...document.metadata,
+          modificationDate: new Date(),
+        })
+        .toPromise()
 
       // Save document
       const savedDoc = await engine.saveAsCopy(document.doc).toPromise()

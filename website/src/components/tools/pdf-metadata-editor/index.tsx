@@ -1,12 +1,5 @@
-import { useEngine } from '@embedpdf/engines/react'
-import { useEffect } from 'react'
+'use client'
 
-export const PdfMetadataEditor = () => {
-  const engine = useEngine()
+import { PdfMetadataEditorTool } from './pdf-metadata-editor-tool'
 
-  useEffect(() => {
-    engine?.closeAllDocuments()
-  }, [engine])
-
-  return <div>PdfMetadataEditor</div>
-}
+export { PdfMetadataEditorTool }
