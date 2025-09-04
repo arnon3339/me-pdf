@@ -7,15 +7,13 @@ import {
   useSensors,
   PointerSensor,
   DragEndEvent,
+  DndContext,
+  closestCorners,
 } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import {
-  restrictToParentElement,
-  restrictToVerticalAxis,
-} from '@dnd-kit/modifiers'
+import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
+import { restrictToParentElement } from '@dnd-kit/modifiers'
 import { SortablePage } from './sortable-page'
 import { Button } from '../../button'
-import { DndContext, closestCenter } from '@dnd-kit/core'
 
 interface MergeViewProps {
   pages: MergeDocPage[]
@@ -32,12 +30,9 @@ export const MergeView: React.FC<MergeViewProps> = ({
   onMerge,
   isMerging,
 }) => {
-  // Set up sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
+      activationConstraint: { distance: 10 },
     }),
   )
 
@@ -53,13 +48,13 @@ export const MergeView: React.FC<MergeViewProps> = ({
         ) : (
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={closestCorners}
+            modifiers={[restrictToParentElement]}
             onDragEnd={onDragEnd}
-            modifiers={[restrictToParentElement, restrictToVerticalAxis]}
           >
             <SortableContext
-              items={pages.map((page) => page.id)}
-              strategy={verticalListSortingStrategy}
+              items={pages.map((p) => p.id)}
+              strategy={rectSortingStrategy}
             >
               <div className="grid grid-cols-2 gap-2">
                 {pages.map((page, index) => (
@@ -67,7 +62,7 @@ export const MergeView: React.FC<MergeViewProps> = ({
                     key={page.id}
                     page={page}
                     index={index}
-                    isNew={true}
+                    isNew
                     onRemove={onRemovePage}
                   />
                 ))}

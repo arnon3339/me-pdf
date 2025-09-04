@@ -4,14 +4,17 @@ import React, { useEffect, useState } from 'react'
 import { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import { DocumentPage, DocumentWithPages, MergeDocPage } from './types'
-import { openPdfDocument, mergePdfPages, closePdfDocument } from './pdf-engine'
+import { mergePdfPages, closePdfDocument } from './pdf-engine'
 import { DocumentView } from './document-view'
 import { MergeView } from './merge-view'
-import { MergeResult } from './merge-result'
 import { useEngine } from '@embedpdf/engines/react'
 import { ToolLayout } from '../shared/tool-layout'
-import { FilePicker } from '../shared/file-picker'
+import { FilePicker, DocumentWithFile } from '../shared/file-picker'
 import { LoadingState } from '../shared/loading-state'
+import { FAQ } from '../shared/faq'
+import { generalToolFAQs, mergeFAQs, toolCategories } from '../shared/faq-data'
+import { RotateCcw } from 'lucide-react'
+import { ResultCard } from '../shared/result-card'
 
 export const PdfMergeTool = () => {
   const engine = useEngine()
@@ -29,17 +32,12 @@ export const PdfMergeTool = () => {
     }
   }, [engine])
 
-  // Handle file upload
-  const handleFileUpload = async (files: File[]) => {
-    if (!engine || !files.length) return
+  // Handle document upload from enhanced FilePicker
+  const handleDocumentSelect = async (documents: DocumentWithFile[]) => {
+    if (!engine || !documents.length) return
 
-    for (const file of files) {
-      const arrayBuffer = await file.arrayBuffer()
-
+    for (const { doc, fileName } of documents) {
       try {
-        // Open the document
-        const doc = await openPdfDocument(engine, arrayBuffer)
-
         // Initialize pages array for this document
         const pages: DocumentPage[] = Array.from(
           { length: doc.pages.length },
@@ -53,10 +51,10 @@ export const PdfMergeTool = () => {
         // Add the document to state
         setDocs((prevDocs) => ({
           ...prevDocs,
-          [doc.id]: { doc, pages },
+          [doc.id]: { doc: { ...doc, name: fileName }, pages },
         }))
       } catch (error) {
-        console.error('Error opening PDF:', error)
+        console.error('Error processing document:', error)
       }
     }
   }
@@ -212,6 +210,8 @@ export const PdfMergeTool = () => {
     )
   }
 
+  const faqItems = [...mergeFAQs]
+
   return (
     <ToolLayout
       title="Merge PDFs"
@@ -222,17 +222,33 @@ export const PdfMergeTool = () => {
       gradientColor="from-purple-600 to-blue-700"
     >
       {!engine ? (
-        <LoadingState />
+        <LoadingState borderColor="border-purple-500" />
       ) : mergedPdf ? (
-        <MergeResult mergedPdfUrl={mergedPdf} onReset={resetTool} />
-      ) : Object.keys(docs).length === 0 ? (
-        <FilePicker
-          onFileSelect={handleFileUpload}
-          multiple={true}
-          buttonText="Choose PDF Files"
-          helperText="All processing happens locally in your browser for complete privacy."
-          gradientColor="from-purple-600 to-blue-700"
+        <ResultCard
+          title="Merged Successfully!"
+          message="Your combined PDF is ready to download."
+          download={{
+            url: mergedPdf,
+            fileName: 'merged_document.pdf',
+            label: 'Download Merged PDF',
+          }}
+          secondary={{
+            label: 'Merge More PDFs',
+            onClick: resetTool,
+            icon: RotateCcw,
+          }}
         />
+      ) : Object.keys(docs).length === 0 ? (
+        <>
+          <FilePicker
+            engine={engine}
+            onDocumentSelect={handleDocumentSelect}
+            multiple={true}
+            buttonText="Choose PDF Files"
+            helperText="All processing happens locally in your browser for complete privacy."
+            gradientColor="from-purple-600 to-blue-700"
+          />
+        </>
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Source documents */}
@@ -260,6 +276,16 @@ export const PdfMergeTool = () => {
           </div>
         </div>
       )}
+
+      {/* FAQ Section */}
+      <div className="mt-16">
+        <FAQ
+          items={faqItems}
+          title="Frequently Asked Questions"
+          subtitle="Everything you need to know about merging PDFs"
+          gradientColor="from-purple-600 to-blue-700"
+        />
+      </div>
     </ToolLayout>
   )
 }
