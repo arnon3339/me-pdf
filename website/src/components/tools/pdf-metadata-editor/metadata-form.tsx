@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { PdfMetadataObject, PdfTrappedStatus } from '@embedpdf/models'
+import { RotateCcw } from 'lucide-react'
 
 interface MetadataFormProps {
   metadata: PdfMetadataObject
@@ -106,250 +107,229 @@ export const MetadataForm = ({
   ]
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-6 rounded-lg bg-blue-50 p-4">
-        <h3 className="font-medium text-blue-900">Editing: {fileName}</h3>
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Editable Fields */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold">Edit Metadata</h3>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Standard fields */}
-            {Object.entries(formData).map(([key, value]) => (
-              <div key={key}>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  {key.charAt(0).toUpperCase() + key.slice(1)}
-                </label>
-                <input
-                  type="text"
-                  value={value}
-                  onChange={(e) =>
-                    handleInputChange(
-                      key as keyof typeof formData,
-                      e.target.value,
-                    )
-                  }
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder={`Enter ${key}`}
-                />
-              </div>
-            ))}
-
-            {/* Trapped dropdown */}
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Trapped
-              </label>
-              <select
-                value={trapped === null ? '' : trapped.toString()}
-                onChange={(e) =>
-                  setTrapped(
-                    e.target.value === '' ? null : parseInt(e.target.value),
-                  )
-                }
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                {trappedOptions.map(({ value, label }) => (
-                  <option
-                    key={value === null ? 'null' : value.toString()}
-                    value={value === null ? '' : value.toString()}
+    <div className="mb-12">
+      <div className="mx-auto max-w-4xl">
+        {/* File info header with gradient glow effect */}
+        <div className="group relative mb-8">
+          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-700 opacity-20 blur transition duration-300"></div>
+          <div className="relative rounded-2xl bg-white p-6 shadow-md">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-purple-600 to-pink-700">
+                  <svg
+                    className="h-6 w-6 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
                   >
-                    {label}
-                  </option>
-                ))}
-              </select>
+                    <path
+                      fillRule="evenodd"
+                      d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Editing PDF Metadata
+                </h3>
+                <p className="break-all text-gray-600">{fileName}</p>
+              </div>
             </div>
+          </div>
+        </div>
 
-            {/* Custom fields */}
-            <div className="border-t pt-4">
-              <h4 className="mb-3 text-sm font-semibold text-gray-700">
-                Custom Fields
-              </h4>
+        {/* Main form card with gradient glow */}
+        <div className="group relative">
+          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-700 opacity-10 blur transition duration-300 group-hover:opacity-20"></div>
+          <div className="relative overflow-hidden rounded-2xl bg-white shadow-md">
+            <div className="p-8">
+              <h3 className="mb-6 text-2xl font-bold text-gray-900">
+                Edit Metadata Fields
+              </h3>
 
-              {/* Existing custom fields */}
-              {Object.entries(customFields)
-                .filter(([_, value]) => value !== null) // Only show non-null fields
-                .map(([key, value]) => (
-                  <div key={key} className="mb-3 flex items-end gap-2">
-                    <div className="flex-1">
-                      <label className="mb-1 block text-xs text-gray-600">
-                        {key}
-                      </label>
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Standard fields */}
+                <div>
+                  <h4 className="mb-4 text-lg font-semibold text-gray-900">
+                    Document Information
+                  </h4>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {Object.entries(formData).map(([key, value]) => (
+                      <div key={key}>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          {key.charAt(0).toUpperCase() + key.slice(1)}
+                        </label>
+                        <input
+                          type="text"
+                          value={value}
+                          onChange={(e) =>
+                            handleInputChange(
+                              key as keyof typeof formData,
+                              e.target.value,
+                            )
+                          }
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                          placeholder={`Enter ${key}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Trapped dropdown */}
+                <div className="border-t border-gray-200 pt-8">
+                  <h4 className="mb-4 text-lg font-semibold text-gray-900">
+                    Technical Settings
+                  </h4>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Trapped Status
+                    </label>
+                    <select
+                      value={trapped === null ? '' : trapped.toString()}
+                      onChange={(e) =>
+                        setTrapped(
+                          e.target.value === ''
+                            ? null
+                            : parseInt(e.target.value),
+                        )
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    >
+                      {trappedOptions.map(({ value, label }) => (
+                        <option
+                          key={value === null ? 'null' : value.toString()}
+                          value={value === null ? '' : value.toString()}
+                        >
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Technical field for professional printing (most users can
+                      ignore this)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Read-only date fields */}
+                {(metadata.creationDate || metadata.modificationDate) && (
+                  <div className="border-t border-gray-200 pt-8">
+                    <h4 className="mb-4 text-lg font-semibold text-gray-900">
+                      Document Dates (Read-only)
+                    </h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {metadata.creationDate && (
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-gray-500">
+                            Creation Date
+                          </label>
+                          <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                            {formatDate(metadata.creationDate)}
+                          </div>
+                        </div>
+                      )}
+                      {metadata.modificationDate && (
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-gray-500">
+                            Last Modified
+                          </label>
+                          <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                            {formatDate(metadata.modificationDate)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom fields */}
+                <div className="border-t border-gray-200 pt-8">
+                  <h4 className="mb-4 text-lg font-semibold text-gray-900">
+                    Custom Properties
+                  </h4>
+
+                  {/* Existing custom fields */}
+                  {Object.entries(customFields)
+                    .filter(([_, value]) => value !== null)
+                    .map(([key, value]) => (
+                      <div key={key} className="mb-4 flex items-end gap-4">
+                        <div className="flex-1">
+                          <label className="mb-2 block text-sm font-medium text-gray-500">
+                            {key}
+                          </label>
+                          <input
+                            type="text"
+                            value={value || ''}
+                            onChange={(e) =>
+                              handleCustomFieldChange(key, e.target.value)
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm transition-colors focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeCustomField(key)}
+                          className="rounded-lg bg-red-100 px-4 py-3 text-sm font-medium text-red-700 transition-colors hover:bg-red-200"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+
+                  {/* Add new custom field */}
+                  <div className="rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-6">
+                    <h5 className="mb-4 text-sm font-semibold text-gray-700">
+                      Add Custom Property
+                    </h5>
+                    <div className="grid gap-4 md:grid-cols-2">
                       <input
                         type="text"
-                        value={value || ''}
-                        onChange={(e) =>
-                          handleCustomFieldChange(key, e.target.value)
-                        }
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={newCustomKey}
+                        onChange={(e) => setNewCustomKey(e.target.value)}
+                        placeholder="Property name"
+                        className="rounded-lg border border-gray-300 px-4 py-3 text-sm transition-colors focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                      />
+                      <input
+                        type="text"
+                        value={newCustomValue}
+                        onChange={(e) => setNewCustomValue(e.target.value)}
+                        placeholder="Property value"
+                        className="rounded-lg border border-gray-300 px-4 py-3 text-sm transition-colors focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
                       />
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeCustomField(key)}
-                      className="whitespace-nowrap rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 hover:bg-red-200"
+                      onClick={addCustomField}
+                      disabled={!newCustomKey.trim()}
+                      className="mt-4 rounded-lg bg-green-100 px-4 py-2 text-sm font-medium text-green-700 transition-colors hover:bg-green-200 disabled:opacity-50"
                     >
-                      Remove
+                      Add Property
                     </button>
                   </div>
-                ))}
+                </div>
 
-              {/* Add new custom field */}
-              <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
-                <h5 className="mb-2 text-xs font-medium text-gray-700">
-                  Add Custom Field
-                </h5>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newCustomKey}
-                      onChange={(e) => setNewCustomKey(e.target.value)}
-                      placeholder="Field name"
-                      className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    <input
-                      type="text"
-                      value={newCustomValue}
-                      onChange={(e) => setNewCustomValue(e.target.value)}
-                      placeholder="Field value"
-                      className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
+                {/* Action buttons */}
+                <div className="flex flex-col gap-4 border-t border-gray-200 pt-8 sm:flex-row">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-700 px-8 py-4 text-lg font-medium text-white transition-all duration-200 hover:shadow-lg disabled:opacity-50"
+                  >
+                    {isLoading ? 'Updating Metadata...' : 'Update Metadata'}
+                  </button>
                   <button
                     type="button"
-                    onClick={addCustomField}
-                    disabled={!newCustomKey.trim()}
-                    className="w-full rounded-md bg-green-100 px-3 py-2 text-sm text-green-700 hover:bg-green-200 disabled:opacity-50"
+                    onClick={onReset}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-8 py-4 text-lg font-medium text-gray-700 transition-colors hover:bg-gray-50"
                   >
-                    Add
+                    <RotateCcw className="h-5 w-5" />
+                    Start Over
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isLoading ? 'Updating...' : 'Update Metadata'}
-              </button>
-              <button
-                type="button"
-                onClick={onReset}
-                className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-50"
-              >
-                Start Over
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Read-only Information */}
-        <div className="rounded-lg bg-gray-50 p-6">
-          <h3 className="mb-4 text-lg font-semibold">
-            Current Values (Live Preview)
-          </h3>
-
-          <div className="space-y-3 text-sm">
-            {/* Standard fields */}
-            {formData.title && (
-              <div>
-                <span className="font-medium">Title:</span>
-                <span className="ml-2 text-gray-600">{formData.title}</span>
-              </div>
-            )}
-            {formData.author && (
-              <div>
-                <span className="font-medium">Author:</span>
-                <span className="ml-2 text-gray-600">{formData.author}</span>
-              </div>
-            )}
-            {formData.subject && (
-              <div>
-                <span className="font-medium">Subject:</span>
-                <span className="ml-2 text-gray-600">{formData.subject}</span>
-              </div>
-            )}
-            {formData.keywords && (
-              <div>
-                <span className="font-medium">Keywords:</span>
-                <span className="ml-2 text-gray-600">{formData.keywords}</span>
-              </div>
-            )}
-            {formData.creator && (
-              <div>
-                <span className="font-medium">Creator:</span>
-                <span className="ml-2 text-gray-600">{formData.creator}</span>
-              </div>
-            )}
-            {formData.producer && (
-              <div>
-                <span className="font-medium">Producer:</span>
-                <span className="ml-2 text-gray-600">{formData.producer}</span>
-              </div>
-            )}
-
-            {/* Trapped status */}
-            {trapped !== null && (
-              <div>
-                <span className="font-medium">Trapped Status:</span>
-                <span className="ml-2 text-gray-600">
-                  {trappedOptions.find((opt) => opt.value === trapped)?.label}
-                </span>
-              </div>
-            )}
-
-            {/* Date fields (read-only from metadata) */}
-            {metadata.creationDate && (
-              <div>
-                <span className="font-medium">Creation Date:</span>
-                <span className="ml-2 text-gray-600">
-                  {formatDate(metadata.creationDate)}
-                </span>
-              </div>
-            )}
-            {metadata.modificationDate && (
-              <div>
-                <span className="font-medium">Modification Date:</span>
-                <span className="ml-2 text-gray-600">
-                  {formatDate(metadata.modificationDate)}
-                </span>
-              </div>
-            )}
-
-            {/* Custom fields (real-time) */}
-            {Object.entries(customFields)
-              .filter(([_, value]) => value !== null && value?.trim())
-              .map(([key, value]) => (
-                <div key={key}>
-                  <span className="font-medium">{key}:</span>
-                  <span className="ml-2 text-gray-600">{value}</span>
-                </div>
-              ))}
-
-            {/* Show message if no fields have values */}
-            {!formData.title &&
-              !formData.author &&
-              !formData.subject &&
-              !formData.keywords &&
-              !formData.creator &&
-              !formData.producer &&
-              trapped === null &&
-              !metadata.creationDate &&
-              !metadata.modificationDate &&
-              Object.entries(customFields).filter(
-                ([_, value]) => value !== null && value?.trim(),
-              ).length === 0 && (
-                <div className="italic text-gray-500">
-                  No metadata fields have values
-                </div>
-              )}
           </div>
         </div>
       </div>
