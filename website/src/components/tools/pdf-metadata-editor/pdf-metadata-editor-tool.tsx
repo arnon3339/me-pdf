@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState } from 'react'
 import { useEngine } from '@embedpdf/engines/react'
-import { PdfDocumentObject, PdfMetadataObject, uuidV4 } from '@embedpdf/models'
+import { PdfDocumentObject, PdfMetadataObject } from '@embedpdf/models'
 import { ToolLayout } from '../shared/tool-layout'
-import { FilePicker } from '../shared/file-picker'
+import { FilePicker, DocumentWithFile } from '../shared/file-picker'
 import { LoadingState } from '../shared/loading-state'
 import { MetadataForm } from './metadata-form'
-import { MetadataResult } from './metadata-result'
+import { FAQ } from '../shared/faq'
+import { metadataFAQs } from '../shared/faq-data'
+import { ResultCard } from '../shared/result-card'
+import { RotateCcw } from 'lucide-react'
 
 interface DocumentWithMetadata {
   doc: PdfDocumentObject
@@ -34,36 +37,25 @@ export const PdfMetadataEditorTool = () => {
     }
   }, [engine])
 
-  const handleFileSelect = async (files: File[]) => {
-    if (!engine || files.length === 0) return
+  const handleDocumentSelect = async (docs: DocumentWithFile[]) => {
+    if (!engine || docs.length === 0) return
 
-    const file = files[0] // Only handle single file
+    const { doc, fileName } = docs[0] // Only handle single file
     setIsLoading(true)
     setError(null)
 
     try {
-      // Convert file to ArrayBuffer
-      const arrayBuffer = await file.arrayBuffer()
-
-      // Load document
-      const doc = await engine
-        .openDocumentBuffer({
-          id: uuidV4(),
-          content: arrayBuffer,
-        })
-        .toPromise()
-
       // Get metadata
       const metadata = await engine.getMetadata(doc).toPromise()
 
       setDocument({
         doc,
         metadata,
-        fileName: file.name,
+        fileName,
       })
     } catch (err) {
-      console.error('Error loading PDF:', err)
-      setError('Failed to load PDF file. Please try again.')
+      console.error('Error getting metadata:', err)
+      setError('Failed to read PDF metadata. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -82,6 +74,7 @@ export const PdfMetadataEditorTool = () => {
       await engine
         .setMetadata(document.doc, {
           ...document.metadata,
+          ...updatedMetadata,
           modificationDate: new Date(),
         })
         .toPromise()
@@ -124,6 +117,8 @@ export const PdfMetadataEditorTool = () => {
     setError(null)
   }
 
+  const faqItems = [...metadataFAQs]
+
   return (
     <ToolLayout
       title="Edit PDF Metadata"
@@ -134,7 +129,7 @@ export const PdfMetadataEditorTool = () => {
       gradientColor="from-purple-600 to-pink-700"
     >
       {!engine ? (
-        <LoadingState />
+        <LoadingState borderColor="border-pink-500" />
       ) : error ? (
         <div className="mb-12 text-center">
           <div className="mx-auto max-w-md rounded-lg bg-red-50 p-4 text-red-700">
@@ -148,14 +143,25 @@ export const PdfMetadataEditorTool = () => {
           </button>
         </div>
       ) : modifiedPdf ? (
-        <MetadataResult
-          modifiedPdfUrl={modifiedPdf}
-          fileName={document?.fileName || 'document'}
-          onReset={resetTool}
+        <ResultCard
+          title="Metadata Updated Successfully!"
+          message="Your PDF metadata has been updated. Download the modified file below."
+          download={{
+            url: modifiedPdf,
+            originalFileName: document?.fileName || 'document.pdf',
+            suffix: '_metadata_updated',
+            label: 'Download Updated PDF',
+          }}
+          secondary={{
+            label: 'Edit Another PDF',
+            onClick: resetTool,
+            icon: RotateCcw,
+          }}
         />
       ) : !document ? (
         <FilePicker
-          onFileSelect={handleFileSelect}
+          engine={engine}
+          onDocumentSelect={handleDocumentSelect}
           multiple={false}
           buttonText="Choose PDF File"
           helperText="Select a PDF file to view and edit its metadata."
@@ -171,6 +177,16 @@ export const PdfMetadataEditorTool = () => {
           isLoading={isLoading}
         />
       )}
+
+      {/* FAQ Section */}
+      <div className="mt-16">
+        <FAQ
+          items={faqItems}
+          title="Frequently Asked Questions"
+          subtitle="Everything you need to know about editing PDF metadata"
+          gradientColor="from-purple-600 to-pink-700"
+        />
+      </div>
     </ToolLayout>
   )
 }
