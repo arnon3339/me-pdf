@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { PdfEngine, PdfDocumentObject, uuidV4 } from '@embedpdf/models'
-import { Lock, Upload, AlertCircle } from 'lucide-react'
+import { Lock, Upload, AlertCircle, X } from 'lucide-react'
 
 export interface DocumentWithFile {
   doc: PdfDocumentObject
@@ -16,6 +16,11 @@ type PendingFile = {
   password: string
   isValidated?: boolean
   hasFailedAttempt?: boolean
+}
+
+type StagedItem = {
+  id: string
+  file: File
 }
 
 interface FilePickerProps {
@@ -42,6 +47,12 @@ export const FilePicker = ({
   const [isLoading, setIsLoading] = useState(false)
   const [loadingFileId, setLoadingFileId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Staging (pre-processing)
+  const [stagedFiles, setStagedFiles] = useState<StagedItem[]>([])
+  const [isDragOver, setIsDragOver] = useState(false)
+
+  // Processing state
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
   const [loadedDocuments, setLoadedDocuments] = useState<DocumentWithFile[]>([])
 
@@ -69,19 +80,87 @@ export const FilePicker = ({
     }
   }, [selectionComplete, onDocumentSelect])
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = Array.from(event.target.files || [])
-    if (files.length === 0) return
+  // ---- Helpers ----
+  const inputId = useMemo(
+    () => `file-input-${Math.random().toString(36).slice(2, 9)}`,
+    [],
+  )
 
-    // Reset
+  const isPdf = (f: File) =>
+    f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+
+  // dedupe based on (name,size,lastModified)
+  const addToStage = (files: File[]) => {
+    if (!files.length) return
+    const allowed = files.filter(isPdf)
+    if (!allowed.length) return
+
+    setStagedFiles((prev) => {
+      const existingKeys = new Set(
+        prev.map((s) => `${s.file.name}|${s.file.size}|${s.file.lastModified}`),
+      )
+      const additions: StagedItem[] = []
+      for (const file of allowed) {
+        const key = `${file.name}|${file.size}|${file.lastModified}`
+        if (!existingKeys.has(key)) {
+          additions.push({ id: uuidV4(), file })
+          existingKeys.add(key)
+        }
+      }
+      const next = [...prev, ...additions]
+
+      // In single-file mode, auto-start immediately with the first file
+      if (!multiple && additions.length > 0) {
+        startProcessing(next.slice(0, 1))
+      }
+      return multiple ? next : next.slice(0, 1)
+    })
+  }
+
+  const removeFromStage = (id: string) => {
+    setStagedFiles((prev) => prev.filter((s) => s.id !== id))
+  }
+
+  const clearStage = () => setStagedFiles([])
+
+  // ---- File input / DnD ----
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    if (files.length) addToStage(multiple ? files : [files[0]])
+    event.target.value = ''
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!disabled && !isLoading && !pendingFiles.length) setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    if (disabled || isLoading || pendingFiles.length) return
+    const files = Array.from(e.dataTransfer.files || [])
+    if (!files.length) return
+    addToStage(multiple ? files : [files[0]])
+  }
+
+  // ---- Start processing staged files ----
+  const startProcessing = (items: StagedItem[] = stagedFiles) => {
+    if (!items.length) return
+    // Reset round state
     setError(null)
     setLoadedDocuments([])
     hasFiredRef.current = false
 
-    // Initialize pending files with stable ids
-    const initialPending: PendingFile[] = files.map((file) => ({
+    const initialPending: PendingFile[] = items.map(({ file }) => ({
       id: uuidV4(),
       file,
       needsPassword: false,
@@ -89,15 +168,14 @@ export const FilePicker = ({
       isValidated: false,
       hasFailedAttempt: false,
     }))
+
     setPendingFiles(initialPending)
-    // >>> Add this line so processFiles can see them immediately
     pendingRef.current = initialPending
 
-    // Start processing all
-    await processFiles(initialPending.map((p) => p.id))
+    // Clear the stage after moving them into pending
+    setStagedFiles([])
 
-    // Reset the input
-    event.target.value = ''
+    void processFiles(initialPending.map((p) => p.id))
   }
 
   /**
@@ -111,7 +189,6 @@ export const FilePicker = ({
       setError('PDF engine not initialized. Please wait and try again.')
       return
     }
-
     if (pendingIds.length === 0) return
 
     setIsLoading(true)
@@ -143,7 +220,6 @@ export const FilePicker = ({
 
         // Pdfium password error code = 4
         if (reason?.code === 4) {
-          // Mark as needing password; mark failed only if a password was supplied
           pwUpdates.set(item.id, {
             needsPassword: true,
             isValidated: false,
@@ -152,7 +228,7 @@ export const FilePicker = ({
           continue
         }
 
-        // Other error — leave it in pending (so user can cancel + reselect)
+        // Other error — keep item pending so the user can cancel/retry selection
         setError(
           `Failed to load "${item.file.name}": ${reason?.message || 'Unknown error'}`,
         )
@@ -160,8 +236,6 @@ export const FilePicker = ({
         return
       }
     }
-
-    // Apply state updates in one go
 
     if (successes.length > 0) {
       setLoadedDocuments((prev) => [
@@ -171,18 +245,14 @@ export const FilePicker = ({
     }
 
     setPendingFiles((prev) => {
-      // First apply password-needed updates
       let next = prev.map((p) => {
         const upd = pwUpdates.get(p.id)
         return upd ? { ...p, ...upd } : p
       })
-
-      // Then remove successes (only those)
       if (successes.length > 0) {
         const successIds = new Set(successes.map((s) => s.id))
         next = next.filter((p) => !successIds.has(p.id))
       }
-
       return next
     })
 
@@ -198,7 +268,6 @@ export const FilePicker = ({
   const handlePasswordSubmit = async (id: string) => {
     const item = pendingRef.current.find((p) => p.id === id)
     if (!item || !item.password.trim()) return
-
     setLoadingFileId(id)
     await processFiles([id])
     setLoadingFileId(null)
@@ -208,15 +277,11 @@ export const FilePicker = ({
     setError(null)
     setPendingFiles([])
     setLoadedDocuments([])
+    setStagedFiles([])
     hasFiredRef.current = false
   }
 
-  const inputId = useMemo(
-    () => `file-input-${Math.random().toString(36).slice(2, 9)}`,
-    [],
-  )
-
-  // UI: when any file needs password, show the unlock UI
+  // ---- Password UI (during processing) ----
   if (pendingFiles.some((f) => f.needsPassword)) {
     return (
       <div className="mb-12">
@@ -235,83 +300,80 @@ export const FilePicker = ({
             </p>
           </div>
 
-          {pendingFiles.map(
-            (file) =>
-              file.needsPassword && (
-                <div
-                  key={file.id}
-                  className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-                >
-                  <div className="mb-3">
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      Password for "{file.file.name}"
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="password"
-                        value={file.password}
-                        onChange={(e) =>
-                          handlePasswordChange(file.id, e.target.value)
-                        }
-                        onKeyDown={(e) =>
-                          e.key === 'Enter' && handlePasswordSubmit(file.id)
-                        }
-                        placeholder="Enter password..."
-                        className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
-                          file.isValidated
-                            ? 'border-green-300 bg-green-50 focus:border-green-500 focus:ring-green-500'
-                            : file.hasFailedAttempt
-                              ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-500'
-                              : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                        }`}
-                        disabled={isLoading || file.isValidated}
-                      />
-                      {file.isValidated && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 transform">
-                          <svg
-                            className="h-5 w-5 text-green-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
+          {pendingFiles.map((file) =>
+            file.needsPassword ? (
+              <div
+                key={file.id}
+                className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+              >
+                <div className="mb-3">
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Password for &quot;{file.file.name}&quot;
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={file.password}
+                      onChange={(e) =>
+                        handlePasswordChange(file.id, e.target.value)
+                      }
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' && handlePasswordSubmit(file.id)
+                      }
+                      placeholder="Enter password..."
+                      className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                        file.isValidated
+                          ? 'border-green-300 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                          : file.hasFailedAttempt
+                            ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                      }`}
+                      disabled={isLoading || file.isValidated}
+                    />
                     {file.isValidated && (
-                      <p className="mt-1 text-xs text-green-600">
-                        Password correct ✓
-                      </p>
-                    )}
-                    {file.hasFailedAttempt && !file.isValidated && (
-                      <p className="mt-1 text-xs text-red-600">
-                        Incorrect password
-                      </p>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 transform">
+                        <svg
+                          className="h-5 w-5 text-green-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
                     )}
                   </div>
-                  {!file.isValidated && (
-                    <button
-                      onClick={() => handlePasswordSubmit(file.id)}
-                      disabled={
-                        isLoading ||
-                        !file.password.trim() ||
-                        loadingFileId === file.id
-                      }
-                      className={`w-full rounded-md bg-gradient-to-r ${gradientColor} px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50`}
-                    >
-                      {loadingFileId === file.id
-                        ? 'Unlocking...'
-                        : 'Unlock PDF'}
-                    </button>
+                  {file.isValidated && (
+                    <p className="mt-1 text-xs text-green-600">
+                      Password correct ✓
+                    </p>
+                  )}
+                  {file.hasFailedAttempt && !file.isValidated && (
+                    <p className="mt-1 text-xs text-red-600">
+                      Incorrect password
+                    </p>
                   )}
                 </div>
-              ),
+                {!file.isValidated && (
+                  <button
+                    onClick={() => handlePasswordSubmit(file.id)}
+                    disabled={
+                      isLoading ||
+                      !file.password.trim() ||
+                      loadingFileId === file.id
+                    }
+                    className={`w-full rounded-md bg-gradient-to-r ${gradientColor} px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    {loadingFileId === file.id ? 'Unlocking...' : 'Unlock PDF'}
+                  </button>
+                )}
+              </div>
+            ) : null,
           )}
 
           <div className="text-center">
@@ -327,7 +389,7 @@ export const FilePicker = ({
     )
   }
 
-  // Error state
+  // ---- Error state ----
   if (error) {
     return (
       <div className="mb-12 text-center">
@@ -347,33 +409,99 @@ export const FilePicker = ({
     )
   }
 
-  // Main picker
+  // ---- Staging UI (no pending work) ----
   return (
-    <div className="mb-12 text-center">
-      <input
-        type="file"
-        accept={accept}
-        multiple={multiple}
-        onChange={handleFileChange}
-        className="hidden"
-        id={inputId}
-        disabled={disabled || isLoading || !engine}
-      />
-      <button
-        onClick={() => document.getElementById(inputId)?.click()}
-        disabled={disabled || isLoading || !engine}
-        className={`inline-flex cursor-pointer items-center gap-3 rounded-full bg-gradient-to-r ${gradientColor} px-8 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50`}
+    <div className="mb-12">
+      <div
+        className={`mx-auto flex max-w-xl flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-colors ${
+          isDragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white'
+        } ${disabled || isLoading || pendingFiles.length ? 'opacity-60' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
-        <Upload className="h-5 w-5" />
-        {isLoading ? 'Loading...' : buttonText}
-      </button>
+        <input
+          type="file"
+          accept={accept}
+          multiple={multiple}
+          onChange={handleFileChange}
+          className="hidden"
+          id={inputId}
+          disabled={disabled || isLoading || !engine || pendingFiles.length > 0}
+        />
 
-      <p className="mt-6 text-sm text-gray-500">{helperText}</p>
+        <button
+          onClick={() => document.getElementById(inputId)?.click()}
+          disabled={disabled || isLoading || !engine || pendingFiles.length > 0}
+          className={`inline-flex cursor-pointer items-center gap-3 rounded-full bg-gradient-to-r ${gradientColor} px-8 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          <Upload className="h-5 w-5" />
+          {isLoading ? 'Loading...' : buttonText}
+        </button>
 
-      {!engine && (
-        <p className="mt-2 text-xs text-amber-600">
-          Initializing PDF engine...
+        <p className="mt-3 text-xs text-gray-500">
+          or drag & drop {multiple ? 'PDF files' : 'a PDF file'} here
         </p>
+
+        <p className="mt-6 text-center text-sm text-gray-500">{helperText}</p>
+        {!engine && (
+          <p className="mt-2 text-xs text-amber-600">
+            Initializing PDF engine...
+          </p>
+        )}
+      </div>
+
+      {/* Staged list */}
+      {stagedFiles.length > 0 && (
+        <div className="mx-auto mt-6 max-w-xl rounded-lg border border-gray-200 bg-white p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-gray-800">
+              {stagedFiles.length} file{stagedFiles.length > 1 ? 's' : ''} ready
+              to process
+            </h4>
+            <button
+              onClick={clearStage}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              Clear
+            </button>
+          </div>
+          <ul className="space-y-2">
+            {stagedFiles.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center justify-between rounded-md border border-gray-100 px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-gray-900">
+                    {item.file.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {(item.file.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
+                </div>
+                <button
+                  onClick={() => removeFromStage(item.id)}
+                  className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                  aria-label="Remove file"
+                  title="Remove file"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            onClick={() => startProcessing()}
+            disabled={!engine || isLoading || pendingFiles.length > 0}
+            className={`mt-4 w-full rounded-md bg-gradient-to-r ${gradientColor} px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50`}
+          >
+            {isLoading
+              ? 'Processing...'
+              : `Process ${stagedFiles.length} file${stagedFiles.length > 1 ? 's' : ''}`}
+          </button>
+        </div>
       )}
     </div>
   )

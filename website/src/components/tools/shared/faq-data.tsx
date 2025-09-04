@@ -1,5 +1,6 @@
 import React from 'react'
 import { FAQItem } from './faq'
+import Link from 'next/link'
 
 // General tool FAQs
 export const generalToolFAQs: FAQItem[] = [
@@ -48,48 +49,134 @@ export const generalToolFAQs: FAQItem[] = [
 ]
 
 // PDF Merge specific FAQs
+// Improved PDF Merge specific FAQs
 export const mergeFAQs: FAQItem[] = [
   {
     id: 'merge-1',
-    question: 'How many PDFs can I merge at once?',
-    answer:
-      "There's no artificial limit on the number of PDFs you can merge. The only constraint is your device's memory capacity.",
-    category: 'Merging',
+    question: 'What is PDF merging?',
+    answer: (
+      <div>
+        <p>
+          PDF merging is the process of combining multiple separate PDF files
+          into a single, unified document. 🗂️
+        </p>
+        <p className="mt-2">
+          Think of it like taking several different reports, essays, or sets of
+          slides and digitally stapling them together in a specific order to
+          create one master file that&apos;s easy to read, share, and archive.
+        </p>
+      </div>
+    ),
+    category: 'General',
   },
   {
     id: 'merge-2',
-    question: 'Can I rearrange pages after adding them?',
-    answer:
-      'Yes! You can drag and drop pages in the merge area to reorder them exactly how you want before creating the final merged PDF.',
+    question: 'How do I merge my PDFs with this tool?',
+    answer: (
+      <div>
+        <p>It&apos;s a simple, straightforward process:</p>
+        <ol className="mt-2 list-decimal space-y-1 pl-5">
+          <li>
+            <strong>Upload your files:</strong> Drag and drop your PDFs into the
+            tool or select them from your device.
+          </li>
+          <li>
+            <strong>Arrange the order:</strong> Drag entire files to reorder
+            them. You can also click on a file to view and reorder its
+            individual pages.
+          </li>
+          <li>
+            <strong>Merge:</strong> Once everything is in the perfect order,
+            click the &quot;Merge PDF&quot; button.
+          </li>
+          <li>
+            <strong>Download:</strong> Your newly combined PDF will be ready for
+            download in moments.
+          </li>
+        </ol>
+      </div>
+    ),
     category: 'Merging',
   },
   {
     id: 'merge-3',
     question: 'Can I merge password-protected PDFs?',
-    answer:
-      "Currently, password-protected PDFs are not supported. You'll need to remove the password protection before merging.",
+    answer: (
+      <div>
+        <p>
+          <strong>Yes!</strong> When you add a password-protected PDF, you will
+          be prompted to enter its password. This is only used to unlock the
+          file so it can be merged.
+        </p>
+        <p className="mt-2">
+          Please note: The final, merged PDF document{' '}
+          <strong>will not be password-protected</strong>.
+        </p>
+      </div>
+    ),
     category: 'Merging',
   },
   {
     id: 'merge-4',
-    question: 'What happens to bookmarks and metadata when merging?',
+    question: 'Can I rearrange files and pages before merging?',
+    answer:
+      'Absolutely. Our tool gives you full control. You can drag and drop entire files to change their sequence. You can also expand any uploaded file to see its individual pages, allowing you to reorder or delete pages as needed before you merge.',
+    category: 'Merging',
+  },
+  {
+    id: 'merge-5',
+    question: 'Will merging change the quality or layout of my pages?',
+    answer:
+      'No, not at all. The merging process preserves the original content of each page perfectly. The layout, fonts, images, and overall quality of your documents will remain identical to how they were in the original files.',
+    category: 'Merging',
+  },
+  {
+    id: 'merge-6',
+    question: 'What happens to bookmarks and metadata when I merge PDFs?',
     answer: (
       <div>
-        <p>When merging PDFs:</p>
-        <ul className="mt-2 list-disc pl-5">
-          <li>Page content is preserved exactly</li>
+        <p>
+          When you merge files, the content of the pages is perfectly preserved,
+          but the original document properties are simplified:
+        </p>
+        <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>
-            Original bookmarks are not carried over to the merged document
+            <strong>Bookmarks:</strong> Bookmarks from the original PDFs are not
+            carried over to the new, merged document.
           </li>
-          <li>The merged PDF will have basic metadata</li>
           <li>
-            You can edit the metadata after merging using our Metadata Editor
-            tool
+            <strong>Metadata:</strong> The new document is created with blank
+            metadata fields (like Title, Author, etc.). This gives you a clean
+            slate for the combined file.
           </li>
         </ul>
+        <p className="mt-2">
+          You can easily add new metadata to your file using our free{' '}
+          <Link
+            href="/tools/pdf-metadata-editor"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            PDF Metadata Editor
+          </Link>{' '}
+          tool after merging.
+        </p>
       </div>
     ),
     category: 'Merging',
+  },
+  {
+    id: 'merge-7',
+    question: 'Is there a limit to how many PDFs I can merge?',
+    answer:
+      "There are no artificial limits on the number of files you can merge at once. The process is primarily limited by your device's memory and your browser's processing capabilities.",
+    category: 'Technical',
+  },
+  {
+    id: 'merge-8',
+    question: 'Are my files secure? Do you keep my data?',
+    answer:
+      'We prioritize your privacy and security. Your files are processed directly in your browser. They are never uploaded to our servers, so your data remains completely private and under your control. We do not see, store, or have any access to your documents.',
+    category: 'Security',
   },
 ]
 
@@ -102,11 +189,11 @@ export const metadataFAQs: FAQItem[] = [
     answer: (
       <div>
         <p>
-          PDF metadata is "data about data." It's a set of information hidden
-          within the PDF file that describes the document's properties. This
-          information isn't part of the visible content (like text or images)
-          but helps software and people understand, organize, and search for the
-          file.
+          PDF metadata is &quot;data about data.&quot; It&apos;s a set of
+          information hidden within the PDF file that describes the
+          document&apos;s properties. This information isn&apos;t part of the
+          visible content (like text or images) but helps software and people
+          understand, organize, and search for the file.
         </p>
         <p className="mt-2">
           Think of it like the information on the back of a book cover: it tells
@@ -140,8 +227,8 @@ export const metadataFAQs: FAQItem[] = [
           </li>
           <li>
             <strong>Privacy:</strong> Remove personal or sensitive information
-            (like the original author's name or software used) before sharing a
-            document.
+            (like the original author&apos;s name or software used) before
+            sharing a document.
           </li>
           <li>
             <strong>Compliance:</strong> Some archival standards or company
@@ -170,7 +257,7 @@ export const metadataFAQs: FAQItem[] = [
             document.
           </li>
           <li>
-            <strong>Subject:</strong> A short description of the document's
+            <strong>Subject:</strong> A short description of the document&apos;s
             topic.
           </li>
           <li>
@@ -179,11 +266,11 @@ export const metadataFAQs: FAQItem[] = [
           </li>
           <li>
             <strong>Creator:</strong> The original application used to create
-            the document (e.g., "Microsoft Word").
+            the document (e.g., &quot;Microsoft Word&quot;).
           </li>
           <li>
             <strong>Producer:</strong> The application that converted the file
-            to PDF (e.g., "Acrobat PDF Library").
+            to PDF (e.g., &quot;Acrobat PDF Library&quot;).
           </li>
           <li>
             <strong>Creation Date:</strong> The date and time the document was
@@ -203,8 +290,8 @@ export const metadataFAQs: FAQItem[] = [
           <li>
             <strong>Custom Properties:</strong> Add your own unique metadata
             fields as key-value pairs. This is perfect for including internal
-            information not covered by standard fields, such as "Project ID,"
-            "Reviewed By," or "Department."
+            information not covered by standard fields, such as &quot;Project
+            ID,&quot; &quot;Reviewed By,&quot; or &quot;Department.&quot;
           </li>
         </ul>
       </div>
@@ -213,7 +300,7 @@ export const metadataFAQs: FAQItem[] = [
   },
   {
     id: 'metadata-4',
-    question: 'Will editing the metadata change my PDF’s content?',
+    question: "Will editing the metadata change my PDF's content?",
     answer:
       "No, absolutely not. Editing metadata only changes the document's properties. The visible content—including text, layout, fonts, and images—will remain completely untouched and identical to the original.",
     category: 'Editing',
@@ -231,9 +318,9 @@ export const metadataFAQs: FAQItem[] = [
     answer: (
       <div>
         <p>
-          The "Trapped" field is a technical property primarily used in the
-          professional printing industry. It indicates whether the document has
-          undergone a "trapping" process.
+          The &quot;Trapped&quot; field is a technical property primarily used
+          in the professional printing industry. It indicates whether the
+          document has undergone a &quot;trapping&quot; process.
         </p>
         <p className="mt-2">
           Trapping is a pre-press technique that creates tiny overlaps between
