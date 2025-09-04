@@ -73,9 +73,9 @@ export const ZoomToolbar = ({ withMarqueeZoom = false }: ZoomToolbarProps) => {
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
@@ -95,9 +95,9 @@ export const ZoomToolbar = ({ withMarqueeZoom = false }: ZoomToolbarProps) => {
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
@@ -108,8 +108,8 @@ export const ZoomToolbar = ({ withMarqueeZoom = false }: ZoomToolbarProps) => {
         </button>
         <button
           className="ml-1 flex h-8 items-center justify-center rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors duration-150 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100"
-          onClick={() => zoom.requestZoom(1.0)}
-          title="Reset Zoom to 100%"
+          onClick={() => zoom.requestZoom(ZoomMode.FitPage)}
+          title="Reset Zoom to Fit Page"
         >
           Reset
         </button>
@@ -131,9 +131,9 @@ export const ZoomToolbar = ({ withMarqueeZoom = false }: ZoomToolbarProps) => {
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <path d="M15 13v4" />
@@ -225,9 +225,8 @@ export const PDFViewer = ({ withMarqueeZoom = false }: PDFViewerProps) => {
                         pageHeight={height}
                         rotation={rotation}
                         scale={scale}
-                        style={{ width, height, position: 'relative' }}
                       >
-                        {pageLayers}_{' '}
+                        {pageLayers}
                       </PagePointerProvider>
                     )
                   }

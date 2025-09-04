@@ -102,7 +102,7 @@ The marquee zoom feature allows users to click and drag a rectangle on a page to
 
 To enable this, place the `<MarqueeZoom />` component inside the `renderPage` prop of your `<Scroller />`. This component will automatically render the selection rectangle when the marquee mode is active.
 
-```tsx {1, 6-13, 18, 19}
+```tsx {1, 6-12, 18, 19}
 import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react';
 
 // Inside your main PDFViewer component
@@ -114,7 +114,6 @@ import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react'
       pageHeight={height}
       rotation={rotation}
       scale={scale}
-      style={{ width, height, position: 'relative' }}
     >
       {/* Base render layer */}
       <RenderLayer pageIndex={pageIndex} scale={scale} />
