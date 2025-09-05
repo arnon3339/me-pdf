@@ -1642,6 +1642,9 @@ importers:
       '@embedpdf/pdfium':
         specifier: workspace:*
         version: link:../packages/pdfium
+      '@embedpdf/plugin-export':
+        specifier: workspace:*
+        version: link:../packages/plugin-export
       '@embedpdf/plugin-interaction-manager':
         specifier: workspace:*
         version: link:../packages/plugin-interaction-manager
