@@ -1654,6 +1654,9 @@ importers:
       '@embedpdf/plugin-render':
         specifier: workspace:*
         version: link:../packages/plugin-render
+      '@embedpdf/plugin-rotate':
+        specifier: workspace:*
+        version: link:../packages/plugin-rotate
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../packages/plugin-scroll

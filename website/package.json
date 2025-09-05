@@ -20,6 +20,7 @@
     "@embedpdf/plugin-loader": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
     "@embedpdf/plugin-scroll": "workspace:*",
+    "@embedpdf/plugin-rotate": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
