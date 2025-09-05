@@ -1669,6 +1669,9 @@ importers:
       '@embedpdf/plugin-spread':
         specifier: workspace:*
         version: link:../packages/plugin-spread
+      '@embedpdf/plugin-tiling':
+        specifier: workspace:*
+        version: link:../packages/plugin-tiling
       '@embedpdf/plugin-viewport':
         specifier: workspace:*
         version: link:../packages/plugin-viewport

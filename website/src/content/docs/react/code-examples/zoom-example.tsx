@@ -17,6 +17,7 @@ import {
 import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/react'
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react'
 import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react'
+import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react'
 
 // Import Zoom and Interaction Manager plugins
 import {
@@ -170,6 +171,7 @@ export const PDFViewer = ({ withMarqueeZoom = false }: PDFViewerProps) => {
       createPluginRegistration(ViewportPluginPackage),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage),
+      createPluginRegistration(TilingPluginPackage),
       createPluginRegistration(ZoomPluginPackage, {
         defaultZoomLevel: ZoomMode.FitPage,
       }),
@@ -210,7 +212,8 @@ export const PDFViewer = ({ withMarqueeZoom = false }: PDFViewerProps) => {
                 renderPage={({ width, height, pageIndex, scale, rotation }) => {
                   const pageLayers = (
                     <>
-                      <RenderLayer pageIndex={pageIndex} scale={scale} />
+                      <RenderLayer pageIndex={pageIndex} />
+                      <TilingLayer pageIndex={pageIndex} scale={scale} />
                       {withMarqueeZoom && (
                         <MarqueeZoom pageIndex={pageIndex} scale={scale} />
                       )}
