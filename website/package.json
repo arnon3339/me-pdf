@@ -22,6 +22,7 @@
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-rotate": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
+    "@embedpdf/plugin-print": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
     "@embedpdf/plugin-interaction-manager": "workspace:*",
     "@headlessui/react": "^2.2.0",

@@ -980,9 +980,6 @@ importers:
       '@embedpdf/build':
         specifier: workspace:*
         version: link:../build
-      '@embedpdf/plugin-render':
-        specifier: workspace:*
-        version: link:../plugin-render
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.18
@@ -1651,6 +1648,9 @@ importers:
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../packages/plugin-loader
+      '@embedpdf/plugin-print':
+        specifier: workspace:*
+        version: link:../packages/plugin-print
       '@embedpdf/plugin-render':
         specifier: workspace:*
         version: link:../packages/plugin-render
