@@ -1663,6 +1663,9 @@ importers:
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../packages/plugin-scroll
+      '@embedpdf/plugin-spread':
+        specifier: workspace:*
+        version: link:../packages/plugin-spread
       '@embedpdf/plugin-viewport':
         specifier: workspace:*
         version: link:../packages/plugin-viewport
