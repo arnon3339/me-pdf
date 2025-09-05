@@ -5,4 +5,5 @@ export default {
   'plugin-print': 'Print',
   'plugin-export': 'Export',
   'plugin-spread': 'Spread',
+  'plugin-pan': 'Pan',
 }
