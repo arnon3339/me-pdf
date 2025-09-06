@@ -1,5 +1,6 @@
 export default {
   'plugin-viewport': 'Viewport',
+  'plugin-scroll': 'Scroll',
   'plugin-render': 'Render',
   'plugin-tiling': 'Tiling',
   'plugin-zoom': 'Zoom',

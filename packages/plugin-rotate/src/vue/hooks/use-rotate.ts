@@ -1,6 +1,6 @@
 import { useCapability, usePlugin } from '@embedpdf/core/vue';
 import { RotatePlugin } from '@embedpdf/plugin-rotate';
-import { ref, watch } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { Rotation } from '@embedpdf/models';
 
 /**
@@ -21,18 +21,14 @@ export const useRotate = () => {
   const { provides } = useRotateCapability();
   const rotation = ref<Rotation>(0);
 
-  watch(
-    provides,
-    (providesValue, _, onCleanup) => {
-      if (providesValue) {
-        const unsubscribe = providesValue.onRotateChange((newRotation) => {
-          rotation.value = newRotation;
-        });
-        onCleanup(unsubscribe);
-      }
-    },
-    { immediate: true },
-  );
+  watchEffect((onCleanup) => {
+    if (!provides.value) return;
+
+    const unsubscribe = provides.value.onRotateChange((newRotation) => {
+      rotation.value = newRotation;
+    });
+    onCleanup(unsubscribe);
+  });
 
   return {
     rotation,
