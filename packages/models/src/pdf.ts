@@ -2445,7 +2445,7 @@ export interface PdfRenderOptions {
    */
   imageType?: ImageConversionTypes;
   /**
-   * Image quality (0-1) for webp and jpeg and png
+   * Image quality (0-1) for jpeg and png
    */
   imageQuality?: number;
 }
