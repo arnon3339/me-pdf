@@ -1,6 +1,7 @@
 export default {
   'plugin-viewport': 'Viewport',
   'plugin-render': 'Render',
+  'plugin-tiling': 'Tiling',
   'plugin-zoom': 'Zoom',
   'plugin-rotate': 'Rotate',
   'plugin-print': 'Print',
