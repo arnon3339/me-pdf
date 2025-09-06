@@ -958,9 +958,6 @@ importers:
 
   packages/plugin-print:
     dependencies:
-      '@embedpdf/core':
-        specifier: workspace:*
-        version: link:../core
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../models
@@ -980,6 +977,9 @@ importers:
       '@embedpdf/build':
         specifier: workspace:*
         version: link:../build
+      '@embedpdf/core':
+        specifier: workspace:*
+        version: link:../core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.18
