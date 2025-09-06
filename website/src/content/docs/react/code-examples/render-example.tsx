@@ -76,7 +76,7 @@ export const ExportToolbar = () => {
   }
 
   return (
-    <div className="mb-4 flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+    <div className="mb-4 mt-4 flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
       <button
         className="rounded-md bg-blue-500 px-3 py-1 text-sm font-medium text-white transition-colors duration-150 hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-blue-300"
         onClick={exportPageAsPng}
