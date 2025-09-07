@@ -4,8 +4,6 @@
 
 Break out imperative selection APIs from **capability** to **plugin**, and slim the capability surface.
 
-### What changed
-
 - **Removed from `SelectionCapability`:**
   - `getGeometry(page)`
   - `begin(page, glyphIdx)`

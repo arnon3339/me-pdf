@@ -4,8 +4,6 @@
 
 Refactor scroller layout API and scroll helpers.
 
-### What changed
-
 - **Moved scroller layout APIs from capability → plugin instance**
   - Removed from `ScrollCapability`:
     - `onScrollerData`
