@@ -1,5 +1,21 @@
 # @embedpdf/plugin-viewport
 
+## 1.1.0
+
+### Minor Changes
+
+- [#141](https://github.com/embedpdf/embed-pdf-viewer/pull/141) by [@bobsingor](https://github.com/bobsingor) – Change `onScrollActivity` payload from `boolean` to structured object and add convenience hooks.
+
+  ### What changed
+
+  - `ViewportCapability.onScrollActivity` now emits a **`ScrollActivity`** object:
+    ```ts
+    export interface ScrollActivity {
+      isSmoothScrolling: boolean;
+      isScrolling: boolean;
+    }
+    ```
+
 ## 1.0.26
 
 ## 1.0.25

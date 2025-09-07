@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.1.0
+
+### Patch Changes
+
+- [#137](https://github.com/embedpdf/embed-pdf-viewer/pull/137) by [@bobsingor](https://github.com/bobsingor) – Add engine context provider to React and Vue
+
 ## 1.0.26
 
 ### Patch Changes
