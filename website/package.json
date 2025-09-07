@@ -22,6 +22,7 @@
     "@embedpdf/plugin-scroll": "workspace:*",
     "@embedpdf/plugin-rotate": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
+    "@embedpdf/plugin-selection": "workspace:*",
     "@embedpdf/plugin-print": "workspace:*",
     "@embedpdf/plugin-export": "workspace:*",
     "@embedpdf/plugin-spread": "workspace:*",
