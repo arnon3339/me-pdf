@@ -57,6 +57,7 @@ export interface SelectionCapability {
   /* get selected text */
   getSelectedText(): PdfTask<string[]>;
   /* copy selected text to clipboard */
+  clear(): void;
   copyToClipboard(): void;
   onSelectionChange: EventHook<SelectionRangeX | null>;
   onTextRetrieved: EventHook<string[]>;

@@ -114,6 +114,7 @@ export class SelectionPlugin extends BasePlugin<
       onTextRetrieved: this.textRetrieved$.on,
       onBeginSelection: this.beginSelection$.on,
       onEndSelection: this.endSelection$.on,
+      clear: () => this.clearSelection(),
       getSelectedText: () => this.getSelectedText(),
       copyToClipboard: () => this.copyToClipboard(),
       enableForMode: (id: string) => this.enabledModes.add(id),
