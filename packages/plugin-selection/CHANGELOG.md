@@ -1,5 +1,11 @@
 # @embedpdf/plugin-selection
 
+## 1.1.1
+
+### Patch Changes
+
+- [`50e051b`](https://github.com/embedpdf/embed-pdf-viewer/commit/50e051b1b3a49098d69ea36b1a848658909e7830) by [@bobsingor](https://github.com/bobsingor) – Add missing clear selection
+
 ## 1.1.0
 
 ### Minor Changes
