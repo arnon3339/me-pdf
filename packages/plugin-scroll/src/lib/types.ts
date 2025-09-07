@@ -3,6 +3,8 @@ import { PdfPageObject, Rect, Rotation } from '@embedpdf/models';
 import { ViewportMetrics } from '@embedpdf/plugin-viewport';
 import { VirtualItem } from './types/virtual-item';
 
+export type ScrollBehavior = 'instant' | 'smooth' | 'auto';
+
 export interface ScrollState extends ScrollMetrics {
   virtualItems: VirtualItem[];
   totalPages: number;
@@ -91,7 +93,6 @@ export interface PageChangePayload {
 }
 
 export interface ScrollCapability {
-  onScrollerData: EventHook<ScrollerLayout>;
   onStateChange: EventHook<ScrollState>;
   onScroll: EventHook<ScrollMetrics>;
   getCurrentPage(): number;
@@ -104,7 +105,6 @@ export interface ScrollCapability {
   scrollToPreviousPage(behavior?: ScrollBehavior): void;
   getMetrics(viewport?: ViewportMetrics): ScrollMetrics;
   getLayout(): LayoutChangePayload;
-  getScrollerLayout(): ScrollerLayout;
   getRectPositionForPage(
     page: number,
     rect: Rect,

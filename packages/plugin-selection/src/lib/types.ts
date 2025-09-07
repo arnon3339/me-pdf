@@ -42,8 +42,6 @@ export interface RegisterSelectionOnPageOptions {
 }
 
 export interface SelectionCapability {
-  /* geometry (cached) */
-  getGeometry(page: number): PdfTask<PdfPageGeometry>;
   /* formatted selection for all pages */
   getFormattedSelection(): FormattedSelection[];
   /* formatted selection for one page */
@@ -60,11 +58,6 @@ export interface SelectionCapability {
   getSelectedText(): PdfTask<string[]>;
   /* copy selected text to clipboard */
   copyToClipboard(): void;
-  /* imperative API used by framework layers */
-  begin(page: number, glyphIdx: number): void;
-  update(page: number, glyphIdx: number): void;
-  end(): void;
-  clear(): void;
   onSelectionChange: EventHook<SelectionRangeX | null>;
   onTextRetrieved: EventHook<string[]>;
   onCopyToClipboard: EventHook<string>;
@@ -77,6 +70,4 @@ export interface SelectionCapability {
   isEnabledForMode(modeId: string): boolean;
   /** Get the current state of the selection plugin. */
   getState(): SelectionState;
-  /** Register selection handlers for a specific page */
-  registerSelectionOnPage: (opts: RegisterSelectionOnPageOptions) => () => void;
 }

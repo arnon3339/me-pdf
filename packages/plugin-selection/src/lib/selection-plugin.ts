@@ -103,17 +103,12 @@ export class SelectionPlugin extends BasePlugin<
   /* ── capability exposed to UI / other plugins ─────────── */
   buildCapability(): SelectionCapability {
     return {
-      getGeometry: (p) => this.getOrLoadGeometry(p),
       getFormattedSelection: () => selector.getFormattedSelection(this.state),
       getFormattedSelectionForPage: (p) => selector.getFormattedSelectionForPage(this.state, p),
       getHighlightRectsForPage: (p) => selector.selectRectsForPage(this.state, p),
       getHighlightRects: () => this.state.rects,
       getBoundingRectForPage: (p) => selector.selectBoundingRectForPage(this.state, p),
       getBoundingRects: () => selector.selectBoundingRectsForAllPages(this.state),
-      begin: (p, i) => this.beginSelection(p, i),
-      update: (p, i) => this.updateSelection(p, i),
-      end: () => this.endSelection(),
-      clear: () => this.clearSelection(),
       onCopyToClipboard: this.copyToClipboard$.on,
       onSelectionChange: this.selChange$.on,
       onTextRetrieved: this.textRetrieved$.on,
@@ -124,7 +119,6 @@ export class SelectionPlugin extends BasePlugin<
       enableForMode: (id: string) => this.enabledModes.add(id),
       isEnabledForMode: (id: string) => this.enabledModes.has(id),
       getState: () => this.state,
-      registerSelectionOnPage: (opts) => this.registerSelectionOnPage(opts),
     };
   }
 
