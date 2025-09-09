@@ -21,6 +21,7 @@ export * from './annotation-plugin';
 export * from './types';
 export * from './manifest';
 export * from './selectors';
-export * from './variant-key';
 export * from './helpers';
+export * from './tools/types';
+export * from './tools/tools-utils';
 export * as patching from './patching';

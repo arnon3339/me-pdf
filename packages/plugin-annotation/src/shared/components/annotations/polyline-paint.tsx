@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
-import { ActiveTool } from '@embedpdf/plugin-annotation';
+import { AnnotationTool } from '@embedpdf/plugin-annotation';
 import {
   PdfAnnotationBorderStyle,
   PdfAnnotationSubtype,
@@ -37,14 +37,13 @@ export const PolylinePaint = ({
   /* ------------------------------------------------------------------ */
   /* active tool state                                                  */
   /* ------------------------------------------------------------------ */
-  const [activeTool, setActiveTool] = useState<ActiveTool>({ variantKey: null, defaults: null });
+  const [activeTool, setActiveTool] = useState<AnnotationTool | null>(null);
   useEffect(() => {
     if (!annotationProvides) return;
     return annotationProvides.onActiveToolChange(setActiveTool);
   }, [annotationProvides]);
 
-  if (!activeTool.defaults) return null;
-  if (activeTool.defaults.subtype !== PdfAnnotationSubtype.POLYLINE) return null;
+  if (!activeTool || activeTool.defaults.type !== PdfAnnotationSubtype.POLYLINE) return null;
 
   const toolColor = activeTool.defaults.color ?? '#000000';
   const toolOpacity = activeTool.defaults.opacity ?? 1;
@@ -94,7 +93,7 @@ export const PolylinePaint = ({
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);
-    annotationProvides!.setActiveVariant(null);
+    annotationProvides!.setActiveTool(null);
     annotationProvides!.selectAnnotation(pageIndex, anno.id);
   };
 

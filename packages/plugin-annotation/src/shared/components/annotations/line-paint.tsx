@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
-import { ActiveTool, patching } from '@embedpdf/plugin-annotation';
+import { AnnotationTool, patching } from '@embedpdf/plugin-annotation';
 import {
   PdfAnnotationSubtype,
   PdfLineAnnoObject,
@@ -30,14 +30,13 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
   /* ------------------------------------------------------------------ */
   /* active tool                                                        */
   /* ------------------------------------------------------------------ */
-  const [activeTool, setActiveTool] = useState<ActiveTool>({ variantKey: null, defaults: null });
+  const [activeTool, setActiveTool] = useState<AnnotationTool | null>(null);
   useEffect(() => {
     if (!annotationProvides) return;
     return annotationProvides.onActiveToolChange(setActiveTool);
   }, [annotationProvides]);
 
-  if (!activeTool.defaults) return null;
-  if (activeTool.defaults.subtype !== PdfAnnotationSubtype.LINE) return null;
+  if (!activeTool || activeTool.defaults.type !== PdfAnnotationSubtype.LINE) return null;
 
   const toolColor = activeTool.defaults.color ?? '#000000';
   const toolOpacity = activeTool.defaults.opacity ?? 1;
@@ -91,7 +90,7 @@ export const LinePaint = ({ pageIndex, scale, pageWidth, pageHeight, cursor }: L
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);
-    annotationProvides!.setActiveVariant(null);
+    annotationProvides!.setActiveTool(null);
     annotationProvides!.selectAnnotation(pageIndex, anno.id);
   };
 

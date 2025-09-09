@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
-import { ActiveTool } from '@embedpdf/plugin-annotation';
 import {
   PdfAnnotationSubtype,
   PdfAnnotationBorderStyle,
@@ -9,8 +8,9 @@ import {
   Rect,
   uuidV4,
 } from '@embedpdf/models';
-import { useAnnotationCapability, useAnnotationPlugin } from '../../hooks';
+import { useAnnotationCapability } from '../../hooks';
 import { clamp } from '@embedpdf/core';
+import { AnnotationTool } from '@embedpdf/plugin-annotation';
 
 interface CirclePaintProps {
   pageIndex: number;
@@ -36,15 +36,15 @@ export const CirclePaint = ({
   /* ------------------------------------------------------------------ */
   /* active tool state                                                  */
   /* ------------------------------------------------------------------ */
-  const [activeTool, setActiveTool] = useState<ActiveTool>({ variantKey: null, defaults: null });
+  const [activeTool, setActiveTool] = useState<AnnotationTool | null>(null);
 
   useEffect(() => {
     if (!annotationProvides) return;
     return annotationProvides.onActiveToolChange(setActiveTool);
   }, [annotationProvides]);
 
-  if (!activeTool.defaults) return null;
-  if (activeTool.defaults.subtype !== PdfAnnotationSubtype.CIRCLE) return null;
+  if (!activeTool) return null;
+  if (activeTool.defaults.type !== PdfAnnotationSubtype.CIRCLE) return null;
 
   const toolColor = activeTool.defaults.color ?? '#000000';
   const toolOpacity = activeTool.defaults.opacity ?? 1;
@@ -117,7 +117,7 @@ export const CirclePaint = ({
             };
 
             annotationProvides.createAnnotation(pageIndex, anno);
-            annotationProvides.setActiveVariant(null);
+            annotationProvides.setActiveTool(null);
             annotationProvides.selectAnnotation(pageIndex, anno.id);
           }
         }

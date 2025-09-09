@@ -2,7 +2,7 @@ import { PdfAnnotationSubtype, PdfStampAnnoObject, Rect, uuidV4 } from '@embedpd
 import { useState, useEffect, useMemo, useRef, ChangeEvent, Fragment } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
-import { ActiveTool } from '@embedpdf/plugin-annotation';
+import { AnnotationTool } from '@embedpdf/plugin-annotation';
 import { useAnnotationCapability } from '../../hooks';
 import { clamp } from '@embedpdf/core';
 
@@ -25,15 +25,14 @@ export const StampPaint = ({ pageIndex, scale, pageWidth, pageHeight }: StampPai
   /* ------------------------------------------------------------------ */
   /* active tool state                                                  */
   /* ------------------------------------------------------------------ */
-  const [activeTool, setActiveTool] = useState<ActiveTool>({ variantKey: null, defaults: null });
+  const [activeTool, setActiveTool] = useState<AnnotationTool | null>(null);
 
   useEffect(() => {
     if (!annotationProvides) return;
     return annotationProvides.onActiveToolChange(setActiveTool);
   }, [annotationProvides]);
 
-  if (!activeTool.defaults) return null;
-  if (activeTool.defaults.subtype !== PdfAnnotationSubtype.STAMP) return null;
+  if (!activeTool || activeTool.defaults.type !== PdfAnnotationSubtype.STAMP) return null;
 
   /* ------------------------------------------------------------------ */
   /* integration with interaction-manager                               */
@@ -122,7 +121,7 @@ export const StampPaint = ({ pageIndex, scale, pageWidth, pageHeight }: StampPai
     };
 
     annotationProvides.createAnnotation(pageIndex, anno, { imageData });
-    annotationProvides.setActiveVariant(null);
+    annotationProvides.setActiveTool(null);
     annotationProvides.selectAnnotation(pageIndex, anno.id);
 
     setStart(null);

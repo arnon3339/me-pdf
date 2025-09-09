@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, JSX } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
-import { ActiveTool } from '@embedpdf/plugin-annotation';
+import { AnnotationTool } from '@embedpdf/plugin-annotation';
 import {
   PdfInkListObject,
   Rect,
@@ -12,7 +12,7 @@ import {
   expandRect,
   uuidV4,
 } from '@embedpdf/models';
-import { useAnnotationCapability, useAnnotationPlugin } from '../../hooks';
+import { useAnnotationCapability } from '../../hooks';
 import { clamp } from '@embedpdf/core';
 
 interface InkPaintProps {
@@ -39,7 +39,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
   /* ------------------------------------------------------------------ */
   /* active tool state                                                  */
   /* ------------------------------------------------------------------ */
-  const [activeTool, setActiveTool] = useState<ActiveTool>({ variantKey: null, defaults: null });
+  const [activeTool, setActiveTool] = useState<AnnotationTool | null>(null);
 
   useEffect(() => {
     if (!annotationProvides) return;
@@ -48,8 +48,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
     return off;
   }, [annotationProvides]);
 
-  if (!activeTool.defaults) return null;
-  if (activeTool.defaults.subtype !== PdfAnnotationSubtype.INK) return null;
+  if (!activeTool || activeTool.defaults.type !== PdfAnnotationSubtype.INK) return null;
 
   const toolColor = activeTool.defaults?.color ?? '#000000';
   const toolOpacity = activeTool.defaults?.opacity ?? 1;
@@ -140,7 +139,7 @@ export const InkPaint = ({ pageIndex, scale, pageWidth, pageHeight }: InkPaintPr
             };
 
             annotationProvides.createAnnotation(pageIndex, anno);
-            annotationProvides.setActiveVariant(null);
+            annotationProvides.setActiveTool(null);
             annotationProvides.selectAnnotation(pageIndex, anno.id);
           }
 

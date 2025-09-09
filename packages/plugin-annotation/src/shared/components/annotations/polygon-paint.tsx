@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from '@framework';
 import type { PointerEventHandlers } from '@embedpdf/plugin-interaction-manager';
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/@framework';
-import { ActiveTool } from '@embedpdf/plugin-annotation';
+import { AnnotationTool } from '@embedpdf/plugin-annotation';
 import {
   PdfAnnotationBorderStyle,
   PdfAnnotationSubtype,
@@ -31,11 +31,10 @@ export const PolygonPaint = ({
 }: PolygonPaintProps) => {
   const { provides: annotationProvides } = useAnnotationCapability();
 
-  const [activeTool, setActiveTool] = useState<ActiveTool>({ variantKey: null, defaults: null });
+  const [activeTool, setActiveTool] = useState<AnnotationTool | null>(null);
   useEffect(() => annotationProvides?.onActiveToolChange(setActiveTool), [annotationProvides]);
 
-  if (!activeTool.defaults || activeTool.defaults.subtype !== PdfAnnotationSubtype.POLYGON)
-    return null;
+  if (!activeTool || activeTool.defaults.type !== PdfAnnotationSubtype.POLYGON) return null;
 
   const toolColor = activeTool.defaults.color ?? '#000000';
   const toolOpacity = activeTool.defaults.opacity ?? 1;
@@ -83,7 +82,7 @@ export const PolygonPaint = ({
     };
 
     annotationProvides!.createAnnotation(pageIndex, anno);
-    annotationProvides!.setActiveVariant(null);
+    annotationProvides!.setActiveTool(null);
     annotationProvides!.selectAnnotation(pageIndex, anno.id);
   };
 
