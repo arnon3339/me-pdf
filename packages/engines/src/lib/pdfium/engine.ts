@@ -3036,6 +3036,37 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * Read Catalog /Lang via EPDFCatalog_GetLanguage (UTF-16LE → JS string).
+   * Returns:
+   *   null  -> /Lang not present (getter returned 0) OR doc not open,
+   *   ''    -> /Lang exists but is explicitly empty,
+   *   'en', 'en-US', ... -> normal tag.
+   *
+   * Note: EPDFCatalog_GetLanguage lengths are BYTES (incl. trailing NUL).
+   *
+   * @private
+   */
+  private readCatalogLanguage(docPtr: number): string | null {
+    // Probe required length in BYTES (includes UTF-16LE trailing NUL).
+    const byteLen = this.pdfiumModule.EPDFCatalog_GetLanguage(docPtr, 0, 0) >>> 0;
+
+    // 0 => /Lang missing (or invalid doc/root) → expose as null
+    if (byteLen === 0) return null;
+
+    // 2 => empty UTF-16LE string (just the NUL) → explicitly empty
+    if (byteLen === 2) return '';
+
+    // Read exact buffer to avoid extra allocs.
+    return readString(
+      this.pdfiumModule.pdfium,
+      (buffer, bufferLength) =>
+        this.pdfiumModule.EPDFCatalog_GetLanguage(docPtr, buffer, bufferLength),
+      this.pdfiumModule.pdfium.UTF16ToString,
+      byteLen,
+    );
+  }
+
+  /**
    * Read metadata from pdf document
    * @param docPtr - pointer to pdf document
    * @param key - key of metadata field

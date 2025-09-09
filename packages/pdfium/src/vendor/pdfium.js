@@ -66,6 +66,7 @@ var createPdfium = (() => {
       '_EPDFAnnot_SetTextAlignment',
       '_EPDFAnnot_SetVerticalAlignment',
       '_EPDFAnnot_SetVertices',
+      '_EPDFCatalog_GetLanguage',
       '_EPDFPage_CreateAnnot',
       '_EPDFPage_GetAnnotByName',
       '_EPDFPage_GetAnnotCountRaw',
@@ -6155,6 +6156,10 @@ var createPdfium = (() => {
     var _FPDFCatalog_SetLanguage = (Module['_FPDFCatalog_SetLanguage'] = createExportWrapper(
       'FPDFCatalog_SetLanguage',
       2,
+    ));
+    var _EPDFCatalog_GetLanguage = (Module['_EPDFCatalog_GetLanguage'] = createExportWrapper(
+      'EPDFCatalog_GetLanguage',
+      3,
     ));
     var _FPDFAvail_Create = (Module['_FPDFAvail_Create'] = createExportWrapper(
       'FPDFAvail_Create',
