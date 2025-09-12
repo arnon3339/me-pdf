@@ -9,6 +9,7 @@ import {
   PdfErrorCode,
   AnnotationCreateContext,
   uuidV4,
+  PdfAnnotationSubtype,
 } from '@embedpdf/models';
 import {
   AnnotationCapability,
@@ -41,6 +42,15 @@ import { HistoryPlugin, HistoryCapability, Command } from '@embedpdf/plugin-hist
 import { getSelectedAnnotation } from './selectors';
 import { deriveRect } from './patching';
 import { AnnotationTool } from './tools/types';
+import { AnyPreviewState, HandlerContext, HandlerFactory, HandlerServices } from './handlers/types';
+import { circleHandlerFactory } from './handlers/circle.handler';
+import { squareHandlerFactory } from './handlers/square.handler';
+import { stampHandlerFactory } from './handlers/stamp.handler';
+import { polygonHandlerFactory } from './handlers/polygon.handler';
+import { polylineHandlerFactory } from './handlers/polyline.handler';
+import { lineHandlerFactory } from './handlers/line.handler';
+import { inkHandlerFactory } from './handlers/ink.handler';
+import { freeTextHandlerFactory } from './handlers/free-text.handler';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -58,6 +68,7 @@ export class AnnotationPlugin extends BasePlugin<
   private readonly history: HistoryCapability | null;
 
   private pendingContexts = new Map<string, unknown>();
+  private handlerFactories = new Map<PdfAnnotationSubtype, HandlerFactory<any>>();
   private readonly activeTool$ = createBehaviorEmitter<AnnotationTool | null>(null);
 
   constructor(id: string, registry: PluginRegistry, config: AnnotationPluginConfig) {
@@ -73,6 +84,15 @@ export class AnnotationPlugin extends BasePlugin<
       const doc = state.core.document;
       if (doc) this.getAllAnnotations(doc);
     });
+
+    this.handlerFactories.set(PdfAnnotationSubtype.CIRCLE, circleHandlerFactory);
+    this.handlerFactories.set(PdfAnnotationSubtype.SQUARE, squareHandlerFactory);
+    this.handlerFactories.set(PdfAnnotationSubtype.STAMP, stampHandlerFactory);
+    this.handlerFactories.set(PdfAnnotationSubtype.POLYGON, polygonHandlerFactory);
+    this.handlerFactories.set(PdfAnnotationSubtype.POLYLINE, polylineHandlerFactory);
+    this.handlerFactories.set(PdfAnnotationSubtype.LINE, lineHandlerFactory);
+    this.handlerFactories.set(PdfAnnotationSubtype.INK, inkHandlerFactory);
+    this.handlerFactories.set(PdfAnnotationSubtype.FREETEXT, freeTextHandlerFactory);
   }
 
   async initialize(): Promise<void> {
@@ -130,7 +150,7 @@ export class AnnotationPlugin extends BasePlugin<
     return {
       getPageAnnotations: (options) => this.getPageAnnotations(options),
       getSelectedAnnotation: () => getSelectedAnnotation(this.state),
-      selectAnnotation: (pageIndex, id) => this.dispatch(selectAnnotation(pageIndex, id)),
+      selectAnnotation: (pageIndex, id) => this.selectAnnotation(pageIndex, id),
       deselectAnnotation: () => this.dispatch(deselectAnnotation()),
       getActiveTool: () => this.getActiveTool(),
       setActiveTool: (toolId) => this.setActiveTool(toolId),
@@ -157,6 +177,51 @@ export class AnnotationPlugin extends BasePlugin<
     if (prev.activeToolId !== next.activeToolId || prev.tools !== next.tools) {
       this.activeTool$.emit(this.getActiveTool());
     }
+  }
+
+  public registerPageHandlers(
+    pageIndex: number,
+    scale: number,
+    callbacks: {
+      services: HandlerServices;
+      onPreview: (toolId: string, state: AnyPreviewState | null) => void;
+    },
+  ) {
+    const page = this.coreState.core.document?.pages[pageIndex];
+    if (!page) return () => {};
+    if (!this.interactionManager) return () => {};
+
+    const unregisterFns: (() => void)[] = [];
+
+    for (const tool of this.state.tools) {
+      if (!tool.defaults.type) continue;
+      const factory = this.handlerFactories.get(tool.defaults.type);
+      if (!factory) continue;
+
+      const context: HandlerContext<PdfAnnotationObject> = {
+        pageIndex,
+        pageSize: page.size,
+        scale,
+        services: callbacks.services, // Pass through services
+        onPreview: (state) => callbacks.onPreview(tool.id, state),
+        onCommit: (annotation, ctx) => {
+          this.createAnnotation(pageIndex, annotation, ctx);
+          this.setActiveTool(null);
+          this.selectAnnotation(pageIndex, annotation.id);
+        },
+        getTool: () => this.state.tools.find((t) => t.id === tool.id),
+      };
+
+      const unregister = this.interactionManager.registerHandlers({
+        modeId: tool.interaction.mode,
+        handlers: factory.create(context),
+        pageIndex,
+      });
+
+      unregisterFns.push(unregister);
+    }
+
+    return () => unregisterFns.forEach((fn) => fn());
   }
 
   private getAllAnnotations(doc: PdfDocumentObject) {
@@ -281,6 +346,10 @@ export class AnnotationPlugin extends BasePlugin<
       undo: () => this.dispatch(createAnnotation(pageIndex, originalAnnotation)),
     };
     this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
+  }
+
+  private selectAnnotation(pageIndex: number, id: string) {
+    this.dispatch(selectAnnotation(pageIndex, id));
   }
 
   public getActiveTool(): AnnotationTool | null {

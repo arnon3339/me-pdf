@@ -22,6 +22,7 @@ export * from './types';
 export * from './manifest';
 export * from './selectors';
 export * from './helpers';
+export * from './handlers/types';
 export * from './tools/types';
 export * from './tools/tools-utils';
 export * as patching from './patching';
