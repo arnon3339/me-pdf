@@ -18,6 +18,7 @@ import {
   GetPageAnnotationsOptions,
   RenderAnnotationOptions,
   TrackedAnnotation,
+  TransformOptions,
 } from './types';
 import {
   setAnnotations,
@@ -40,17 +41,20 @@ import {
 import { SelectionPlugin, SelectionCapability } from '@embedpdf/plugin-selection';
 import { HistoryPlugin, HistoryCapability, Command } from '@embedpdf/plugin-history';
 import { getSelectedAnnotation } from './selectors';
-import { deriveRect } from './patching';
 import { AnnotationTool } from './tools/types';
 import { AnyPreviewState, HandlerContext, HandlerFactory, HandlerServices } from './handlers/types';
-import { circleHandlerFactory } from './handlers/circle.handler';
-import { squareHandlerFactory } from './handlers/square.handler';
-import { stampHandlerFactory } from './handlers/stamp.handler';
-import { polygonHandlerFactory } from './handlers/polygon.handler';
-import { polylineHandlerFactory } from './handlers/polyline.handler';
-import { lineHandlerFactory } from './handlers/line.handler';
-import { inkHandlerFactory } from './handlers/ink.handler';
-import { freeTextHandlerFactory } from './handlers/free-text.handler';
+import {
+  circleHandlerFactory,
+  squareHandlerFactory,
+  stampHandlerFactory,
+  polygonHandlerFactory,
+  polylineHandlerFactory,
+  lineHandlerFactory,
+  inkHandlerFactory,
+  freeTextHandlerFactory,
+} from './handlers';
+import { PatchRegistry, TransformContext } from './patching/patch-registry';
+import { patchInk, patchLine, patchPolyline, patchPolygon } from './patching/patches';
 
 export class AnnotationPlugin extends BasePlugin<
   AnnotationPluginConfig,
@@ -70,6 +74,7 @@ export class AnnotationPlugin extends BasePlugin<
   private pendingContexts = new Map<string, unknown>();
   private handlerFactories = new Map<PdfAnnotationSubtype, HandlerFactory<any>>();
   private readonly activeTool$ = createBehaviorEmitter<AnnotationTool | null>(null);
+  private readonly patchRegistry = new PatchRegistry();
 
   constructor(id: string, registry: PluginRegistry, config: AnnotationPluginConfig) {
     super(id, registry);
@@ -85,6 +90,11 @@ export class AnnotationPlugin extends BasePlugin<
       if (doc) this.getAllAnnotations(doc);
     });
 
+    this.registerHandlerFactories();
+    this.registerBuiltInPatches();
+  }
+
+  private registerHandlerFactories() {
     this.handlerFactories.set(PdfAnnotationSubtype.CIRCLE, circleHandlerFactory);
     this.handlerFactories.set(PdfAnnotationSubtype.SQUARE, squareHandlerFactory);
     this.handlerFactories.set(PdfAnnotationSubtype.STAMP, stampHandlerFactory);
@@ -93,6 +103,13 @@ export class AnnotationPlugin extends BasePlugin<
     this.handlerFactories.set(PdfAnnotationSubtype.LINE, lineHandlerFactory);
     this.handlerFactories.set(PdfAnnotationSubtype.INK, inkHandlerFactory);
     this.handlerFactories.set(PdfAnnotationSubtype.FREETEXT, freeTextHandlerFactory);
+  }
+
+  private registerBuiltInPatches() {
+    this.patchRegistry.register(PdfAnnotationSubtype.INK, patchInk);
+    this.patchRegistry.register(PdfAnnotationSubtype.LINE, patchLine);
+    this.patchRegistry.register(PdfAnnotationSubtype.POLYLINE, patchPolyline);
+    this.patchRegistry.register(PdfAnnotationSubtype.POLYGON, patchPolygon);
   }
 
   async initialize(): Promise<void> {
@@ -156,6 +173,8 @@ export class AnnotationPlugin extends BasePlugin<
       setActiveTool: (toolId) => this.setActiveTool(toolId),
       getTools: () => this.state.tools,
       getTool: (toolId) => this.getTool(toolId),
+      transformAnnotation: (annotation, options) => this.transformAnnotation(annotation, options),
+      registerPatchFunction: (type, patchFn) => this.registerPatchFunction(type, patchFn),
       findToolForAnnotation: (anno) => this.findToolForAnnotation(anno),
       setToolDefaults: (toolId, patch) => this.dispatch(setToolDefaults(toolId, patch)),
       getColorPresets: () => [...this.state.colorPresets],
@@ -177,6 +196,26 @@ export class AnnotationPlugin extends BasePlugin<
     if (prev.activeToolId !== next.activeToolId || prev.tools !== next.tools) {
       this.activeTool$.emit(this.getActiveTool());
     }
+  }
+
+  private registerPatchFunction<T extends PdfAnnotationObject>(
+    type: PdfAnnotationSubtype,
+    patchFn: (original: T, context: TransformContext<T>) => Partial<T>,
+  ) {
+    this.patchRegistry.register(type, patchFn);
+  }
+
+  private transformAnnotation<T extends PdfAnnotationObject>(
+    annotation: T,
+    options: TransformOptions<T>,
+  ) {
+    const context: TransformContext<T> = {
+      type: options.type,
+      changes: options.changes,
+      metadata: options.metadata,
+    };
+
+    return this.patchRegistry.transform(annotation, context);
   }
 
   public registerPageHandlers(
@@ -300,8 +339,10 @@ export class AnnotationPlugin extends BasePlugin<
   private buildPatch(original: PdfAnnotationObject, patch: Partial<PdfAnnotationObject>) {
     if ('rect' in patch) return patch;
 
-    const merged = { ...original, ...patch } as PdfAnnotationObject;
-    return { ...patch, rect: deriveRect(merged) };
+    return this.transformAnnotation(original, {
+      type: 'property-update',
+      changes: patch,
+    });
   }
 
   private updateAnnotation(pageIndex: number, id: string, patch: Partial<PdfAnnotationObject>) {

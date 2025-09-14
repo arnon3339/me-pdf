@@ -2,6 +2,7 @@ import { BasePluginConfig, EventHook } from '@embedpdf/core';
 import {
   AnnotationCreateContext,
   PdfAnnotationObject,
+  PdfAnnotationSubtype,
   PdfErrorReason,
   PdfRenderPageAnnotationOptions,
   PdfTextAnnoObject,
@@ -43,6 +44,31 @@ export interface AnnotationPluginConfig extends BasePluginConfig {
   annotationAuthor?: string;
 }
 
+/**
+ * Options for transforming an annotation
+ */
+export interface TransformOptions<T extends PdfAnnotationObject = PdfAnnotationObject> {
+  /** The type of transformation */
+  type: 'move' | 'resize' | 'vertex-edit' | 'property-update';
+
+  /** The changes to apply */
+  changes: Partial<T>;
+
+  /** Optional metadata */
+  metadata?: {
+    maintainAspectRatio?: boolean;
+    [key: string]: any;
+  };
+}
+
+/**
+ * Function type for custom patch functions
+ */
+export type PatchFunction<T extends PdfAnnotationObject> = (
+  original: T,
+  context: TransformOptions<T>,
+) => Partial<T>;
+
 export interface AnnotationCapability {
   getPageAnnotations: (
     options: GetPageAnnotationsOptions,
@@ -72,6 +98,23 @@ export interface AnnotationCapability {
     patch: Partial<PdfAnnotationObject>,
   ) => void;
   deleteAnnotation: (pageIndex: number, annotationId: string) => void;
+
+  /**
+   * Transform an annotation based on interaction (move, resize, etc.)
+   * This applies annotation-specific logic to ensure consistency.
+   */
+  transformAnnotation: <T extends PdfAnnotationObject>(
+    annotation: T,
+    options: TransformOptions<T>,
+  ) => Partial<T>;
+  /**
+   * Register a custom patch function for a specific annotation type.
+   * This allows extending the transformation logic for custom annotations.
+   */
+  registerPatchFunction: <T extends PdfAnnotationObject>(
+    type: PdfAnnotationSubtype,
+    patchFn: PatchFunction<T>,
+  ) => void;
 
   renderAnnotation: (options: RenderAnnotationOptions) => Task<Blob, PdfErrorReason>;
 

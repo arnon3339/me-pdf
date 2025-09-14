@@ -55,7 +55,7 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
           <Underline
             color={activeTool.defaults?.color}
             opacity={activeTool.defaults?.opacity}
-            rects={rects}
+            segmentRects={rects}
             scale={scale}
           />
         </div>
@@ -73,7 +73,7 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
           <Highlight
             color={activeTool.defaults?.color}
             opacity={activeTool.defaults?.opacity}
-            rects={rects}
+            segmentRects={rects}
             scale={scale}
           />
         </div>
@@ -91,7 +91,7 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
           <Strikeout
             color={activeTool.defaults?.color}
             opacity={activeTool.defaults?.opacity}
-            rects={rects}
+            segmentRects={rects}
             scale={scale}
           />
         </div>
@@ -109,7 +109,7 @@ export function TextMarkup({ pageIndex, scale }: TextMarkupProps) {
           <Squiggly
             color={activeTool.defaults?.color}
             opacity={activeTool.defaults?.opacity}
-            rects={rects}
+            segmentRects={rects}
             scale={scale}
           />
         </div>

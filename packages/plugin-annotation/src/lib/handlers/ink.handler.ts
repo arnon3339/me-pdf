@@ -104,13 +104,6 @@ export const inkHandlerFactory: HandlerFactory<PdfInkAnnoObject> = {
           onPreview(null);
         }, 800); // Commit after 800ms of inactivity
       },
-      onPointerLeave: (_, evt) => {
-        setStrokes([]);
-        setIsDrawing(false);
-        onPreview(null);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        evt.releasePointerCapture?.();
-      },
       onPointerCancel: (_, evt) => {
         setStrokes([]);
         setIsDrawing(false);

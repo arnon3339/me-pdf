@@ -1,4 +1,4 @@
-import { MouseEvent, TouchEvent, useEffect, useRef } from '@framework';
+import { mapDoubleClick, MouseEvent, TouchEvent, useEffect, useRef } from '@framework';
 import {
   PdfFreeTextAnnoObject,
   PdfVerticalAlignment,
@@ -15,6 +15,7 @@ interface FreeTextProps {
   pageIndex: number;
   scale: number;
   onClick?: (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => void;
+  onDoubleClick?: (event: MouseEvent<HTMLDivElement>) => void;
 }
 
 export function FreeText({
@@ -47,7 +48,6 @@ export function FreeText({
   const handleBlur = () => {
     if (!annotationProvides) return;
     if (!editorRef.current) return;
-
     annotationProvides.updateAnnotation(pageIndex, annotation.object.id, {
       contents: editorRef.current.innerText,
     });
@@ -69,6 +69,8 @@ export function FreeText({
       <span
         ref={editorRef}
         onBlur={handleBlur}
+        tabIndex={0}
+        suppressContentEditableWarning={true}
         style={{
           color: annotation.object.fontColor,
           fontSize: annotation.object.fontSize * scale,
@@ -89,6 +91,7 @@ export function FreeText({
           lineHeight: '1.18',
           overflow: 'hidden',
           cursor: isEditing ? 'text' : 'pointer',
+          outline: 'none',
         }}
         contentEditable={isEditing}
       >

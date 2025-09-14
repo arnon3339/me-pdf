@@ -1,46 +1,39 @@
+import { PdfAnnotationObject } from '@embedpdf/models';
 import {
-  JSX,
-  HTMLAttributes,
-  CSSProperties,
   useState,
-  Fragment,
-  useLayoutEffect,
+  JSX,
+  CSSProperties,
+  useRef,
   mapDoubleClick,
-  MouseEvent,
+  useEffect,
+  Fragment,
 } from '@framework';
+import { CounterRotate, useInteractionHandles } from '@embedpdf/utils/@framework';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
-import { PdfAnnotationObject, Position, Rect, rectEquals } from '@embedpdf/models';
 import { useAnnotationCapability } from '../hooks';
-import { SelectionMenuProps } from '../../shared/types';
-import { CounterRotate } from '@embedpdf/utils/@framework';
-import { VertexEditor } from './vertex-editor';
-import { ComputePatch } from '../patchers';
-import { useDragResize } from '../hooks/use-drag-resize';
-import { ResizeHandles } from './resize-handles';
+import { SelectionMenuProps, VertexConfig } from '../types';
 
-type AnnotationContainerProps<T extends PdfAnnotationObject> = Omit<
-  HTMLAttributes<HTMLDivElement>,
-  'style' | 'children'
-> & {
+interface AnnotationContainerProps<T extends PdfAnnotationObject> {
   scale: number;
-  isSelected?: boolean;
   pageIndex: number;
+  rotation: number;
   pageWidth: number;
   pageHeight: number;
-  rotation: number;
   trackedAnnotation: TrackedAnnotation<T>;
   children: JSX.Element | ((annotation: T) => JSX.Element);
-  style?: CSSProperties;
-  isDraggable?: boolean;
-  isResizable?: boolean;
-  outlineOffset?: number;
-  onDoubleClick?: (event: MouseEvent<HTMLDivElement>) => void;
-  selectionMenu?: (props: SelectionMenuProps) => JSX.Element;
-  computeVertices?: (annotation: T) => Position[];
-  computePatch?: ComputePatch<T>;
+  isSelected: boolean;
+  isDraggable: boolean;
+  isResizable: boolean;
   lockAspectRatio?: boolean;
-};
+  style?: CSSProperties;
+  vertexConfig?: VertexConfig<T>;
+  selectionMenu?: (props: SelectionMenuProps) => JSX.Element;
+  outlineOffset?: number;
+  onDoubleClick?: (event: any) => void; // You'll need to import proper MouseEvent type
+  zIndex?: number;
+}
 
+// Simplified AnnotationContainer
 export function AnnotationContainer<T extends PdfAnnotationObject>({
   scale,
   pageIndex,
@@ -49,130 +42,131 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   pageHeight,
   trackedAnnotation,
   children,
-  style,
-  outlineOffset = 1,
-  isSelected = false,
-  isDraggable = true,
-  isResizable = true,
+  isSelected,
+  isDraggable,
+  isResizable,
   lockAspectRatio = false,
-  computeVertices,
-  computePatch,
+  style = {},
+  vertexConfig,
   selectionMenu,
+  outlineOffset = 1,
   onDoubleClick,
+  zIndex = 1,
   ...props
 }: AnnotationContainerProps<T>): JSX.Element {
+  const [preview, setPreview] = useState<T>(trackedAnnotation.object);
   const { provides: annotationProvides } = useAnnotationCapability();
-  const [currentRect, setCurrentRect] = useState<Rect>(trackedAnnotation.object.rect);
-  const [currentVertices, setCurrentVertices] = useState<Position[]>(
-    computeVertices?.(trackedAnnotation.object) ?? [],
-  );
-  const [previewObject, setPreviewObject] = useState<Partial<T> | null>(null);
+  const gestureBaseRef = useRef<T | null>(null);
 
-  /* hook owns every pointer detail */
-  const { rootHandlers, startResize } = useDragResize({
-    scale,
-    pageWidth,
-    pageHeight,
-    rotation,
-    tracked: trackedAnnotation,
-    isSelected,
-    isDraggable,
-    isResizable,
-    lockAspectRatio,
-    computePatch,
-    computeVertices,
-    currentRect,
-    setCurrentRect,
-    setCurrentVertices,
-    setPreviewObject,
-    commit: (patch) =>
-      annotationProvides?.updateAnnotation(pageIndex, trackedAnnotation.object.id, patch),
+  const currentObject = preview
+    ? { ...trackedAnnotation.object, ...preview }
+    : trackedAnnotation.object;
+
+  const { dragProps, vertices, resize } = useInteractionHandles({
+    controller: {
+      element: currentObject.rect,
+      vertices: vertexConfig?.extractVertices(currentObject),
+      constraints: {
+        minWidth: 25,
+        minHeight: 25,
+        boundingBox: { width: pageWidth / scale, height: pageHeight / scale },
+      },
+      maintainAspectRatio: lockAspectRatio,
+      pageRotation: rotation,
+      scale: scale,
+      enabled: isSelected,
+      onUpdate: (event) => {
+        if (!event.transformData?.type) return;
+
+        if (event.state === 'start') {
+          gestureBaseRef.current = currentObject;
+        }
+
+        const transformType = event.transformData.type;
+        const base = gestureBaseRef.current ?? currentObject;
+
+        const changes = event.transformData.changes.vertices
+          ? vertexConfig?.transformAnnotation(base, event.transformData.changes.vertices)
+          : { rect: event.transformData.changes.rect };
+
+        const patched = annotationProvides?.transformAnnotation<T>(base, {
+          type: transformType,
+          changes: changes as Partial<T>,
+          metadata: event.transformData.metadata,
+        });
+
+        if (patched) {
+          setPreview((prev) => ({
+            ...prev,
+            ...patched,
+          }));
+        }
+
+        if (event.state === 'end' && patched) {
+          gestureBaseRef.current = null;
+          annotationProvides?.updateAnnotation(pageIndex, trackedAnnotation.object.id, patched);
+        }
+      },
+    },
+    resizeUI: {
+      handleSize: 12,
+      spacing: outlineOffset,
+      offsetMode: 'outside',
+      includeSides: true,
+      zIndex: zIndex + 1,
+    },
+    vertexUI: {
+      vertexSize: 12,
+      zIndex: zIndex + 2,
+    },
+    includeVertices: vertexConfig ? true : false,
   });
 
-  useLayoutEffect(() => {
-    if (!rectEquals(trackedAnnotation.object.rect, currentRect)) {
-      setCurrentRect(trackedAnnotation.object.rect);
-      setPreviewObject((prev) => (prev ? { ...prev, rect: trackedAnnotation.object.rect } : null));
-      setCurrentVertices(computeVertices?.(trackedAnnotation.object) ?? []);
-    }
-  }, [trackedAnnotation]);
-
-  const currentObject = previewObject
-    ? { ...trackedAnnotation.object, ...previewObject }
-    : trackedAnnotation.object;
+  useEffect(() => {
+    setPreview(trackedAnnotation.object);
+  }, [trackedAnnotation.object]);
 
   return (
     <Fragment>
       <div
-        /* attach handlers */
-        {...rootHandlers}
+        {...(isDraggable && isSelected ? dragProps : {})}
         {...mapDoubleClick(onDoubleClick)}
         style={{
           position: 'absolute',
+          left: currentObject.rect.origin.x * scale,
+          top: currentObject.rect.origin.y * scale,
+          width: currentObject.rect.size.width * scale,
+          height: currentObject.rect.size.height * scale,
           outline: isSelected ? '1px solid #007ACC' : 'none',
           outlineOffset: isSelected ? `${outlineOffset}px` : '0px',
-          left: `${currentRect.origin.x * scale}px`,
-          top: `${currentRect.origin.y * scale}px`,
-          width: `${currentRect.size.width * scale}px`,
-          height: `${currentRect.size.height * scale}px`,
           pointerEvents: isSelected ? 'auto' : 'none',
           touchAction: isSelected ? 'auto' : 'none',
           cursor: isSelected && isDraggable ? 'move' : 'default',
-          ...(isSelected && {
-            zIndex: 3,
-          }),
+          zIndex,
           ...style,
         }}
         {...props}
       >
-        {/* children */}
         {typeof children === 'function' ? children(currentObject) : children}
 
-        {/* vertex editing – unchanged */}
-        {isSelected && currentVertices.length > 0 && (
-          <VertexEditor
-            rect={currentRect}
-            rotation={rotation}
-            scale={scale}
-            vertices={currentVertices}
-            onEdit={(v) => {
-              setCurrentVertices(v);
-              if (computePatch) {
-                const patch = computePatch(trackedAnnotation.object, {
-                  rect: currentRect,
-                  vertices: v,
-                });
-                setPreviewObject(patch);
-                setCurrentRect(patch.rect || currentRect);
-              }
-            }}
-            onCommit={(v) => {
-              if (annotationProvides && computePatch) {
-                const patch = computePatch(trackedAnnotation.object, {
-                  rect: currentRect,
-                  vertices: v,
-                });
-                annotationProvides.updateAnnotation(pageIndex, trackedAnnotation.object.id, patch);
-              }
-            }}
-          />
-        )}
+        {isSelected &&
+          isResizable &&
+          resize.map((p) => <div {...p} style={{ ...p.style, backgroundColor: '#007ACC' }} />)}
 
-        {/* resize handles */}
-        {isSelected && isResizable && (
-          <ResizeHandles
-            rotation={rotation}
-            outlineOffset={outlineOffset}
-            startResize={startResize}
-          />
-        )}
+        {isSelected &&
+          vertices.map((p) => <div {...p} style={{ ...p.style, backgroundColor: '#007ACC' }} />)}
       </div>
-
       {/* CounterRotate remains unchanged */}
       <CounterRotate
         rect={{
-          origin: { x: currentRect.origin.x * scale, y: currentRect.origin.y * scale },
-          size: { width: currentRect.size.width * scale, height: currentRect.size.height * scale },
+          origin: {
+            x: currentObject.rect.origin.x * scale,
+            y: currentObject.rect.origin.y * scale,
+          },
+          size: {
+            width: currentObject.rect.size.width * scale,
+            height: currentObject.rect.size.height * scale,
+          },
         }}
         rotation={rotation}
       >

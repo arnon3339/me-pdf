@@ -80,7 +80,7 @@ export const defaultTools = [
     matchScore: (a) => (a.type === PdfAnnotationSubtype.INK && a.intent !== 'InkHighlight' ? 5 : 0),
     interaction: {
       mode: 'ink',
-      exclusive: true,
+      exclusive: false,
       cursor: 'crosshair',
     },
     defaults: {

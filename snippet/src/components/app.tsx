@@ -1098,14 +1098,14 @@ export const menuItems: Record<string, MenuItem<State>> = {
     action: (registry, state) => {
       const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
       if (annotation) {
-        if (state.plugins.annotation.activeToolId === 'strikethrough') {
+        if (state.plugins.annotation.activeToolId === 'strikeout') {
           annotation.setActiveTool(null);
         } else {
-          annotation.setActiveTool('strikethrough');
+          annotation.setActiveTool('strikeout');
         }
       }
     },
-    active: (storeState) => storeState.plugins.annotation.activeToolId === 'strikethrough',
+    active: (storeState) => storeState.plugins.annotation.activeToolId === 'strikeout',
   },
   highlight: {
     id: 'highlight',
