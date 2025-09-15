@@ -56,7 +56,7 @@ export function useDoublePressProps<
     ? ({
         // Computed property uses the framework’s name ('onDoubleClick' or 'onDblClick')
         [dblClickProp]: handleDouble,
-        onPointerUp: handlePointerUp,
+        onPointerUpCapture: handlePointerUp,
       } as DoubleProps<K>)
     : {};
 }
