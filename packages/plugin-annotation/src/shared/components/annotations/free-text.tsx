@@ -1,4 +1,4 @@
-import { MouseEvent, TouchEvent, useEffect, useRef } from '@framework';
+import { MouseEvent, TouchEvent, useEffect, useLayoutEffect, useRef, useState } from '@framework';
 import {
   PdfFreeTextAnnoObject,
   PdfVerticalAlignment,
@@ -28,6 +28,7 @@ export function FreeText({
 }: FreeTextProps) {
   const editorRef = useRef<HTMLSpanElement>(null);
   const { provides: annotationProvides } = useAnnotationCapability();
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     if (isEditing && editorRef.current) {
@@ -45,6 +46,18 @@ export function FreeText({
     }
   }, [isEditing]);
 
+  useLayoutEffect(() => {
+    try {
+      const nav = navigator as any;
+      const ios =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && nav?.maxTouchPoints > 1);
+      setIsIOS(ios);
+    } catch {
+      setIsIOS(false);
+    }
+  }, []);
+
   const handleBlur = () => {
     if (!annotationProvides) return;
     if (!editorRef.current) return;
@@ -55,11 +68,6 @@ export function FreeText({
 
   // iOS zoom prevention: keep focused font-size >= 16px, visually scale down if needed.
   const computedFontPx = annotation.object.fontSize * scale;
-  const isIOS =
-    typeof navigator !== 'undefined' &&
-    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && (navigator as any).maxTouchPoints > 1));
-
   const MIN_IOS_FOCUS_FONT_PX = 16;
   const needsComp =
     isIOS && isEditing && computedFontPx > 0 && computedFontPx < MIN_IOS_FOCUS_FONT_PX;
