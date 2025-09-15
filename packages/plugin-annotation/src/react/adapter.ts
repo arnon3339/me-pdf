@@ -17,5 +17,3 @@ export type {
   PointerEvent,
   TouchEvent,
 } from 'react';
-
-export const mapDoubleClick = (handler: any) => (handler ? { onDoubleClick: handler } : {});

@@ -1,15 +1,12 @@
 import { PdfAnnotationObject } from '@embedpdf/models';
 import {
-  useState,
-  JSX,
-  CSSProperties,
-  useRef,
-  mapDoubleClick,
-  useEffect,
-  Fragment,
-} from '@framework';
-import { CounterRotate, useInteractionHandles } from '@embedpdf/utils/@framework';
+  CounterRotate,
+  useDoublePressProps,
+  useInteractionHandles,
+} from '@embedpdf/utils/@framework';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
+import { useState, JSX, CSSProperties, useRef, useEffect } from '@framework';
+
 import { useAnnotationCapability } from '../hooks';
 import { SelectionMenuProps, VertexConfig } from '../types';
 
@@ -122,6 +119,8 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
     includeVertices: vertexConfig ? true : false,
   });
 
+  const doubleProps = useDoublePressProps(onDoubleClick);
+
   useEffect(() => {
     setPreview(trackedAnnotation.object);
   }, [trackedAnnotation.object]);
@@ -130,7 +129,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
     <div data-no-interaction>
       <div
         {...(isDraggable && isSelected ? dragProps : {})}
-        {...mapDoubleClick(onDoubleClick)}
+        {...doubleProps}
         style={{
           position: 'absolute',
           left: currentObject.rect.origin.x * scale,

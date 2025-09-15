@@ -1,4 +1,4 @@
-import { mapDoubleClick, MouseEvent, TouchEvent, useEffect, useRef } from '@framework';
+import { MouseEvent, TouchEvent, useEffect, useRef } from '@framework';
 import {
   PdfFreeTextAnnoObject,
   PdfVerticalAlignment,
