@@ -10,6 +10,23 @@ import {
 } from '@embedpdf/models';
 import { AnnotationTool } from './tools/types';
 
+export type AnnotationEvent =
+  | {
+      type: 'create';
+      annotation: PdfAnnotationObject;
+      pageIndex: number;
+      ctx?: AnnotationCreateContext<any>;
+      committed: boolean;
+    }
+  | {
+      type: 'update';
+      annotation: PdfAnnotationObject;
+      pageIndex: number;
+      patch: Partial<PdfAnnotationObject>;
+      committed: boolean;
+    }
+  | { type: 'delete'; annotation: PdfAnnotationObject; pageIndex: number; committed: boolean };
+
 export type CommitState = 'new' | 'dirty' | 'deleted' | 'synced' | 'ignored';
 
 export interface TrackedAnnotation<T extends PdfAnnotationObject = PdfAnnotationObject> {
@@ -126,6 +143,7 @@ export interface AnnotationCapability {
 
   onStateChange: EventHook<AnnotationState>;
   onActiveToolChange: EventHook<AnnotationTool | null>;
+  onAnnotationEvent: EventHook<AnnotationEvent>;
   commit: () => Task<boolean, PdfErrorReason>;
 }
 

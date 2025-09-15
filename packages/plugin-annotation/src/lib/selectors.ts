@@ -78,7 +78,7 @@ export const getSidebarAnnotationsWithRepliesGroupedByPage = (
   for (const uidList of Object.values(s.pages)) {
     for (const uid of uidList) {
       const ta = s.byUid[uid];
-      if (isText(ta)) {
+      if (ta && isText(ta)) {
         const parentId = ta.object.inReplyToId;
         if (parentId) (repliesByParent[parentId] ||= []).push(ta);
       }
@@ -96,7 +96,7 @@ export const getSidebarAnnotationsWithRepliesGroupedByPage = (
 
     for (const uid of uidList) {
       const ta = s.byUid[uid];
-      if (isSidebarAnnotation(ta)) {
+      if (ta && isSidebarAnnotation(ta)) {
         pageAnnotations.push({
           page,
           annotation: ta,

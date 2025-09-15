@@ -13,6 +13,7 @@ import {
 } from '@embedpdf/models';
 import {
   AnnotationCapability,
+  AnnotationEvent,
   AnnotationPluginConfig,
   AnnotationState,
   GetPageAnnotationsOptions,
@@ -74,6 +75,7 @@ export class AnnotationPlugin extends BasePlugin<
   private pendingContexts = new Map<string, unknown>();
   private handlerFactories = new Map<PdfAnnotationSubtype, HandlerFactory<any>>();
   private readonly activeTool$ = createBehaviorEmitter<AnnotationTool | null>(null);
+  private readonly events$ = createBehaviorEmitter<AnnotationEvent>();
   private readonly patchRegistry = new PatchRegistry();
 
   constructor(id: string, registry: PluginRegistry, config: AnnotationPluginConfig) {
@@ -201,6 +203,7 @@ export class AnnotationPlugin extends BasePlugin<
       renderAnnotation: (options) => this.renderAnnotation(options),
       onStateChange: this.state$.on,
       onActiveToolChange: this.activeTool$.on,
+      onAnnotationEvent: this.events$.on,
       commit: () => this.commit(),
     };
   }
@@ -338,6 +341,7 @@ export class AnnotationPlugin extends BasePlugin<
         }),
       );
       if (ctx) this.pendingContexts.set(id, ctx);
+      this.events$.emit({ type: 'create', annotation, pageIndex, ctx, committed: false });
     };
 
     if (!this.history) {
@@ -351,6 +355,7 @@ export class AnnotationPlugin extends BasePlugin<
         this.pendingContexts.delete(id);
         this.dispatch(deselectAnnotation());
         this.dispatch(deleteAnnotation(pageIndex, id));
+        this.events$.emit({ type: 'delete', annotation, pageIndex, committed: false });
       },
     };
     this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
@@ -372,8 +377,19 @@ export class AnnotationPlugin extends BasePlugin<
       author: patch.author ?? this.config.annotationAuthor,
     });
 
-    if (!this.history) {
+    const execute = () => {
       this.dispatch(patchAnnotation(pageIndex, id, finalPatch));
+      this.events$.emit({
+        type: 'update',
+        annotation: originalObject,
+        pageIndex,
+        patch: finalPatch,
+        committed: false,
+      });
+    };
+
+    if (!this.history) {
+      execute();
       if (this.config.autoCommit !== false) {
         this.commit();
       }
@@ -383,8 +399,17 @@ export class AnnotationPlugin extends BasePlugin<
       Object.keys(patch).map((key) => [key, originalObject[key as keyof PdfAnnotationObject]]),
     );
     const command: Command = {
-      execute: () => this.dispatch(patchAnnotation(pageIndex, id, finalPatch)),
-      undo: () => this.dispatch(patchAnnotation(pageIndex, id, originalPatch)),
+      execute,
+      undo: () => {
+        this.dispatch(patchAnnotation(pageIndex, id, originalPatch));
+        this.events$.emit({
+          type: 'update',
+          annotation: originalObject,
+          pageIndex,
+          patch: originalPatch,
+          committed: false,
+        });
+      },
     };
     this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
   }
@@ -393,18 +418,33 @@ export class AnnotationPlugin extends BasePlugin<
     const originalAnnotation = this.state.byUid[id]?.object;
     if (!originalAnnotation) return;
 
-    if (!this.history) {
+    const execute = () => {
       this.dispatch(deselectAnnotation());
       this.dispatch(deleteAnnotation(pageIndex, id));
+      this.events$.emit({
+        type: 'delete',
+        annotation: originalAnnotation,
+        pageIndex,
+        committed: false,
+      });
+    };
+
+    if (!this.history) {
+      execute();
       if (this.config.autoCommit !== false) this.commit();
       return;
     }
     const command: Command = {
-      execute: () => {
-        this.dispatch(deselectAnnotation());
-        this.dispatch(deleteAnnotation(pageIndex, id));
+      execute,
+      undo: () => {
+        this.dispatch(createAnnotation(pageIndex, originalAnnotation));
+        this.events$.emit({
+          type: 'create',
+          annotation: originalAnnotation,
+          pageIndex,
+          committed: false,
+        });
       },
-      undo: () => this.dispatch(createAnnotation(pageIndex, originalAnnotation)),
     };
     this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
   }
@@ -472,12 +512,29 @@ export class AnnotationPlugin extends BasePlugin<
           >;
           const task = this.engine.createPageAnnotation!(doc, page, ta.object, ctx);
           task.wait(() => {
+            this.events$.emit({
+              type: 'create',
+              annotation: ta.object,
+              pageIndex: ta.object.pageIndex,
+              ctx,
+              committed: true,
+            });
             this.pendingContexts.delete(ta.object.id);
           }, ignore);
           creations.push(task);
           break;
         case 'dirty':
-          updates.push(this.engine.updatePageAnnotation!(doc, page, ta.object));
+          const updateTask = this.engine.updatePageAnnotation!(doc, page, ta.object);
+          updateTask.wait(() => {
+            this.events$.emit({
+              type: 'update',
+              annotation: ta.object,
+              pageIndex: ta.object.pageIndex,
+              patch: ta.object,
+              committed: true,
+            });
+          }, ignore);
+          updates.push(updateTask);
           break;
         case 'deleted':
           deletions.push({ ta, uid });
@@ -495,6 +552,12 @@ export class AnnotationPlugin extends BasePlugin<
         const removeTask = this.engine.removePageAnnotation!(doc, page, ta.object);
         removeTask.wait(() => {
           this.dispatch(purgeAnnotation(uid));
+          this.events$.emit({
+            type: 'delete',
+            annotation: ta.object,
+            pageIndex: ta.object.pageIndex,
+            committed: true,
+          });
           task.resolve(true);
         }, task.fail);
         deletionTasks.push(task);
