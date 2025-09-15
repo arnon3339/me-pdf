@@ -57,10 +57,14 @@ export function useDragResize(options: UseDragResizeOptions) {
   );
 
   const handleMove = useCallback((e: PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     controllerRef.current?.move(e.clientX, e.clientY);
   }, []);
 
   const handleEnd = useCallback((e: PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     controllerRef.current?.end();
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
   }, []);

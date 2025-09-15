@@ -92,6 +92,7 @@ export function describeResizeFromConfig(
       borderRadius: '50%',
       zIndex,
       cursor: rotationAwareCursor ? diagonalCursor(handle, rotation) : 'default',
+      touchAction: 'none',
       ...(pos as any),
     },
     attrs: { 'data-epdf-handle': handle },
@@ -122,6 +123,7 @@ export function describeVerticesFromConfig(
         borderRadius: '50%',
         cursor: 'pointer',
         zIndex,
+        touchAction: 'none',
       },
       attrs: { 'data-epdf-vertex': i },
     };

@@ -140,7 +140,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
           outline: isSelected ? '1px solid #007ACC' : 'none',
           outlineOffset: isSelected ? `${outlineOffset}px` : '0px',
           pointerEvents: isSelected ? 'auto' : 'none',
-          touchAction: isSelected ? 'auto' : 'none',
+          touchAction: 'none',
           cursor: isSelected && isDraggable ? 'move' : 'default',
           zIndex,
           ...style,
