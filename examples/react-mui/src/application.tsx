@@ -22,8 +22,9 @@ import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { SelectionLayer } from '@embedpdf/plugin-selection/react';
+import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 
-import { CircularProgress, Box, Alert } from '@mui/material';
+import { CircularProgress, Box, Alert, Typography } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import { useMemo } from 'react';
 
@@ -33,6 +34,7 @@ import { Drawer, DrawerComponent, DrawerProvider } from './components/drawer-sys
 import { Sidebar } from './components/sidebar';
 import { Toolbar } from './components/toolbar';
 import { ViewSidebarReverseIcon } from './icons';
+import { AnnotationSelectionMenu } from './components/annotation-selection-menu';
 
 const plugins = [
   createPluginRegistration(LoaderPluginPackage, {
@@ -68,6 +70,7 @@ const plugins = [
   createPluginRegistration(ExportPluginPackage),
   createPluginRegistration(ThumbnailPluginPackage),
   createPluginRegistration(SelectionPluginPackage),
+  createPluginRegistration(AnnotationPluginPackage),
 ];
 
 const drawerComponents: DrawerComponent[] = [
@@ -210,6 +213,35 @@ function App() {
                               />
                               <MarqueeZoom pageIndex={pageIndex} scale={scale} />
                               <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                              <AnnotationLayer
+                                pageIndex={pageIndex}
+                                scale={scale}
+                                pageWidth={width}
+                                pageHeight={height}
+                                rotation={rotation}
+                                selectionMenu={({
+                                  menuWrapperProps,
+                                  selected,
+                                  rect,
+                                  annotation,
+                                }) => (
+                                  <Box
+                                    {...menuWrapperProps}
+                                    style={{
+                                      ...menuWrapperProps.style,
+                                      display: 'flex',
+                                      justifyContent: 'center',
+                                    }}
+                                  >
+                                    {selected ? (
+                                      <AnnotationSelectionMenu
+                                        selected={annotation}
+                                        topOffset={rect.size.height + 10}
+                                      />
+                                    ) : null}
+                                  </Box>
+                                )}
+                              />
                             </PagePointerProvider>
                           </Rotate>
                         )}

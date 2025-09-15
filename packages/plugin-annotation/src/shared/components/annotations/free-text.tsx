@@ -1,4 +1,12 @@
-import { MouseEvent, TouchEvent, useEffect, useLayoutEffect, useRef, useState } from '@framework';
+import {
+  MouseEvent,
+  TouchEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  suppressContentEditableWarningProps,
+} from '@framework';
 import {
   PdfFreeTextAnnoObject,
   PdfVerticalAlignment,
@@ -117,6 +125,7 @@ export function FreeText({
           transformOrigin: 'top left',
         }}
         contentEditable={isEditing}
+        {...suppressContentEditableWarningProps}
       >
         {annotation.object.contents}
       </span>

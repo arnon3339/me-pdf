@@ -17,3 +17,7 @@ export type {
   PointerEvent,
   TouchEvent,
 } from 'react';
+
+export const suppressContentEditableWarningProps = {
+  suppressContentEditableWarning: true,
+};

@@ -150,10 +150,14 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
 
         {isSelected &&
           isResizable &&
-          resize.map((p) => <div {...p} style={{ ...p.style, backgroundColor: '#007ACC' }} />)}
+          resize.map(({ key, ...props }) => (
+            <div key={key} {...props} style={{ ...props.style, backgroundColor: '#007ACC' }} />
+          ))}
 
         {isSelected &&
-          vertices.map((p) => <div {...p} style={{ ...p.style, backgroundColor: '#007ACC' }} />)}
+          vertices.map(({ key, ...props }) => (
+            <div key={key} {...props} style={{ ...props.style, backgroundColor: '#007ACC' }} />
+          ))}
       </div>
       {/* CounterRotate remains unchanged */}
       <CounterRotate
