@@ -54,7 +54,9 @@ const pointerEventTypes = [
 ];
 
 const touchEventTypes = ['touchstart', 'touchend', 'touchmove', 'touchcancel'];
-const allEventTypes = [...pointerEventTypes, ...touchEventTypes];
+const HAS_POINTER = typeof PointerEvent !== 'undefined';
+// If the browser supports Pointer Events, don't attach legacy touch events to avoid double-dispatch.
+const allEventTypes = HAS_POINTER ? pointerEventTypes : [...pointerEventTypes, ...touchEventTypes];
 
 /* -------------------------------------------------- */
 /* helper: decide listener options per event type     */
@@ -137,6 +139,7 @@ export function createPointerProvider(
 
   /* attach for the first time */
   addListeners(attachedWithRawTouch);
+  element.style.touchAction = attachedWithRawTouch ? 'none' : '';
 
   /* ---------- mode & handler change hooks --------------------------------------- */
   const stopMode = cap.onModeChange(() => {
@@ -154,6 +157,7 @@ export function createPointerProvider(
       removeListeners();
       addListeners(raw);
       attachedWithRawTouch = raw;
+      element.style.touchAction = attachedWithRawTouch ? 'none' : '';
     }
   });
 
