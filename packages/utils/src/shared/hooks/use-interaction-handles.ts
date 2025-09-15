@@ -1,4 +1,4 @@
-import { useMemo } from '@framework';
+import { useMemo, PointerEvent } from '@framework';
 import type { CSSProperties } from '@framework';
 import { useDragResize, UseDragResizeOptions } from './use-drag-resize';
 import {
@@ -11,10 +11,10 @@ import {
 export type DivProps = {
   key: string | number;
   style: CSSProperties;
-  onPointerDown: (e: React.PointerEvent) => void;
-  onPointerMove: (e: React.PointerEvent) => void;
-  onPointerUp: (e: React.PointerEvent) => void;
-  onPointerCancel: (e: React.PointerEvent) => void;
+  onPointerDown: (e: PointerEvent) => void;
+  onPointerMove: (e: PointerEvent) => void;
+  onPointerUp: (e: PointerEvent) => void;
+  onPointerCancel: (e: PointerEvent) => void;
 } & Record<string, any>;
 
 export function useInteractionHandles(opts: {

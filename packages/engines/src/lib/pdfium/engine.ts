@@ -2822,6 +2822,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     ) {
       return false;
     }
+    if (annotation.custom && !this.setAnnotCustom(annotationPtr, annotation.custom)) {
+      return false;
+    }
     if (annotation.flags && !this.setAnnotationFlags(annotationPtr, annotation.flags)) {
       return false;
     }

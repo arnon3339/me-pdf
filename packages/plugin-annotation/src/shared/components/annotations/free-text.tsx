@@ -70,7 +70,6 @@ export function FreeText({
         ref={editorRef}
         onBlur={handleBlur}
         tabIndex={0}
-        suppressContentEditableWarning={true}
         style={{
           color: annotation.object.fontColor,
           fontSize: annotation.object.fontSize * scale,

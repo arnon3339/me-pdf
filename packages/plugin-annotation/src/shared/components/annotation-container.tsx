@@ -127,7 +127,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   }, [trackedAnnotation.object]);
 
   return (
-    <Fragment>
+    <div data-no-interaction>
       <div
         {...(isDraggable && isSelected ? dragProps : {})}
         {...mapDoubleClick(onDoubleClick)}
@@ -180,6 +180,6 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
           })
         }
       </CounterRotate>
-    </Fragment>
+    </div>
   );
 }

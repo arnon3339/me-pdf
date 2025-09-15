@@ -135,18 +135,34 @@ export class AnnotationPlugin extends BasePlugin<
       if (!activeTool || !activeTool.interaction.textSelection) return;
 
       const formattedSelection = this.selection?.getFormattedSelection();
-      if (!formattedSelection) return;
+      const selectionText = this.selection?.getSelectedText();
+
+      if (!formattedSelection || !selectionText) return;
 
       for (const selection of formattedSelection) {
-        // Create an annotation using the defaults from the active text tool
-        this.createAnnotation(selection.pageIndex, {
-          ...activeTool.defaults,
-          rect: selection.rect,
-          segmentRects: selection.segmentRects,
-          pageIndex: selection.pageIndex,
-          id: uuidV4(),
-        } as PdfAnnotationObject);
+        selectionText.wait((text) => {
+          const annotationId = uuidV4();
+          // Create an annotation using the defaults from the active text tool
+          this.createAnnotation(selection.pageIndex, {
+            ...activeTool.defaults,
+            rect: selection.rect,
+            segmentRects: selection.segmentRects,
+            pageIndex: selection.pageIndex,
+            created: new Date(),
+            id: annotationId,
+            custom: {
+              text: text.join('\n'),
+            },
+          } as PdfAnnotationObject);
+          if (this.config.deactivateToolAfterCreate !== false) {
+            this.setActiveTool(null);
+          }
+          if (this.config.selectAfterCreate !== false) {
+            this.selectAnnotation(selection.pageIndex, annotationId);
+          }
+        }, ignore);
       }
+
       this.selection?.clear();
     });
   }
@@ -245,8 +261,12 @@ export class AnnotationPlugin extends BasePlugin<
         onPreview: (state) => callbacks.onPreview(tool.id, state),
         onCommit: (annotation, ctx) => {
           this.createAnnotation(pageIndex, annotation, ctx);
-          this.setActiveTool(null);
-          this.selectAnnotation(pageIndex, annotation.id);
+          if (this.config.deactivateToolAfterCreate !== false) {
+            this.setActiveTool(null);
+          }
+          if (this.config.selectAfterCreate !== false) {
+            this.selectAnnotation(pageIndex, annotation.id);
+          }
         },
         getTool: () => this.state.tools.find((t) => t.id === tool.id),
       };

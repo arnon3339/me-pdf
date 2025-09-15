@@ -4,6 +4,7 @@ import type {
   InteractionScope,
   PointerEventHandlers,
   EmbedPdfPointerEvent,
+  InteractionExclusionRules,
 } from '@embedpdf/plugin-interaction-manager';
 
 /* -------------------------------------------------- */
@@ -65,6 +66,41 @@ function listenerOpts(eventType: string, wantsRawTouch: boolean): AddEventListen
 
 function isTouchEvent(evt: Event): evt is TouchEvent {
   return typeof TouchEvent !== 'undefined' && evt instanceof TouchEvent;
+}
+
+/**
+ * Check if an element should be excluded based on rules
+ * This is in the framework layer, not the plugin
+ */
+function shouldExcludeElement(element: Element | null, rules: InteractionExclusionRules): boolean {
+  if (!element) return false;
+
+  let current: Element | null = element;
+
+  while (current) {
+    // Check classes
+    if (rules.classes?.length) {
+      for (const className of rules.classes) {
+        if (current.classList?.contains(className)) {
+          return true;
+        }
+      }
+    }
+
+    // Check data attributes
+    if (rules.dataAttributes?.length) {
+      for (const attr of rules.dataAttributes) {
+        if (current.hasAttribute(attr)) {
+          return true;
+        }
+      }
+    }
+
+    // Move up the DOM tree
+    current = current.parentElement;
+  }
+
+  return false;
 }
 
 /* -------------------------------------------------- */
@@ -146,6 +182,12 @@ export function createPointerProvider(
   /* ---------- central event handler --------------------------------------------- */
   function handleEvent(evt: Event) {
     if (cap.isPaused()) return;
+
+    // Get exclusion rules from capability and check in framework layer
+    const exclusionRules = cap.getExclusionRules();
+    if (evt.target && shouldExcludeElement(evt.target as Element, exclusionRules)) {
+      return; // Skip processing this event
+    }
 
     const handlerKey = domEventMap[evt.type];
     if (!handlerKey || !active?.[handlerKey]) return;

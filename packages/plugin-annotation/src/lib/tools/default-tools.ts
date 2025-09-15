@@ -97,7 +97,7 @@ export const defaultTools = [
       a.type === PdfAnnotationSubtype.INK && a.intent === 'InkHighlight' ? 10 : 0,
     interaction: {
       mode: 'inkHighlighter',
-      exclusive: true,
+      exclusive: false,
       cursor: 'crosshair',
     },
     defaults: {
@@ -115,7 +115,7 @@ export const defaultTools = [
     id: 'circle' as const,
     name: 'Circle',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.CIRCLE ? 1 : 0),
-    interaction: { mode: 'circle', exclusive: true, cursor: 'crosshair' },
+    interaction: { mode: 'circle', exclusive: false, cursor: 'crosshair' },
     defaults: {
       type: PdfAnnotationSubtype.CIRCLE,
       color: 'transparent',
@@ -129,7 +129,7 @@ export const defaultTools = [
     id: 'square' as const,
     name: 'Square',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.SQUARE ? 1 : 0),
-    interaction: { mode: 'square', exclusive: true, cursor: 'crosshair' },
+    interaction: { mode: 'square', exclusive: false, cursor: 'crosshair' },
     defaults: {
       type: PdfAnnotationSubtype.SQUARE,
       color: 'transparent',
@@ -143,7 +143,7 @@ export const defaultTools = [
     id: 'line' as const,
     name: 'Line',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.LINE && a.intent !== 'LineArrow' ? 5 : 0),
-    interaction: { mode: 'line', exclusive: true, cursor: 'crosshair' },
+    interaction: { mode: 'line', exclusive: false, cursor: 'crosshair' },
     defaults: {
       type: PdfAnnotationSubtype.LINE,
       color: 'transparent',
@@ -156,7 +156,7 @@ export const defaultTools = [
     id: 'lineArrow' as const,
     name: 'Arrow',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.LINE && a.intent === 'LineArrow' ? 10 : 0),
-    interaction: { mode: 'lineArrow', exclusive: true, cursor: 'crosshair' },
+    interaction: { mode: 'lineArrow', exclusive: false, cursor: 'crosshair' },
     defaults: {
       type: PdfAnnotationSubtype.LINE,
       intent: 'LineArrow',
@@ -174,7 +174,7 @@ export const defaultTools = [
     id: 'polyline' as const,
     name: 'Polyline',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.POLYLINE ? 1 : 0),
-    interaction: { mode: 'polyline', exclusive: true, cursor: 'crosshair' },
+    interaction: { mode: 'polyline', exclusive: false, cursor: 'crosshair' },
     defaults: {
       type: PdfAnnotationSubtype.POLYLINE,
       color: 'transparent',
@@ -187,7 +187,7 @@ export const defaultTools = [
     id: 'polygon' as const,
     name: 'Polygon',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.POLYGON ? 1 : 0),
-    interaction: { mode: 'polygon', exclusive: true, cursor: 'crosshair' },
+    interaction: { mode: 'polygon', exclusive: false, cursor: 'crosshair' },
     defaults: {
       type: PdfAnnotationSubtype.POLYGON,
       color: 'transparent',
@@ -202,7 +202,7 @@ export const defaultTools = [
     id: 'freeText' as const,
     name: 'Free Text',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.FREETEXT ? 1 : 0),
-    interaction: { mode: 'freeText', exclusive: true, cursor: 'crosshair' },
+    interaction: { mode: 'freeText', exclusive: false, cursor: 'crosshair' },
     defaults: {
       type: PdfAnnotationSubtype.FREETEXT,
       contents: 'Insert text',
@@ -219,7 +219,7 @@ export const defaultTools = [
     id: 'stamp' as const,
     name: 'Image',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.STAMP ? 1 : 0),
-    interaction: { mode: 'stamp', exclusive: true, cursor: 'copy' },
+    interaction: { mode: 'stamp', exclusive: false, cursor: 'copy' },
     defaults: {
       type: PdfAnnotationSubtype.STAMP,
       // No imageSrc by default, which tells the UI to open a file picker

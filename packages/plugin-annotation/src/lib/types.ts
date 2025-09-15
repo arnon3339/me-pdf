@@ -40,8 +40,14 @@ export interface AnnotationPluginConfig extends BasePluginConfig {
   /** A list of custom tools to add or default tools to override. */
   tools?: AnnotationTool[];
   colorPresets?: string[];
+  /** When true (default), automatically commit the annotation changes into the PDF document. */
   autoCommit?: boolean;
+  /** The author of the annotation. */
   annotationAuthor?: string;
+  /** When true (default false), deactivate the active tool after creating an annotation. */
+  deactivateToolAfterCreate?: boolean;
+  /** When true (default false), select the annotation immediately after creation. */
+  selectAfterCreate?: boolean;
 }
 
 /**
