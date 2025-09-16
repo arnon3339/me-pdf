@@ -26,7 +26,7 @@ import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annot
 
 import { CircularProgress, Box, Alert, Typography } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 
 import { PageControls } from './components/page-controls';
 import { Search } from './components/search';
@@ -99,6 +99,7 @@ function App() {
   );
 
   const { engine, isLoading, error } = usePdfiumEngine(isDev ? { logger: consoleLogger } : {});
+  const popperContainerRef = useRef<HTMLDivElement>(null);
 
   if (error) {
     return (
@@ -155,6 +156,7 @@ function App() {
 
               {/* Main Viewport */}
               <Box
+                ref={popperContainerRef}
                 sx={{
                   flex: '1 1 0', // grow / shrink, flex-basis 0
                   minWidth: 0, // allow shrinking inside flex row
@@ -219,27 +221,16 @@ function App() {
                                 pageWidth={width}
                                 pageHeight={height}
                                 rotation={rotation}
-                                selectionMenu={({
-                                  menuWrapperProps,
-                                  selected,
-                                  rect,
-                                  annotation,
-                                }) => (
-                                  <Box
-                                    {...menuWrapperProps}
-                                    style={{
-                                      ...menuWrapperProps.style,
-                                      display: 'flex',
-                                      justifyContent: 'center',
-                                    }}
-                                  >
+                                selectionMenu={({ menuWrapperProps, selected, annotation }) => (
+                                  <>
                                     {selected ? (
                                       <AnnotationSelectionMenu
+                                        menuWrapperProps={menuWrapperProps}
                                         selected={annotation}
-                                        topOffset={rect.size.height + 10}
+                                        container={popperContainerRef.current}
                                       />
                                     ) : null}
-                                  </Box>
+                                  </>
                                 )}
                               />
                             </PagePointerProvider>

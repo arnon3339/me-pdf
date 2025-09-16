@@ -225,4 +225,4 @@ export const defaultTools = [
       // No imageSrc by default, which tells the UI to open a file picker
     },
   },
-] satisfies readonly AnnotationTool<any>[];
+] satisfies readonly AnnotationTool[];
