@@ -27,10 +27,9 @@ import {
   AnnotationPlugin,
   AnnotationPluginPackage,
   AnnotationTool,
-  StampToolConfig,
 } from '@embedpdf/plugin-annotation/react';
 
-import { CircularProgress, Box, Alert, Typography } from '@mui/material';
+import { CircularProgress, Box, Alert } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import { useMemo, useRef } from 'react';
 
@@ -160,6 +159,10 @@ function App() {
               imageSrc:
                 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Eo_circle_green_checkmark.svg/512px-Eo_circle_green_checkmark.svg.png',
               imageSize: { width: 20, height: 20 },
+            },
+            behavior: {
+              deactivateToolAfterCreate: true,
+              selectAfterCreate: true,
             },
           });
         }}

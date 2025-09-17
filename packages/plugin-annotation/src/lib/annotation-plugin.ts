@@ -157,10 +157,11 @@ export class AnnotationPlugin extends BasePlugin<
               text: text.join('\n'),
             },
           } as PdfAnnotationObject);
-          if (this.config.deactivateToolAfterCreate !== false) {
+
+          if (this.getToolBehavior(activeTool, 'deactivateToolAfterCreate')) {
             this.setActiveTool(null);
           }
-          if (this.config.selectAfterCreate !== false) {
+          if (this.getToolBehavior(activeTool, 'selectAfterCreate')) {
             this.selectAnnotation(selection.pageIndex, annotationId);
           }
         }, ignore);
@@ -269,10 +270,10 @@ export class AnnotationPlugin extends BasePlugin<
         onPreview: (state) => callbacks.onPreview(tool.id, state),
         onCommit: (annotation, ctx) => {
           this.createAnnotation(pageIndex, annotation, ctx);
-          if (this.config.deactivateToolAfterCreate !== false) {
+          if (this.getToolBehavior(tool, 'deactivateToolAfterCreate')) {
             this.setActiveTool(null);
           }
-          if (this.config.selectAfterCreate !== false) {
+          if (this.getToolBehavior(tool, 'selectAfterCreate')) {
             this.selectAnnotation(pageIndex, annotation.id);
           }
         },
@@ -582,5 +583,22 @@ export class AnnotationPlugin extends BasePlugin<
     }, task.fail);
 
     return task;
+  }
+
+  /**
+   * Gets the effective behavior setting for a tool, checking tool-specific config first,
+   * then falling back to plugin config.
+   */
+  private getToolBehavior(
+    tool: AnnotationTool,
+    setting: 'deactivateToolAfterCreate' | 'selectAfterCreate',
+  ): boolean {
+    // Check if tool has specific behavior setting
+    if (tool.behavior?.[setting] !== undefined) {
+      return tool.behavior[setting];
+    }
+
+    // Fall back to plugin config
+    return this.config[setting] !== false;
   }
 }

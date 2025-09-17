@@ -53,4 +53,12 @@ export interface AnnotationTool<T extends PdfAnnotationObject = PdfAnnotationObj
     /** If true, this interaction mode is activated by selecting text. */
     textSelection?: boolean;
   };
+
+  /** Tool-specific behavior settings that override plugin defaults */
+  behavior?: {
+    /** When true, deactivate this tool after creating an annotation. Overrides plugin config. */
+    deactivateToolAfterCreate?: boolean;
+    /** When true, select the annotation immediately after creation. Overrides plugin config. */
+    selectAfterCreate?: boolean;
+  };
 }

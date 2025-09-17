@@ -109,7 +109,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
       handleSize: 12,
       spacing: outlineOffset,
       offsetMode: 'outside',
-      includeSides: true,
+      includeSides: lockAspectRatio ? false : true,
       zIndex: zIndex + 1,
     },
     vertexUI: {
