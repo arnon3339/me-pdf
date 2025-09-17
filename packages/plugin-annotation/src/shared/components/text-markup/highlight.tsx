@@ -4,7 +4,7 @@ import { Rect } from '@embedpdf/models';
 type HighlightProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   color?: string;
   opacity?: number;
-  rects: Rect[];
+  segmentRects: Rect[];
   rect?: Rect;
   scale: number;
   onClick?: (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => void;
@@ -14,7 +14,7 @@ type HighlightProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
 export function Highlight({
   color = '#FFFF00',
   opacity = 0.5,
-  rects,
+  segmentRects,
   rect,
   scale,
   onClick,
@@ -23,7 +23,7 @@ export function Highlight({
 }: HighlightProps) {
   return (
     <>
-      {rects.map((b, i) => (
+      {segmentRects.map((b, i) => (
         <div
           key={i}
           onPointerDown={onClick}

@@ -1,15 +1,8 @@
 import { HTMLAttributes, CSSProperties } from '@framework';
 import { Annotations } from './annotations';
 import { TextMarkup } from './text-markup';
-import { InkPaint } from './annotations/ink-paint';
-import { SelectionMenu } from '../types';
-import { CirclePaint } from './annotations/circle-paint';
-import { SquarePaint } from './annotations/square-paint';
-import { PolylinePaint } from './annotations/polyline-paint';
-import { LinePaint } from './annotations/line-paint';
-import { PolygonPaint } from './annotations/polygon-paint';
-import { FreeTextPaint } from './annotations/free-text-paint';
-import { StampPaint } from './annotations/stamp-paint';
+import { SelectionMenu, ResizeHandleUI, VertexHandleUI } from '../types';
+import { AnnotationPaintLayer } from './annotation-paint-layer';
 
 type AnnotationLayerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageIndex: number;
@@ -17,18 +10,28 @@ type AnnotationLayerProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   pageWidth: number;
   pageHeight: number;
   rotation: number;
+  /** Customize selection menu across all annotations on this layer */
   selectionMenu?: SelectionMenu;
   style?: CSSProperties;
+  /** Customize resize handles */
+  resizeUI?: ResizeHandleUI;
+  /** Customize vertex handles */
+  vertexUI?: VertexHandleUI;
+  /** Customize selection outline color */
+  selectionOutlineColor?: string;
 };
 
 export function AnnotationLayer({
+  style,
   pageIndex,
   scale,
+  selectionMenu,
+  resizeUI,
+  vertexUI,
   pageWidth,
   pageHeight,
   rotation,
-  selectionMenu,
-  style,
+  selectionOutlineColor,
   ...props
 }: AnnotationLayerProps) {
   return (
@@ -45,51 +48,12 @@ export function AnnotationLayer({
         rotation={rotation}
         pageWidth={pageWidth}
         pageHeight={pageHeight}
+        resizeUI={resizeUI}
+        vertexUI={vertexUI}
+        selectionOutlineColor={selectionOutlineColor}
       />
       <TextMarkup pageIndex={pageIndex} scale={scale} />
-      <InkPaint pageIndex={pageIndex} scale={scale} pageWidth={pageWidth} pageHeight={pageHeight} />
-      <CirclePaint
-        pageIndex={pageIndex}
-        scale={scale}
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-      />
-      <SquarePaint
-        pageIndex={pageIndex}
-        scale={scale}
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-      />
-      <PolygonPaint
-        pageIndex={pageIndex}
-        scale={scale}
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-      />
-      <PolylinePaint
-        pageIndex={pageIndex}
-        scale={scale}
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-      />
-      <LinePaint
-        pageIndex={pageIndex}
-        scale={scale}
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-      />
-      <FreeTextPaint
-        pageIndex={pageIndex}
-        scale={scale}
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-      />
-      <StampPaint
-        pageIndex={pageIndex}
-        scale={scale}
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-      />
+      <AnnotationPaintLayer pageIndex={pageIndex} scale={scale} />
     </div>
   );
 }

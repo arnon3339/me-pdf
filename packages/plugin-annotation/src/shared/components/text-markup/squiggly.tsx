@@ -4,7 +4,7 @@ import { Rect } from '@embedpdf/models';
 type SquigglyProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
   color?: string;
   opacity?: number;
-  rects: Rect[];
+  segmentRects: Rect[];
   rect?: Rect;
   scale: number;
   onClick?: (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => void;
@@ -14,7 +14,7 @@ type SquigglyProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
 export function Squiggly({
   color = '#FFFF00',
   opacity = 0.5,
-  rects,
+  segmentRects,
   rect,
   scale,
   onClick,
@@ -34,7 +34,7 @@ export function Squiggly({
 
   return (
     <>
-      {rects.map((r, i) => (
+      {segmentRects.map((r, i) => (
         <div
           key={i}
           onPointerDown={onClick}
