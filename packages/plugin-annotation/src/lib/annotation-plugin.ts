@@ -17,6 +17,7 @@ import {
   AnnotationPluginConfig,
   AnnotationState,
   GetPageAnnotationsOptions,
+  ImportAnnotationItem,
   RenderAnnotationOptions,
   TrackedAnnotation,
   TransformOptions,
@@ -79,6 +80,9 @@ export class AnnotationPlugin extends BasePlugin<
   private readonly events$ = createBehaviorEmitter<AnnotationEvent>();
   private readonly patchRegistry = new PatchRegistry();
 
+  private isInitialLoadComplete = false;
+  private importQueue: ImportAnnotationItem<PdfAnnotationObject>[] = [];
+
   constructor(id: string, registry: PluginRegistry, config: AnnotationPluginConfig) {
     super(id, registry);
     this.config = config;
@@ -90,6 +94,7 @@ export class AnnotationPlugin extends BasePlugin<
 
     this.coreStore.onAction(SET_DOCUMENT, (_, state) => {
       const doc = state.core.document;
+      this.isInitialLoadComplete = false;
       if (doc) this.getAllAnnotations(doc);
     });
 
@@ -203,6 +208,7 @@ export class AnnotationPlugin extends BasePlugin<
       setToolDefaults: (toolId, patch) => this.dispatch(setToolDefaults(toolId, patch)),
       getColorPresets: () => [...this.state.colorPresets],
       addColorPreset: (color) => this.dispatch(addColorPreset(color)),
+      importAnnotations: (items) => this.importAnnotations(items),
       createAnnotation: (pageIndex, anno, ctx) => this.createAnnotation(pageIndex, anno, ctx),
       updateAnnotation: (pageIndex, id, patch) => this.updateAnnotation(pageIndex, id, patch),
       deleteAnnotation: (pageIndex, id) => this.deleteAnnotation(pageIndex, id),
@@ -294,7 +300,25 @@ export class AnnotationPlugin extends BasePlugin<
 
   private getAllAnnotations(doc: PdfDocumentObject) {
     const task = this.engine.getAllAnnotations(doc);
-    task.wait((annotations) => this.dispatch(setAnnotations(annotations)), ignore);
+    task.wait((annotations) => {
+      this.dispatch(setAnnotations(annotations));
+
+      // Mark initial load as complete
+      this.isInitialLoadComplete = true;
+
+      // Process any queued imports
+      if (this.importQueue.length > 0) {
+        this.processImportQueue();
+      }
+
+      this.events$.emit({
+        type: 'loaded',
+        total: Object.values(annotations).reduce(
+          (sum, pageAnnotations) => sum + pageAnnotations.length,
+          0,
+        ),
+      });
+    }, ignore);
   }
 
   private getPageAnnotations(
@@ -330,6 +354,38 @@ export class AnnotationPlugin extends BasePlugin<
     }
 
     return this.engine.renderPageAnnotation(coreState.document, page, annotation, options);
+  }
+
+  private importAnnotations(items: ImportAnnotationItem<PdfAnnotationObject>[]) {
+    // If initial load hasn't completed, queue the items
+    if (!this.isInitialLoadComplete) {
+      this.importQueue.push(...items);
+      return;
+    }
+
+    // Otherwise, import immediately
+    this.processImportItems(items);
+  }
+
+  private processImportQueue() {
+    if (this.importQueue.length === 0) return;
+
+    const items = [...this.importQueue];
+    this.importQueue = []; // Clear the queue
+    this.processImportItems(items);
+  }
+
+  private processImportItems(items: ImportAnnotationItem<PdfAnnotationObject>[]) {
+    for (const item of items) {
+      const { annotation, ctx } = item;
+      const pageIndex = annotation.pageIndex;
+      const id = annotation.id;
+
+      this.dispatch(createAnnotation(pageIndex, annotation));
+      if (ctx) this.pendingContexts.set(id, ctx);
+    }
+
+    if (this.config.autoCommit !== false) this.commit();
   }
 
   private createAnnotation<A extends PdfAnnotationObject>(

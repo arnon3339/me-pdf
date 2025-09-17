@@ -25,7 +25,8 @@ export type AnnotationEvent =
       patch: Partial<PdfAnnotationObject>;
       committed: boolean;
     }
-  | { type: 'delete'; annotation: PdfAnnotationObject; pageIndex: number; committed: boolean };
+  | { type: 'delete'; annotation: PdfAnnotationObject; pageIndex: number; committed: boolean }
+  | { type: 'loaded'; total: number };
 
 export type CommitState = 'new' | 'dirty' | 'deleted' | 'synced' | 'ignored';
 
@@ -92,6 +93,11 @@ export type PatchFunction<T extends PdfAnnotationObject> = (
   context: TransformOptions<T>,
 ) => Partial<T>;
 
+export type ImportAnnotationItem<T extends PdfAnnotationObject = PdfAnnotationObject> = {
+  annotation: T;
+  ctx?: AnnotationCreateContext<T>;
+};
+
 export interface AnnotationCapability {
   getPageAnnotations: (
     options: GetPageAnnotationsOptions,
@@ -111,6 +117,7 @@ export interface AnnotationCapability {
   getColorPresets: () => string[];
   addColorPreset: (color: string) => void;
 
+  importAnnotations: (items: ImportAnnotationItem<PdfAnnotationObject>[]) => void;
   createAnnotation: <A extends PdfAnnotationObject>(
     pageIndex: number,
     annotation: A,
