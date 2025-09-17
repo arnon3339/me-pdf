@@ -1,5 +1,11 @@
 # @embedpdf/models
 
+## 1.2.0
+
+### Patch Changes
+
+- [#153](https://github.com/embedpdf/embed-pdf-viewer/pull/153) by [@bobsingor](https://github.com/bobsingor) – Add new function to PDFium EPDFAnnot_UpdateAppearanceToRect to be able to update the appearance stream on resize of the stamp image annotation
+
 ## 1.1.1
 
 ## 1.1.0
