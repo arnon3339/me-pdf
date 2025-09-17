@@ -160,10 +160,6 @@ function App() {
                 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Eo_circle_green_checkmark.svg/512px-Eo_circle_green_checkmark.svg.png',
               imageSize: { width: 20, height: 20 },
             },
-            behavior: {
-              deactivateToolAfterCreate: true,
-              selectAfterCreate: true,
-            },
           });
         }}
       >
