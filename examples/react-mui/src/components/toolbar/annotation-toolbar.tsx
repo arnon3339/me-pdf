@@ -1,6 +1,7 @@
 import { AppBar, Toolbar as MuiToolbar } from '@mui/material';
 import TextFieldsOutlinedIcon from '@mui/icons-material/TextFieldsOutlined';
 import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { AnnotationTool, useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useEffect, useState } from 'react';
 import { ToggleIconButton } from '../toggle-icon-button';
@@ -33,6 +34,12 @@ export const AnnotationToolbar = () => {
     annotationProvider.setActiveTool(currentId === 'ink' ? null : 'ink');
   };
 
+  const handleStampApprovedAnnotation = () => {
+    if (!annotationProvider) return;
+    const currentId = activeTool?.id ?? null;
+    annotationProvider.setActiveTool(currentId === 'stampApproved' ? null : 'stampApproved');
+  };
+
   return (
     <AppBar
       position="static"
@@ -60,6 +67,14 @@ export const AnnotationToolbar = () => {
           aria-label="Freehand annotation"
         >
           <GestureOutlinedIcon fontSize="small" />
+        </ToggleIconButton>
+        <ToggleIconButton
+          tone="light"
+          isOpen={activeTool?.id === 'stampApproved'}
+          onClick={handleStampApprovedAnnotation}
+          aria-label="Stamp approved"
+        >
+          <CheckCircleOutlinedIcon fontSize="small" />
         </ToggleIconButton>
       </MuiToolbar>
     </AppBar>

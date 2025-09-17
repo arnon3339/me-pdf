@@ -1,4 +1,10 @@
-import { PdfAnnotationSubtype, PdfStampAnnoObject, Rect, uuidV4 } from '@embedpdf/models';
+import {
+  PdfAnnotationIcon,
+  PdfAnnotationSubtype,
+  PdfStampAnnoObject,
+  Rect,
+  uuidV4,
+} from '@embedpdf/models';
 import { HandlerFactory } from './types';
 import { clamp } from '@embedpdf/core';
 
@@ -12,13 +18,14 @@ export const stampHandlerFactory: HandlerFactory<PdfStampAnnoObject> = {
         const tool = getTool();
         if (!tool) return;
 
-        const { imageSrc } = tool.defaults;
+        const { imageSrc, imageSize } = tool.defaults;
 
         const placeStamp = (imageData: ImageData, width: number, height: number) => {
-          // The width and height are now guaranteed to be scaled to fit the page.
-          // We still clamp the origin to ensure it's placed fully on-page.
-          const finalX = clamp(pos.x, 0, pageSize.width - width);
-          const finalY = clamp(pos.y, 0, pageSize.height - height);
+          // Center the stamp at the click position, then clamp origin to stay fully on-page.
+          const originX = pos.x - width / 2;
+          const originY = pos.y - height / 2;
+          const finalX = clamp(originX, 0, pageSize.width - width);
+          const finalY = clamp(originY, 0, pageSize.height - height);
 
           const rect: Rect = {
             origin: { x: finalX, y: finalY },
@@ -28,6 +35,8 @@ export const stampHandlerFactory: HandlerFactory<PdfStampAnnoObject> = {
           const anno: PdfStampAnnoObject = {
             rect,
             type: PdfAnnotationSubtype.STAMP,
+            icon: PdfAnnotationIcon.Draft,
+            subject: 'Stamp',
             pageIndex: context.pageIndex,
             id: uuidV4(),
             created: new Date(),
@@ -43,7 +52,12 @@ export const stampHandlerFactory: HandlerFactory<PdfStampAnnoObject> = {
             source: imageSrc,
             maxWidth: pageSize.width,
             maxHeight: pageSize.height,
-            onComplete: (result) => placeStamp(result.imageData, result.width, result.height),
+            onComplete: (result) =>
+              placeStamp(
+                result.imageData,
+                imageSize?.width ?? result.width,
+                imageSize?.height ?? result.height,
+              ),
           });
         } else {
           // Dynamic stamp: let user select a file

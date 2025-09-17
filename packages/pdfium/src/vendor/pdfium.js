@@ -66,6 +66,7 @@ var createPdfium = (() => {
       '_EPDFAnnot_SetTextAlignment',
       '_EPDFAnnot_SetVerticalAlignment',
       '_EPDFAnnot_SetVertices',
+      '_EPDFAnnot_UpdateAppearanceToRect',
       '_EPDFCatalog_GetLanguage',
       '_EPDFPage_CreateAnnot',
       '_EPDFPage_GetAnnotByName',
@@ -6103,6 +6104,8 @@ var createPdfium = (() => {
       'EPDFAnnot_GetIcon',
       1,
     ));
+    var _EPDFAnnot_UpdateAppearanceToRect = (Module['_EPDFAnnot_UpdateAppearanceToRect'] =
+      createExportWrapper('EPDFAnnot_UpdateAppearanceToRect', 2));
     var _EPDFPage_CreateAnnot = (Module['_EPDFPage_CreateAnnot'] = createExportWrapper(
       'EPDFPage_CreateAnnot',
       2,

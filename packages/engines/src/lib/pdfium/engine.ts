@@ -117,6 +117,7 @@ import {
   PdfMetadataObject,
   PdfPrintOptions,
   PdfTrappedStatus,
+  PdfStampFit,
 } from '@embedpdf/models';
 import { isValidCustomKey, readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -2355,9 +2356,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     annotationPtr: number,
     annotation: PdfTextAnnoObject,
   ) {
-    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
-      return false;
-    }
     if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
       return false;
     }
@@ -2431,9 +2429,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
-      return false;
-    }
-    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
       return false;
     }
     if (!this.setAnnotString(annotationPtr, 'T', annotation.author || '')) {
@@ -2513,9 +2508,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     ) {
       return false;
     }
-    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
-      return false;
-    }
     if (!this.setInkList(page, annotationPtr, annotation.inkList)) {
       return false;
     }
@@ -2564,9 +2556,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       return false;
     }
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
-      return false;
-    }
-    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
       return false;
     }
     if (
@@ -2661,9 +2650,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (annotation.flags && !this.setAnnotationFlags(annotationPtr, annotation.flags)) {
       return false;
     }
-    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
-      return false;
-    }
     if (
       annotation.type === PdfAnnotationSubtype.POLYLINE &&
       !this.setLineEndings(
@@ -2748,9 +2734,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
       return false;
     }
-    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
-      return false;
-    }
     if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
       return false;
     }
@@ -2831,9 +2814,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
       return false;
     }
-    if (!this.setPageAnnoRect(page, pagePtr, annotationPtr, annotation.rect)) {
-      return false;
-    }
     if (!this.syncQuadPointsAnno(page, annotationPtr, annotation.segmentRects)) {
       return false;
     }
@@ -2891,6 +2871,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     if (annotation.modified && !this.setAnnotationDate(annotationPtr, 'M', annotation.modified)) {
       return false;
     }
+    if (annotation.icon && !this.setAnnotationIcon(annotationPtr, annotation.icon)) {
+      return false;
+    }
+    if (annotation.subject && !this.setAnnotString(annotationPtr, 'Subj', annotation.subject)) {
+      return false;
+    }
     if (!this.setAnnotString(annotationPtr, 'Contents', annotation.contents ?? '')) {
       return false;
     }
@@ -2899,14 +2885,12 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         this.pdfiumModule.FPDFAnnot_RemoveObject(annotationPtr, i);
       }
 
-      return this.addImageObject(
-        docPtr,
-        page,
-        pagePtr,
-        annotationPtr,
-        annotation.rect.origin,
-        imageData,
-      );
+      if (!this.addImageObject(docPtr, page, pagePtr, annotationPtr, annotation.rect, imageData)) {
+        return false;
+      }
+    }
+    if (!this.pdfiumModule.EPDFAnnot_UpdateAppearanceToRect(annotationPtr, PdfStampFit.Cover)) {
+      return false;
     }
 
     return true;
@@ -2929,7 +2913,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     page: PdfPageObject,
     pagePtr: number,
     annotationPtr: number,
-    position: Position,
+    rect: Rect,
     imageData: ImageData,
   ) {
     const bytesPerPixel = 4;
@@ -2996,8 +2980,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.memoryManager.free(matrixPtr);
 
     const pagePos = this.convertDevicePointToPagePoint(page, {
-      x: position.x,
-      y: position.y + imageData.height, // shift down by the image height
+      x: rect.origin.x,
+      y: rect.origin.y + imageData.height, // shift down by the image height
     });
     this.pdfiumModule.FPDFPageObj_Transform(imageObjectPtr, 1, 0, 0, 1, pagePos.x, pagePos.y);
 
@@ -6410,7 +6394,10 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     // 2) device size (rotation-aware) → integer pixels
     const finalScale = Math.max(0.01, scaleFactor * dpr);
-    const devRect = toIntRect(transformRect(page.size, annotation.rect, rotation, finalScale));
+
+    const rect = toIntRect(annotation.rect);
+    const devRect = toIntRect(transformRect(page.size, rect, rotation, finalScale));
+
     const wDev = Math.max(1, devRect.size.width);
     const hDev = Math.max(1, devRect.size.height);
     const stride = wDev * 4;
@@ -6429,7 +6416,7 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     // 4) user matrix (no Y-flip; includes -origin translate)
     const M = buildUserToDeviceMatrix(
-      annotation.rect, // {origin:{L,B}, size:{W,H}}
+      rect, // {origin:{L,B}, size:{W,H}}
       rotation,
       wDev,
       hDev,
@@ -7078,6 +7065,32 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     this.memoryManager.free(bufferPtr);
 
     return ap;
+  }
+
+  /**
+   * Set the appearance stream of annotation
+   * @param annotationPtr - pointer to pdf annotation
+   * @param mode - appearance mode
+   * @param apContent - appearance stream content (null to remove)
+   * @returns whether the appearance stream was set successfully
+   *
+   * @private
+   */
+  private setPageAnnoAppearanceStream(
+    annotationPtr: number,
+    mode: AppearanceMode = AppearanceMode.Normal,
+    apContent: string,
+  ): boolean {
+    // UTF-16LE buffer (+2 bytes for NUL)
+    const bytes = 2 * (apContent.length + 1);
+    const ptr = this.memoryManager.malloc(bytes);
+    try {
+      this.pdfiumModule.pdfium.stringToUTF16(apContent, ptr, bytes);
+      const ok = this.pdfiumModule.FPDFAnnot_SetAP(annotationPtr, mode, ptr);
+      return !!ok;
+    } finally {
+      this.memoryManager.free(ptr);
+    }
   }
 
   /**

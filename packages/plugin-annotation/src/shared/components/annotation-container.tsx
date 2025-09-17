@@ -64,8 +64,8 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
       element: currentObject.rect,
       vertices: vertexConfig?.extractVertices(currentObject),
       constraints: {
-        minWidth: 25,
-        minHeight: 25,
+        minWidth: 10,
+        minHeight: 10,
         boundingBox: { width: pageWidth / scale, height: pageHeight / scale },
       },
       maintainAspectRatio: lockAspectRatio,

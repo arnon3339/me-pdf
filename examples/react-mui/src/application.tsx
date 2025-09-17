@@ -1,7 +1,7 @@
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
-import { ConsoleLogger } from '@embedpdf/models';
+import { ConsoleLogger, PdfAnnotationSubtype, PdfStampAnnoObject } from '@embedpdf/models';
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
 import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll/react';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
@@ -22,7 +22,13 @@ import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { SelectionLayer } from '@embedpdf/plugin-selection/react';
-import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
+import {
+  AnnotationLayer,
+  AnnotationPlugin,
+  AnnotationPluginPackage,
+  AnnotationTool,
+  StampToolConfig,
+} from '@embedpdf/plugin-annotation/react';
 
 import { CircularProgress, Box, Alert, Typography } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
@@ -135,7 +141,29 @@ function App() {
 
   return (
     <DrawerProvider components={drawerComponents}>
-      <EmbedPDF engine={engine} plugins={plugins}>
+      <EmbedPDF
+        engine={engine}
+        plugins={plugins}
+        onInitialized={async (registry) => {
+          const annotation = registry.getPlugin<AnnotationPlugin>('annotation')?.provides();
+          annotation?.addTool<AnnotationTool<PdfStampAnnoObject>>({
+            id: 'stampApproved',
+            name: 'Stamp Approved',
+            interaction: {
+              mode: 'stampApproved',
+              exclusive: true,
+              cursor: 'crosshair',
+            },
+            matchScore: () => 0,
+            defaults: {
+              type: PdfAnnotationSubtype.STAMP,
+              imageSrc:
+                'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Eo_circle_green_checkmark.svg/512px-Eo_circle_green_checkmark.svg.png',
+              imageSize: { width: 20, height: 20 },
+            },
+          });
+        }}
+      >
         {({ pluginsReady }) => (
           <Box
             sx={{

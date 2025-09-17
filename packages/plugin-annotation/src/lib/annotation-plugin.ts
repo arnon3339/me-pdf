@@ -34,6 +34,7 @@ import {
   purgeAnnotation,
   setToolDefaults,
   setActiveToolId,
+  addTool,
 } from './actions';
 import {
   InteractionManagerCapability,
@@ -191,6 +192,10 @@ export class AnnotationPlugin extends BasePlugin<
       setActiveTool: (toolId) => this.setActiveTool(toolId),
       getTools: () => this.state.tools,
       getTool: (toolId) => this.getTool(toolId),
+      addTool: (tool) => {
+        this.dispatch(addTool(tool));
+        this.registerInteractionForTool(tool);
+      },
       transformAnnotation: (annotation, options) => this.transformAnnotation(annotation, options),
       registerPatchFunction: (type, patchFn) => this.registerPatchFunction(type, patchFn),
       findToolForAnnotation: (anno) => this.findToolForAnnotation(anno),

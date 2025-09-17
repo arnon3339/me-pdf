@@ -1,4 +1,4 @@
-import { PdfAnnotationObject, PdfAnnotationSubtype } from '@embedpdf/models';
+import { PdfAnnotationObject, PdfAnnotationSubtype, Size } from '@embedpdf/models';
 
 /**
  * Specific configuration for Stamp tools.
@@ -6,6 +6,7 @@ import { PdfAnnotationObject, PdfAnnotationSubtype } from '@embedpdf/models';
 export interface StampToolConfig {
   /** The base64 or URL source for the stamp's image. */
   imageSrc?: string;
+  imageSize?: Size;
 }
 
 /**

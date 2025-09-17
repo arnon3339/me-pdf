@@ -104,6 +104,7 @@ export interface AnnotationCapability {
   setActiveTool: (toolId: string | null) => void;
   getTools: () => AnnotationTool[];
   getTool: <T extends AnnotationTool>(toolId: string) => T | undefined;
+  addTool: <T extends AnnotationTool>(tool: T) => void;
   findToolForAnnotation: (annotation: PdfAnnotationObject) => AnnotationTool | null;
   setToolDefaults: (toolId: string, patch: Partial<any>) => void;
 

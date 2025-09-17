@@ -37,6 +37,7 @@ export function AnnotationPaintLayer({ pageIndex, scale }: Props) {
         if (!ctx) return;
 
         const img = new Image();
+        img.crossOrigin = 'Anonymous';
         img.onload = () => {
           let { naturalWidth: width, naturalHeight: height } = img;
 

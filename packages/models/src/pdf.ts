@@ -299,6 +299,15 @@ export enum PdfBlendMode {
 }
 
 /**
+ * Stamp fit
+ */
+export enum PdfStampFit {
+  Contain = 0,
+  Cover = 1,
+  Stretch = 2,
+}
+
+/**
  * Representation of the linked destination
  *
  * @public
@@ -1668,6 +1677,14 @@ export type PdfStampAnnoObjectContents = Array<PdfPathObject | PdfImageObject | 
 export interface PdfStampAnnoObject extends PdfAnnotationObjectBase {
   /** {@inheritDoc PdfAnnotationObjectBase.type} */
   type: PdfAnnotationSubtype.STAMP;
+  /**
+   * Icon of the stamp annotation
+   */
+  icon?: PdfAnnotationIcon;
+  /**
+   * Subject of the stamp annotation
+   */
+  subject?: string;
 }
 
 /**
