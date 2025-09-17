@@ -3,10 +3,6 @@ import {
   PdfAnnotationLineEnding,
   PdfAnnotationSubtype,
   PdfBlendMode,
-  PdfCircleAnnoObject,
-  PdfFreeTextAnnoObject,
-  PdfLineAnnoObject,
-  PdfSquareAnnoObject,
   PdfStandardFont,
   PdfTextAlignment,
   PdfVerticalAlignment,
@@ -132,7 +128,7 @@ export const defaultTools = [
       enabled: true,
       defaultSize: { width: 100, height: 100 },
     },
-  } as AnnotationTool<PdfCircleAnnoObject>,
+  },
   {
     id: 'square' as const,
     name: 'Square',
@@ -150,7 +146,7 @@ export const defaultTools = [
       enabled: true,
       defaultSize: { width: 100, height: 100 },
     },
-  } as AnnotationTool<PdfSquareAnnoObject>,
+  },
   {
     id: 'line' as const,
     name: 'Line',
@@ -168,7 +164,7 @@ export const defaultTools = [
       defaultLength: 100,
       defaultAngle: 0,
     },
-  } as AnnotationTool<PdfLineAnnoObject>,
+  },
   {
     id: 'lineArrow' as const,
     name: 'Arrow',
@@ -191,7 +187,7 @@ export const defaultTools = [
       defaultLength: 100,
       defaultAngle: 0,
     },
-  } as AnnotationTool<PdfLineAnnoObject>,
+  },
   {
     id: 'polyline' as const,
     name: 'Polyline',
@@ -241,7 +237,7 @@ export const defaultTools = [
       defaultSize: { width: 100, height: 20 },
       defaultContent: 'Insert text',
     },
-  } as AnnotationTool<PdfFreeTextAnnoObject>,
+  },
   {
     id: 'stamp' as const,
     name: 'Image',

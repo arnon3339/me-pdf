@@ -67,9 +67,14 @@ type GetToolConfig<T extends PdfAnnotationObject> = T['type'] extends keyof Tool
   : {};
 
 // Helper type to get click behavior config
-type GetClickBehavior<T extends PdfAnnotationObject> = T['type'] extends keyof ClickBehaviorMap
-  ? { clickBehavior?: ClickBehaviorMap[T['type']] }
-  : {};
+type ClickBehaviorFor<T extends PdfAnnotationObject> =
+  // if none of T['type'] is in ClickBehaviorMap, omit the property
+  Extract<T['type'], keyof ClickBehaviorMap> extends never
+    ? {}
+    : {
+        // otherwise allow it, with the right unioned type
+        clickBehavior?: ClickBehaviorMap[Extract<T['type'], keyof ClickBehaviorMap>];
+      };
 
 /**
  * The primary interface for defining an annotation tool.
@@ -110,4 +115,4 @@ export type AnnotationTool<T extends PdfAnnotationObject = PdfAnnotationObject> 
     /** When true, select the annotation immediately after creation. Overrides plugin config. */
     selectAfterCreate?: boolean;
   };
-} & GetClickBehavior<T>;
+} & ClickBehaviorFor<T>;
