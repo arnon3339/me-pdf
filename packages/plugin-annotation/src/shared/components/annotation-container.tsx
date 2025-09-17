@@ -8,7 +8,7 @@ import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 import { useState, JSX, CSSProperties, useRef, useEffect } from '@framework';
 
 import { useAnnotationCapability } from '../hooks';
-import { SelectionMenuProps, VertexConfig } from '../types';
+import { ResizeHandleUI, SelectionMenuProps, VertexConfig, VertexHandleUI } from '../types';
 
 interface AnnotationContainerProps<T extends PdfAnnotationObject> {
   scale: number;
@@ -28,6 +28,9 @@ interface AnnotationContainerProps<T extends PdfAnnotationObject> {
   outlineOffset?: number;
   onDoubleClick?: (event: any) => void; // You'll need to import proper MouseEvent type
   zIndex?: number;
+  resizeUI?: ResizeHandleUI;
+  vertexUI?: VertexHandleUI;
+  selectionOutlineColor?: string;
 }
 
 // Simplified AnnotationContainer
@@ -49,6 +52,9 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   outlineOffset = 1,
   onDoubleClick,
   zIndex = 1,
+  resizeUI,
+  vertexUI,
+  selectionOutlineColor = '#007ACC',
   ...props
 }: AnnotationContainerProps<T>): JSX.Element {
   const [preview, setPreview] = useState<T>(trackedAnnotation.object);
@@ -58,6 +64,12 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   const currentObject = preview
     ? { ...trackedAnnotation.object, ...preview }
     : trackedAnnotation.object;
+
+  // Defaults retain current behavior
+  const HANDLE_COLOR = resizeUI?.color ?? '#007ACC';
+  const VERTEX_COLOR = vertexUI?.color ?? '#007ACC';
+  const HANDLE_SIZE = resizeUI?.size ?? 12;
+  const VERTEX_SIZE = vertexUI?.size ?? 12;
 
   const { dragProps, vertices, resize } = useInteractionHandles({
     controller: {
@@ -106,14 +118,14 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
       },
     },
     resizeUI: {
-      handleSize: 12,
+      handleSize: HANDLE_SIZE,
       spacing: outlineOffset,
       offsetMode: 'outside',
       includeSides: lockAspectRatio ? false : true,
       zIndex: zIndex + 1,
     },
     vertexUI: {
-      vertexSize: 12,
+      vertexSize: VERTEX_SIZE,
       zIndex: zIndex + 2,
     },
     includeVertices: vertexConfig ? true : false,
@@ -136,7 +148,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
           top: currentObject.rect.origin.y * scale,
           width: currentObject.rect.size.width * scale,
           height: currentObject.rect.size.height * scale,
-          outline: isSelected ? '1px solid #007ACC' : 'none',
+          outline: isSelected ? `1px solid ${selectionOutlineColor}` : 'none',
           outlineOffset: isSelected ? `${outlineOffset}px` : '0px',
           pointerEvents: isSelected ? 'auto' : 'none',
           touchAction: 'none',
@@ -150,14 +162,38 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
 
         {isSelected &&
           isResizable &&
-          resize.map(({ key, ...props }) => (
-            <div key={key} {...props} style={{ ...props.style, backgroundColor: '#007ACC' }} />
-          ))}
+          resize.map(({ key, ...hProps }) =>
+            resizeUI?.component ? (
+              resizeUI.component({
+                key,
+                ...hProps,
+                backgroundColor: HANDLE_COLOR,
+              })
+            ) : (
+              <div
+                key={key}
+                {...hProps}
+                style={{ ...hProps.style, backgroundColor: HANDLE_COLOR }}
+              />
+            ),
+          )}
 
         {isSelected &&
-          vertices.map(({ key, ...props }) => (
-            <div key={key} {...props} style={{ ...props.style, backgroundColor: '#007ACC' }} />
-          ))}
+          vertices.map(({ key, ...vProps }) =>
+            vertexUI?.component ? (
+              vertexUI.component({
+                key,
+                ...vProps,
+                backgroundColor: VERTEX_COLOR,
+              })
+            ) : (
+              <div
+                key={key}
+                {...vProps}
+                style={{ ...vProps.style, backgroundColor: VERTEX_COLOR }}
+              />
+            ),
+          )}
       </div>
       {/* CounterRotate remains unchanged */}
       <CounterRotate

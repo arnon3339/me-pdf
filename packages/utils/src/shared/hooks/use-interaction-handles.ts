@@ -8,7 +8,7 @@ import {
   type VertexUI,
 } from '../plugin-interaction-primitives/utils';
 
-export type DivProps = {
+export type HandleElementProps = {
   key: string | number;
   style: CSSProperties;
   onPointerDown: (e: PointerEvent) => void;
@@ -39,7 +39,7 @@ export function useInteractionHandles(opts: {
   const { dragProps, createResizeProps, createVertexProps } = useDragResize(controller);
 
   // Resize handles: only uses data from the SAME controller config.
-  const resize: DivProps[] = useMemo(() => {
+  const resize: HandleElementProps[] = useMemo(() => {
     const desc = describeResizeFromConfig(controller, resizeUI);
     return desc.map((d) => ({
       key: d.attrs?.['data-epdf-handle'] as string,
@@ -68,7 +68,7 @@ export function useInteractionHandles(opts: {
   ]);
 
   // Vertex handles: same source; prefer live vertices if parent rerenders with updated cfg.vertices
-  const vertices: DivProps[] = useMemo(() => {
+  const vertices: HandleElementProps[] = useMemo(() => {
     if (!includeVertices) return [];
     const desc = describeVerticesFromConfig(controller, vertexUI, controller.vertices);
     return desc.map((d, i) => ({

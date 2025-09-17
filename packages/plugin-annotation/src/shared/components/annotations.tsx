@@ -37,7 +37,7 @@ import { Strikeout } from './text-markup/strikeout';
 import { Squiggly } from './text-markup/squiggly';
 import { Ink } from './annotations/ink';
 import { Square } from './annotations/square';
-import { SelectionMenu } from '../types';
+import { ResizeHandleUI, SelectionMenu, VertexHandleUI } from '../types';
 import { Circle } from './annotations/circle';
 import { Line } from './annotations/line';
 import { Polyline } from './annotations/polyline';
@@ -52,6 +52,9 @@ interface AnnotationsProps {
   pageWidth: number;
   pageHeight: number;
   selectionMenu?: SelectionMenu;
+  resizeUI?: ResizeHandleUI;
+  vertexUI?: VertexHandleUI;
+  selectionOutlineColor?: string;
 }
 
 export function Annotations(annotationsProps: AnnotationsProps) {
