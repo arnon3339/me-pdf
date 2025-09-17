@@ -8,6 +8,7 @@ import {
 import { HandlerFactory, PreviewState } from './types';
 import { useState } from '../utils/use-state';
 import { clamp } from '@embedpdf/core';
+import { useClickDetector } from './click-detector';
 
 export const squareHandlerFactory: HandlerFactory<PdfSquareAnnoObject> = {
   annotationType: PdfAnnotationSubtype.SQUARE,
@@ -34,6 +35,46 @@ export const squareHandlerFactory: HandlerFactory<PdfSquareAnnoObject> = {
         opacity: tool.defaults.opacity ?? 1,
       };
     };
+
+    const clickDetector = useClickDetector<PdfSquareAnnoObject>({
+      threshold: 5,
+      getTool,
+      onClickDetected: (pos, tool) => {
+        const defaults = getDefaults();
+        if (!defaults) return;
+
+        const clickConfig = tool.clickBehavior;
+        if (!clickConfig?.enabled) return;
+
+        const { width, height } = clickConfig.defaultSize;
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+
+        // Center at click position, but keep within bounds
+        const x = clamp(pos.x - halfWidth, 0, pageSize.width - width);
+        const y = clamp(pos.y - halfHeight, 0, pageSize.height - height);
+
+        const strokeWidth = defaults.strokeWidth;
+        const halfStroke = strokeWidth / 2;
+
+        const rect: Rect = {
+          origin: { x: x - halfStroke, y: y - halfStroke },
+          size: { width: width + strokeWidth, height: height + strokeWidth },
+        };
+
+        const anno: PdfSquareAnnoObject = {
+          ...defaults,
+          type: PdfAnnotationSubtype.SQUARE,
+          flags: ['print'],
+          created: new Date(),
+          id: uuidV4(),
+          pageIndex,
+          rect,
+        };
+
+        onCommit(anno);
+      },
+    });
 
     const getPreview = (current: {
       x: number;
@@ -72,16 +113,19 @@ export const squareHandlerFactory: HandlerFactory<PdfSquareAnnoObject> = {
       onPointerDown: (pos, evt) => {
         const clampedPos = clampToPage(pos);
         setStart(clampedPos);
+        clickDetector.onStart(clampedPos);
         onPreview(getPreview(clampedPos));
         evt.setPointerCapture?.();
       },
       onPointerMove: (pos) => {
-        if (getStart()) {
-          const clampedPos = clampToPage(pos);
+        const clampedPos = clampToPage(pos);
+        clickDetector.onMove(clampedPos);
+
+        if (getStart() && clickDetector.hasMoved()) {
           onPreview(getPreview(clampedPos));
         }
       },
-      onPointerUp: (pos) => {
+      onPointerUp: (pos, evt) => {
         const p1 = getStart();
         if (!p1) return;
 
@@ -90,10 +134,12 @@ export const squareHandlerFactory: HandlerFactory<PdfSquareAnnoObject> = {
 
         const clampedPos = clampToPage(pos);
 
-        const width = Math.abs(p1.x - clampedPos.x);
-        const height = Math.abs(p1.y - clampedPos.y);
+        if (!clickDetector.hasMoved()) {
+          clickDetector.onEnd(clampedPos);
+        } else {
+          const defaults = getDefaults();
+          if (!defaults) return;
 
-        if (width >= 1 && height >= 1) {
           const preview = getPreview(clampedPos);
           if (preview) {
             const anno: PdfSquareAnnoObject = {
@@ -108,17 +154,22 @@ export const squareHandlerFactory: HandlerFactory<PdfSquareAnnoObject> = {
             onCommit(anno);
           }
         }
+
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
+        evt.releasePointerCapture?.();
       },
       onPointerLeave: (_, evt) => {
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
         evt.releasePointerCapture?.();
       },
       onPointerCancel: (_, evt) => {
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
         evt.releasePointerCapture?.();
       },
     };

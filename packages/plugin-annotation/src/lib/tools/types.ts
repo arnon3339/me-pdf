@@ -10,6 +10,40 @@ export interface StampToolConfig {
 }
 
 /**
+ * Click behavior for shape annotations (Circle, Square)
+ */
+export interface ShapeClickBehavior {
+  /** If true, creates annotation on click with default size */
+  enabled: boolean;
+  /** Default size to use when clicking (PDF units) */
+  defaultSize: Size;
+}
+
+/**
+ * Click behavior for line annotations
+ */
+export interface LineClickBehavior {
+  /** If true, creates annotation on click with default length */
+  enabled: boolean;
+  /** Default length of the line */
+  defaultLength: number;
+  /** Default angle in radians (0 = horizontal right) */
+  defaultAngle?: number;
+}
+
+/**
+ * Click behavior for free text annotations
+ */
+export interface FreeTextClickBehavior {
+  /** If true, creates annotation on click with default size */
+  enabled: boolean;
+  /** Default size for the text box */
+  defaultSize: Size;
+  /** Optional default content */
+  defaultContent?: string;
+}
+
+/**
  * A central, extensible map that associates an annotation subtype
  * with its unique tool configuration interface.
  */
@@ -17,16 +51,31 @@ export interface ToolConfigMap {
   [PdfAnnotationSubtype.STAMP]: StampToolConfig;
 }
 
-// This helper type looks up the config for a given annotation type T.
-// If it finds a config in ToolConfigMap, it returns it; otherwise, it returns an empty object {}.
+/**
+ * Map of annotation subtypes to their click behavior configuration
+ */
+export interface ClickBehaviorMap {
+  [PdfAnnotationSubtype.CIRCLE]: ShapeClickBehavior;
+  [PdfAnnotationSubtype.SQUARE]: ShapeClickBehavior;
+  [PdfAnnotationSubtype.LINE]: LineClickBehavior;
+  [PdfAnnotationSubtype.FREETEXT]: FreeTextClickBehavior;
+}
+
+// Helper type to get tool config
 type GetToolConfig<T extends PdfAnnotationObject> = T['type'] extends keyof ToolConfigMap
   ? ToolConfigMap[T['type']]
   : {};
 
+// Helper type to get click behavior config
+type GetClickBehavior<T extends PdfAnnotationObject> = T['type'] extends keyof ClickBehaviorMap
+  ? { clickBehavior?: ClickBehaviorMap[T['type']] }
+  : {};
+
 /**
  * The primary interface for defining an annotation tool.
+ * Uses a type alias to properly combine the base interface with conditional properties.
  */
-export interface AnnotationTool<T extends PdfAnnotationObject = PdfAnnotationObject> {
+export type AnnotationTool<T extends PdfAnnotationObject = PdfAnnotationObject> = {
   /** A unique identifier, e.g., 'ink', 'arrow' */
   id: string;
 
@@ -61,4 +110,4 @@ export interface AnnotationTool<T extends PdfAnnotationObject = PdfAnnotationObj
     /** When true, select the annotation immediately after creation. Overrides plugin config. */
     selectAfterCreate?: boolean;
   };
-}
+} & GetClickBehavior<T>;

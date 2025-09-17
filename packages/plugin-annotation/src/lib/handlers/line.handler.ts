@@ -9,11 +9,12 @@ import { HandlerFactory, PreviewState } from './types';
 import { useState } from '../utils/use-state';
 import * as patching from '../patching';
 import { clamp } from '@embedpdf/core';
+import { useClickDetector } from './click-detector';
 
 export const lineHandlerFactory: HandlerFactory<PdfLineAnnoObject> = {
   annotationType: PdfAnnotationSubtype.LINE,
   create(context) {
-    const { onCommit, onPreview, getTool, pageSize } = context;
+    const { pageIndex, onCommit, onPreview, getTool, pageSize } = context;
     const [getStart, setStart] = useState<{ x: number; y: number } | null>(null);
 
     const clampToPage = (pos: { x: number; y: number }) => ({
@@ -39,6 +40,52 @@ export const lineHandlerFactory: HandlerFactory<PdfLineAnnoObject> = {
         strokeColor: tool.defaults.strokeColor ?? '#000000',
       };
     };
+
+    const clickDetector = useClickDetector<PdfLineAnnoObject>({
+      threshold: 5,
+      getTool,
+      onClickDetected: (pos, tool) => {
+        const defaults = getDefaults();
+        if (!defaults) return;
+
+        const clickConfig = tool.clickBehavior;
+        if (!clickConfig?.enabled) return;
+
+        const angle = clickConfig.defaultAngle ?? 0;
+        const length = clickConfig.defaultLength;
+        const halfLength = length / 2;
+
+        // Calculate start and end points centered at click position
+        const startX = pos.x - halfLength * Math.cos(angle);
+        const startY = pos.y - halfLength * Math.sin(angle);
+        const endX = pos.x + halfLength * Math.cos(angle);
+        const endY = pos.y + halfLength * Math.sin(angle);
+
+        // Clamp both points to page bounds
+        const start = clampToPage({ x: startX, y: startY });
+        const end = clampToPage({ x: endX, y: endY });
+
+        // If clamping significantly altered the line, we might want to maintain the angle
+        // by adjusting the opposite point, but for simplicity we'll just use the clamped points
+
+        const rect = patching.lineRectWithEndings(
+          [start, end],
+          defaults.strokeWidth,
+          defaults.lineEndings,
+        );
+
+        onCommit({
+          ...defaults,
+          rect,
+          linePoints: { start, end },
+          pageIndex,
+          id: uuidV4(),
+          flags: ['print'],
+          created: new Date(),
+          type: PdfAnnotationSubtype.LINE,
+        });
+      },
+    });
 
     const getPreview = (current: {
       x: number;
@@ -71,12 +118,15 @@ export const lineHandlerFactory: HandlerFactory<PdfLineAnnoObject> = {
       onPointerDown: (pos, evt) => {
         const clampedPos = clampToPage(pos);
         setStart(clampedPos);
+        clickDetector.onStart(clampedPos);
         onPreview(getPreview(clampedPos));
         evt.setPointerCapture?.();
       },
       onPointerMove: (pos) => {
-        if (getStart()) {
-          const clampedPos = clampToPage(pos);
+        const clampedPos = clampToPage(pos);
+        clickDetector.onMove(clampedPos);
+
+        if (getStart() && clickDetector.hasMoved()) {
           onPreview(getPreview(clampedPos));
         }
       },
@@ -84,42 +134,49 @@ export const lineHandlerFactory: HandlerFactory<PdfLineAnnoObject> = {
         const start = getStart();
         if (!start) return;
 
-        const defaults = getDefaults();
-        if (!defaults) return;
-
         const clampedPos = clampToPage(pos);
 
-        // Ignore tiny lines
-        if (Math.abs(clampedPos.x - start.x) > 2 || Math.abs(clampedPos.y - start.y) > 2) {
-          const rect = patching.lineRectWithEndings(
-            [start, clampedPos],
-            defaults.strokeWidth,
-            defaults.lineEndings,
-          );
-          onCommit({
-            ...defaults,
-            rect,
-            linePoints: { start, end: clampedPos },
-            pageIndex: context.pageIndex,
-            id: uuidV4(),
-            flags: ['print'],
-            created: new Date(),
-            type: PdfAnnotationSubtype.LINE,
-          });
+        if (!clickDetector.hasMoved()) {
+          clickDetector.onEnd(clampedPos);
+        } else {
+          const defaults = getDefaults();
+          if (!defaults) return;
+
+          // Only create if line is long enough
+          if (Math.abs(clampedPos.x - start.x) > 2 || Math.abs(clampedPos.y - start.y) > 2) {
+            const rect = patching.lineRectWithEndings(
+              [start, clampedPos],
+              defaults.strokeWidth,
+              defaults.lineEndings,
+            );
+            onCommit({
+              ...defaults,
+              rect,
+              linePoints: { start, end: clampedPos },
+              pageIndex,
+              id: uuidV4(),
+              flags: ['print'],
+              created: new Date(),
+              type: PdfAnnotationSubtype.LINE,
+            });
+          }
         }
 
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
         evt.releasePointerCapture?.();
       },
       onPointerLeave: (_, evt) => {
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
         evt.releasePointerCapture?.();
       },
       onPointerCancel: (_, evt) => {
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
         evt.releasePointerCapture?.();
       },
     };

@@ -3,6 +3,10 @@ import {
   PdfAnnotationLineEnding,
   PdfAnnotationSubtype,
   PdfBlendMode,
+  PdfCircleAnnoObject,
+  PdfFreeTextAnnoObject,
+  PdfLineAnnoObject,
+  PdfSquareAnnoObject,
   PdfStandardFont,
   PdfTextAlignment,
   PdfVerticalAlignment,
@@ -124,7 +128,11 @@ export const defaultTools = [
       strokeColor: '#E44234',
       strokeStyle: PdfAnnotationBorderStyle.SOLID,
     },
-  },
+    clickBehavior: {
+      enabled: true,
+      defaultSize: { width: 100, height: 100 },
+    },
+  } as AnnotationTool<PdfCircleAnnoObject>,
   {
     id: 'square' as const,
     name: 'Square',
@@ -138,7 +146,11 @@ export const defaultTools = [
       strokeColor: '#E44234',
       strokeStyle: PdfAnnotationBorderStyle.SOLID,
     },
-  },
+    clickBehavior: {
+      enabled: true,
+      defaultSize: { width: 100, height: 100 },
+    },
+  } as AnnotationTool<PdfSquareAnnoObject>,
   {
     id: 'line' as const,
     name: 'Line',
@@ -151,7 +163,12 @@ export const defaultTools = [
       strokeWidth: 6,
       strokeColor: '#E44234',
     },
-  },
+    clickBehavior: {
+      enabled: true,
+      defaultLength: 100,
+      defaultAngle: 0,
+    },
+  } as AnnotationTool<PdfLineAnnoObject>,
   {
     id: 'lineArrow' as const,
     name: 'Arrow',
@@ -169,7 +186,12 @@ export const defaultTools = [
         end: PdfAnnotationLineEnding.OpenArrow,
       },
     },
-  },
+    clickBehavior: {
+      enabled: true,
+      defaultLength: 100,
+      defaultAngle: 0,
+    },
+  } as AnnotationTool<PdfLineAnnoObject>,
   {
     id: 'polyline' as const,
     name: 'Polyline',
@@ -214,7 +236,12 @@ export const defaultTools = [
       backgroundColor: 'transparent',
       opacity: 1,
     },
-  },
+    clickBehavior: {
+      enabled: true,
+      defaultSize: { width: 100, height: 20 },
+      defaultContent: 'Insert text',
+    },
+  } as AnnotationTool<PdfFreeTextAnnoObject>,
   {
     id: 'stamp' as const,
     name: 'Image',

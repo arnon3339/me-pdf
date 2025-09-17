@@ -2,6 +2,9 @@ import { AppBar, Toolbar as MuiToolbar } from '@mui/material';
 import TextFieldsOutlinedIcon from '@mui/icons-material/TextFieldsOutlined';
 import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
+import SquareOutlinedIcon from '@mui/icons-material/SquareOutlined';
+import NorthEastOutlinedIcon from '@mui/icons-material/NorthEastOutlined';
 import { AnnotationTool, useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useEffect, useState } from 'react';
 import { ToggleIconButton } from '../toggle-icon-button';
@@ -32,6 +35,24 @@ export const AnnotationToolbar = () => {
     if (!annotationProvider) return;
     const currentId = activeTool?.id ?? null;
     annotationProvider.setActiveTool(currentId === 'ink' ? null : 'ink');
+  };
+
+  const handleCircleAnnotation = () => {
+    if (!annotationProvider) return;
+    const currentId = activeTool?.id ?? null;
+    annotationProvider.setActiveTool(currentId === 'circle' ? null : 'circle');
+  };
+
+  const handleSquareAnnotation = () => {
+    if (!annotationProvider) return;
+    const currentId = activeTool?.id ?? null;
+    annotationProvider.setActiveTool(currentId === 'square' ? null : 'square');
+  };
+
+  const handleLineArrowAnnotation = () => {
+    if (!annotationProvider) return;
+    const currentId = activeTool?.id ?? null;
+    annotationProvider.setActiveTool(currentId === 'lineArrow' ? null : 'lineArrow');
   };
 
   const handleStampApprovedAnnotation = () => {
@@ -67,6 +88,30 @@ export const AnnotationToolbar = () => {
           aria-label="Freehand annotation"
         >
           <GestureOutlinedIcon fontSize="small" />
+        </ToggleIconButton>
+        <ToggleIconButton
+          tone="light"
+          isOpen={activeTool?.id === 'circle'}
+          onClick={handleCircleAnnotation}
+          aria-label="Circle annotation"
+        >
+          <CircleOutlinedIcon fontSize="small" />
+        </ToggleIconButton>
+        <ToggleIconButton
+          tone="light"
+          isOpen={activeTool?.id === 'square'}
+          onClick={handleSquareAnnotation}
+          aria-label="Square annotation"
+        >
+          <SquareOutlinedIcon fontSize="small" />
+        </ToggleIconButton>
+        <ToggleIconButton
+          tone="light"
+          isOpen={activeTool?.id === 'lineArrow'}
+          onClick={handleLineArrowAnnotation}
+          aria-label="Line arrow annotation"
+        >
+          <NorthEastOutlinedIcon fontSize="small" />
         </ToggleIconButton>
         <ToggleIconButton
           tone="light"

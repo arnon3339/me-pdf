@@ -10,11 +10,12 @@ import {
 import { HandlerFactory, PreviewState } from './types';
 import { useState } from '../utils/use-state';
 import { clamp } from '@embedpdf/core';
+import { useClickDetector } from './click-detector';
 
 export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
   annotationType: PdfAnnotationSubtype.FREETEXT,
   create(context) {
-    const { onCommit, onPreview, getTool, pageSize } = context;
+    const { onCommit, onPreview, getTool, pageSize, pageIndex } = context;
     const [getStart, setStart] = useState<{ x: number; y: number } | null>(null);
 
     const clampToPage = (pos: { x: number; y: number }) => ({
@@ -37,6 +38,48 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
         contents: tool.defaults.contents ?? 'Insert text here',
       };
     };
+
+    const clickDetector = useClickDetector<PdfFreeTextAnnoObject>({
+      threshold: 5,
+      getTool,
+      onClickDetected: (pos, tool) => {
+        const defaults = getDefaults();
+        if (!defaults) return;
+
+        // TypeScript knows this is FreeTextClickBehavior
+        const clickConfig = tool.clickBehavior;
+        if (!clickConfig?.enabled) return;
+
+        const { width, height } = clickConfig.defaultSize;
+
+        // Center the text box at click position, but keep within bounds
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+        const x = clamp(pos.x - halfWidth, 0, pageSize.width - width);
+        const y = clamp(pos.y - halfHeight, 0, pageSize.height - height);
+
+        const rect: Rect = {
+          origin: { x, y },
+          size: { width, height },
+        };
+
+        // Use defaultContent from clickBehavior if available, otherwise use tool defaults
+        const contents = clickConfig.defaultContent ?? defaults.contents;
+
+        const anno: PdfFreeTextAnnoObject = {
+          ...defaults,
+          contents,
+          type: PdfAnnotationSubtype.FREETEXT,
+          rect,
+          flags: ['print'],
+          pageIndex,
+          id: uuidV4(),
+          created: new Date(),
+        };
+
+        onCommit(anno);
+      },
+    });
 
     const getPreview = (current: {
       x: number;
@@ -72,12 +115,15 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
       onPointerDown: (pos, evt) => {
         const clampedPos = clampToPage(pos);
         setStart(clampedPos);
+        clickDetector.onStart(clampedPos);
         onPreview(getPreview(clampedPos));
         evt.setPointerCapture?.();
       },
       onPointerMove: (pos) => {
-        if (getStart()) {
-          const clampedPos = clampToPage(pos);
+        const clampedPos = clampToPage(pos);
+        clickDetector.onMove(clampedPos);
+
+        if (getStart() && clickDetector.hasMoved()) {
           onPreview(getPreview(clampedPos));
         }
       },
@@ -89,13 +135,16 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
         if (!defaults) return;
 
         const clampedPos = clampToPage(pos);
-        const minX = Math.min(start.x, clampedPos.x);
-        const minY = Math.min(start.y, clampedPos.y);
-        const width = Math.abs(start.x - clampedPos.x);
-        const height = Math.abs(start.y - clampedPos.y);
 
-        // Ignore tiny boxes
-        if (width >= 1 && height >= 1) {
+        if (!clickDetector.hasMoved()) {
+          clickDetector.onEnd(clampedPos);
+        } else {
+          const minX = Math.min(start.x, clampedPos.x);
+          const minY = Math.min(start.y, clampedPos.y);
+          const width = Math.abs(start.x - clampedPos.x);
+          const height = Math.abs(start.y - clampedPos.y);
+
+          // Ignore tiny boxes
           const rect: Rect = {
             origin: { x: minX, y: minY },
             size: { width, height },
@@ -115,16 +164,19 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
 
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
         evt.releasePointerCapture?.();
       },
       onPointerLeave: (_, evt) => {
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
         evt.releasePointerCapture?.();
       },
       onPointerCancel: (_, evt) => {
         setStart(null);
         onPreview(null);
+        clickDetector.reset();
         evt.releasePointerCapture?.();
       },
     };
