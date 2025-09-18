@@ -1336,6 +1336,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
           annotation.createAnnotation(selection.pageIndex, {
             id: annotationId,
             created: new Date(),
+            flags: ['print'],
             type: PdfAnnotationSubtype.SQUIGGLY,
             blendMode: PdfBlendMode.Normal,
             color: defaultSettings.color,
@@ -1381,6 +1382,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
           annotation.createAnnotation(selection.pageIndex, {
             id: annotationId,
             created: new Date(),
+            flags: ['print'],
             type: PdfAnnotationSubtype.UNDERLINE,
             blendMode: PdfBlendMode.Normal,
             color: defaultSettings.color,
@@ -1426,6 +1428,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
           annotation.createAnnotation(selection.pageIndex, {
             id: annotationId,
             created: new Date(),
+            flags: ['print'],
             type: PdfAnnotationSubtype.STRIKEOUT,
             blendMode: PdfBlendMode.Normal,
             color: defaultSettings.color,
@@ -1471,6 +1474,7 @@ export const menuItems: Record<string, MenuItem<State>> = {
           annotation.createAnnotation(selection.pageIndex, {
             id: annotationId,
             created: new Date(),
+            flags: ['print'],
             type: PdfAnnotationSubtype.HIGHLIGHT,
             blendMode: PdfBlendMode.Multiply,
             color: defaultSettings.color,

@@ -27,6 +27,7 @@ export const squareHandlerFactory: HandlerFactory<PdfSquareAnnoObject> = {
       if (!tool) return null;
       return {
         ...tool.defaults,
+        flags: tool.defaults.flags ?? ['print'],
         strokeWidth: tool.defaults.strokeWidth ?? 2,
         strokeColor: tool.defaults.strokeColor ?? '#000000',
         strokeStyle: tool.defaults.strokeStyle ?? PdfAnnotationBorderStyle.SOLID,
@@ -65,7 +66,6 @@ export const squareHandlerFactory: HandlerFactory<PdfSquareAnnoObject> = {
         const anno: PdfSquareAnnoObject = {
           ...defaults,
           type: PdfAnnotationSubtype.SQUARE,
-          flags: ['print'],
           created: new Date(),
           id: uuidV4(),
           pageIndex,
@@ -145,7 +145,6 @@ export const squareHandlerFactory: HandlerFactory<PdfSquareAnnoObject> = {
             const anno: PdfSquareAnnoObject = {
               ...defaults,
               type: PdfAnnotationSubtype.SQUARE,
-              flags: ['print'],
               created: new Date(),
               id: uuidV4(),
               pageIndex,

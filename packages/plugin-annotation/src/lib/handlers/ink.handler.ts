@@ -30,6 +30,7 @@ export const inkHandlerFactory: HandlerFactory<PdfInkAnnoObject> = {
         strokeWidth: tool.defaults.strokeWidth ?? 1,
         color: tool.defaults.color ?? '#000000',
         opacity: tool.defaults.opacity ?? 1,
+        flags: tool.defaults.flags ?? ['print'],
       };
     };
 
@@ -94,7 +95,6 @@ export const inkHandlerFactory: HandlerFactory<PdfInkAnnoObject> = {
               inkList: strokes,
               rect,
               type: PdfAnnotationSubtype.INK,
-              flags: ['print'],
               pageIndex: context.pageIndex,
               id: uuidV4(),
               created: new Date(),

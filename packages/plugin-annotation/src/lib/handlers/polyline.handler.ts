@@ -38,6 +38,7 @@ export const polylineHandlerFactory: HandlerFactory<PdfPolylineAnnoObject> = {
         strokeColor: tool.defaults.strokeColor ?? '#000000',
         strokeStyle: tool.defaults.strokeStyle ?? PdfAnnotationBorderStyle.SOLID,
         strokeDashArray: tool.defaults.strokeDashArray ?? [],
+        flags: tool.defaults.flags ?? ['print'],
       };
     };
 
@@ -58,7 +59,6 @@ export const polylineHandlerFactory: HandlerFactory<PdfPolylineAnnoObject> = {
         vertices,
         rect,
         type: PdfAnnotationSubtype.POLYLINE,
-        flags: ['print'],
         pageIndex: context.pageIndex,
         id: uuidV4(),
         created: new Date(),

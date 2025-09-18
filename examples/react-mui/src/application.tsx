@@ -149,8 +149,7 @@ function App() {
             id: 'stampApproved',
             name: 'Stamp Approved',
             interaction: {
-              mode: 'stampApproved',
-              exclusive: true,
+              exclusive: false,
               cursor: 'crosshair',
             },
             matchScore: () => 0,

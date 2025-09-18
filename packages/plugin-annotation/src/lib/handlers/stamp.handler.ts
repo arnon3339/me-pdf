@@ -33,14 +33,15 @@ export const stampHandlerFactory: HandlerFactory<PdfStampAnnoObject> = {
           };
 
           const anno: PdfStampAnnoObject = {
+            ...tool.defaults,
             rect,
             type: PdfAnnotationSubtype.STAMP,
-            icon: PdfAnnotationIcon.Draft,
-            subject: 'Stamp',
+            icon: tool.defaults.icon ?? PdfAnnotationIcon.Draft,
+            subject: tool.defaults.subject ?? 'Stamp',
+            flags: tool.defaults.flags ?? ['print'],
             pageIndex: context.pageIndex,
             id: uuidV4(),
             created: new Date(),
-            flags: ['print'],
           };
 
           onCommit(anno, { imageData });

@@ -33,6 +33,7 @@ export const circleHandlerFactory: HandlerFactory<PdfCircleAnnoObject> = {
         strokeDashArray: tool.defaults.strokeDashArray ?? [],
         color: tool.defaults.color ?? '#000000',
         opacity: tool.defaults.opacity ?? 1,
+        flags: tool.defaults.flags ?? ['print'],
       };
     };
 
@@ -65,7 +66,6 @@ export const circleHandlerFactory: HandlerFactory<PdfCircleAnnoObject> = {
         const anno: PdfCircleAnnoObject = {
           ...defaults,
           type: PdfAnnotationSubtype.CIRCLE,
-          flags: ['print'],
           created: new Date(),
           id: uuidV4(),
           pageIndex,
