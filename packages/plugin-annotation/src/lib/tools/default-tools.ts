@@ -64,7 +64,7 @@ export const defaultTools = [
     },
     defaults: {
       type: PdfAnnotationSubtype.SQUIGGLY,
-      color: '#5CC96E',
+      color: '#E44234',
       opacity: 1,
     },
   },
