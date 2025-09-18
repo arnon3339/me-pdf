@@ -1,5 +1,13 @@
 # @embedpdf/plugin-annotation
 
+## 1.2.1
+
+### Patch Changes
+
+- [#164](https://github.com/embedpdf/embed-pdf-viewer/pull/164) by [@bobsingor](https://github.com/bobsingor) – Fix defaults on annotation stamp
+
+- [#164](https://github.com/embedpdf/embed-pdf-viewer/pull/164) by [@bobsingor](https://github.com/bobsingor) – Make interaction mode optional fallback on tool id
+
 ## 1.2.0
 
 ### Minor Changes
