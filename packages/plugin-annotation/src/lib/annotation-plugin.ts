@@ -132,7 +132,7 @@ export class AnnotationPlugin extends BasePlugin<
 
     this.interactionManager?.onModeChange((s) => {
       const newToolId =
-        this.state.tools.find((t) => t.interaction.mode === s.activeMode)?.id ?? null;
+        this.state.tools.find((t) => (t.interaction.mode ?? t.id) === s.activeMode)?.id ?? null;
       if (newToolId !== this.state.activeToolId) {
         this.dispatch(setActiveToolId(newToolId));
       }
@@ -178,13 +178,13 @@ export class AnnotationPlugin extends BasePlugin<
 
   private registerInteractionForTool(tool: AnnotationTool) {
     this.interactionManager?.registerMode({
-      id: tool.interaction.mode,
+      id: tool.interaction.mode ?? tool.id,
       scope: 'page',
       exclusive: tool.interaction.exclusive,
       cursor: tool.interaction.cursor,
     });
     if (tool.interaction.textSelection) {
-      this.selection?.enableForMode(tool.interaction.mode);
+      this.selection?.enableForMode(tool.interaction.mode ?? tool.id);
     }
   }
 
@@ -287,7 +287,7 @@ export class AnnotationPlugin extends BasePlugin<
       };
 
       const unregister = this.interactionManager.registerHandlers({
-        modeId: tool.interaction.mode,
+        modeId: tool.interaction.mode ?? tool.id,
         handlers: factory.create(context),
         pageIndex,
       });
@@ -394,16 +394,20 @@ export class AnnotationPlugin extends BasePlugin<
     ctx?: AnnotationCreateContext<A>,
   ) {
     const id = annotation.id;
+    const newAnnotation = {
+      ...annotation,
+      author: annotation.author ?? this.config.annotationAuthor,
+    };
     const execute = () => {
-      this.dispatch(
-        createAnnotation(pageIndex, {
-          ...annotation,
-          author: annotation.author ?? this.config.annotationAuthor,
-          flags: ['print'],
-        }),
-      );
+      this.dispatch(createAnnotation(pageIndex, newAnnotation));
       if (ctx) this.pendingContexts.set(id, ctx);
-      this.events$.emit({ type: 'create', annotation, pageIndex, ctx, committed: false });
+      this.events$.emit({
+        type: 'create',
+        annotation: newAnnotation,
+        pageIndex,
+        ctx,
+        committed: false,
+      });
     };
 
     if (!this.history) {
@@ -417,7 +421,12 @@ export class AnnotationPlugin extends BasePlugin<
         this.pendingContexts.delete(id);
         this.dispatch(deselectAnnotation());
         this.dispatch(deleteAnnotation(pageIndex, id));
-        this.events$.emit({ type: 'delete', annotation, pageIndex, committed: false });
+        this.events$.emit({
+          type: 'delete',
+          annotation: newAnnotation,
+          pageIndex,
+          committed: false,
+        });
       },
     };
     this.history.register(command, this.ANNOTATION_HISTORY_TOPIC);
@@ -524,7 +533,7 @@ export class AnnotationPlugin extends BasePlugin<
     if (toolId === this.state.activeToolId) return;
     const tool = this.state.tools.find((t) => t.id === toolId);
     if (tool) {
-      this.interactionManager?.activate(tool.interaction.mode);
+      this.interactionManager?.activate(tool.interaction.mode ?? tool.id);
     } else {
       this.interactionManager?.activateDefaultMode();
     }

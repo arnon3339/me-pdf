@@ -36,6 +36,7 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
         textAlign: tool.defaults.textAlign ?? PdfTextAlignment.Left,
         verticalAlign: tool.defaults.verticalAlign ?? PdfVerticalAlignment.Top,
         contents: tool.defaults.contents ?? 'Insert text here',
+        flags: tool.defaults.flags ?? ['print'],
       };
     };
 
@@ -71,7 +72,6 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
           contents,
           type: PdfAnnotationSubtype.FREETEXT,
           rect,
-          flags: ['print'],
           pageIndex,
           id: uuidV4(),
           created: new Date(),
@@ -154,7 +154,6 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
             ...defaults,
             type: PdfAnnotationSubtype.FREETEXT,
             rect,
-            flags: ['print'],
             pageIndex: context.pageIndex,
             id: uuidV4(),
             created: new Date(),

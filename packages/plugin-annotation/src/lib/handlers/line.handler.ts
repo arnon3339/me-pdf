@@ -38,6 +38,7 @@ export const lineHandlerFactory: HandlerFactory<PdfLineAnnoObject> = {
         strokeStyle: tool.defaults.strokeStyle ?? PdfAnnotationBorderStyle.SOLID,
         strokeDashArray: tool.defaults.strokeDashArray ?? [],
         strokeColor: tool.defaults.strokeColor ?? '#000000',
+        flags: tool.defaults.flags ?? ['print'],
       };
     };
 
@@ -80,7 +81,6 @@ export const lineHandlerFactory: HandlerFactory<PdfLineAnnoObject> = {
           linePoints: { start, end },
           pageIndex,
           id: uuidV4(),
-          flags: ['print'],
           created: new Date(),
           type: PdfAnnotationSubtype.LINE,
         });

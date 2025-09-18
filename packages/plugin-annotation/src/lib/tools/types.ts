@@ -101,7 +101,7 @@ export type AnnotationTool<T extends PdfAnnotationObject = PdfAnnotationObject> 
 
   /** Defines how this tool interacts with the viewer. */
   interaction: {
-    mode: string;
+    mode?: string;
     exclusive: boolean;
     cursor?: string;
     /** If true, this interaction mode is activated by selecting text. */
