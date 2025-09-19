@@ -5,7 +5,9 @@ import { EmbedPDF } from '@embedpdf/core/react'
 import { usePdfiumEngine } from '@embedpdf/engines/react'
 import {
   AnnotationLayer,
+  AnnotationPlugin,
   AnnotationPluginPackage,
+  AnnotationTool,
   useAnnotationCapability,
 } from '@embedpdf/plugin-annotation/react'
 import {
@@ -25,6 +27,7 @@ import {
 } from '@embedpdf/plugin-viewport/react'
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react'
 import { useEffect, useState } from 'react'
+import { PdfAnnotationSubtype, PdfStampAnnoObject } from '@embedpdf/models'
 
 // 1. Register plugins, including Annotation and its dependencies
 const plugins = [
@@ -83,6 +86,7 @@ export const AnnotationToolbar = () => {
   }
 
   const tools = [
+    { id: 'stampCheckmark', name: 'Checkmark' },
     { id: 'ink', name: 'Pen' },
     { id: 'square', name: 'Square' },
     { id: 'highlight', name: 'Highlight' },
@@ -136,7 +140,29 @@ export const PDFViewer = () => {
         userSelect: 'none',
       }}
     >
-      <EmbedPDF engine={engine} plugins={plugins}>
+      <EmbedPDF
+        engine={engine}
+        plugins={plugins}
+        onInitialized={async (registry) => {
+          const annotation = registry
+            .getPlugin<AnnotationPlugin>('annotation')
+            ?.provides()
+          annotation?.addTool<AnnotationTool<PdfStampAnnoObject>>({
+            id: 'stampCheckmark',
+            name: 'Checkmark',
+            interaction: {
+              exclusive: false,
+              cursor: 'crosshair',
+            },
+            matchScore: () => 0,
+            defaults: {
+              type: PdfAnnotationSubtype.STAMP,
+              imageSrc: '/circle-checkmark.png',
+              imageSize: { width: 30, height: 30 },
+            },
+          })
+        }}
+      >
         <AnnotationToolbar />
         <div className="flex-grow" style={{ position: 'relative' }}>
           <Viewport
