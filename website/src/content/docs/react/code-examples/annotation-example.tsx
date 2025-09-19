@@ -86,7 +86,8 @@ export const AnnotationToolbar = () => {
   }
 
   const tools = [
-    { id: 'stampCheckmark', name: 'Checkmark' },
+    { id: 'stampCheckmark', name: 'Checkmark (stamp)' },
+    { id: 'stampCross', name: 'Cross (stamp)' },
     { id: 'ink', name: 'Pen' },
     { id: 'square', name: 'Square' },
     { id: 'highlight', name: 'Highlight' },
@@ -158,6 +159,21 @@ export const PDFViewer = () => {
             defaults: {
               type: PdfAnnotationSubtype.STAMP,
               imageSrc: '/circle-checkmark.png',
+              imageSize: { width: 30, height: 30 },
+            },
+          })
+
+          annotation?.addTool<AnnotationTool<PdfStampAnnoObject>>({
+            id: 'stampCross',
+            name: 'Cross',
+            interaction: {
+              exclusive: false,
+              cursor: 'crosshair',
+            },
+            matchScore: () => 0,
+            defaults: {
+              type: PdfAnnotationSubtype.STAMP,
+              imageSrc: '/circle-cross.png',
               imageSize: { width: 30, height: 30 },
             },
           })
