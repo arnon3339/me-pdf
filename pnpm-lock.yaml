@@ -1656,9 +1656,15 @@ importers:
       '@embedpdf/pdfium':
         specifier: workspace:*
         version: link:../packages/pdfium
+      '@embedpdf/plugin-annotation':
+        specifier: workspace:*
+        version: link:../packages/plugin-annotation
       '@embedpdf/plugin-export':
         specifier: workspace:*
         version: link:../packages/plugin-export
+      '@embedpdf/plugin-history':
+        specifier: workspace:*
+        version: link:../packages/plugin-history
       '@embedpdf/plugin-interaction-manager':
         specifier: workspace:*
         version: link:../packages/plugin-interaction-manager
