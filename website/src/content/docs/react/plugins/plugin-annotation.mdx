@@ -140,6 +140,39 @@ You can extend the plugin's functionality by adding your own tools. For example,
 </EmbedPDF>
 ```
 
+## Listening to Annotation Events
+
+For more advanced integrations, such as saving annotation data to a backend or synchronizing state with an external data store, you can subscribe to annotation lifecycle events using `onAnnotationEvent`.
+
+This method allows you to react specifically to when annotations are created, updated, or deleted. Each event provides the annotation object and a `committed` flag, which indicates whether the change has been saved to the underlying PDF document in the engine.
+
+```tsx
+import { useEffect } from 'react';
+import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
+
+const AnnotationLogger = () => {
+  const { provides: annotationApi } = useAnnotationCapability();
+
+  useEffect(() => {
+    if (!annotationApi) return;
+
+    const unsubscribe = annotationApi.onAnnotationEvent((event) => {
+      console.log(`Annotation event: ${event.type}`, { event });
+
+      // Example: Save to backend after a change is committed to the engine
+      if (event.type === 'create' && event.committed) {
+        // yourApi.saveAnnotation(event.annotation);
+      }
+    });
+
+    // Clean up the subscription when the component unmounts
+    return unsubscribe;
+  }, [annotationApi]);
+
+  return null; // This is a non-visual component
+};
+```
+
 ## Default Annotation Tools
 
 The plugin comes with a set of pre-configured tools. You can activate any of these tools by passing its `id` to the `setActiveTool` method. You can also override their default properties by providing a modified `AnnotationTool` object with a matching `id` in the plugin configuration.
@@ -244,3 +277,14 @@ A selection of key methods available on the `provides` object:
 | **`commit()`** | Manually saves all pending annotation changes to the PDF document. |
 | **`onStateChange(cb)`** | Subscribes to any change in the annotation state. |
 | **`onAnnotationEvent(cb)`**| Subscribes to events like annotation creation, updates, or deletion. |
+
+### The `AnnotationEvent` Object
+
+The object passed to the `onAnnotationEvent` callback contains details about the lifecycle event. Its shape varies based on the `type` property.
+
+| Event Type | Properties | Description |
+| :--- | :--- | :--- |
+| **`'create'`** | `annotation`, `pageIndex`, `ctx`, `committed` | Fired when an annotation is created. `ctx` may contain extra data like `ImageData` for stamps. `committed` is `true` if the change has been saved to the engine. |
+| **`'update'`** | `annotation`, `pageIndex`, `patch`, `committed` | Fired when an annotation is moved, resized, or its properties change. `annotation` is the original object, and `patch` contains only the changed properties. |
+| **`'delete'`** | `annotation`, `pageIndex`, `committed` | Fired when an annotation is deleted. |
+| **`'loaded'`** | `total` | Fired once when the initial set of annotations is loaded from the document. `total` is the number of annotations loaded. |
