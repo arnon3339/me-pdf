@@ -1,5 +1,17 @@
 # @embedpdf/plugin-annotation
 
+## 1.3.0
+
+### Minor Changes
+
+- [#172](https://github.com/embedpdf/embed-pdf-viewer/pull/172) by [@bobsingor](https://github.com/bobsingor) – Custom render function if you want the frontend behaviour of annotation to be different
+
+### Patch Changes
+
+- [#172](https://github.com/embedpdf/embed-pdf-viewer/pull/172) by [@bobsingor](https://github.com/bobsingor) – Fix issue with forwarding props on text markups
+
+- [#168](https://github.com/embedpdf/embed-pdf-viewer/pull/168) by [@Ludy87](https://github.com/Ludy87) – Add license fields to the package.json with the value MIT
+
 ## 1.2.1
 
 ### Patch Changes

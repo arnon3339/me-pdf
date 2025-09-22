@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.3.0
+
+### Patch Changes
+
+- [#170](https://github.com/embedpdf/embed-pdf-viewer/pull/170) by [@bobsingor](https://github.com/bobsingor) – Add ability to setBookmarks and deleteBookmarks
+
 ## 1.2.1
 
 ## 1.2.0
