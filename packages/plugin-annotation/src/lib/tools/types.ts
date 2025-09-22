@@ -106,6 +106,11 @@ export type AnnotationTool<T extends PdfAnnotationObject = PdfAnnotationObject> 
     cursor?: string;
     /** If true, this interaction mode is activated by selecting text. */
     textSelection?: boolean;
+
+    /** Annotation interaction behaviors */
+    isDraggable?: boolean;
+    isResizable?: boolean;
+    lockAspectRatio?: boolean;
   };
 
   /** Tool-specific behavior settings that override plugin defaults */

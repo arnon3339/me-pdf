@@ -1,7 +1,7 @@
-import { HTMLAttributes, CSSProperties, MouseEvent, TouchEvent } from '@framework';
+import { CSSProperties, MouseEvent, TouchEvent } from '@framework';
 import { Rect } from '@embedpdf/models';
 
-type SquigglyProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
+type SquigglyProps = {
   color?: string;
   opacity?: number;
   segmentRects: Rect[];
@@ -19,7 +19,6 @@ export function Squiggly({
   scale,
   onClick,
   style,
-  ...props
 }: SquigglyProps) {
   const amplitude = 2 * scale; // wave height
   const period = 6 * scale; // wave length
@@ -51,7 +50,6 @@ export function Squiggly({
             zIndex: onClick ? 1 : 0,
             ...style,
           }}
-          {...props}
         >
           {/* Visual squiggly line */}
           <div

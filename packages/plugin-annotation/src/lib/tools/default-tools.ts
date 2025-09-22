@@ -18,6 +18,8 @@ export const defaultTools = [
     interaction: {
       exclusive: false,
       textSelection: true,
+      isDraggable: false,
+      isResizable: false,
     },
     defaults: {
       type: PdfAnnotationSubtype.HIGHLIGHT,
@@ -33,6 +35,8 @@ export const defaultTools = [
     interaction: {
       exclusive: false,
       textSelection: true,
+      isDraggable: false,
+      isResizable: false,
     },
     defaults: {
       type: PdfAnnotationSubtype.UNDERLINE,
@@ -61,6 +65,8 @@ export const defaultTools = [
     interaction: {
       exclusive: false,
       textSelection: true,
+      isDraggable: false,
+      isResizable: false,
     },
     defaults: {
       type: PdfAnnotationSubtype.SQUIGGLY,
@@ -77,6 +83,9 @@ export const defaultTools = [
     interaction: {
       exclusive: false,
       cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: true,
+      lockAspectRatio: false,
     },
     defaults: {
       type: PdfAnnotationSubtype.INK,
@@ -93,6 +102,9 @@ export const defaultTools = [
     interaction: {
       exclusive: false,
       cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: true,
+      lockAspectRatio: false,
     },
     defaults: {
       type: PdfAnnotationSubtype.INK,
@@ -109,7 +121,13 @@ export const defaultTools = [
     id: 'circle' as const,
     name: 'Circle',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.CIRCLE ? 1 : 0),
-    interaction: { exclusive: false, cursor: 'crosshair' },
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: true,
+      lockAspectRatio: false,
+    },
     defaults: {
       type: PdfAnnotationSubtype.CIRCLE,
       color: 'transparent',
@@ -127,7 +145,13 @@ export const defaultTools = [
     id: 'square' as const,
     name: 'Square',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.SQUARE ? 1 : 0),
-    interaction: { exclusive: false, cursor: 'crosshair' },
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: true,
+      lockAspectRatio: false,
+    },
     defaults: {
       type: PdfAnnotationSubtype.SQUARE,
       color: 'transparent',
@@ -145,7 +169,13 @@ export const defaultTools = [
     id: 'line' as const,
     name: 'Line',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.LINE && a.intent !== 'LineArrow' ? 5 : 0),
-    interaction: { exclusive: false, cursor: 'crosshair' },
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: false,
+      lockAspectRatio: false,
+    },
     defaults: {
       type: PdfAnnotationSubtype.LINE,
       color: 'transparent',
@@ -163,7 +193,13 @@ export const defaultTools = [
     id: 'lineArrow' as const,
     name: 'Arrow',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.LINE && a.intent === 'LineArrow' ? 10 : 0),
-    interaction: { exclusive: false, cursor: 'crosshair' },
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: false,
+      lockAspectRatio: false,
+    },
     defaults: {
       type: PdfAnnotationSubtype.LINE,
       intent: 'LineArrow',
@@ -186,7 +222,13 @@ export const defaultTools = [
     id: 'polyline' as const,
     name: 'Polyline',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.POLYLINE ? 1 : 0),
-    interaction: { exclusive: false, cursor: 'crosshair' },
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: false,
+      lockAspectRatio: false,
+    },
     defaults: {
       type: PdfAnnotationSubtype.POLYLINE,
       color: 'transparent',
@@ -199,7 +241,13 @@ export const defaultTools = [
     id: 'polygon' as const,
     name: 'Polygon',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.POLYGON ? 1 : 0),
-    interaction: { exclusive: false, cursor: 'crosshair' },
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: false,
+      lockAspectRatio: false,
+    },
     defaults: {
       type: PdfAnnotationSubtype.POLYGON,
       color: 'transparent',
@@ -214,7 +262,13 @@ export const defaultTools = [
     id: 'freeText' as const,
     name: 'Free Text',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.FREETEXT ? 1 : 0),
-    interaction: { exclusive: false, cursor: 'crosshair' },
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: true,
+      lockAspectRatio: false,
+    },
     defaults: {
       type: PdfAnnotationSubtype.FREETEXT,
       contents: 'Insert text',
@@ -236,7 +290,13 @@ export const defaultTools = [
     id: 'stamp' as const,
     name: 'Image',
     matchScore: (a) => (a.type === PdfAnnotationSubtype.STAMP ? 1 : 0),
-    interaction: { exclusive: false, cursor: 'copy' },
+    interaction: {
+      exclusive: false,
+      cursor: 'copy',
+      isDraggable: true,
+      isResizable: true,
+      lockAspectRatio: true,
+    },
     defaults: {
       type: PdfAnnotationSubtype.STAMP,
       // No imageSrc by default, which tells the UI to open a file picker

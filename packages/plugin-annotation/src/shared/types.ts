@@ -47,3 +47,24 @@ export interface VertexHandleUI {
   /** Custom renderer for each vertex (overrides default) */
   component?: (p: HandleProps) => JSX.Element;
 }
+
+/**
+ * Props for the custom annotation renderer
+ */
+export interface CustomAnnotationRendererProps<T extends PdfAnnotationObject> {
+  annotation: T;
+  isSelected: boolean;
+  scale: number;
+  rotation: number;
+  pageWidth: number;
+  pageHeight: number;
+  pageIndex: number;
+  onSelect: (event: any) => void;
+}
+
+/**
+ * Custom renderer for an annotation
+ */
+export type CustomAnnotationRenderer<T extends PdfAnnotationObject> = (
+  props: CustomAnnotationRendererProps<T>,
+) => JSX.Element | null;

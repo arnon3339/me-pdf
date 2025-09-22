@@ -1,7 +1,7 @@
-import { HTMLAttributes, CSSProperties, MouseEvent, TouchEvent } from '@framework';
+import { CSSProperties, MouseEvent, TouchEvent } from '@framework';
 import { Rect } from '@embedpdf/models';
 
-type HighlightProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & {
+type HighlightProps = {
   color?: string;
   opacity?: number;
   segmentRects: Rect[];
@@ -19,7 +19,6 @@ export function Highlight({
   scale,
   onClick,
   style,
-  ...props
 }: HighlightProps) {
   return (
     <>
@@ -41,7 +40,6 @@ export function Highlight({
             zIndex: onClick ? 1 : undefined,
             ...style,
           }}
-          {...props}
         />
       ))}
     </>

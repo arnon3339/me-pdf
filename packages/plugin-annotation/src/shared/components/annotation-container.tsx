@@ -8,7 +8,13 @@ import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 import { useState, JSX, CSSProperties, useRef, useEffect } from '@framework';
 
 import { useAnnotationCapability } from '../hooks';
-import { ResizeHandleUI, SelectionMenuProps, VertexConfig, VertexHandleUI } from '../types';
+import {
+  CustomAnnotationRenderer,
+  ResizeHandleUI,
+  SelectionMenuProps,
+  VertexConfig,
+  VertexHandleUI,
+} from '../types';
 
 interface AnnotationContainerProps<T extends PdfAnnotationObject> {
   scale: number;
@@ -27,10 +33,12 @@ interface AnnotationContainerProps<T extends PdfAnnotationObject> {
   selectionMenu?: (props: SelectionMenuProps) => JSX.Element;
   outlineOffset?: number;
   onDoubleClick?: (event: any) => void; // You'll need to import proper MouseEvent type
+  onSelect: (event: any) => void;
   zIndex?: number;
   resizeUI?: ResizeHandleUI;
   vertexUI?: VertexHandleUI;
   selectionOutlineColor?: string;
+  customAnnotationRenderer?: CustomAnnotationRenderer<T>;
 }
 
 // Simplified AnnotationContainer
@@ -51,10 +59,12 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
   selectionMenu,
   outlineOffset = 1,
   onDoubleClick,
+  onSelect,
   zIndex = 1,
   resizeUI,
   vertexUI,
   selectionOutlineColor = '#007ACC',
+  customAnnotationRenderer,
   ...props
 }: AnnotationContainerProps<T>): JSX.Element {
   const [preview, setPreview] = useState<T>(trackedAnnotation.object);
@@ -158,7 +168,25 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
         }}
         {...props}
       >
-        {typeof children === 'function' ? children(currentObject) : children}
+        {(() => {
+          // Check for custom renderer first
+          const customRender = customAnnotationRenderer?.({
+            annotation: currentObject,
+            isSelected,
+            scale,
+            rotation,
+            pageWidth,
+            pageHeight,
+            pageIndex,
+            onSelect,
+          });
+          if (customRender !== null && customRender !== undefined) {
+            return customRender;
+          }
+
+          // Fall back to default children rendering
+          return typeof children === 'function' ? children(currentObject) : children;
+        })()}
 
         {isSelected &&
           isResizable &&
