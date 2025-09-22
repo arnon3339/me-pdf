@@ -35,6 +35,12 @@ var createPdfium = (() => {
       '_EPDF_RenderAnnotBitmap',
       '_EPDF_SetMetaText',
       '_EPDF_SetMetaTrapped',
+      '_EPDFAction_CreateGoTo',
+      '_EPDFAction_CreateGoToNamed',
+      '_EPDFAction_CreateLaunch',
+      '_EPDFAction_CreateRemoteGoToByName',
+      '_EPDFAction_CreateRemoteGoToDest',
+      '_EPDFAction_CreateURI',
       '_EPDFAnnot_ClearColor',
       '_EPDFAnnot_GenerateAppearance',
       '_EPDFAnnot_GenerateAppearanceWithBlend',
@@ -67,7 +73,22 @@ var createPdfium = (() => {
       '_EPDFAnnot_SetVerticalAlignment',
       '_EPDFAnnot_SetVertices',
       '_EPDFAnnot_UpdateAppearanceToRect',
+      '_EPDFBookmark_AppendChild',
+      '_EPDFBookmark_Clear',
+      '_EPDFBookmark_ClearTarget',
+      '_EPDFBookmark_Create',
+      '_EPDFBookmark_Delete',
+      '_EPDFBookmark_InsertAfter',
+      '_EPDFBookmark_SetAction',
+      '_EPDFBookmark_SetDest',
+      '_EPDFBookmark_SetTitle',
       '_EPDFCatalog_GetLanguage',
+      '_EPDFDest_CreateRemoteView',
+      '_EPDFDest_CreateRemoteXYZ',
+      '_EPDFDest_CreateView',
+      '_EPDFDest_CreateXYZ',
+      '_EPDFNamedDest_Remove',
+      '_EPDFNamedDest_SetDest',
       '_EPDFPage_CreateAnnot',
       '_EPDFPage_GetAnnotByName',
       '_EPDFPage_GetAnnotCountRaw',
@@ -5759,6 +5780,86 @@ var createPdfium = (() => {
       createExportWrapper('PDFiumExt_ExitFormFillEnvironment', 1));
     var _FPDFDOC_ExitFormFillEnvironment = (Module['_FPDFDOC_ExitFormFillEnvironment'] =
       createExportWrapper('FPDFDOC_ExitFormFillEnvironment', 1));
+    var _EPDFNamedDest_SetDest = (Module['_EPDFNamedDest_SetDest'] = createExportWrapper(
+      'EPDFNamedDest_SetDest',
+      3,
+    ));
+    var _EPDFNamedDest_Remove = (Module['_EPDFNamedDest_Remove'] = createExportWrapper(
+      'EPDFNamedDest_Remove',
+      2,
+    ));
+    var _EPDFDest_CreateView = (Module['_EPDFDest_CreateView'] = createExportWrapper(
+      'EPDFDest_CreateView',
+      4,
+    ));
+    var _EPDFDest_CreateXYZ = (Module['_EPDFDest_CreateXYZ'] = createExportWrapper(
+      'EPDFDest_CreateXYZ',
+      7,
+    ));
+    var _EPDFDest_CreateRemoteView = (Module['_EPDFDest_CreateRemoteView'] = createExportWrapper(
+      'EPDFDest_CreateRemoteView',
+      5,
+    ));
+    var _EPDFDest_CreateRemoteXYZ = (Module['_EPDFDest_CreateRemoteXYZ'] = createExportWrapper(
+      'EPDFDest_CreateRemoteXYZ',
+      8,
+    ));
+    var _EPDFAction_CreateGoTo = (Module['_EPDFAction_CreateGoTo'] = createExportWrapper(
+      'EPDFAction_CreateGoTo',
+      2,
+    ));
+    var _EPDFAction_CreateGoToNamed = (Module['_EPDFAction_CreateGoToNamed'] = createExportWrapper(
+      'EPDFAction_CreateGoToNamed',
+      2,
+    ));
+    var _EPDFAction_CreateLaunch = (Module['_EPDFAction_CreateLaunch'] = createExportWrapper(
+      'EPDFAction_CreateLaunch',
+      2,
+    ));
+    var _EPDFAction_CreateRemoteGoToByName = (Module['_EPDFAction_CreateRemoteGoToByName'] =
+      createExportWrapper('EPDFAction_CreateRemoteGoToByName', 3));
+    var _EPDFAction_CreateRemoteGoToDest = (Module['_EPDFAction_CreateRemoteGoToDest'] =
+      createExportWrapper('EPDFAction_CreateRemoteGoToDest', 3));
+    var _EPDFAction_CreateURI = (Module['_EPDFAction_CreateURI'] = createExportWrapper(
+      'EPDFAction_CreateURI',
+      2,
+    ));
+    var _EPDFBookmark_Create = (Module['_EPDFBookmark_Create'] = createExportWrapper(
+      'EPDFBookmark_Create',
+      2,
+    ));
+    var _EPDFBookmark_Delete = (Module['_EPDFBookmark_Delete'] = createExportWrapper(
+      'EPDFBookmark_Delete',
+      2,
+    ));
+    var _EPDFBookmark_AppendChild = (Module['_EPDFBookmark_AppendChild'] = createExportWrapper(
+      'EPDFBookmark_AppendChild',
+      3,
+    ));
+    var _EPDFBookmark_InsertAfter = (Module['_EPDFBookmark_InsertAfter'] = createExportWrapper(
+      'EPDFBookmark_InsertAfter',
+      4,
+    ));
+    var _EPDFBookmark_Clear = (Module['_EPDFBookmark_Clear'] = createExportWrapper(
+      'EPDFBookmark_Clear',
+      1,
+    ));
+    var _EPDFBookmark_SetTitle = (Module['_EPDFBookmark_SetTitle'] = createExportWrapper(
+      'EPDFBookmark_SetTitle',
+      2,
+    ));
+    var _EPDFBookmark_SetDest = (Module['_EPDFBookmark_SetDest'] = createExportWrapper(
+      'EPDFBookmark_SetDest',
+      3,
+    ));
+    var _EPDFBookmark_SetAction = (Module['_EPDFBookmark_SetAction'] = createExportWrapper(
+      'EPDFBookmark_SetAction',
+      3,
+    ));
+    var _EPDFBookmark_ClearTarget = (Module['_EPDFBookmark_ClearTarget'] = createExportWrapper(
+      'EPDFBookmark_ClearTarget',
+      1,
+    ));
     var _EPDF_PNG_EncodeRGBA = (Module['_EPDF_PNG_EncodeRGBA'] = createExportWrapper(
       'EPDF_PNG_EncodeRGBA',
       6,

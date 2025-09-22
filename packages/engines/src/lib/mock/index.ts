@@ -131,6 +131,12 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
         bookmarks,
       });
     },
+    setBookmarks: jest.fn((doc: PdfDocumentObject, payload: PdfBookmarkObject[]) => {
+      return PdfTaskHelper.resolve(true);
+    }),
+    deleteBookmarks: jest.fn((doc: PdfDocumentObject) => {
+      return PdfTaskHelper.resolve(true);
+    }),
     renderPage: jest.fn(
       (doc: PdfDocumentObject, page: PdfPageObject, options?: PdfRenderPageOptions) => {
         const { scaleFactor = 1, rotation = Rotation.Degree0, dpr = 1 } = options ?? {};
