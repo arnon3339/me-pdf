@@ -28,7 +28,9 @@ export const outlineFAQs: FAQItem[] = [
       <div>
         <p>Adding bookmarks is simple:</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5">
-          <li>Click the "Add Bookmark" button to create a new bookmark</li>
+          <li>
+            Click the &quot;Add Bookmark&quot; button to create a new bookmark
+          </li>
           <li>Enter a descriptive title for the bookmark</li>
           <li>Select which page it should link to</li>
           <li>Click the checkmark to save</li>

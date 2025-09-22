@@ -307,7 +307,7 @@ export const PdfOutlineEditorTool = () => {
                       No Bookmarks
                     </h4>
                     <p className="mb-4 text-gray-500">
-                      This document doesn't have any bookmarks yet.
+                      This document doesn&apos;t have any bookmarks yet.
                     </p>
                     <button
                       onClick={handleAddRootBookmark}
