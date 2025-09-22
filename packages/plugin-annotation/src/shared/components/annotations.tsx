@@ -1,4 +1,4 @@
-import { blendModeToCss, PdfBlendMode } from '@embedpdf/models';
+import { blendModeToCss, PdfAnnotationObject, PdfBlendMode } from '@embedpdf/models';
 import {
   getAnnotationsByPageIndex,
   getSelectedAnnotationByPageIndex,
@@ -37,7 +37,7 @@ import { Strikeout } from './text-markup/strikeout';
 import { Squiggly } from './text-markup/squiggly';
 import { Ink } from './annotations/ink';
 import { Square } from './annotations/square';
-import { ResizeHandleUI, SelectionMenu, VertexHandleUI } from '../types';
+import { CustomAnnotationRenderer, ResizeHandleUI, SelectionMenu, VertexHandleUI } from '../types';
 import { Circle } from './annotations/circle';
 import { Line } from './annotations/line';
 import { Polyline } from './annotations/polyline';
@@ -55,6 +55,7 @@ interface AnnotationsProps {
   resizeUI?: ResizeHandleUI;
   vertexUI?: VertexHandleUI;
   selectionOutlineColor?: string;
+  customAnnotationRenderer?: CustomAnnotationRenderer<PdfAnnotationObject>;
 }
 
 export function Annotations(annotationsProps: AnnotationsProps) {
@@ -111,6 +112,7 @@ export function Annotations(annotationsProps: AnnotationsProps) {
       {annotations.map((annotation) => {
         const isSelected = selectionState?.object.id === annotation.object.id;
         const isEditing = editingId === annotation.object.id;
+        const tool = annotationProvides?.findToolForAnnotation(annotation.object);
 
         if (isInk(annotation)) {
           return (
@@ -118,9 +120,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={true}
-              isResizable={true}
+              isDraggable={tool?.interaction.isDraggable ?? true}
+              isResizable={tool?.interaction.isResizable ?? true}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
@@ -144,9 +148,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={true}
-              isResizable={true}
+              isDraggable={tool?.interaction.isDraggable ?? true}
+              isResizable={tool?.interaction.isResizable ?? true}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
@@ -170,9 +176,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={true}
-              isResizable={true}
+              isDraggable={tool?.interaction.isDraggable ?? true}
+              isResizable={tool?.interaction.isResizable ?? true}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
@@ -196,9 +204,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={false}
-              isResizable={false}
+              isDraggable={tool?.interaction.isDraggable ?? false}
+              isResizable={tool?.interaction.isResizable ?? false}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               zIndex={0}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
@@ -218,9 +228,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={false}
-              isResizable={false}
+              isDraggable={tool?.interaction.isDraggable ?? false}
+              isResizable={tool?.interaction.isResizable ?? false}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               zIndex={0}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
@@ -240,9 +252,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={false}
-              isResizable={false}
+              isDraggable={tool?.interaction.isDraggable ?? false}
+              isResizable={tool?.interaction.isResizable ?? false}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               zIndex={0}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
@@ -262,9 +276,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={false}
-              isResizable={false}
+              isDraggable={tool?.interaction.isDraggable ?? false}
+              isResizable={tool?.interaction.isResizable ?? false}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               zIndex={0}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Multiply),
@@ -284,9 +300,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={true}
-              isResizable={false}
+              isDraggable={tool?.interaction.isDraggable ?? true}
+              isResizable={tool?.interaction.isResizable ?? false}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               vertexConfig={{
                 extractVertices: (annotation) => [
                   annotation.linePoints.start,
@@ -327,9 +345,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={true}
-              isResizable={false}
+              isDraggable={tool?.interaction.isDraggable ?? true}
+              isResizable={tool?.interaction.isResizable ?? false}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               vertexConfig={{
                 extractVertices: (annotation) => annotation.vertices,
                 transformAnnotation: (annotation, vertices) => {
@@ -364,9 +384,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={true}
-              isResizable={false}
+              isDraggable={tool?.interaction.isDraggable ?? true}
+              isResizable={tool?.interaction.isResizable ?? false}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               vertexConfig={{
                 extractVertices: (annotation) => annotation.vertices,
                 transformAnnotation: (annotation, vertices) => {
@@ -401,9 +423,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={!isEditing}
-              isResizable={true}
+              isDraggable={(tool?.interaction.isDraggable ?? true) && !isEditing}
+              isResizable={tool?.interaction.isResizable ?? true}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
+              onSelect={(e) => handleClick(e, annotation)}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
@@ -436,10 +460,11 @@ export function Annotations(annotationsProps: AnnotationsProps) {
               key={annotation.object.id}
               trackedAnnotation={annotation}
               isSelected={isSelected}
-              isDraggable={true}
-              isResizable={true}
+              isDraggable={tool?.interaction.isDraggable ?? true}
+              isResizable={tool?.interaction.isResizable ?? true}
+              lockAspectRatio={tool?.interaction.lockAspectRatio ?? false}
               selectionMenu={selectionMenu}
-              lockAspectRatio={true}
+              onSelect={(e) => handleClick(e, annotation)}
               style={{
                 mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal),
               }}
