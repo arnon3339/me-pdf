@@ -6,6 +6,7 @@
   "types": "dist/embedpdf.d.ts",
   "license": "MIT",
   "type": "module",
+  "license": "MIT",
   "files": [
     "dist",
     "README.md"
