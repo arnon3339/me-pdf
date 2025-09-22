@@ -183,7 +183,7 @@ export function stripPdfUnwantedMarkers(text: string): string {
 }
 
 /**
- * zoom mode
+ * Zoom mode
  *
  * @public
  */
@@ -198,17 +198,29 @@ export enum PdfZoomMode {
    */
   FitPage = 2,
   /**
-   * Fit the page width.
+   * Fit the entire page width to the window.
    */
   FitHorizontal = 3,
   /**
-   * Fit the page height.
+   * Fit the entire page height to the window.
    */
   FitVertical = 4,
   /**
    * Fit a specific rectangle area within the window.
    */
   FitRectangle = 5,
+  /**
+   * Fit bounding box of the entire page (including annotations).
+   */
+  FitBoundingBox = 6,
+  /**
+   * Fit the bounding box width of the page.
+   */
+  FitBoundingBoxHorizontal = 7,
+  /**
+   * Fit the bounding box height of the page.
+   */
+  FitBoundingBoxVertical = 8,
 }
 
 /**
@@ -336,6 +348,15 @@ export interface PdfDestinationObject {
       }
     | {
         mode: PdfZoomMode.FitRectangle;
+      }
+    | {
+        mode: PdfZoomMode.FitBoundingBox;
+      }
+    | {
+        mode: PdfZoomMode.FitBoundingBoxHorizontal;
+      }
+    | {
+        mode: PdfZoomMode.FitBoundingBoxVertical;
       };
   view: number[];
 }
@@ -2622,6 +2643,19 @@ export interface PdfEngine<T = Blob> {
    * @returns task that contains the bookmarks or error
    */
   getBookmarks: (doc: PdfDocumentObject) => PdfTask<PdfBookmarksObject>;
+  /**
+   * Set the bookmarks of the file
+   * @param doc - pdf document
+   * @param payload - bookmarks to set
+   * @returns task that contains whether the bookmarks are set successfully or not
+   */
+  setBookmarks: (doc: PdfDocumentObject, payload: PdfBookmarkObject[]) => PdfTask<boolean>;
+  /**
+   * Remove all bookmarks from the document.
+   * @param doc - pdf document
+   * @returns task that contains whether the bookmarks are removed successfully or not
+   */
+  deleteBookmarks: (doc: PdfDocumentObject) => PdfTask<boolean>;
   /**
    * Render the specified pdf page
    * @param doc - pdf document

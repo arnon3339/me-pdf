@@ -37,6 +37,7 @@ import {
   PdfOpenDocumentBufferOptions,
   PdfAnnotationsProgress,
   PdfPrintOptions,
+  PdfBookmarkObject,
 } from '@embedpdf/models';
 import { ExecuteRequest, Response, SpecificExecuteRequest } from './runner';
 
@@ -344,6 +345,38 @@ export class WebWorkerEngine implements PdfEngine {
     const task = new WorkerTask<PdfBookmarksObject>(this.worker, requestId);
 
     const request: ExecuteRequest = createRequest(requestId, 'getBookmarks', [doc]);
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.setBookmarks}
+   *
+   * @public
+   */
+  setBookmarks(doc: PdfDocumentObject, payload: PdfBookmarkObject[]) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setBookmarks', doc, payload);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+
+    const request: ExecuteRequest = createRequest(requestId, 'setBookmarks', [doc, payload]);
+    this.proxy(task, request);
+
+    return task;
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.deleteBookmarks}
+   *
+   * @public
+   */
+  deleteBookmarks(doc: PdfDocumentObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'deleteBookmarks', doc);
+    const requestId = this.generateRequestId(doc.id);
+    const task = new WorkerTask<boolean>(this.worker, requestId);
+
+    const request: ExecuteRequest = createRequest(requestId, 'deleteBookmarks', [doc]);
     this.proxy(task, request);
 
     return task;

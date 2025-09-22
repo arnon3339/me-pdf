@@ -308,6 +308,40 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     return PdfTaskHelper.resolve(true);
   }
 
+  /** Write a UTF-16LE (WIDESTRING) to wasm, call `fn(ptr)`, then free. */
+  private withWString<T>(value: string, fn: (ptr: number) => T): T {
+    // bytes = (len + 1) * 2
+    const length = (value.length + 1) * 2;
+    const ptr = this.memoryManager.malloc(length);
+    try {
+      // emscripten runtime exposes stringToUTF16
+      this.pdfiumModule.pdfium.stringToUTF16(value, ptr, length);
+      return fn(ptr);
+    } finally {
+      this.memoryManager.free(ptr);
+    }
+  }
+
+  /** Write a float[] to wasm, call `fn(ptr, count)`, then free. */
+  private withFloatArray<T>(
+    values: number[] | undefined,
+    fn: (ptr: number, count: number) => T,
+  ): T {
+    const arr = values ?? [];
+    const bytes = arr.length * 4;
+    const ptr = bytes ? this.memoryManager.malloc(bytes) : WasmPointer(0);
+    try {
+      if (bytes) {
+        for (let i = 0; i < arr.length; i++) {
+          this.pdfiumModule.pdfium.setValue(ptr + i * 4, arr[i], 'float');
+        }
+      }
+      return fn(ptr, arr.length);
+    } finally {
+      if (bytes) this.memoryManager.free(ptr);
+    }
+  }
+
   /**
    * {@inheritDoc @embedpdf/models!PdfEngine.openDocumentUrl}
    *
@@ -951,6 +985,101 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     return PdfTaskHelper.resolve({
       bookmarks,
     });
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.setBookmarks}
+   *
+   * @public
+   */
+  setBookmarks(doc: PdfDocumentObject, list: PdfBookmarkObject[]) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'setBookmarks', doc, list);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SetBookmarks`, 'Begin', doc.id);
+
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SetBookmarks`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    // Clear any existing outlines
+    if (!this.pdfiumModule.EPDFBookmark_Clear(ctx.docPtr)) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SetBookmarks`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: 'failed to clear existing bookmarks',
+      });
+    }
+
+    // Recursive builder
+    const build = (parentPtr: number, items: PdfBookmarkObject[]): boolean => {
+      let prevChild = 0;
+      for (const item of items) {
+        // Create
+        const bmPtr = this.withWString(item.title ?? '', (wptr) =>
+          this.pdfiumModule.EPDFBookmark_AppendChild(ctx.docPtr, parentPtr, wptr),
+        );
+        if (!bmPtr) return false;
+
+        // Target (optional)
+        if (item.target) {
+          const ok = this.applyBookmarkTarget(ctx.docPtr, bmPtr, item.target);
+          if (!ok) return false;
+        }
+
+        // Children
+        if (item.children?.length) {
+          const ok = build(bmPtr, item.children);
+          if (!ok) return false;
+        }
+
+        prevChild = bmPtr;
+      }
+      return true;
+    };
+
+    const ok = build(/*top-level*/ 0, list);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `SetBookmarks`, 'End', doc.id);
+
+    if (!ok) {
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: 'failed to build bookmark tree',
+      });
+    }
+    return PdfTaskHelper.resolve(true);
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.deleteBookmarks}
+   *
+   * @public
+   */
+  deleteBookmarks(doc: PdfDocumentObject) {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'deleteBookmarks', doc);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `DeleteBookmarks`, 'Begin', doc.id);
+
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `DeleteBookmarks`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    const ok = this.pdfiumModule.EPDFBookmark_Clear(ctx.docPtr);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `DeleteBookmarks`, 'End', doc.id);
+
+    return ok
+      ? PdfTaskHelper.resolve(true)
+      : PdfTaskHelper.reject({
+          code: PdfErrorCode.Unknown,
+          message: 'failed to clear bookmarks',
+        });
   }
 
   /**
@@ -6722,6 +6851,110 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
           action,
         };
       }
+    }
+  }
+
+  private createLocalDestPtr(docPtr: number, dest: PdfDestinationObject): number {
+    // Load page for local destinations.
+    const pagePtr = this.pdfiumModule.FPDF_LoadPage(docPtr, dest.pageIndex);
+    if (!pagePtr) return 0;
+
+    try {
+      if (dest.zoom.mode === PdfZoomMode.XYZ) {
+        const { x, y, zoom } = dest.zoom.params;
+        // We treat provided x/y/zoom as “specified”.
+        return this.pdfiumModule.EPDFDest_CreateXYZ(
+          pagePtr,
+          /*has_left*/ true,
+          x,
+          /*has_top*/ true,
+          y,
+          /*has_zoom*/ true,
+          zoom,
+        );
+      }
+
+      // Map non-XYZ “view modes” to PDFDEST_VIEW_* and params.
+      let viewEnum: PdfZoomMode;
+      let params: number[] = [];
+
+      switch (dest.zoom.mode) {
+        case PdfZoomMode.FitPage:
+          viewEnum = PdfZoomMode.FitPage; // no params
+          break;
+        case PdfZoomMode.FitHorizontal:
+          // FitH needs top; use view[0] if provided, else 0
+          viewEnum = PdfZoomMode.FitHorizontal;
+          params = [dest.view?.[0] ?? 0];
+          break;
+        case PdfZoomMode.FitVertical:
+          // FitV needs left; use view[0] if provided, else 0
+          viewEnum = PdfZoomMode.FitVertical;
+          params = [dest.view?.[0] ?? 0];
+          break;
+        case PdfZoomMode.FitRectangle:
+          // FitR needs left, bottom, right, top (pad with zeros).
+          {
+            const v = dest.view ?? [];
+            params = [v[0] ?? 0, v[1] ?? 0, v[2] ?? 0, v[3] ?? 0];
+            viewEnum = PdfZoomMode.FitRectangle;
+          }
+          break;
+        case PdfZoomMode.Unknown:
+        default:
+          // Unknown cannot be encoded as a valid explicit destination.
+          return 0;
+      }
+
+      return this.withFloatArray(params, (ptr, count) =>
+        this.pdfiumModule.EPDFDest_CreateView(pagePtr, viewEnum, ptr, count),
+      );
+    } finally {
+      this.pdfiumModule.FPDF_ClosePage(pagePtr);
+    }
+  }
+
+  private applyBookmarkTarget(docPtr: number, bmPtr: number, target: PdfLinkTarget): boolean {
+    if (target.type === 'destination') {
+      const destPtr = this.createLocalDestPtr(docPtr, target.destination);
+      if (!destPtr) return false;
+      const ok = this.pdfiumModule.EPDFBookmark_SetDest(docPtr, bmPtr, destPtr);
+      return !!ok;
+    }
+
+    // target.type === 'action'
+    const action = target.action;
+    switch (action.type) {
+      case PdfActionType.Goto: {
+        const destPtr = this.createLocalDestPtr(docPtr, action.destination);
+        if (!destPtr) return false;
+        const actPtr = this.pdfiumModule.EPDFAction_CreateGoTo(docPtr, destPtr);
+        if (!actPtr) return false;
+        return !!this.pdfiumModule.EPDFBookmark_SetAction(docPtr, bmPtr, actPtr);
+      }
+
+      case PdfActionType.URI: {
+        const actPtr = this.pdfiumModule.EPDFAction_CreateURI(docPtr, action.uri);
+        if (!actPtr) return false;
+        return !!this.pdfiumModule.EPDFBookmark_SetAction(docPtr, bmPtr, actPtr);
+      }
+
+      case PdfActionType.LaunchAppOrOpenFile: {
+        const actPtr = this.withWString(action.path, (wptr) =>
+          this.pdfiumModule.EPDFAction_CreateLaunch(docPtr, wptr),
+        );
+        if (!actPtr) return false;
+        return !!this.pdfiumModule.EPDFBookmark_SetAction(docPtr, bmPtr, actPtr);
+      }
+
+      case PdfActionType.RemoteGoto:
+        // We need a file path to build a GoToR action. Your Action shape
+        // doesn’t carry a path, so we’ll reject for now.
+        return false;
+
+      case PdfActionType.Unsupported:
+      default:
+        return false;
     }
   }
 

@@ -33,6 +33,13 @@ const tools = [
     href: '/tools/pdf-metadata-editor',
     color: 'from-purple-600 to-pink-700',
   },
+  {
+    title: 'PDF Outline Editor',
+    description: 'Create and edit PDF bookmarks and navigation structure',
+    icon: <EditIcon className="h-6 w-6 text-white" />,
+    href: '/tools/pdf-outline-editor',
+    color: 'from-teal-600 to-green-700',
+  },
   // Add more tools here as they are created
 ]
 
