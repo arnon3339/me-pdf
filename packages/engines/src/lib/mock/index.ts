@@ -38,6 +38,7 @@ import {
   PdfTask,
   PdfPrintOptions,
   PdfTrappedStatus,
+  PdfAddAttachmentParams,
 } from '@embedpdf/models';
 
 /**
@@ -372,6 +373,12 @@ export function createMockPdfEngine(partialEngine?: Partial<PdfEngine>): PdfEngi
     },
     getAttachments: (doc: PdfDocumentObject) => {
       return PdfTaskHelper.resolve([] as PdfAttachmentObject[]);
+    },
+    addAttachment: (doc: PdfDocumentObject, params: PdfAddAttachmentParams) => {
+      return PdfTaskHelper.resolve(true);
+    },
+    removeAttachment: (doc: PdfDocumentObject, attachment: PdfAttachmentObject) => {
+      return PdfTaskHelper.resolve(true);
     },
     readAttachmentContent: (doc: PdfDocumentObject, attachment: PdfAttachmentObject) => {
       return PdfTaskHelper.resolve(new ArrayBuffer(0));

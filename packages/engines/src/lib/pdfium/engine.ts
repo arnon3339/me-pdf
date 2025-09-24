@@ -118,6 +118,7 @@ import {
   PdfPrintOptions,
   PdfTrappedStatus,
   PdfStampFit,
+  PdfAddAttachmentParams,
 } from '@embedpdf/models';
 import { isValidCustomKey, readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -1774,6 +1775,127 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
 
     this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `GetAttachments`, 'End', doc.id);
     return PdfTaskHelper.resolve(attachments);
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.addAttachment}
+   *
+   * @public
+   */
+  addAttachment(doc: PdfDocumentObject, params: PdfAddAttachmentParams): PdfTask<boolean> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'addAttachment', doc, params?.name);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `AddAttachment`, 'Begin', doc.id);
+
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `AddAttachment`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    const { name, description, mimeType, data } = params ?? {};
+    if (!name) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `AddAttachment`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.NotFound,
+        message: 'attachment name is required',
+      });
+    }
+    if (!data || (data instanceof Uint8Array ? data.byteLength === 0 : data.byteLength === 0)) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `AddAttachment`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.NotFound,
+        message: 'attachment data is empty',
+      });
+    }
+
+    // 1) Create the attachment handle (also inserts into the EmbeddedFiles name tree).
+    const attachmentPtr = this.withWString(name, (wNamePtr) =>
+      this.pdfiumModule.FPDFDoc_AddAttachment(ctx.docPtr, wNamePtr),
+    );
+
+    if (!attachmentPtr) {
+      // Most likely: duplicate name in the name tree.
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `AddAttachment`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: `An attachment named "${name}" already exists`,
+      });
+    }
+
+    this.withWString(description, (wDescriptionPtr) =>
+      this.pdfiumModule.EPDFAttachment_SetDescription(attachmentPtr, wDescriptionPtr),
+    );
+
+    this.pdfiumModule.EPDFAttachment_SetSubtype(attachmentPtr, mimeType);
+
+    // 3) Copy data into WASM memory and call SetFile (this stores bytes and fills Size/CreationDate/CheckSum)
+    const u8 = data instanceof Uint8Array ? data : new Uint8Array(data);
+    const len = u8.byteLength;
+
+    const contentPtr = this.memoryManager.malloc(len);
+    try {
+      this.pdfiumModule.pdfium.HEAPU8.set(u8, contentPtr);
+      const ok = this.pdfiumModule.FPDFAttachment_SetFile(
+        attachmentPtr,
+        ctx.docPtr,
+        contentPtr,
+        len,
+      );
+      if (!ok) {
+        this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `AddAttachment`, 'End', doc.id);
+        return PdfTaskHelper.reject({
+          code: PdfErrorCode.Unknown,
+          message: 'failed to write attachment bytes',
+        });
+      }
+    } finally {
+      this.memoryManager.free(contentPtr);
+    }
+
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `AddAttachment`, 'End', doc.id);
+    return PdfTaskHelper.resolve<boolean>(true);
+  }
+
+  /**
+   * {@inheritDoc @embedpdf/models!PdfEngine.removeAttachment}
+   *
+   * @public
+   */
+  removeAttachment(doc: PdfDocumentObject, attachment: PdfAttachmentObject): PdfTask<boolean> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'deleteAttachment', doc, attachment);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `DeleteAttachment`, 'Begin', doc.id);
+
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `DeleteAttachment`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    const count = this.pdfiumModule.FPDFDoc_GetAttachmentCount(ctx.docPtr);
+    if (attachment.index < 0 || attachment.index >= count) {
+      this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `DeleteAttachment`, 'End', doc.id);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: `attachment index ${attachment.index} out of range`,
+      });
+    }
+
+    const ok = this.pdfiumModule.FPDFDoc_DeleteAttachment(ctx.docPtr, attachment.index);
+    this.logger.perf(LOG_SOURCE, LOG_CATEGORY, `DeleteAttachment`, 'End', doc.id);
+
+    if (!ok) {
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: 'failed to delete attachment',
+      });
+    }
+    return PdfTaskHelper.resolve<boolean>(true);
   }
 
   /**
@@ -4440,6 +4562,38 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * Get the date of the attachment
+   *
+   * @param attachmentPtr - pointer to an `FPDF_ATTACHMENT`
+   * @param key - 'ModDate' for modified date, 'CreationDate' for creation date
+   * @returns `Date` or `undefined` when PDFium can't read the date
+   */
+  private getAttachmentDate(
+    attachmentPtr: number,
+    key: 'ModDate' | 'CreationDate',
+  ): Date | undefined {
+    const raw = this.getAttachmentString(attachmentPtr, key);
+    return raw ? pdfDateToDate(raw) : undefined;
+  }
+
+  /**
+   * Set the date of the attachment
+   *
+   * @param attachmentPtr - pointer to an `FPDF_ATTACHMENT`
+   * @param key - 'ModDate' for modified date, 'CreationDate' for creation date
+   * @param date - `Date` to set
+   * @returns `true` on success
+   */
+  private setAttachmentDate(
+    attachmentPtr: number,
+    key: 'ModDate' | 'CreationDate',
+    date: Date,
+  ): boolean {
+    const raw = dateToPdfDate(date);
+    return this.setAttachmentString(attachmentPtr, key, raw);
+  }
+
+  /**
    * Dash-pattern helper ( /BS → /D array, dashed borders only )
    *
    * Uses the two new PDFium helpers:
@@ -6105,6 +6259,50 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   }
 
   /**
+   * Get a string value (`/T`, `/M`, `/State`, …) from an attachment.
+   *
+   * @returns decoded UTF-8 string or `undefined` when the key is absent
+   *
+   * @private
+   */
+  private getAttachmentString(attachmentPtr: number, key: string): string | undefined {
+    const len = this.pdfiumModule.FPDFAttachment_GetStringValue(attachmentPtr, key, 0, 0);
+    if (len === 0) return;
+
+    const bytes = (len + 1) * 2;
+    const ptr = this.memoryManager.malloc(bytes);
+
+    this.pdfiumModule.FPDFAttachment_GetStringValue(attachmentPtr, key, ptr, bytes);
+    const value = this.pdfiumModule.pdfium.UTF16ToString(ptr);
+    this.memoryManager.free(ptr);
+
+    return value || undefined;
+  }
+
+  /**
+   * Get a number value (`/Size`) from an attachment.
+   *
+   * @returns number or `null` when the key is absent
+   *
+   * @private
+   */
+  private getAttachmentNumber(attachmentPtr: number, key: string): number | undefined {
+    const outPtr = this.memoryManager.malloc(4); // int32
+    try {
+      const ok = this.pdfiumModule.EPDFAttachment_GetIntegerValue(
+        attachmentPtr,
+        key, // FPDF_BYTESTRING → ASCII JS string is fine in your glue
+        outPtr,
+      );
+      if (!ok) return undefined;
+      // Treat as unsigned to avoid negative values if >2GB (rare on wasm, but harmless)
+      return this.pdfiumModule.pdfium.getValue(outPtr, 'i32') >>> 0;
+    } finally {
+      this.memoryManager.free(outPtr);
+    }
+  }
+
+  /**
    * Get custom data of the annotation
    * @param annotationPtr - pointer to pdf annotation
    * @returns custom data of the annotation
@@ -6213,12 +6411,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private getAnnotationByName(pagePtr: number, name: string): number | undefined {
-    const bytes = 2 * (name.length + 1);
-    const ptr = this.memoryManager.malloc(bytes);
-    this.pdfiumModule.pdfium.stringToUTF16(name, ptr, bytes);
-    const ok = this.pdfiumModule.EPDFPage_GetAnnotByName(pagePtr, ptr);
-    this.memoryManager.free(ptr);
-    return ok;
+    return this.withWString(name, (wNamePtr) => {
+      return this.pdfiumModule.EPDFPage_GetAnnotByName(pagePtr, wNamePtr);
+    });
   }
 
   /**
@@ -6230,12 +6425,9 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private removeAnnotationByName(pagePtr: number, name: string): boolean {
-    const bytes = 2 * (name.length + 1);
-    const ptr = this.memoryManager.malloc(bytes);
-    this.pdfiumModule.pdfium.stringToUTF16(name, ptr, bytes);
-    const ok = this.pdfiumModule.EPDFPage_RemoveAnnotByName(pagePtr, ptr);
-    this.memoryManager.free(ptr);
-    return ok;
+    return this.withWString(name, (wNamePtr) => {
+      return this.pdfiumModule.EPDFPage_RemoveAnnotByName(pagePtr, wNamePtr);
+    });
   }
 
   /**
@@ -6246,12 +6438,23 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
    * @private
    */
   private setAnnotString(annotationPtr: number, key: string, value: string): boolean {
-    const bytes = 2 * (value.length + 1);
-    const ptr = this.memoryManager.malloc(bytes);
-    this.pdfiumModule.pdfium.stringToUTF16(value, ptr, bytes);
-    const ok = this.pdfiumModule.FPDFAnnot_SetStringValue(annotationPtr, key, ptr);
-    this.memoryManager.free(ptr);
-    return ok;
+    return this.withWString(value, (wValPtr) => {
+      return this.pdfiumModule.FPDFAnnot_SetStringValue(annotationPtr, key, wValPtr);
+    });
+  }
+
+  /**
+   * Set a string value (`/T`, `/M`, `/State`, …) to an attachment.
+   *
+   * @returns `true` if the operation was successful
+   *
+   * @private
+   */
+  private setAttachmentString(attachmentPtr: number, key: string, value: string): boolean {
+    return this.withWString(value, (wValPtr) => {
+      // FPDFAttachment_SetStringValue writes into /Params dictionary
+      return this.pdfiumModule.FPDFAttachment_SetStringValue(attachmentPtr, key, wValPtr);
+    });
   }
 
   /**
@@ -7166,18 +7369,21 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       },
       this.pdfiumModule.pdfium.UTF16ToString,
     );
-    const creationDate = readString(
+    const description = readString(
       this.pdfiumModule.pdfium,
       (buffer, bufferLength) => {
-        return this.pdfiumModule.FPDFAttachment_GetStringValue(
-          attachmentPtr,
-          'CreationDate',
-          buffer,
-          bufferLength,
-        );
+        return this.pdfiumModule.EPDFAttachment_GetDescription(attachmentPtr, buffer, bufferLength);
       },
       this.pdfiumModule.pdfium.UTF16ToString,
     );
+    const mimeType = readString(
+      this.pdfiumModule.pdfium,
+      (buffer, bufferLength) => {
+        return this.pdfiumModule.FPDFAttachment_GetSubtype(attachmentPtr, buffer, bufferLength);
+      },
+      this.pdfiumModule.pdfium.UTF16ToString,
+    );
+    const creationDate = this.getAttachmentDate(attachmentPtr, 'CreationDate');
     const checksum = readString(
       this.pdfiumModule.pdfium,
       (buffer, bufferLength) => {
@@ -7190,10 +7396,14 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
       },
       this.pdfiumModule.pdfium.UTF16ToString,
     );
+    const size = this.getAttachmentNumber(attachmentPtr, 'Size');
 
     return {
       index,
       name,
+      description,
+      mimeType,
+      size,
       creationDate,
       checksum,
     };

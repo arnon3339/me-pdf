@@ -1999,7 +1999,10 @@ export type PdfAnnotationObject = PdfSupportedAnnoObject | PdfUnsupportedAnnoObj
 export interface PdfAttachmentObject {
   index: number;
   name: string;
-  creationDate: string;
+  description: string;
+  mimeType: string;
+  size?: number;
+  creationDate?: Date;
   checksum: string;
 }
 
@@ -2565,6 +2568,28 @@ export interface PdfPrintOptions {
 }
 
 /**
+ * Parameters for adding an attachment to a PDF document
+ */
+export interface PdfAddAttachmentParams {
+  /**
+   * Name of the attachment
+   */
+  name: string;
+  /**
+   * Description of the attachment
+   */
+  description: string;
+  /**
+   * MIME type of the attachment
+   */
+  mimeType: string;
+  /**
+   * Data of the attachment
+   */
+  data: ArrayBuffer | Uint8Array;
+}
+
+/**
  * Pdf engine
  *
  * @public
@@ -2792,6 +2817,22 @@ export interface PdfEngine<T = Blob> {
    * @returns task that contains the attachments or error
    */
   getAttachments: (doc: PdfDocumentObject) => PdfTask<PdfAttachmentObject[]>;
+  /**
+   * Add a attachment to the file
+  /**
+   * @param doc - pdf document
+   * @param attachment - pdf attachment
+   * @returns task that contains the attachment or error
+   */
+  addAttachment: (doc: PdfDocumentObject, params: PdfAddAttachmentParams) => PdfTask<boolean>;
+  /**
+   * Remove a attachment from the file
+  /**
+   * @param doc - pdf document
+   * @param attachment - pdf attachment
+   * @returns task that contains the attachment or error
+   */
+  removeAttachment: (doc: PdfDocumentObject, attachment: PdfAttachmentObject) => PdfTask<boolean>;
   /**
    * Read content of pdf attachment
    * @param doc - pdf document
