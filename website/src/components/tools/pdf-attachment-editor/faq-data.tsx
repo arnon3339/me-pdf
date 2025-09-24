@@ -36,18 +36,18 @@ export const attachmentFAQs: FAQItem[] = [
       <div>
         <p>Adding attachments is simple:</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5">
-          <li>Click the "Add Attachment" button</li>
+          <li>Click the &quot;Add Attachment&quot; button</li>
           <li>Select or drag and drop the file you want to attach</li>
           <li>
             Give the attachment a descriptive name (this is what users will see
             in the PDF)
           </li>
           <li>Optionally add a description</li>
-          <li>Click "Add Attachment" to confirm</li>
+          <li>Click &quot;Add Attachment&quot; to confirm</li>
         </ol>
         <p className="mt-2">
-          After adding attachments, remember to click "Save Changes" to create
-          your updated PDF.
+          After adding attachments, remember to click &quot;Save Changes&quot;
+          to create your updated PDF.
         </p>
       </div>
     ),

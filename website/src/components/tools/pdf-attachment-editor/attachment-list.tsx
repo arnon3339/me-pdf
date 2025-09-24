@@ -79,10 +79,10 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
           No Attachments
         </h4>
         <p className="text-gray-500">
-          This document doesn't have any attachments yet.
+          This document doesn&apos;t have any attachments yet.
         </p>
         <p className="mt-2 text-sm text-gray-500">
-          Click "Add Attachment" to attach files to this PDF.
+          Click &quot;Add Attachment&quot; to attach files to this PDF.
         </p>
       </div>
     )
