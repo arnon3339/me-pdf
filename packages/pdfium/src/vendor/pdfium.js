@@ -73,6 +73,10 @@ var createPdfium = (() => {
       '_EPDFAnnot_SetVerticalAlignment',
       '_EPDFAnnot_SetVertices',
       '_EPDFAnnot_UpdateAppearanceToRect',
+      '_EPDFAttachment_GetDescription',
+      '_EPDFAttachment_GetIntegerValue',
+      '_EPDFAttachment_SetDescription',
+      '_EPDFAttachment_SetSubtype',
       '_EPDFBookmark_AppendChild',
       '_EPDFBookmark_Clear',
       '_EPDFBookmark_ClearTarget',
@@ -6253,6 +6257,16 @@ var createPdfium = (() => {
       'FPDFAttachment_GetSubtype',
       3,
     ));
+    var _EPDFAttachment_SetSubtype = (Module['_EPDFAttachment_SetSubtype'] = createExportWrapper(
+      'EPDFAttachment_SetSubtype',
+      2,
+    ));
+    var _EPDFAttachment_SetDescription = (Module['_EPDFAttachment_SetDescription'] =
+      createExportWrapper('EPDFAttachment_SetDescription', 2));
+    var _EPDFAttachment_GetDescription = (Module['_EPDFAttachment_GetDescription'] =
+      createExportWrapper('EPDFAttachment_GetDescription', 3));
+    var _EPDFAttachment_GetIntegerValue = (Module['_EPDFAttachment_GetIntegerValue'] =
+      createExportWrapper('EPDFAttachment_GetIntegerValue', 3));
     var _FPDFCatalog_IsTagged = (Module['_FPDFCatalog_IsTagged'] = createExportWrapper(
       'FPDFCatalog_IsTagged',
       1,

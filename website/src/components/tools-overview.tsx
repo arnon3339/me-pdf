@@ -1,7 +1,13 @@
 'use client'
 
 import React from 'react'
-import { ArrowRight, MergeIcon, EditIcon, FileText } from 'lucide-react'
+import {
+  ArrowRight,
+  MergeIcon,
+  EditIcon,
+  FileText,
+  Paperclip,
+} from 'lucide-react'
 import { Scribble3 } from './icons/scribble3'
 import { PrivacyStatement } from './tools/shared/privacy-statement'
 import Link from 'next/link'
@@ -29,6 +35,13 @@ const tools = [
     icon: <FileText className="h-6 w-6 text-white" />,
     href: '/tools/pdf-outline-editor',
     color: 'from-teal-600 to-green-700',
+  },
+  {
+    title: 'PDF Attachment Editor',
+    description: 'Add, remove, and manage file attachments embedded in PDFs',
+    icon: <Paperclip className="h-6 w-6 text-white" />,
+    href: '/tools/pdf-attachment-editor',
+    color: 'from-orange-600 to-amber-600',
   },
   // Add more tools here as they are created
 ]

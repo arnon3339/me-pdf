@@ -393,6 +393,12 @@ export class EngineRunner {
       case 'getAttachments':
         task = this.engine[name]!(...args);
         break;
+      case 'addAttachment':
+        task = this.engine[name]!(...args);
+        break;
+      case 'removeAttachment':
+        task = this.engine[name]!(...args);
+        break;
       case 'readAttachmentContent':
         task = this.engine[name]!(...args);
         break;
