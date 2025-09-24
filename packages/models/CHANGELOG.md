@@ -1,5 +1,11 @@
 # @embedpdf/models
 
+## 1.3.1
+
+### Patch Changes
+
+- [#175](https://github.com/embedpdf/embed-pdf-viewer/pull/175) by [@bobsingor](https://github.com/bobsingor) – add addAttachment and removeAttachment functions to pdfium and the engine
+
 ## 1.3.0
 
 ### Patch Changes
