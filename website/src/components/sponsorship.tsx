@@ -498,17 +498,17 @@ const Sponsorship2: React.FC = () => {
                       Current Progress
                     </div>
                     <div className="text-lg font-bold sm:text-xl">
-                      $2,000 / $30,000 per month
+                      $2,650 / $30,000 per month
                     </div>
                   </div>
                   <div className="h-6 overflow-hidden rounded-full bg-white/20 sm:h-8">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-1000 ease-out"
-                      style={{ width: 'max(3%, 6.67%)' }}
+                      style={{ width: 'max(3%, 8.83%)' }}
                     ></div>
                   </div>
                   <div className="mt-2 text-center text-xs text-white/70 sm:text-left sm:text-sm">
-                    6.67% funded
+                    8.83% funded
                   </div>
                 </div>
               </div>
@@ -550,10 +550,10 @@ const Sponsorship2: React.FC = () => {
             Become a Founding Sponsor
           </h2>
           <p className="mx-auto mb-20 max-w-3xl text-center text-xl text-gray-600">
-            The first 10 sponsors that commit for 1 year will be permanently
-            recognized as founding sponsors who made this project possible.
+            The first 10 sponsors that commit to one of the plans below for 1
+            year will be permanently recognized as founding sponsors who made
+            this project possible.
           </p>
-
           <div className="grid gap-8 md:grid-cols-3">
             {/* Bronze */}
             <div className="rounded-2xl border-2 border-gray-200 p-8 transition hover:scale-105 hover:transform hover:border-blue-500">
