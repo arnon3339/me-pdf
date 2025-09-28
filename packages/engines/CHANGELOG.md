@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.3.3
+
+### Patch Changes
+
+- [#183](https://github.com/embedpdf/embed-pdf-viewer/pull/183) by [@bobsingor](https://github.com/bobsingor) – Fix issues with redaction and annotation on a page that is fixed rotated
+
 ## 1.3.2
 
 ## 1.3.1
