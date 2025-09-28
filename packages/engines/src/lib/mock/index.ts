@@ -415,6 +415,7 @@ export function createMockPdfDocument(doc?: Partial<PdfDocumentObject>): PdfDocu
         width: pageWidth,
         height: pageHeight,
       },
+      rotation: Rotation.Degree0,
     });
   }
 
