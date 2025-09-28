@@ -1,5 +1,11 @@
 # @embedpdf/pdfium
 
+## 1.3.2
+
+### Patch Changes
+
+- [#181](https://github.com/embedpdf/embed-pdf-viewer/pull/181) by [@bobsingor](https://github.com/bobsingor) – Add new function EPDF_GetPageRotationByIndex
+
 ## 1.3.1
 
 ### Patch Changes
