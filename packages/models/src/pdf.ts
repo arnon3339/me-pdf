@@ -16,11 +16,6 @@ export interface PdfPageObject {
    * Orignal size of this page
    */
   size: Size;
-
-  /**
-   * Rotation of this page
-   */
-  rotation: Rotation;
 }
 
 /**

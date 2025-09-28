@@ -6,7 +6,6 @@ export const functions = {
     'number',
   ] as const,
   EPDF_GetMetaTrapped: [['number'] as const, 'number'] as const,
-  EPDF_GetPageRotationByIndex: [['number', 'number'] as const, 'number'] as const,
   EPDF_HasMetaText: [['number', 'string'] as const, 'boolean'] as const,
   EPDF_PNG_EncodeRGBA: [
     ['number', 'number', 'number', 'number', 'number', 'number'] as const,
