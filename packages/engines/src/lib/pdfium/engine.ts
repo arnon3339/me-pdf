@@ -3153,28 +3153,6 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     return true;
   }
 
-  /** Build page-space image placement matrix from a device-space rect. */
-  private imageMatrixFromDeviceRect(page: PdfPageObject, rect: Rect) {
-    const x0 = rect.origin.x;
-    const y0 = rect.origin.y;
-    const x1 = x0 + rect.size.width;
-    const y1 = y0 + rect.size.height;
-
-    // Use BL, BR, TL (device → page), not TL/TR/BL
-    const BL = this.convertDevicePointToPagePoint(page, { x: x0, y: y1 });
-    const BR = this.convertDevicePointToPagePoint(page, { x: x1, y: y1 });
-    const TL = this.convertDevicePointToPagePoint(page, { x: x0, y: y0 });
-
-    const a = BR.x - BL.x;
-    const b = BR.y - BL.y;
-    const c = TL.x - BL.x;
-    const d = TL.y - BL.y;
-    const e = BL.x;
-    const f = BL.y;
-
-    return { a, b, c, d, e, f };
-  }
-
   /**
    * Add image object to annotation
    * @param docPtr - pointer to pdf document object
@@ -3195,77 +3173,86 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     rect: Rect,
     imageData: ImageData,
   ) {
-    const BYTES_PER_PIXEL = 4;
+    const bytesPerPixel = 4;
     const pixelCount = imageData.width * imageData.height;
 
-    // BGRA buffer -> FPDFBitmap
-    const bufPtr = this.memoryManager.malloc(BYTES_PER_PIXEL * pixelCount);
-    if (!bufPtr) return false;
-
-    for (let i = 0; i < pixelCount; i++) {
-      const r = imageData.data[i * 4 + 0];
-      const g = imageData.data[i * 4 + 1];
-      const b = imageData.data[i * 4 + 2];
-      const a = imageData.data[i * 4 + 3];
-      this.pdfiumModule.pdfium.setValue(bufPtr + i * 4 + 0, b, 'i8');
-      this.pdfiumModule.pdfium.setValue(bufPtr + i * 4 + 1, g, 'i8');
-      this.pdfiumModule.pdfium.setValue(bufPtr + i * 4 + 2, r, 'i8');
-      this.pdfiumModule.pdfium.setValue(bufPtr + i * 4 + 3, a, 'i8');
+    const bitmapBufferPtr = this.memoryManager.malloc(bytesPerPixel * pixelCount);
+    if (!bitmapBufferPtr) {
+      return false;
     }
 
+    for (let i = 0; i < pixelCount; i++) {
+      const red = imageData.data[i * bytesPerPixel];
+      const green = imageData.data[i * bytesPerPixel + 1];
+      const blue = imageData.data[i * bytesPerPixel + 2];
+      const alpha = imageData.data[i * bytesPerPixel + 3];
+
+      this.pdfiumModule.pdfium.setValue(bitmapBufferPtr + i * bytesPerPixel, blue, 'i8');
+      this.pdfiumModule.pdfium.setValue(bitmapBufferPtr + i * bytesPerPixel + 1, green, 'i8');
+      this.pdfiumModule.pdfium.setValue(bitmapBufferPtr + i * bytesPerPixel + 2, red, 'i8');
+      this.pdfiumModule.pdfium.setValue(bitmapBufferPtr + i * bytesPerPixel + 3, alpha, 'i8');
+    }
+
+    const format = BitmapFormat.Bitmap_BGRA;
     const bitmapPtr = this.pdfiumModule.FPDFBitmap_CreateEx(
       imageData.width,
       imageData.height,
-      BitmapFormat.Bitmap_BGRA,
-      bufPtr,
+      format,
+      bitmapBufferPtr,
       0,
     );
     if (!bitmapPtr) {
-      this.memoryManager.free(bufPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
 
-    const imgPtr = this.pdfiumModule.FPDFPageObj_NewImageObj(docPtr);
-    if (!imgPtr) {
+    const imageObjectPtr = this.pdfiumModule.FPDFPageObj_NewImageObj(docPtr);
+    if (!imageObjectPtr) {
       this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-      this.memoryManager.free(bufPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
 
-    if (!this.pdfiumModule.FPDFImageObj_SetBitmap(pagePtr, 0, imgPtr, bitmapPtr)) {
-      this.pdfiumModule.FPDFPageObj_Destroy(imgPtr);
+    if (!this.pdfiumModule.FPDFImageObj_SetBitmap(pagePtr, 0, imageObjectPtr, bitmapPtr)) {
       this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-      this.memoryManager.free(bufPtr);
+      this.pdfiumModule.FPDFPageObj_Destroy(imageObjectPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
 
-    const M = this.imageMatrixFromDeviceRect(page, rect);
-    const mPtr = this.memoryManager.malloc(6 * 4);
-    this.pdfiumModule.pdfium.setValue(mPtr + 0, M.a, 'float');
-    this.pdfiumModule.pdfium.setValue(mPtr + 4, M.b, 'float');
-    this.pdfiumModule.pdfium.setValue(mPtr + 8, M.c, 'float');
-    this.pdfiumModule.pdfium.setValue(mPtr + 12, M.d, 'float');
-    this.pdfiumModule.pdfium.setValue(mPtr + 16, M.e, 'float');
-    this.pdfiumModule.pdfium.setValue(mPtr + 20, M.f, 'float');
-
-    const setOk = this.pdfiumModule.FPDFPageObj_SetMatrix(imgPtr, mPtr);
-    this.memoryManager.free(mPtr);
-
-    if (!setOk) {
-      this.pdfiumModule.FPDFPageObj_Destroy(imgPtr);
+    const matrixPtr = this.memoryManager.malloc(6 * 4);
+    this.pdfiumModule.pdfium.setValue(matrixPtr, imageData.width, 'float');
+    this.pdfiumModule.pdfium.setValue(matrixPtr + 4, 0, 'float');
+    this.pdfiumModule.pdfium.setValue(matrixPtr + 8, 0, 'float');
+    this.pdfiumModule.pdfium.setValue(matrixPtr + 12, imageData.height, 'float');
+    this.pdfiumModule.pdfium.setValue(matrixPtr + 16, 0, 'float');
+    this.pdfiumModule.pdfium.setValue(matrixPtr + 20, 0, 'float');
+    if (!this.pdfiumModule.FPDFPageObj_SetMatrix(imageObjectPtr, matrixPtr)) {
+      this.memoryManager.free(matrixPtr);
       this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-      this.memoryManager.free(bufPtr);
+      this.pdfiumModule.FPDFPageObj_Destroy(imageObjectPtr);
+      this.memoryManager.free(bitmapBufferPtr);
+      return false;
+    }
+    this.memoryManager.free(matrixPtr);
+
+    const pagePos = this.convertDevicePointToPagePoint(page, {
+      x: rect.origin.x,
+      y: rect.origin.y + imageData.height, // shift down by the image height
+    });
+    this.pdfiumModule.FPDFPageObj_Transform(imageObjectPtr, 1, 0, 0, 1, pagePos.x, pagePos.y);
+
+    if (!this.pdfiumModule.FPDFAnnot_AppendObject(annotationPtr, imageObjectPtr)) {
+      this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
+      this.pdfiumModule.FPDFPageObj_Destroy(imageObjectPtr);
+      this.memoryManager.free(bitmapBufferPtr);
       return false;
     }
 
-    // Append to the annotation
-    const ok = this.pdfiumModule.FPDFAnnot_AppendObject(annotationPtr, imgPtr);
-
-    // Clean up bitmap buffer (PDFium keeps its own copy)
     this.pdfiumModule.FPDFBitmap_Destroy(bitmapPtr);
-    this.memoryManager.free(bufPtr);
+    this.memoryManager.free(bitmapBufferPtr);
 
-    return !!ok;
+    return true;
   }
 
   /**
@@ -7605,44 +7592,43 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
   /**
    * Set the rect of specified annotation
    * @param page - page info that the annotation is belonged to
-   * @param pagePtr - pointer of page object
    * @param annotationPtr - pointer to annotation object
    * @param rect - target rectangle
    * @returns whether the rect is setted
    *
    * @private
    */
-  private setPageAnnoRect(page: PdfPageObject, annotationPtr: number, rect: Rect): boolean {
-    // Device-space corners (origin is top-left in your viewer)
-    const x0 = rect.origin.x;
-    const y0 = rect.origin.y;
-    const x1 = x0 + rect.size.width;
-    const y1 = y0 + rect.size.height;
+  private setPageAnnoRect(page: PdfPageObject, annotPtr: number, rect: Rect): boolean {
+    // Snap device edges the same way FPDF_DeviceToPage(int,int,...) did (truncate → floor for ≥0)
+    const x0d = Math.floor(rect.origin.x);
+    const y0d = Math.floor(rect.origin.y);
+    const x1d = Math.floor(rect.origin.x + rect.size.width);
+    const y1d = Math.floor(rect.origin.y + rect.size.height);
 
-    const p1 = this.convertDevicePointToPagePoint(page, { x: x0, y: y0 });
-    const p2 = this.convertDevicePointToPagePoint(page, { x: x1, y: y0 });
-    const p3 = this.convertDevicePointToPagePoint(page, { x: x1, y: y1 });
-    const p4 = this.convertDevicePointToPagePoint(page, { x: x0, y: y1 });
-
-    if (!p1 || !p2 || !p3 || !p4) return false;
+    // Map all 4 integer corners to page space (handles any /Rotate)
+    const TL = this.convertDevicePointToPagePoint(page, { x: x0d, y: y0d });
+    const TR = this.convertDevicePointToPagePoint(page, { x: x1d, y: y0d });
+    const BR = this.convertDevicePointToPagePoint(page, { x: x1d, y: y1d });
+    const BL = this.convertDevicePointToPagePoint(page, { x: x0d, y: y1d });
 
     // Page-space AABB
-    const xs = [p1.x, p2.x, p3.x, p4.x];
-    const ys = [p1.y, p2.y, p3.y, p4.y];
-    const left = Math.min(...xs);
-    const right = Math.max(...xs);
-    const bottom = Math.min(...ys);
-    const top = Math.max(...ys);
+    let left = Math.min(TL.x, TR.x, BR.x, BL.x);
+    let right = Math.max(TL.x, TR.x, BR.x, BL.x);
+    let bottom = Math.min(TL.y, TR.y, BR.y, BL.y);
+    let top = Math.max(TL.y, TR.y, BR.y, BL.y);
+    if (left > right) [left, right] = [right, left];
+    if (bottom > top) [bottom, top] = [top, bottom];
 
-    // FS_RECTF is {left, bottom, right, top}, 4 floats
-    const rectPtr = this.memoryManager.malloc(16);
-    this.pdfiumModule.pdfium.setValue(rectPtr + 0, left, 'float');
-    this.pdfiumModule.pdfium.setValue(rectPtr + 4, bottom, 'float');
-    this.pdfiumModule.pdfium.setValue(rectPtr + 8, right, 'float');
-    this.pdfiumModule.pdfium.setValue(rectPtr + 12, top, 'float');
+    // Write FS_RECTF in memory order: L, T, R, B
+    const ptr = this.memoryManager.malloc(16);
+    const pdf = this.pdfiumModule.pdfium;
+    pdf.setValue(ptr + 0, left, 'float'); // L
+    pdf.setValue(ptr + 4, top, 'float'); // T
+    pdf.setValue(ptr + 8, right, 'float'); // R
+    pdf.setValue(ptr + 12, bottom, 'float'); // B
 
-    const ok = this.pdfiumModule.FPDFAnnot_SetRect(annotationPtr, rectPtr);
-    this.memoryManager.free(rectPtr);
+    const ok = this.pdfiumModule.FPDFAnnot_SetRect(annotPtr, ptr);
+    this.memoryManager.free(ptr);
     return !!ok;
   }
 
