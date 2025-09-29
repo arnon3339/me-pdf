@@ -31,8 +31,8 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
   private readonly refreshPages$ = createEmitter<number[]>();
   private readonly taskCache = new Map<number, Task<Blob, PdfErrorReason>>();
   private canAutoScroll = true;
-  // 🔔 new: ask pane to scroll to a specific top
-  private readonly scrollTo$ = createEmitter<ScrollToOptions>();
+  // ask pane to scroll to a specific top
+  private readonly scrollTo$ = createBehaviorEmitter<ScrollToOptions>();
 
   constructor(
     id: string,
@@ -181,14 +181,21 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     const item = this.thumbs[pageIdx];
     if (!item) return;
 
+    const behavior = this.cfg.scrollBehavior ?? 'smooth';
+
+    if (this.viewportH <= 0) {
+      // Center the thumbnail in the viewport
+      const top = Math.max(0, item.top - item.wrapperHeight);
+      this.scrollTo$.emit({ top, behavior });
+      return;
+    }
+
     const margin = 8;
     const top = item.top;
     const bottom = item.top + item.wrapperHeight;
 
     const needsUp = top < this.scrollY + margin;
     const needsDown = bottom > this.scrollY + this.viewportH - margin;
-
-    const behavior = this.cfg.scrollBehavior ?? 'smooth';
 
     if (needsUp) {
       this.scrollTo$.emit({ top, behavior });

@@ -11,7 +11,7 @@ type ThumbnailsProps = Omit<HTMLAttributes<HTMLDivElement>, 'style' | 'children'
   scrollOptions?: ScrollIntoViewOptions;
 };
 
-export function ThumbnailsPane({ style, ...props }: ThumbnailsProps) {
+export function ThumbnailsPane({ style, scrollOptions, selectedPage, ...props }: ThumbnailsProps) {
   const { plugin: thumbnailPlugin } = useThumbnailPlugin();
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -38,15 +38,15 @@ export function ThumbnailsPane({ style, ...props }: ThumbnailsProps) {
     thumbnailPlugin.updateWindow(vp.scrollTop, vp.clientHeight);
   }, [window, thumbnailPlugin]);
 
-  // 4) NEW: let plugin drive scroll – minimal pane logic
+  // 4) let plugin drive scroll – only after window is set, and only once
   useEffect(() => {
     const vp = viewportRef.current;
-    if (!vp || !thumbnailPlugin) return;
+    if (!vp || !thumbnailPlugin || !window) return;
 
     return thumbnailPlugin.onScrollTo(({ top, behavior }) => {
       vp.scrollTo({ top, behavior });
     });
-  }, [thumbnailPlugin]);
+  }, [thumbnailPlugin, !!window]); // Note: !!window to prevent re-subscription on window updates
 
   return (
     <div ref={viewportRef} style={{ overflowY: 'auto', position: 'relative', ...style }} {...props}>

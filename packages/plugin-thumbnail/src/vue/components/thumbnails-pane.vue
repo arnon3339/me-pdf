@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watchEffect, useAttrs } from 'vue';
+import { onMounted, onBeforeUnmount, ref, watchEffect, nextTick, useAttrs } from 'vue';
 import { useThumbnailPlugin } from '../hooks';
 import type { WindowState } from '@embedpdf/plugin-thumbnail';
 
@@ -19,6 +19,7 @@ watchEffect((onCleanup) => {
   onCleanup(() => offWindow?.());
 });
 
+// Setup scroll listener on mount
 onMounted(() => {
   const vp = viewportRef.value;
   if (!vp || !thumbnailPlugin.value) return;
@@ -29,13 +30,24 @@ onMounted(() => {
   // initial push
   thumbnailPlugin.value.updateWindow(vp.scrollTop, vp.clientHeight);
 
-  offScrollTo = thumbnailPlugin.value.onScrollTo(({ top, behavior }) => {
-    vp.scrollTo({ top, behavior });
-  });
-
   onBeforeUnmount(() => {
     vp.removeEventListener('scroll', onScroll);
   });
+});
+
+// Setup scrollTo subscription only after window is ready
+watchEffect((onCleanup) => {
+  const vp = viewportRef.value;
+  if (!vp || !thumbnailPlugin.value || !windowState.value) return;
+
+  offScrollTo = thumbnailPlugin.value.onScrollTo(({ top, behavior }) => {
+    // Wait for Vue to finish rendering the content before scrolling
+    nextTick(() => {
+      vp.scrollTo({ top, behavior });
+    });
+  });
+
+  onCleanup(() => offScrollTo?.());
 });
 
 onBeforeUnmount(() => {
