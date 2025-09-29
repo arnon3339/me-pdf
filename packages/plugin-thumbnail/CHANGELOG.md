@@ -1,5 +1,13 @@
 # @embedpdf/plugin-thumbnail
 
+## 1.3.5
+
+### Patch Changes
+
+- [#187](https://github.com/embedpdf/embed-pdf-viewer/pull/187) by [@bobsingor](https://github.com/bobsingor) – Fix bug that prevents from scrolling down in the thumbnail container
+
+- [#187](https://github.com/embedpdf/embed-pdf-viewer/pull/187) by [@bobsingor](https://github.com/bobsingor) – Add Vue framework layer for thumbnail plugin
+
 ## 1.3.4
 
 ## 1.3.3

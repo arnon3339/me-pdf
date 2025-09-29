@@ -1,5 +1,11 @@
 # @embedpdf/plugin-scroll
 
+## 1.3.5
+
+### Patch Changes
+
+- [#187](https://github.com/embedpdf/embed-pdf-viewer/pull/187) by [@bobsingor](https://github.com/bobsingor) – Add isPageChanging event to the scrol plugin
+
 ## 1.3.4
 
 ## 1.3.3
