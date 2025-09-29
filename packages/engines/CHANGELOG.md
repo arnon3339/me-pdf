@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.3.4
+
+### Patch Changes
+
+- [`3409705`](https://github.com/embedpdf/embed-pdf-viewer/commit/3409705a52afd5fb34a0cdca3e6d5634000f2adb) by [@bobsingor](https://github.com/bobsingor) – Fix stamp scaling issue
+
 ## 1.3.3
 
 ### Patch Changes
