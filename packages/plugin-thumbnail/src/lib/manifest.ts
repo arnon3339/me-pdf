@@ -17,5 +17,7 @@ export const manifest: PluginManifest<ThumbnailPluginConfig> = {
     buffer: 3,
     labelHeight: 16,
     autoScroll: true,
+    scrollBehavior: 'smooth',
+    imagePadding: 0,
   },
 };

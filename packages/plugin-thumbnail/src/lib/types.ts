@@ -1,5 +1,6 @@
 import { BasePluginConfig } from '@embedpdf/core';
 import { PdfErrorReason, Task } from '@embedpdf/models';
+import type { ScrollBehavior } from '@embedpdf/plugin-scroll';
 
 export interface ThumbnailPluginConfig extends BasePluginConfig {
   width?: number; // thumb width  (css px), default 120
@@ -7,15 +8,27 @@ export interface ThumbnailPluginConfig extends BasePluginConfig {
   buffer?: number; // extra rows above/below viewport, default 3
   labelHeight?: number; // reserved space under thumb     (default 16)
   autoScroll?: boolean; // auto scroll to selected page when page changes (default true)
+  scrollBehavior?: ScrollBehavior;
+  imagePadding?: number;
+}
+
+export interface ScrollToOptions {
+  top: number;
+  behavior?: ScrollBehavior;
 }
 
 export interface ThumbMeta {
   pageIndex: number;
-  width: number; // thumbnail width
-  height: number; // bitmap height   (thumb only)
-  wrapperHeight: number; // bitmap + labelHeight
-  top: number; // offset from top of whole list
+  /** Inner bitmap size (excludes padding). */
+  width: number;
+  height: number;
+  /** Total row height (padding*2 + image height + labelHeight). */
+  wrapperHeight: number;
+  /** Top offset of the entire row (including padding + label). */
+  top: number;
   labelHeight: number;
+  /** Padding applied around the image (px). */
+  padding?: number;
 }
 
 export interface WindowState {

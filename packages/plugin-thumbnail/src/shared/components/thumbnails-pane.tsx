@@ -5,17 +5,13 @@ import { useThumbnailPlugin } from '../hooks';
 type ThumbnailsProps = Omit<HTMLAttributes<HTMLDivElement>, 'style' | 'children'> & {
   style?: CSSProperties;
   children: (m: ThumbMeta) => ReactNode;
-  /** @deprecated use scrollToThumb instead */
+  /** @deprecated use scrollToThumb via capability or rely on autoScroll */
   selectedPage?: number;
+  /** @deprecated behavior is now controlled by ThumbnailPluginConfig.scrollBehavior */
   scrollOptions?: ScrollIntoViewOptions;
 };
 
-export function ThumbnailsPane({
-  style,
-  selectedPage,
-  scrollOptions = { behavior: 'smooth', block: 'nearest', inline: 'nearest' },
-  ...props
-}: ThumbnailsProps) {
+export function ThumbnailsPane({ style, ...props }: ThumbnailsProps) {
   const { plugin: thumbnailPlugin } = useThumbnailPlugin();
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -47,10 +43,10 @@ export function ThumbnailsPane({
     const vp = viewportRef.current;
     if (!vp || !thumbnailPlugin) return;
 
-    return thumbnailPlugin.onScrollTo((top) => {
-      vp.scrollTo({ top, ...scrollOptions });
+    return thumbnailPlugin.onScrollTo(({ top, behavior }) => {
+      vp.scrollTo({ top, behavior });
     });
-  }, [thumbnailPlugin, scrollOptions]);
+  }, [thumbnailPlugin]);
 
   return (
     <div ref={viewportRef} style={{ overflowY: 'auto', position: 'relative', ...style }} {...props}>

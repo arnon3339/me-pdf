@@ -9,7 +9,7 @@ import {
   StoreState,
   Unsubscribe,
 } from '@embedpdf/core';
-import { ThumbMeta, ThumbnailPluginConfig, WindowState } from './types';
+import { ScrollToOptions, ThumbMeta, ThumbnailPluginConfig, WindowState } from './types';
 import { ThumbnailCapability } from './types';
 import { ignore, PdfErrorReason, Task } from '@embedpdf/models';
 import { RenderCapability, RenderPlugin } from '@embedpdf/plugin-render';
@@ -32,7 +32,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
   private readonly taskCache = new Map<number, Task<Blob, PdfErrorReason>>();
   private canAutoScroll = true;
   // 🔔 new: ask pane to scroll to a specific top
-  private readonly scrollTo$ = createEmitter<number>();
+  private readonly scrollTo$ = createEmitter<ScrollToOptions>();
 
   constructor(
     id: string,
@@ -58,8 +58,11 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
 
     // auto-scroll thumbnails when the main scroller's current page changes
     if (this.scrollCapability && this.cfg.autoScroll !== false) {
-      this.scrollCapability.onPageChangeState(({ isChanging }) => {
+      this.scrollCapability.onPageChangeState(({ isChanging, targetPage }) => {
         this.canAutoScroll = !isChanging;
+        if (!isChanging) {
+          this.scrollToThumb(targetPage - 1);
+        }
       });
       this.scrollCapability.onPageChange(({ pageNumber }) => {
         if (this.canAutoScroll) {
@@ -80,7 +83,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     return this.emitWindow.on(cb);
   }
 
-  public onScrollTo(cb: (top: number) => void): Unsubscribe {
+  public onScrollTo(cb: (o: ScrollToOptions) => void): Unsubscribe {
     return this.scrollTo$.on(cb);
   }
 
@@ -88,23 +91,28 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     const core = state.core;
     if (!core.document) return;
 
-    const W = this.cfg.width ?? 120;
+    const OUTER_W = this.cfg.width ?? 120;
     const L = this.cfg.labelHeight ?? 16;
     const GAP = this.cfg.gap ?? 8;
+    const P = this.cfg.imagePadding ?? 0;
+
+    // Inner bitmap width cannot go below 1px
+    const INNER_W = Math.max(1, OUTER_W - 2 * P);
 
     let offset = 0;
     this.thumbs = core.document.pages.map((p) => {
       const ratio = p.size.height / p.size.width;
-      const thumbH = Math.round(W * ratio);
-      const wrapH = thumbH + L;
+      const imgH = Math.round(INNER_W * ratio);
+      const wrapH = P + imgH + P + L; // padding + image + padding + label
 
       const meta: ThumbMeta = {
         pageIndex: p.index,
-        width: W,
-        height: thumbH,
-        wrapperHeight: wrapH,
-        top: offset,
+        width: INNER_W, // bitmap width (for <img> size)
+        height: imgH, // bitmap height (for <img> size)
+        wrapperHeight: wrapH, // full row height used by virtualizer
+        top: offset, // top of the row
         labelHeight: L,
+        padding: P, // NEW
       };
       offset += wrapH + GAP;
       return meta;
@@ -180,10 +188,12 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     const needsUp = top < this.scrollY + margin;
     const needsDown = bottom > this.scrollY + this.viewportH - margin;
 
+    const behavior = this.cfg.scrollBehavior ?? 'smooth';
+
     if (needsUp) {
-      this.scrollTo$.emit(top);
+      this.scrollTo$.emit({ top, behavior });
     } else if (needsDown) {
-      this.scrollTo$.emit(Math.max(0, bottom - this.viewportH));
+      this.scrollTo$.emit({ top: Math.max(0, bottom - this.viewportH), behavior });
     }
   }
 
@@ -193,7 +203,12 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
 
     const core = this.coreState.core;
     const page = core.document!.pages[idx];
-    const scale = (this.cfg.width ?? 120) / page.size.width;
+
+    const OUTER_W = this.cfg.width ?? 120;
+    const P = this.cfg.imagePadding ?? 0;
+    const INNER_W = Math.max(1, OUTER_W - 2 * P);
+
+    const scale = INNER_W / page.size.width; // scale to inner width (excludes padding)
 
     const task = this.renderCapability.renderPageRect({
       pageIndex: idx,
