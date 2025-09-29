@@ -6,6 +6,7 @@ export interface ThumbnailPluginConfig extends BasePluginConfig {
   gap?: number; // vertical gap (css px), default 8
   buffer?: number; // extra rows above/below viewport, default 3
   labelHeight?: number; // reserved space under thumb     (default 16)
+  autoScroll?: boolean; // auto scroll to selected page when page changes (default true)
 }
 
 export interface ThumbMeta {
@@ -25,10 +26,7 @@ export interface WindowState {
 }
 
 export interface ThumbnailCapability {
-  /** called from UI on every scroll */
-  setViewport(offsetY: number, viewportH: number): void;
-  /** listen to window changes */
-  onWindow(cb: (w: WindowState) => void): () => void;
+  scrollToThumb(pageIdx: number): void;
   /** lazily render one thumb */
   renderThumb(pageIdx: number, dpr: number): Task<Blob, PdfErrorReason>;
 }

@@ -39,6 +39,7 @@
     "@embedpdf/build": "workspace:*",
     "@embedpdf/core": "workspace:*",
     "@embedpdf/plugin-render": "workspace:*",
+    "@embedpdf/plugin-scroll": "workspace:*",
     "@types/react": "^18.2.0",
     "typescript": "^5.0.0"
   },

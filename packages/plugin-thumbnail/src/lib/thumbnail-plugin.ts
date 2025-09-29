@@ -13,16 +13,26 @@ import { ThumbMeta, ThumbnailPluginConfig, WindowState } from './types';
 import { ThumbnailCapability } from './types';
 import { ignore, PdfErrorReason, Task } from '@embedpdf/models';
 import { RenderCapability, RenderPlugin } from '@embedpdf/plugin-render';
+import { ScrollCapability, ScrollPlugin } from '@embedpdf/plugin-scroll';
 
 export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, ThumbnailCapability> {
   static readonly id = 'thumbnail' as const;
 
   private renderCapability: RenderCapability;
+  private scrollCapability: ScrollCapability | null = null;
   private thumbs: ThumbMeta[] = [];
   private window: WindowState | null = null;
+
+  // track viewport metrics for scroll decisions
+  private viewportH: number = 0;
+  private scrollY: number = 0;
+
   private readonly emitWindow = createBehaviorEmitter<WindowState>();
   private readonly refreshPages$ = createEmitter<number[]>();
   private readonly taskCache = new Map<number, Task<Blob, PdfErrorReason>>();
+  private canAutoScroll = true;
+  // 🔔 new: ask pane to scroll to a specific top
+  private readonly scrollTo$ = createEmitter<number>();
 
   constructor(
     id: string,
@@ -32,6 +42,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     super(id, registry);
 
     this.renderCapability = this.registry.getPlugin<RenderPlugin>('render')!.provides();
+    this.scrollCapability = this.registry.getPlugin<ScrollPlugin>('scroll')?.provides() ?? null;
 
     this.coreStore.onAction(SET_DOCUMENT, (_action, state) => {
       this.taskCache.clear();
@@ -44,6 +55,18 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
         this.taskCache.delete(pageIdx);
       }
     });
+
+    // auto-scroll thumbnails when the main scroller's current page changes
+    if (this.scrollCapability && this.cfg.autoScroll !== false) {
+      this.scrollCapability.onPageChangeState(({ isChanging }) => {
+        this.canAutoScroll = !isChanging;
+      });
+      this.scrollCapability.onPageChange(({ pageNumber }) => {
+        if (this.canAutoScroll) {
+          this.scrollToThumb(pageNumber - 1);
+        }
+      });
+    }
   }
 
   /* ------------ init ------------------------------------------------ */
@@ -53,20 +76,27 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     return this.refreshPages$.on(fn);
   }
 
+  public onWindow(cb: (w: WindowState) => void): Unsubscribe {
+    return this.emitWindow.on(cb);
+  }
+
+  public onScrollTo(cb: (top: number) => void): Unsubscribe {
+    return this.scrollTo$.on(cb);
+  }
+
   private setWindowState(state: StoreState<CoreState>) {
     const core = state.core;
-
     if (!core.document) return;
 
     const W = this.cfg.width ?? 120;
-    const L = this.cfg.labelHeight ?? 16; // label
+    const L = this.cfg.labelHeight ?? 16;
     const GAP = this.cfg.gap ?? 8;
 
     let offset = 0;
     this.thumbs = core.document.pages.map((p) => {
       const ratio = p.size.height / p.size.width;
       const thumbH = Math.round(W * ratio);
-      const wrapH = thumbH + L; // no GAP here
+      const wrapH = thumbH + L;
 
       const meta: ThumbMeta = {
         pageIndex: p.index,
@@ -76,7 +106,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
         top: offset,
         labelHeight: L,
       };
-      offset += wrapH + GAP; // GAP added *after* wrapper
+      offset += wrapH + GAP;
       return meta;
     });
 
@@ -84,7 +114,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
       start: -1,
       end: -1,
       items: [],
-      totalHeight: offset - GAP, // last item has no gap below
+      totalHeight: offset - GAP,
     };
     this.emitWindow.emit(this.window);
   }
@@ -92,17 +122,20 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
   /* ------------ capability ----------------------------------------- */
   protected buildCapability(): ThumbnailCapability {
     return {
-      onWindow: this.emitWindow.on,
-      setViewport: (y, h) => this.updateWindow(y, h),
       renderThumb: (idx, dpr) => this.renderThumb(idx, dpr),
+      scrollToThumb: (pageIdx) => this.scrollToThumb(pageIdx),
     };
   }
 
-  /* ------------ windowing math ------------------------------------- */
-  private updateWindow(scrollY: number, viewportH: number) {
+  /* ------------ windowing & viewport state ------------------------- */
+  public updateWindow(scrollY: number, viewportH: number) {
     const BUF = this.cfg.buffer ?? 3;
 
-    /* -------- find first visible wrapper ---------- */
+    // remember latest viewport metrics for scroll decisions
+    this.scrollY = scrollY;
+    this.viewportH = viewportH;
+
+    /* find first visible */
     let low = 0,
       high = this.thumbs.length - 1,
       first = 0;
@@ -116,7 +149,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
       }
     }
 
-    /* -------- find last visible + buffer ---------- */
+    /* find last visible + buffer */
     let last = first;
     const limit = scrollY + viewportH;
     while (last + 1 < this.thumbs.length && this.thumbs[last].top < limit) last++;
@@ -132,6 +165,26 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
       totalHeight: this.window!.totalHeight,
     };
     this.emitWindow.emit(this.window);
+  }
+
+  /* ------------ scroll helper now in plugin ------------------------ */
+  private scrollToThumb(pageIdx: number) {
+    if (!this.window) return;
+    const item = this.thumbs[pageIdx];
+    if (!item) return;
+
+    const margin = 8;
+    const top = item.top;
+    const bottom = item.top + item.wrapperHeight;
+
+    const needsUp = top < this.scrollY + margin;
+    const needsDown = bottom > this.scrollY + this.viewportH - margin;
+
+    if (needsUp) {
+      this.scrollTo$.emit(top);
+    } else if (needsDown) {
+      this.scrollTo$.emit(Math.max(0, bottom - this.viewportH));
+    }
   }
 
   /* ------------ thumbnail raster ----------------------------------- */
@@ -152,11 +205,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     });
 
     this.taskCache.set(idx, task);
-
-    task.wait(ignore, () => {
-      this.taskCache.delete(idx);
-    });
-
+    task.wait(ignore, () => this.taskCache.delete(idx));
     return task;
   }
 }
