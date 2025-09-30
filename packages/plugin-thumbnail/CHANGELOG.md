@@ -1,5 +1,11 @@
 # @embedpdf/plugin-thumbnail
 
+## 1.3.6
+
+### Patch Changes
+
+- [#189](https://github.com/embedpdf/embed-pdf-viewer/pull/189) by [@bobsingor](https://github.com/bobsingor) – Fix bug Cannot read properties of null (reading 'totalHeight') on thumbnails
+
 ## 1.3.5
 
 ### Patch Changes
