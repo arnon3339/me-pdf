@@ -73,7 +73,9 @@ const plugins = [
   createPluginRegistration(SpreadPluginPackage),
   createPluginRegistration(FullscreenPluginPackage),
   createPluginRegistration(ExportPluginPackage),
-  createPluginRegistration(ThumbnailPluginPackage),
+  createPluginRegistration(ThumbnailPluginPackage, {
+    paddingY: 10,
+  }),
   createPluginRegistration(SelectionPluginPackage),
   createPluginRegistration(AnnotationPluginPackage),
 ];

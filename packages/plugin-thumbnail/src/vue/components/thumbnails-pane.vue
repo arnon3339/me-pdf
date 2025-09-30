@@ -57,7 +57,16 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="viewportRef" :style="{ overflowY: 'auto', position: 'relative' }" v-bind="attrs">
+  <div
+    ref="viewportRef"
+    :style="{
+      overflowY: 'auto',
+      position: 'relative',
+      paddingTop: (thumbnailPlugin?.cfg?.paddingY ?? 0) + 'px',
+      paddingBottom: (thumbnailPlugin?.cfg?.paddingY ?? 0) + 'px',
+    }"
+    v-bind="attrs"
+  >
     <div :style="{ height: (windowState?.totalHeight ?? 0) + 'px', position: 'relative' }">
       <!-- ✅ Use a template v-for to render the default scoped slot -->
       <template v-for="m in windowState?.items ?? []" :key="m.pageIndex">

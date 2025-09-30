@@ -48,8 +48,20 @@ export function ThumbnailsPane({ style, scrollOptions, selectedPage, ...props }:
     });
   }, [thumbnailPlugin, !!window]); // Note: !!window to prevent re-subscription on window updates
 
+  const paddingY = thumbnailPlugin?.cfg.paddingY ?? 0;
+
   return (
-    <div ref={viewportRef} style={{ overflowY: 'auto', position: 'relative', ...style }} {...props}>
+    <div
+      ref={viewportRef}
+      style={{
+        overflowY: 'auto',
+        position: 'relative',
+        paddingTop: paddingY,
+        paddingBottom: paddingY,
+        ...style,
+      }}
+      {...props}
+    >
       <div style={{ height: window?.totalHeight ?? 0, position: 'relative' }}>
         {window?.items.map((m) => props.children(m))}
       </div>

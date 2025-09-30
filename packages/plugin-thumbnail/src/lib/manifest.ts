@@ -19,5 +19,6 @@ export const manifest: PluginManifest<ThumbnailPluginConfig> = {
     autoScroll: true,
     scrollBehavior: 'smooth',
     imagePadding: 0,
+    paddingY: 0,
   },
 };

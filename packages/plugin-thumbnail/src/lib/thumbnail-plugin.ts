@@ -37,7 +37,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
   constructor(
     id: string,
     registry: PluginRegistry,
-    private cfg: ThumbnailPluginConfig,
+    public cfg: ThumbnailPluginConfig,
   ) {
     super(id, registry);
 
@@ -95,11 +95,12 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     const L = this.cfg.labelHeight ?? 16;
     const GAP = this.cfg.gap ?? 8;
     const P = this.cfg.imagePadding ?? 0;
+    const PADDING_Y = this.cfg.paddingY ?? 0;
 
     // Inner bitmap width cannot go below 1px
     const INNER_W = Math.max(1, OUTER_W - 2 * P);
 
-    let offset = 0;
+    let offset = PADDING_Y; // Start with top padding
     this.thumbs = core.document.pages.map((p) => {
       const ratio = p.size.height / p.size.width;
       const imgH = Math.round(INNER_W * ratio);
@@ -122,7 +123,7 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
       start: -1,
       end: -1,
       items: [],
-      totalHeight: offset - GAP,
+      totalHeight: offset - GAP + PADDING_Y, // Add bottom padding to total height
     };
     this.emitWindow.emit(this.window);
   }
@@ -182,10 +183,11 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     if (!item) return;
 
     const behavior = this.cfg.scrollBehavior ?? 'smooth';
+    const PADDING_Y = this.cfg.paddingY ?? 0; // Include padding in scroll calculations
 
     if (this.viewportH <= 0) {
       // Center the thumbnail in the viewport
-      const top = Math.max(0, item.top - item.wrapperHeight);
+      const top = Math.max(PADDING_Y, item.top - item.wrapperHeight);
       this.scrollTo$.emit({ top, behavior });
       return;
     }
@@ -194,13 +196,13 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     const top = item.top;
     const bottom = item.top + item.wrapperHeight;
 
-    const needsUp = top < this.scrollY + margin;
+    const needsUp = top < this.scrollY + margin + PADDING_Y;
     const needsDown = bottom > this.scrollY + this.viewportH - margin;
 
     if (needsUp) {
-      this.scrollTo$.emit({ top, behavior });
+      this.scrollTo$.emit({ top: Math.max(0, top - PADDING_Y), behavior });
     } else if (needsDown) {
-      this.scrollTo$.emit({ top: Math.max(0, bottom - this.viewportH), behavior });
+      this.scrollTo$.emit({ top: Math.max(0, bottom - this.viewportH + PADDING_Y), behavior });
     }
   }
 
