@@ -96,7 +96,6 @@ const ThumbnailSidebar = () => {
                     height: '100%',
                     objectFit: 'contain',
                   }}
-                  _
                 />
               </div>
               {/* Page number label */}
