@@ -27,11 +27,18 @@ onMounted(() => {
   const onScroll = () => thumbnailPlugin.value!.updateWindow(vp.scrollTop, vp.clientHeight);
   vp.addEventListener('scroll', onScroll);
 
+  // Setup resize observer for viewport changes
+  const resizeObserver = new ResizeObserver(() => {
+    thumbnailPlugin.value!.updateWindow(vp.scrollTop, vp.clientHeight);
+  });
+  resizeObserver.observe(vp);
+
   // initial push
   thumbnailPlugin.value.updateWindow(vp.scrollTop, vp.clientHeight);
 
   onBeforeUnmount(() => {
     vp.removeEventListener('scroll', onScroll);
+    resizeObserver.disconnect();
   });
 });
 
@@ -57,7 +64,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="viewportRef" :style="{ overflowY: 'auto', position: 'relative' }" v-bind="attrs">
+  <div
+    ref="viewportRef"
+    :style="{
+      overflowY: 'auto',
+      position: 'relative',
+      paddingTop: (thumbnailPlugin?.cfg?.paddingY ?? 0) + 'px',
+      paddingBottom: (thumbnailPlugin?.cfg?.paddingY ?? 0) + 'px',
+      height: '100%',
+    }"
+    v-bind="attrs"
+  >
     <div :style="{ height: (windowState?.totalHeight ?? 0) + 'px', position: 'relative' }">
       <!-- ✅ Use a template v-for to render the default scoped slot -->
       <template v-for="m in windowState?.items ?? []" :key="m.pageIndex">

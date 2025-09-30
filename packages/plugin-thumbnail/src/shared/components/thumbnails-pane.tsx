@@ -29,6 +29,19 @@ export function ThumbnailsPane({ style, scrollOptions, selectedPage, ...props }:
     return () => vp.removeEventListener('scroll', onScroll);
   }, [thumbnailPlugin]);
 
+  // 2.5) keep plugin in sync when viewport resizes (e.g., menu opens/closes)
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp || !thumbnailPlugin) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      thumbnailPlugin.updateWindow(vp.scrollTop, vp.clientHeight);
+    });
+    resizeObserver.observe(vp);
+
+    return () => resizeObserver.disconnect();
+  }, [thumbnailPlugin]);
+
   // 3) kick-start after document change
   useEffect(() => {
     const vp = viewportRef.current;
@@ -48,8 +61,21 @@ export function ThumbnailsPane({ style, scrollOptions, selectedPage, ...props }:
     });
   }, [thumbnailPlugin, !!window]); // Note: !!window to prevent re-subscription on window updates
 
+  const paddingY = thumbnailPlugin?.cfg.paddingY ?? 0;
+
   return (
-    <div ref={viewportRef} style={{ overflowY: 'auto', position: 'relative', ...style }} {...props}>
+    <div
+      ref={viewportRef}
+      style={{
+        overflowY: 'auto',
+        position: 'relative',
+        paddingTop: paddingY,
+        paddingBottom: paddingY,
+        height: '100%',
+        ...style,
+      }}
+      {...props}
+    >
       <div style={{ height: window?.totalHeight ?? 0, position: 'relative' }}>
         {window?.items.map((m) => props.children(m))}
       </div>
