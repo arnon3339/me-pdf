@@ -71,6 +71,7 @@ onBeforeUnmount(() => {
       position: 'relative',
       paddingTop: (thumbnailPlugin?.cfg?.paddingY ?? 0) + 'px',
       paddingBottom: (thumbnailPlugin?.cfg?.paddingY ?? 0) + 'px',
+      height: '100%',
     }"
     v-bind="attrs"
   >

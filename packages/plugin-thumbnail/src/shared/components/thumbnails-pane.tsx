@@ -71,6 +71,7 @@ export function ThumbnailsPane({ style, scrollOptions, selectedPage, ...props }:
         position: 'relative',
         paddingTop: paddingY,
         paddingBottom: paddingY,
+        height: '100%',
         ...style,
       }}
       {...props}
