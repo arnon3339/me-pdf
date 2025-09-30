@@ -27,11 +27,18 @@ onMounted(() => {
   const onScroll = () => thumbnailPlugin.value!.updateWindow(vp.scrollTop, vp.clientHeight);
   vp.addEventListener('scroll', onScroll);
 
+  // Setup resize observer for viewport changes
+  const resizeObserver = new ResizeObserver(() => {
+    thumbnailPlugin.value!.updateWindow(vp.scrollTop, vp.clientHeight);
+  });
+  resizeObserver.observe(vp);
+
   // initial push
   thumbnailPlugin.value.updateWindow(vp.scrollTop, vp.clientHeight);
 
   onBeforeUnmount(() => {
     vp.removeEventListener('scroll', onScroll);
+    resizeObserver.disconnect();
   });
 });
 

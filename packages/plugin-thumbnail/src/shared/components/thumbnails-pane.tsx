@@ -29,6 +29,19 @@ export function ThumbnailsPane({ style, scrollOptions, selectedPage, ...props }:
     return () => vp.removeEventListener('scroll', onScroll);
   }, [thumbnailPlugin]);
 
+  // 2.5) keep plugin in sync when viewport resizes (e.g., menu opens/closes)
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp || !thumbnailPlugin) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      thumbnailPlugin.updateWindow(vp.scrollTop, vp.clientHeight);
+    });
+    resizeObserver.observe(vp);
+
+    return () => resizeObserver.disconnect();
+  }, [thumbnailPlugin]);
+
   // 3) kick-start after document change
   useEffect(() => {
     const vp = viewportRef.current;
