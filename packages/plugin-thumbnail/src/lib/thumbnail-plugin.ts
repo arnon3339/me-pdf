@@ -125,7 +125,12 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
       items: [],
       totalHeight: offset - GAP + PADDING_Y, // Add bottom padding to total height
     };
-    this.emitWindow.emit(this.window);
+
+    if (this.viewportH > 0) {
+      this.updateWindow(this.scrollY, this.viewportH);
+    } else {
+      this.emitWindow.emit(this.window);
+    }
   }
 
   /* ------------ capability ----------------------------------------- */
@@ -143,6 +148,9 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     // remember latest viewport metrics for scroll decisions
     this.scrollY = scrollY;
     this.viewportH = viewportH;
+
+    // Early return if window state hasn't been initialized yet
+    if (!this.window || this.thumbs.length === 0) return;
 
     /* find first visible */
     let low = 0,
@@ -165,13 +173,13 @@ export class ThumbnailPlugin extends BasePlugin<ThumbnailPluginConfig, Thumbnail
     last = Math.min(this.thumbs.length - 1, last + BUF);
 
     const start = Math.max(0, first - BUF);
-    if (this.window && start === this.window.start && last === this.window.end) return;
+    if (start === this.window.start && last === this.window.end) return;
 
     this.window = {
       start,
       end: last,
       items: this.thumbs.slice(start, last + 1),
-      totalHeight: this.window!.totalHeight,
+      totalHeight: this.window.totalHeight,
     };
     this.emitWindow.emit(this.window);
   }
