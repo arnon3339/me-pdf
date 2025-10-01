@@ -146,7 +146,10 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
                     </div>
                     <Scroller v-else>
                       <template #default="{ page }">
-                        <Rotate :page-size="{ width: page.width, height: page.height }">
+                        <Rotate
+                          :key="page.document?.id"
+                          :page-size="{ width: page.width, height: page.height }"
+                        >
                           <PagePointerProvider
                             :page-index="page.pageIndex"
                             :page-width="page.width"
