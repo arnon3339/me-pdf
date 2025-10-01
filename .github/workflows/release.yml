@@ -89,8 +89,9 @@ jobs:
 
       - name: Prepare release notes
         if: steps.published.outputs.did_publish == 'true'
+        env:
+          PR_BODY: ${{ steps.merged_pr.outputs.body }}
         run: |
-          PR_BODY='${{ steps.merged_pr.outputs.body }}'
           echo "$PR_BODY" | sed -n '/# Releases/,$p' > release-notes.md || true
           if [ ! -s release-notes.md ]; then
             echo "## Releases" > release-notes.md
@@ -102,9 +103,11 @@ jobs:
 
       - name: Package published dists
         if: steps.published.outputs.did_publish == 'true'
+        env:
+          PUBLISHED_JSON: ${{ steps.published.outputs.published }}
         run: |
           mkdir -p release-assets
-          echo '${{ steps.published.outputs.published }}' | jq -r '.[].name' | while read name; do
+          echo "$PUBLISHED_JSON" | jq -r '.[].name' | while read name; do
             short=$(echo "$name" | sed 's!.*/!!')
             dir="packages/$short"
             if [ -d "$dir/dist" ]; then
