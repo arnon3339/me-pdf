@@ -63,40 +63,16 @@ jobs:
           publish: pnpm ci:publish
           createGithubReleases: false
 
-      # 💡 ADD THIS DEBUG STEP
-      - name: Debug - Check for publish summary
-        if: always()
-        run: |
-          echo "=== Current directory ==="
-          pwd
-          echo ""
-          echo "=== GITHUB_WORKSPACE ==="
-          echo "$GITHUB_WORKSPACE"
-          echo ""
-          echo "=== Files in current directory ==="
-          ls -la
-          echo ""
-          echo "=== Files in GITHUB_WORKSPACE ==="
-          ls -la "$GITHUB_WORKSPACE"
-          echo ""
-          echo "=== Searching for publish-summary.json everywhere ==="
-          find . -name "publish-summary.json" -type f 2>/dev/null || echo "Not found"
-          echo ""
-          echo "=== If found, show contents ==="
-          cat publish-summary.json 2>/dev/null || echo "File not accessible in current dir"
-          cat "$GITHUB_WORKSPACE/publish-summary.json" 2>/dev/null || echo "File not accessible in GITHUB_WORKSPACE"
-
       # Robust publish detection via the file your ci:publish writes
       - name: Detect publish summary
         id: published
         run: |
-          if [ -f "publish-summary.json" ]; then
-            # Expecting: { "publishedPackages": [ { "name": "...", "version": "..." }, ... ] }
-            COUNT=$(jq '.publishedPackages | length' publish-summary.json 2>/dev/null || echo 0)
+          if [ -f "pnpm-publish-summary.json" ]; then
+            COUNT=$(jq '.publishedPackages | length' pnpm-publish-summary.json 2>/dev/null || echo 0)
             if [ "$COUNT" -gt 0 ]; then
               echo "did_publish=true" >> $GITHUB_OUTPUT
-              echo "published=$(jq -c '.publishedPackages' publish-summary.json)" >> $GITHUB_OUTPUT
-              echo "version=$(jq -r '.publishedPackages[0].version' publish-summary.json)" >> $GITHUB_OUTPUT
+              echo "published=$(jq -c '.publishedPackages' pnpm-publish-summary.json)" >> $GITHUB_OUTPUT
+              echo "version=$(jq -r '.publishedPackages[0].version' pnpm-publish-summary.json)" >> $GITHUB_OUTPUT
             else
               echo "did_publish=false" >> $GITHUB_OUTPUT
             fi
