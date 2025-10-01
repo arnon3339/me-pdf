@@ -1,5 +1,11 @@
 # @embedpdf/pdfium
 
+## 1.3.10
+
+### Patch Changes
+
+- [`5daa1b0`](https://github.com/embedpdf/embed-pdf-viewer/commit/5daa1b066243784097596dade60acaad5afa0899) by [@bobsingor](https://github.com/bobsingor) – No changes, test workflow
+
 ## 1.3.9
 
 ### Patch Changes
