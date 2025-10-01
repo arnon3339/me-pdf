@@ -1,5 +1,7 @@
 # @embedpdf/plugin-bookmark
 
+## 1.3.9
+
 ## 1.3.8
 
 ## 1.3.7
