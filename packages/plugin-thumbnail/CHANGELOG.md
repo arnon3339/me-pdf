@@ -1,5 +1,7 @@
 # @embedpdf/plugin-thumbnail
 
+## 1.3.7
+
 ## 1.3.6
 
 ### Patch Changes
