@@ -1,5 +1,7 @@
 # @embedpdf/plugin-capture
 
+## 1.3.11
+
 ## 1.3.10
 
 ## 1.3.9
