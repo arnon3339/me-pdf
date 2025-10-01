@@ -1,30 +1,26 @@
 name: Release
-
+# 1️⃣  When to run
+# ──────────────────────────────────────────────────────────────────────
 on:
   push:
-    branches: [main]
-    paths:
+    branches: [main]          # only after code is merged to main
+    paths:                    # ignore website/docs–only commits
       - "packages/**"
       - ".changeset/**"
       - "pnpm-lock.yaml"
-  workflow_dispatch:
-    inputs:
-      dry_run:
-        description: "Simulate a release (no npm publish, no GitHub Release)"
-        required: false
-        default: "false"
-        type: choice
-        options: ["false", "true"]
+  workflow_dispatch: {}
 
+# 2️⃣  Only one release job at a time
+# ──────────────────────────────────────────────────────────────────────
 concurrency:
   group: release
   cancel-in-progress: false
 
 permissions:
-  contents: write
-  id-token: write
-  pull-requests: write
-
+  contents: write             # create tags + version-bump PR + releases
+  id-token: write             # provenance for npm provenance
+  pull-requests: write        # create version-bump PR + read merged PR
+  
 env:
   CI: true
 
@@ -34,216 +30,108 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NPM_TOKEN:    ${{ secrets.NPM_TOKEN }}
-
     steps:
+      # ─── Check out the repo ────────────────────────────────────────
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
+          fetch-depth: 0      # needed for git tags
+          
+      # ─── Set up PNPM ───────────────────────────────────────────────
       - uses: pnpm/action-setup@v4
         with:
           version: 10.4.0
           run_install: false
-
+          
+      # ─── Set up Node and cache the pnpm store ──────────────────────
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
-
+          
+      # ─── Install deps (root + workspaces) ──────────────────────────
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build:packages
-
-      # ---------- DRY RUN PATH (no npm publish, no GH Release) ----------
-      # Compute the would-be release plan with Changesets and prepare assets,
-      # then upload as workflow artifacts.
-      - name: Compute release plan (dry run)
-        id: plan
-        if: ${{ github.event.inputs.dry_run == 'true' }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            // We try to read the "version PR" body for notes (optional in dry run)
-            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner, repo, commit_sha: context.sha
-            });
-            const versionPr = prs.data.find(pr => pr.title.toLowerCase().startsWith('chore: version packages'));
-            const body = versionPr?.body || '';
-
-            core.setOutput('body', body);
-
-      - name: Get would-be releases from Changesets
-        id: wouldbe
-        if: ${{ github.event.inputs.dry_run == 'true' }}
-        run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const path = require('path');
-          // These deps are usually already present because you use Changesets.
-          const getReleasePlan = require('@changesets/get-release-plan').default;
-
-          (async () => {
-            const cwd = process.cwd();
-            // getReleasePlan(workdir, sinceRef, preState, snapshot, snapshotPrereleaseTemplate)
-            // We'll compute plan since origin/main (if on push) or current branch base.
-            const sinceRef = 'origin/main';
-            const plan = await getReleasePlan(cwd, sinceRef);
-            // plan.releases: [{name, type, oldVersion, newVersion}, ...]
-            fs.writeFileSync('.wouldbe.json', JSON.stringify(plan, null, 2));
-            console.log('Would-be releases:\n', JSON.stringify(plan.releases, null, 2));
-          })();
-          NODE
-
-      - name: Prepare assets (dry run)
-        if: ${{ github.event.inputs.dry_run == 'true' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p release-assets
-          node <<'NODE'
-          const fs = require('fs');
-          const path = require('path');
-          const { execSync } = require('child_process');
-
-          if (!fs.existsSync('.wouldbe.json')) {
-            console.error('No .wouldbe.json found (did Changesets plan fail?)');
-            process.exit(1);
-          }
-          const plan = JSON.parse(fs.readFileSync('.wouldbe.json', 'utf8'));
-          const releases = plan.releases || [];
-          if (!releases.length) {
-            console.log('No packages would be released.');
-            process.exit(0);
-          }
-
-          const packagesDir = path.join(process.cwd(), 'packages');
-          const entries = fs.existsSync(packagesDir) ? fs.readdirSync(packagesDir) : [];
-
-          const targetNames = new Set(releases.map(r => r.name)); // package.json "name"
-          for (const entry of entries) {
-            const pkgDir = path.join(packagesDir, entry);
-            const pkgJsonPath = path.join(pkgDir, 'package.json');
-            if (!fs.existsSync(pkgJsonPath)) continue;
-            const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-            if (!targetNames.has(pkg.name)) continue;
-
-            const distDir = path.join(pkgDir, 'dist');
-            if (!fs.existsSync(distDir)) continue;
-
-            const safe = pkg.name.replace(/^@/, '').replace(/\//g, '-');
-            const zipOut = path.join('release-assets', `${safe}-dist.zip`);
-            const tgzOut = path.join('release-assets', `${safe}-dist.tar.gz`);
-
-            execSync(`zip -r "${zipOut}" "dist"`, { cwd: pkgDir, stdio: 'inherit' });
-            execSync(`tar -czf "${path.relative(pkgDir, tgzOut)}" -C "${pkgDir}" dist`, { stdio: 'inherit' });
-
-            console.log(`Prepared (dry): ${pkg.name} -> ${zipOut}, ${tgzOut}`);
-          }
-          NODE
-          ls -la release-assets || true
-
-      - name: Upload dry-run assets
-        if: ${{ github.event.inputs.dry_run == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-assets-dry-run
-          path: release-assets
-
-      - name: Print would-be notes and tag
-        if: ${{ github.event.inputs.dry_run == 'true' }}
-        run: |
-          echo "----- WOULD-BE RELEASE NOTES (from version PR if found) -----"
-          echo "${{ steps.plan.outputs.body }}"
-          echo "----- WOULD-BE VERSION TAG -----"
-          # In dry run we infer the tag from the first release's newVersion
-          if [ -f .wouldbe.json ]; then
-            TAG=$(node -e "const p=require('./.wouldbe.json'); const r=p.releases?.[0]; if(r?.newVersion){console.log('v'+r.newVersion)}")
-            echo "${TAG:-<none>}"
-          else
-            echo "<none>"
-          fi
-
-      # ---------- REAL RELEASE PATH (npm publish + GH Release) ----------
-      - name: Version and publish (real)
+      
+      # ─── Version-bump PR & publish (Changesets magic) ──────────────
+      - name: Version packages and (eventually) publish
         id: changesets
-        if: ${{ github.event.inputs.dry_run != 'true' }}
         uses: changesets/action@v1
         with:
           commit: "chore: version packages"
           title:  "chore: version packages"
           publish: pnpm ci:publish
-          createGithubReleases: false
-
-      - name: Collect release metadata (real)
-        id: meta
-        if: ${{ github.event.inputs.dry_run != 'true' && steps.changesets.outputs.published == 'true' }}
-        uses: actions/github-script@v7
+          createGithubReleases: false  # We'll create releases manually with assets
+          
+      # ─── Get the merged PR information ─────────────────────────────
+      - name: Get merged PR info
+        if: steps.changesets.outputs.published == 'true'
+        id: merged-pr
+        uses: actions-ecosystem/action-get-merged-pull-request@v1
         with:
-          script: |
-            const { owner, repo } = context.repo;
-            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner, repo, commit_sha: context.sha
-            });
-            const versionPr = prs.data.find(pr => pr.title.toLowerCase().startsWith('chore: version packages'));
-            const body = versionPr?.body || '';
-
-            // Parse publishedPackages from the Changesets step output
-            let publishedPackages = [];
-            const raw = `${{ steps.changesets.outputs.publishedPackages }}`;
-            if (raw && raw !== 'null') {
-              try { publishedPackages = JSON.parse(raw); } catch {}
-            }
-            if (!publishedPackages.length) {
-              core.setOutput('skip', 'true'); return;
-            }
-
-            const tag = `v${publishedPackages[0].version}`;
-            core.setOutput('tag', tag);
-            core.setOutput('body', body);
-            core.setOutput('publishedPackages', JSON.stringify(publishedPackages));
-
-      - name: Prepare release assets (real)
-        if: ${{ github.event.inputs.dry_run != 'true' && steps.meta.outputs.tag }}
-        shell: bash
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+      # ─── Package ONLY the published packages ────────────────────────
+      - name: Package published packages
+        if: steps.changesets.outputs.published == 'true'
         run: |
-          set -euo pipefail
           mkdir -p release-assets
-          echo '${{ steps.meta.outputs.publishedPackages }}' > .published.json
-          node <<'NODE'
-          const fs = require('fs');
-          const path = require('path');
-          const { execSync } = require('child_process');
-          const published = JSON.parse(fs.readFileSync('.published.json', 'utf8'));
-          const map = new Map(published.map(p => [p.name, p.version]));
-          const packagesDir = path.join(process.cwd(), 'packages');
-          const entries = fs.existsSync(packagesDir) ? fs.readdirSync(packagesDir) : [];
-          for (const entry of entries) {
-            const dir = path.join(packagesDir, entry);
-            const pkgJson = path.join(dir, 'package.json');
-            if (!fs.existsSync(pkgJson)) continue;
-            const pkg = JSON.parse(fs.readFileSync(pkgJson, 'utf8'));
-            if (!map.has(pkg.name)) continue;
-            const dist = path.join(dir, 'dist');
-            if (!fs.existsSync(dist)) continue;
-            const safe = pkg.name.replace(/^@/, '').replace(/\//g, '-');
-            const zipOut = path.join('release-assets', `${safe}-dist.zip`);
-            const tgzOut = path.join('release-assets', `${safe}-dist.tar.gz`);
-            execSync(`zip -r "${zipOut}" "dist"`, { cwd: dir, stdio: 'inherit' });
-            execSync(`tar -czf "${path.relative(dir, tgzOut)}" -C "${dir}" dist`, { stdio: 'inherit' });
-            console.log(`Prepared: ${pkg.name}@${map.get(pkg.name)} -> ${zipOut}, ${tgzOut}`);
-          }
-          NODE
-          ls -la release-assets
-
-      - name: Create GitHub Release (real)
-        if: ${{ github.event.inputs.dry_run != 'true' && steps.meta.outputs.tag }}
+          
+          # Parse the publishedPackages JSON and package each one
+          echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[] | .name' | while read package_name; do
+            # Extract package name without scope (e.g., @embedpdf/core -> core)
+            pkg_short_name=$(echo "$package_name" | sed 's/.*\///')
+            
+            # Find the package directory
+            pkg_dir="packages/$pkg_short_name"
+            
+            if [ -d "$pkg_dir/dist" ]; then
+              echo "📦 Packaging $package_name..."
+              
+              # Create archives with the package name
+              zip -r "release-assets/${pkg_short_name}-dist.zip" "$pkg_dir/dist"
+              tar -czf "release-assets/${pkg_short_name}-dist.tar.gz" -C "$pkg_dir" dist
+              
+              echo "✅ Packaged $pkg_short_name"
+            else
+              echo "⚠️  No dist folder found for $package_name at $pkg_dir"
+            fi
+          done
+          
+          echo "📋 Release assets prepared:"
+          ls -lh release-assets/
+          
+      # ─── Extract main version (from first published package) ───────
+      - name: Get release version
+        if: steps.changesets.outputs.published == 'true'
+        id: version
+        run: |
+          VERSION=$(echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[0].version')
+          echo "version=v$VERSION" >> $GITHUB_OUTPUT
+          echo "📌 Release version: v$VERSION"
+          
+      # ─── Extract release notes from PR body (remove intro) ─────────
+      - name: Prepare release notes from PR body
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          PR_BODY='${{ steps.merged-pr.outputs.body }}'
+          
+          # Remove the intro paragraph (everything before "# Releases")
+          # This removes the "This PR was opened by..." text
+          echo "$PR_BODY" | sed -n '/# Releases/,$p' > release-notes.md
+          
+          echo "📝 Release notes prepared:"
+          cat release-notes.md
+          
+      # ─── Create GitHub Release with assets ─────────────────────────
+      - name: Create GitHub Release
+        if: steps.changesets.outputs.published == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.meta.outputs.tag }}
-          body: ${{ steps.meta.outputs.body }}
-          files: |
-            release-assets/*.zip
-            release-assets/*.tar.gz
-          draft: false
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          files: release-assets/*
+          draft: true
           prerelease: false
+          make_latest: false
