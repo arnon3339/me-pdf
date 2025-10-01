@@ -1,26 +1,23 @@
 name: Release
-# 1️⃣  When to run
-# ──────────────────────────────────────────────────────────────────────
+
 on:
   push:
-    branches: [main]          # only after code is merged to main
-    paths:                    # ignore website/docs–only commits
+    branches: [main]
+    paths:
       - "packages/**"
       - ".changeset/**"
       - "pnpm-lock.yaml"
   workflow_dispatch: {}
 
-# 2️⃣  Only one release job at a time
-# ──────────────────────────────────────────────────────────────────────
 concurrency:
   group: release
   cancel-in-progress: false
 
 permissions:
-  contents: write             # create tags + version-bump PR + releases
-  id-token: write             # provenance for npm provenance
-  pull-requests: write        # create version-bump PR + read merged PR
-  
+  contents: write
+  id-token: write
+  pull-requests: write
+
 env:
   CI: true
 
@@ -30,106 +27,103 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NPM_TOKEN:    ${{ secrets.NPM_TOKEN }}
+
     steps:
-      # ─── Check out the repo ────────────────────────────────────────
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0      # needed for git tags
-          
-      # ─── Set up PNPM ───────────────────────────────────────────────
-      - uses: pnpm/action-setup@v4
+          fetch-depth: 0
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
         with:
           version: 10.4.0
           run_install: false
-          
-      # ─── Set up Node and cache the pnpm store ──────────────────────
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
-          
-      # ─── Install deps (root + workspaces) ──────────────────────────
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build:packages
-      
-      # ─── Version-bump PR & publish (Changesets magic) ──────────────
-      - name: Version packages and (eventually) publish
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build:packages
+
+      # Changesets will either open a version PR or publish if already versioned
+      - name: Version / Publish via Changesets
         id: changesets
         uses: changesets/action@v1
         with:
           commit: "chore: version packages"
           title:  "chore: version packages"
           publish: pnpm ci:publish
-          createGithubReleases: false  # We'll create releases manually with assets
-          
-      # ─── Get the merged PR information ─────────────────────────────
+          createGithubReleases: false
+
+      # Robust publish detection via the file your ci:publish writes
+      - name: Detect publish summary
+        id: published
+        run: |
+          if [ -f "publish-summary.json" ]; then
+            # Expecting: { "publishedPackages": [ { "name": "...", "version": "..." }, ... ] }
+            COUNT=$(jq '.publishedPackages | length' publish-summary.json 2>/dev/null || echo 0)
+            if [ "$COUNT" -gt 0 ]; then
+              echo "did_publish=true" >> $GITHUB_OUTPUT
+              echo "published=$(jq -c '.publishedPackages' publish-summary.json)" >> $GITHUB_OUTPUT
+              echo "version=$(jq -r '.publishedPackages[0].version' publish-summary.json)" >> $GITHUB_OUTPUT
+            else
+              echo "did_publish=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "did_publish=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Get merged PR info
-        if: steps.changesets.outputs.published == 'true'
-        id: merged-pr
+        if: steps.published.outputs.did_publish == 'true'
+        id: merged_pr
         uses: actions-ecosystem/action-get-merged-pull-request@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          
-      # ─── Package ONLY the published packages ────────────────────────
-      - name: Package published packages
-        if: steps.changesets.outputs.published == 'true'
+
+      - name: Prepare release notes
+        if: steps.published.outputs.did_publish == 'true'
+        run: |
+          PR_BODY='${{ steps.merged_pr.outputs.body }}'
+          echo "$PR_BODY" | sed -n '/# Releases/,$p' > release-notes.md || true
+          if [ ! -s release-notes.md ]; then
+            echo "## Releases" > release-notes.md
+            echo "" >> release-notes.md
+            echo "Automated release." >> release-notes.md
+          fi
+          echo "Release notes:"
+          cat release-notes.md
+
+      - name: Package published dists
+        if: steps.published.outputs.did_publish == 'true'
         run: |
           mkdir -p release-assets
-          
-          # Parse the publishedPackages JSON and package each one
-          echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[] | .name' | while read package_name; do
-            # Extract package name without scope (e.g., @embedpdf/core -> core)
-            pkg_short_name=$(echo "$package_name" | sed 's/.*\///')
-            
-            # Find the package directory
-            pkg_dir="packages/$pkg_short_name"
-            
-            if [ -d "$pkg_dir/dist" ]; then
-              echo "📦 Packaging $package_name..."
-              
-              # Create archives with the package name
-              zip -r "release-assets/${pkg_short_name}-dist.zip" "$pkg_dir/dist"
-              tar -czf "release-assets/${pkg_short_name}-dist.tar.gz" -C "$pkg_dir" dist
-              
-              echo "✅ Packaged $pkg_short_name"
+          echo '${{ steps.published.outputs.published }}' | jq -r '.[].name' | while read name; do
+            short=$(echo "$name" | sed 's!.*/!!')
+            dir="packages/$short"
+            if [ -d "$dir/dist" ]; then
+              echo "Packaging $short"
+              (cd "$dir" && zip -r "../../release-assets/${short}-dist.zip" dist >/dev/null)
+              tar -czf "release-assets/${short}-dist.tar.gz" -C "$dir" dist
             else
-              echo "⚠️  No dist folder found for $package_name at $pkg_dir"
+              echo "No dist for $short"
             fi
           done
-          
-          echo "📋 Release assets prepared:"
-          ls -lh release-assets/
-          
-      # ─── Extract main version (from first published package) ───────
-      - name: Get release version
-        if: steps.changesets.outputs.published == 'true'
-        id: version
-        run: |
-          VERSION=$(echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[0].version')
-          echo "version=v$VERSION" >> $GITHUB_OUTPUT
-          echo "📌 Release version: v$VERSION"
-          
-      # ─── Extract release notes from PR body (remove intro) ─────────
-      - name: Prepare release notes from PR body
-        if: steps.changesets.outputs.published == 'true'
-        run: |
-          PR_BODY='${{ steps.merged-pr.outputs.body }}'
-          
-          # Remove the intro paragraph (everything before "# Releases")
-          # This removes the "This PR was opened by..." text
-          echo "$PR_BODY" | sed -n '/# Releases/,$p' > release-notes.md
-          
-          echo "📝 Release notes prepared:"
-          cat release-notes.md
-          
-      # ─── Create GitHub Release with assets ─────────────────────────
-      - name: Create GitHub Release
-        if: steps.changesets.outputs.published == 'true'
+          ls -lh release-assets || true
+
+      - name: Create GitHub Release (draft)
+        if: steps.published.outputs.did_publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: Release ${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.published.outputs.version }}
+          name: Release v${{ steps.published.outputs.version }}
           body_path: release-notes.md
           files: release-assets/*
           draft: true
