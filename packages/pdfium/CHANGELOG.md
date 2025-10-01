@@ -1,5 +1,11 @@
 # @embedpdf/pdfium
 
+## 1.3.8
+
+### Patch Changes
+
+- [#194](https://github.com/embedpdf/embed-pdf-viewer/pull/194) by [@bobsingor](https://github.com/bobsingor) – No changes, test new release workflow
+
 ## 1.3.7
 
 ### Patch Changes
