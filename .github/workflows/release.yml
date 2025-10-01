@@ -92,11 +92,9 @@ jobs:
         env:
           PR_BODY: ${{ steps.merged_pr.outputs.body }}
         run: |
-          echo "$PR_BODY" | sed -n '/# Releases/,$p' > release-notes.md || true
+          echo "$PR_BODY" | sed -n '/# Releases/,$p' | tail -n +2 > release-notes.md || true
           if [ ! -s release-notes.md ]; then
-            echo "## Releases" > release-notes.md
-            echo "" >> release-notes.md
-            echo "Automated release." >> release-notes.md
+            echo "Automated release." > release-notes.md
           fi
           echo "Release notes:"
           cat release-notes.md
@@ -128,6 +126,6 @@ jobs:
           name: Release v${{ steps.published.outputs.version }}
           body_path: release-notes.md
           files: release-assets/*
-          draft: true
+          draft: false
           prerelease: false
-          make_latest: false
+          make_latest: true
