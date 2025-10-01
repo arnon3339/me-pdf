@@ -1,5 +1,7 @@
 # @embedpdf/plugin-search
 
+## 1.3.10
+
 ## 1.3.9
 
 ## 1.3.8
