@@ -105,8 +105,8 @@ const CaptureResult = () => {
     return (
       <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-center">
         <p className="text-sm text-gray-500">
-          Click "Capture Area" and drag a rectangle on the PDF to create a
-          snapshot.
+          Click &quot;Capture Area&quot; and drag a rectangle on the PDF to
+          create a snapshot.
         </p>
       </div>
     )
