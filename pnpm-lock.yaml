@@ -1668,6 +1668,9 @@ importers:
       '@embedpdf/plugin-annotation':
         specifier: workspace:*
         version: link:../packages/plugin-annotation
+      '@embedpdf/plugin-capture':
+        specifier: workspace:*
+        version: link:../packages/plugin-capture
       '@embedpdf/plugin-export':
         specifier: workspace:*
         version: link:../packages/plugin-export

@@ -12,4 +12,5 @@ export default {
   'plugin-export': 'Export',
   'plugin-spread': 'Spread',
   'plugin-pan': 'Pan',
+  'plugin-capture': 'Capture',
 }
