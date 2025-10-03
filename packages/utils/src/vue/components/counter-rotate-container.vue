@@ -28,8 +28,14 @@ const menuWrapperProps = computed(() => ({
     pointerEvents: 'none',
     zIndex: 3,
   } as CSSProperties,
-  onPointerDown: (e: PointerEvent) => e.stopPropagation(),
-  onTouchStart: (e: TouchEvent) => e.stopPropagation(),
+  onPointerDown: (e: PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  },
+  onTouchStart: (e: TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  },
 }));
 
 const adjustedRect = computed(() => ({

@@ -119,7 +119,7 @@ export class RedactionPlugin extends BasePlugin<
         id: uuidV4(),
         kind: 'text',
         page: s.pageIndex,
-        boundingRect: s.rect,
+        rect: s.rect,
         rects: s.segmentRects,
       }));
 
@@ -308,7 +308,7 @@ export class RedactionPlugin extends BasePlugin<
       id,
       kind: 'text',
       page: s.pageIndex,
-      boundingRect: s.rect,
+      rect: s.rect,
       rects: s.segmentRects,
     }));
 

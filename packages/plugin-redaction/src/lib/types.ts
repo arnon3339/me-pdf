@@ -25,8 +25,8 @@ export type RedactionItem =
       id: string;
       kind: 'text';
       page: number;
-      boundingRect: Rect;
-      rects: Rect[]; // inner segments
+      rect: Rect;
+      rects: Rect[];
     }
   | {
       id: string;

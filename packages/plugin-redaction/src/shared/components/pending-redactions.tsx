@@ -94,7 +94,7 @@ export function PendingRedactions({
           );
         }
         // kind === 'text' → draw bounding box; inner rects are not drawn here to avoid clutter.
-        const b = it.boundingRect;
+        const b = it.rect;
         return (
           <Fragment key={it.id}>
             <div
