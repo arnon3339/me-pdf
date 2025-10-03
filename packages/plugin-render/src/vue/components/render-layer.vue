@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount, computed } from 'vue';
+import { ref, watch, onBeforeUnmount, computed, watchEffect } from 'vue';
 import { ignore, PdfErrorCode, PdfErrorReason, Task } from '@embedpdf/models';
 
 import { useRenderCapability, useRenderPlugin } from '../hooks';
@@ -78,20 +78,15 @@ function startRender() {
 }
 
 // Watch for external refresh events
-watch(
-  renderPlugin,
-  (pluginInstance, _, onCleanup) => {
-    if (pluginInstance) {
-      const unsubscribe = pluginInstance.onRefreshPages((pages: number[]) => {
-        if (pages.includes(props.pageIndex)) {
-          refreshTick.value++;
-        }
-      });
-      onCleanup(unsubscribe);
+watchEffect((onCleanup) => {
+  if (!renderPlugin.value) return;
+  const unsubscribe = renderPlugin.value.onRefreshPages((pages: number[]) => {
+    if (pages.includes(props.pageIndex)) {
+      refreshTick.value++;
     }
-  },
-  { immediate: true },
-);
+  });
+  onCleanup(unsubscribe);
+});
 
 // Watch for changes that require a re-render
 watch(

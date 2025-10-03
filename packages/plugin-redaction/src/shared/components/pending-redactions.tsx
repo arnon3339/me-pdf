@@ -37,8 +37,6 @@ export function PendingRedactions({
     };
   }, [redaction, pageIndex]);
 
-  if (!items.length) return null;
-
   const select = useCallback(
     (e: MouseEvent | TouchEvent, id: string) => {
       e.stopPropagation();
@@ -47,6 +45,8 @@ export function PendingRedactions({
     },
     [redaction, pageIndex],
   );
+
+  if (!items.length) return null;
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>

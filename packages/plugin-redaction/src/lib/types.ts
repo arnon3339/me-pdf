@@ -2,6 +2,12 @@ import { BasePluginConfig, EventHook } from '@embedpdf/core';
 import { PdfErrorReason, Rect, Task } from '@embedpdf/models';
 import { FormattedSelection } from '@embedpdf/plugin-selection';
 
+// Redaction mode enum
+export enum RedactionMode {
+  MarqueeRedact = 'marqueeRedact',
+  RedactSelection = 'redactSelection',
+}
+
 export interface SelectedRedaction {
   page: number;
   id: string | null;
@@ -9,7 +15,9 @@ export interface SelectedRedaction {
 
 export interface RedactionState {
   isRedacting: boolean;
+  activeType: RedactionMode | null;
   pending: Record<number, RedactionItem[]>;
+  pendingCount: number;
   selected: SelectedRedaction | null;
 }
 
@@ -55,6 +63,7 @@ export interface RedactionCapability {
   isRedactSelectionActive: () => boolean;
 
   onRedactionSelectionChange: EventHook<FormattedSelection[]>;
+  onStateChange: EventHook<RedactionState>;
 
   onPendingChange: EventHook<Record<number, RedactionItem[]>>;
   removePending: (page: number, id: string) => void;

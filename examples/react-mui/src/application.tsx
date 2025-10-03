@@ -19,6 +19,7 @@ import { Rotate, RotatePluginPackage } from '@embedpdf/plugin-rotate/react';
 import { SpreadPluginPackage } from '@embedpdf/plugin-spread/react';
 import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
+import { RedactionLayer, RedactionPluginPackage } from '@embedpdf/plugin-redaction/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { SelectionLayer } from '@embedpdf/plugin-selection/react';
@@ -40,6 +41,7 @@ import { Sidebar } from './components/sidebar';
 import { Toolbar } from './components/toolbar';
 import { ViewSidebarReverseIcon } from './icons';
 import { AnnotationSelectionMenu } from './components/annotation-selection-menu';
+import { RedactionSelectionMenu } from './components/redaction-selection-menu';
 
 const plugins = [
   createPluginRegistration(LoaderPluginPackage, {
@@ -78,6 +80,7 @@ const plugins = [
   }),
   createPluginRegistration(SelectionPluginPackage),
   createPluginRegistration(AnnotationPluginPackage),
+  createPluginRegistration(RedactionPluginPackage),
 ];
 
 const drawerComponents: DrawerComponent[] = [
@@ -243,6 +246,22 @@ function App() {
                               />
                               <MarqueeZoom pageIndex={pageIndex} scale={scale} />
                               <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                              <RedactionLayer
+                                pageIndex={pageIndex}
+                                scale={scale}
+                                rotation={rotation}
+                                selectionMenu={({ menuWrapperProps, selected, item }) => (
+                                  <>
+                                    {selected ? (
+                                      <RedactionSelectionMenu
+                                        menuWrapperProps={menuWrapperProps}
+                                        selected={item}
+                                        container={popperContainerRef.current}
+                                      />
+                                    ) : null}
+                                  </>
+                                )}
+                              />
                               <AnnotationLayer
                                 pageIndex={pageIndex}
                                 scale={scale}
