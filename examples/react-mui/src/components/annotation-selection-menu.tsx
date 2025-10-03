@@ -27,7 +27,7 @@ export function AnnotationSelectionMenu({
 
   return (
     <>
-      <span ref={setAnchorEl} {...menuWrapperProps} />
+      <span {...menuWrapperProps} ref={setAnchorEl} />
       <Popper
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
