@@ -1,5 +1,11 @@
 # @embedpdf/utils
 
+## 1.3.12
+
+### Patch Changes
+
+- [#204](https://github.com/embedpdf/embed-pdf-viewer/pull/204) by [@bobsingor](https://github.com/bobsingor) – Improved pointer event handling in counter-rotate containers to prevent unwanted text selection
+
 ## 1.3.11
 
 ## 1.3.10
