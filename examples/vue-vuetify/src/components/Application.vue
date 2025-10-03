@@ -23,6 +23,7 @@ import { SpreadPluginPackage } from '@embedpdf/plugin-spread/vue';
 import { PrintPluginPackage } from '@embedpdf/plugin-print/vue';
 import { SearchPluginPackage, SearchLayer } from '@embedpdf/plugin-search/vue';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/vue';
+import { RedactionPluginPackage, RedactionLayer } from '@embedpdf/plugin-redaction/vue';
 
 import Toolbar from './Toolbar.vue';
 import DrawerProvider from './drawer-system/DrawerProvider.vue';
@@ -115,6 +116,7 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
           flags: [],
           showAllResults: true,
         }),
+        createPluginRegistration(RedactionPluginPackage),
       ]"
     >
       <template #default="{ pluginsReady }">
@@ -169,6 +171,11 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
                             />
                             <MarqueeZoom :page-index="page.pageIndex" :scale="page.scale" />
                             <SearchLayer :page-index="page.pageIndex" :scale="page.scale" />
+                            <RedactionLayer
+                              :page-index="page.pageIndex"
+                              :scale="page.scale"
+                              :rotation="page.rotation"
+                            />
                             <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
                           </PagePointerProvider>
                         </Rotate>

@@ -13,4 +13,5 @@ export default {
   'plugin-spread': 'Spread',
   'plugin-pan': 'Pan',
   'plugin-capture': 'Capture',
+  'plugin-redaction': 'Redaction',
 }
