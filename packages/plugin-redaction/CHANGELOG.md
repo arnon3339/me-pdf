@@ -1,5 +1,13 @@
 # @embedpdf/plugin-redaction
 
+## 1.3.12
+
+### Patch Changes
+
+- [#204](https://github.com/embedpdf/embed-pdf-viewer/pull/204) by [@bobsingor](https://github.com/bobsingor) – Add Vue export to the redaction plugin package.json
+
+- [#204](https://github.com/embedpdf/embed-pdf-viewer/pull/204) by [@bobsingor](https://github.com/bobsingor) – Add events function that get events on add, remove, clear, commit
+
 ## 1.3.11
 
 ## 1.3.10

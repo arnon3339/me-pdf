@@ -1,5 +1,11 @@
 # @embedpdf/plugin-render
 
+## 1.3.12
+
+### Patch Changes
+
+- [#204](https://github.com/embedpdf/embed-pdf-viewer/pull/204) by [@bobsingor](https://github.com/bobsingor) – Fix refresh not working on Vue component after redaction
+
 ## 1.3.11
 
 ## 1.3.10
