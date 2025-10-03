@@ -6,6 +6,7 @@ import {
   RedactionItem,
   SelectedRedaction,
   RedactionMode,
+  RedactionEvent,
 } from './types';
 import {
   BasePlugin,
@@ -58,6 +59,7 @@ export class RedactionPlugin extends BasePlugin<
   private readonly pending$ = createBehaviorEmitter<Record<number, RedactionItem[]>>();
   private readonly selected$ = createBehaviorEmitter<SelectedRedaction | null>();
   private readonly state$ = createBehaviorEmitter<RedactionState>();
+  private readonly events$ = createBehaviorEmitter<RedactionEvent>();
 
   private readonly unsubscribeSelectionChange: Unsubscribe | undefined;
   private readonly unsubscribeEndSelection: Unsubscribe | undefined;
@@ -135,9 +137,6 @@ export class RedactionPlugin extends BasePlugin<
 
   protected buildCapability(): RedactionCapability {
     return {
-      onRedactionSelectionChange: this.redactionSelection$.on,
-      onStateChange: this.state$.on,
-
       queueCurrentSelectionAsPending: () => this.queueCurrentSelectionAsPending(),
 
       enableMarqueeRedact: () => this.enableMarqueeRedact(),
@@ -150,14 +149,20 @@ export class RedactionPlugin extends BasePlugin<
       isRedactSelectionActive: () =>
         this.interactionManagerCapability?.getActiveMode() === RedactionMode.RedactSelection,
 
-      onPendingChange: this.pending$.on,
+      addPending: (items) => {
+        this.dispatch(addPending(items));
+        this.pending$.emit(this.state.pending);
+        this.events$.emit({ type: 'add', items });
+      },
       removePending: (page, id) => {
         this.dispatch(removePending(page, id));
         this.pending$.emit(this.state.pending);
+        this.events$.emit({ type: 'remove', page, id });
       },
       clearPending: () => {
         this.dispatch(clearPending());
         this.pending$.emit(this.state.pending);
+        this.events$.emit({ type: 'clear' });
       },
       commitAllPending: () => this.commitAllPending(),
       commitPending: (page, id) => this.commitPendingOne(page, id),
@@ -165,12 +170,20 @@ export class RedactionPlugin extends BasePlugin<
       endRedaction: () => this.endRedaction(),
       startRedaction: () => this.startRedaction(),
 
-      onSelectionChange: this.selected$.on,
       selectPending: (page, id) => this.selectPending(page, id),
       deselectPending: () => this.deselectPending(),
 
-      registerMarqueeOnPage: (opts) => this.registerMarqueeOnPage(opts),
+      onSelectedChange: this.selected$.on,
+      onRedactionEvent: this.events$.on,
+      onStateChange: this.state$.on,
+      onPendingChange: this.pending$.on,
     };
+  }
+
+  public onRedactionSelectionChange(
+    callback: (formattedSelection: FormattedSelection[]) => void,
+  ): Unsubscribe {
+    return this.redactionSelection$.on(callback);
   }
 
   private selectPending(page: number, id: string) {
@@ -336,9 +349,13 @@ export class RedactionPlugin extends BasePlugin<
           this.dispatch(removePending(page, id));
           this.pending$.emit(this.state.pending);
           this.dispatchCoreAction(refreshPages([page]));
+          this.events$.emit({ type: 'commit', success: true });
           task.resolve(true);
         },
-        () => task.reject({ code: PdfErrorCode.Unknown, message: 'Failed to commit redactions' }),
+        (error) => {
+          this.events$.emit({ type: 'commit', success: false, error: error.reason });
+          task.reject({ code: PdfErrorCode.Unknown, message: 'Failed to commit redactions' });
+        },
       );
 
     return task;
@@ -383,9 +400,13 @@ export class RedactionPlugin extends BasePlugin<
         this.dispatch(clearPending());
         this.dispatchCoreAction(refreshPages(pagesToRefresh));
         this.pending$.emit(this.state.pending);
+        this.events$.emit({ type: 'commit', success: true });
         task.resolve(true);
       },
-      () => task.reject({ code: PdfErrorCode.Unknown, message: 'Failed to commit redactions' }),
+      (error) => {
+        this.events$.emit({ type: 'commit', success: false, error: error.reason });
+        task.reject({ code: PdfErrorCode.Unknown, message: 'Failed to commit redactions' });
+      },
     );
 
     return task;
@@ -402,6 +423,7 @@ export class RedactionPlugin extends BasePlugin<
     this.redactionSelection$.clear();
     this.pending$.clear();
     this.state$.clear();
+    this.events$.clear();
 
     this.unsubscribeSelectionChange?.();
     this.unsubscribeEndSelection?.();

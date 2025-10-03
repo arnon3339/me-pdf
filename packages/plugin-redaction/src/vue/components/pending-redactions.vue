@@ -134,7 +134,7 @@ onMounted(() => {
     items.value = map[props.pageIndex] ?? [];
   });
 
-  unsubscribeSelection = redaction.value.onSelectionChange((sel) => {
+  unsubscribeSelection = redaction.value.onSelectedChange((sel) => {
     selectedId.value = sel && sel.page === props.pageIndex ? sel.id : null;
   });
 });

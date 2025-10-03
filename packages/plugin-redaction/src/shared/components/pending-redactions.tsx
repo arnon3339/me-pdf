@@ -28,7 +28,7 @@ export function PendingRedactions({
   useEffect(() => {
     if (!redaction) return;
     const off1 = redaction.onPendingChange((map) => setItems(map[pageIndex] ?? []));
-    const off2 = redaction.onSelectionChange((sel) => {
+    const off2 = redaction.onSelectedChange((sel) => {
       setSelectedId(sel && sel.page === pageIndex ? sel.id : null);
     });
     return () => {
