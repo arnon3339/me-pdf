@@ -30,6 +30,7 @@ import DrawerProvider from './drawer-system/DrawerProvider.vue';
 import Drawer from './drawer-system/Drawer.vue';
 import Search from './Search.vue';
 import Sidebar from './Sidebar.vue';
+import RedactionSelectionMenu from './RedactionSelectionMenu.vue';
 
 // Define drawer components
 const drawerComponents = [
@@ -175,7 +176,18 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
                               :page-index="page.pageIndex"
                               :scale="page.scale"
                               :rotation="page.rotation"
-                            />
+                            >
+                              <template
+                                #selection-menu="{ item, selected, menuWrapperProps, rect }"
+                              >
+                                <RedactionSelectionMenu
+                                  v-if="selected"
+                                  :item="item"
+                                  :menu-wrapper-props="menuWrapperProps"
+                                  :rect="rect"
+                                />
+                              </template>
+                            </RedactionLayer>
                             <SelectionLayer :page-index="page.pageIndex" :scale="page.scale" />
                           </PagePointerProvider>
                         </Rotate>

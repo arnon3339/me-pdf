@@ -439,6 +439,9 @@ importers:
       '@embedpdf/plugin-zoom':
         specifier: workspace:*
         version: link:../../packages/plugin-zoom
+      '@embedpdf/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@fontsource/roboto':
         specifier: 5.2.6
         version: 5.2.6

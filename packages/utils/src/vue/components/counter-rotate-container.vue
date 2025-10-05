@@ -1,5 +1,9 @@
 <template>
-  <slot :menu-wrapper-props="menuWrapperProps" :matrix="matrix" :rect="adjustedRect" />
+  <slot
+    :menu-wrapper-props="menuWrapperProps"
+    :matrix="counterRotation.matrix"
+    :rect="adjustedRect"
+  />
 </template>
 
 <script setup lang="ts">
@@ -14,25 +18,25 @@ interface CounterRotateProps {
 
 const props = defineProps<CounterRotateProps>();
 
-const { matrix, width, height } = getCounterRotation(props.rect, props.rotation);
+const counterRotation = computed(() => getCounterRotation(props.rect, props.rotation));
 
 const menuWrapperProps = computed(() => ({
   style: {
     position: 'absolute',
     left: `${props.rect.origin.x}px`,
     top: `${props.rect.origin.y}px`,
-    transform: matrix,
+    transform: counterRotation.value.matrix,
     transformOrigin: '0 0',
-    width: `${width}px`,
-    height: `${height}px`,
+    width: `${counterRotation.value.width}px`,
+    height: `${counterRotation.value.height}px`,
     pointerEvents: 'none',
     zIndex: 3,
   } as CSSProperties,
-  onPointerDown: (e: PointerEvent) => {
+  onPointerdown: (e: PointerEvent) => {
     e.stopPropagation();
     e.preventDefault();
   },
-  onTouchStart: (e: TouchEvent) => {
+  onTouchstart: (e: TouchEvent) => {
     e.stopPropagation();
     e.preventDefault();
   },
@@ -40,6 +44,6 @@ const menuWrapperProps = computed(() => ({
 
 const adjustedRect = computed(() => ({
   origin: { x: props.rect.origin.x, y: props.rect.origin.y },
-  size: { width, height },
+  size: { width: counterRotation.value.width, height: counterRotation.value.height },
 }));
 </script>
