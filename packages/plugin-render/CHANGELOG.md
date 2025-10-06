@@ -1,5 +1,11 @@
 # @embedpdf/plugin-render
 
+## 1.3.13
+
+### Patch Changes
+
+- [#209](https://github.com/embedpdf/embed-pdf-viewer/pull/209) by [@bobsingor](https://github.com/bobsingor) – Refactor Vue render-layer to improve image URL management
+
 ## 1.3.12
 
 ### Patch Changes
