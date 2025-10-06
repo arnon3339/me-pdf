@@ -232,6 +232,7 @@ const handlePrintDialogClose = () => {
     <div class="mode-tabs-container">
       <v-tabs v-model="mode" color="primary" density="compact" class="mode-tabs">
         <v-tab value="view">View</v-tab>
+        <v-tab value="annotate">Annotate</v-tab>
         <v-tab value="redact">Redact</v-tab>
       </v-tabs>
     </div>
@@ -243,6 +244,7 @@ const handlePrintDialogClose = () => {
 
   <!-- Conditional Toolbars -->
   <RedactToolbar v-if="mode === 'redact'" />
+  <AnnotationToolbar v-if="mode === 'annotate'" />
 
   <!-- Print Dialog -->
   <PrintDialog :open="printDialogOpen" @close="handlePrintDialogClose" />

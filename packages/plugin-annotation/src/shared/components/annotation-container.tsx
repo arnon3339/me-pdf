@@ -12,9 +12,9 @@ import {
   CustomAnnotationRenderer,
   ResizeHandleUI,
   SelectionMenuProps,
-  VertexConfig,
   VertexHandleUI,
-} from '../types';
+} from './types';
+import { VertexConfig } from '../types';
 
 interface AnnotationContainerProps<T extends PdfAnnotationObject> {
   scale: number;
@@ -169,9 +169,12 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
         {...props}
       >
         {(() => {
+          const childrenRender =
+            typeof children === 'function' ? children(currentObject) : children;
           // Check for custom renderer first
           const customRender = customAnnotationRenderer?.({
             annotation: currentObject,
+            children: childrenRender,
             isSelected,
             scale,
             rotation,
@@ -185,7 +188,7 @@ export function AnnotationContainer<T extends PdfAnnotationObject>({
           }
 
           // Fall back to default children rendering
-          return typeof children === 'function' ? children(currentObject) : children;
+          return childrenRender;
         })()}
 
         {isSelected &&

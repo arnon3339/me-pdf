@@ -1,7 +1,7 @@
 import { HTMLAttributes, CSSProperties } from '@framework';
 import { Annotations } from './annotations';
 import { TextMarkup } from './text-markup';
-import { SelectionMenu, ResizeHandleUI, VertexHandleUI, CustomAnnotationRenderer } from '../types';
+import { SelectionMenu, ResizeHandleUI, VertexHandleUI, CustomAnnotationRenderer } from './types';
 import { AnnotationPaintLayer } from './annotation-paint-layer';
 import { PdfAnnotationObject } from '@embedpdf/models';
 
