@@ -1,5 +1,13 @@
 # @embedpdf/plugin-annotation
 
+## 1.3.13
+
+### Patch Changes
+
+- [#209](https://github.com/embedpdf/embed-pdf-viewer/pull/209) by [@bobsingor](https://github.com/bobsingor) – Introduces a deepToRaw utility to recursively unwrap Vue refs/reactives, and applies it to annotation rendering to prevent unnecessary re-renders.
+
+- [#208](https://github.com/embedpdf/embed-pdf-viewer/pull/208) by [@bobsingor](https://github.com/bobsingor) – Introduces Vue components for annotation features, including annotation containers, layers, paint layers, and annotation types (circle, square, ink, etc.). Integrates annotation tools into the Vue-Vuetify example, updates toolbar and application logic to support annotation mode, and refactors shared annotation types for better modularity. Also adds supporting hooks and utilities for annotation interaction and state management.
+
 ## 1.3.12
 
 ## 1.3.11

@@ -1,5 +1,11 @@
 # @embedpdf/utils
 
+## 1.3.13
+
+### Patch Changes
+
+- [`e5d4729`](https://github.com/embedpdf/embed-pdf-viewer/commit/e5d47296346f4ed68873b254ec6c55b75beb5342) by [@bobsingor](https://github.com/bobsingor) – Updates MenuWrapperProps and counter-rotate-container.vue to use lowercase event handler props for pointer and touch events
+
 ## 1.3.12
 
 ### Patch Changes

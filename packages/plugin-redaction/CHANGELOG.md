@@ -1,5 +1,7 @@
 # @embedpdf/plugin-redaction
 
+## 1.3.13
+
 ## 1.3.12
 
 ### Patch Changes

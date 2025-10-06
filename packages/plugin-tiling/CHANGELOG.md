@@ -1,5 +1,11 @@
 # @embedpdf/plugin-tiling
 
+## 1.3.13
+
+### Patch Changes
+
+- [#209](https://github.com/embedpdf/embed-pdf-viewer/pull/209) by [@bobsingor](https://github.com/bobsingor) – Refactor tile refresh logic and cleanup tile image components
+
 ## 1.3.12
 
 ### Patch Changes
