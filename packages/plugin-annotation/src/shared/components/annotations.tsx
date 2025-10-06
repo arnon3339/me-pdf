@@ -37,7 +37,7 @@ import { Strikeout } from './text-markup/strikeout';
 import { Squiggly } from './text-markup/squiggly';
 import { Ink } from './annotations/ink';
 import { Square } from './annotations/square';
-import { CustomAnnotationRenderer, ResizeHandleUI, SelectionMenu, VertexHandleUI } from '../types';
+import { CustomAnnotationRenderer, ResizeHandleUI, SelectionMenu, VertexHandleUI } from './types';
 import { Circle } from './annotations/circle';
 import { Line } from './annotations/line';
 import { Polyline } from './annotations/polyline';

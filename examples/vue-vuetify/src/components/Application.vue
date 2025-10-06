@@ -24,6 +24,7 @@ import { PrintPluginPackage } from '@embedpdf/plugin-print/vue';
 import { SearchPluginPackage, SearchLayer } from '@embedpdf/plugin-search/vue';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/vue';
 import { RedactionPluginPackage, RedactionLayer } from '@embedpdf/plugin-redaction/vue';
+import { AnnotationPluginPackage, AnnotationLayer } from '@embedpdf/plugin-annotation/vue';
 
 import Toolbar from './Toolbar.vue';
 import DrawerProvider from './drawer-system/DrawerProvider.vue';
@@ -31,6 +32,8 @@ import Drawer from './drawer-system/Drawer.vue';
 import Search from './Search.vue';
 import Sidebar from './Sidebar.vue';
 import RedactionSelectionMenu from './RedactionSelectionMenu.vue';
+import AnnotationSelectionMenu from './AnnotationSelectionMenu.vue';
+import { AllLogger, ConsoleLogger } from '@embedpdf/models';
 
 // Define drawer components
 const drawerComponents = [
@@ -50,7 +53,13 @@ const drawerComponents = [
   },
 ];
 
-const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine();
+const {
+  engine,
+  isLoading: engineLoading,
+  error: engineError,
+} = usePdfiumEngine({
+  //logger: new AllLogger([new ConsoleLogger()]),
+});
 </script>
 
 <template>
@@ -118,6 +127,7 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
           showAllResults: true,
         }),
         createPluginRegistration(RedactionPluginPackage),
+        createPluginRegistration(AnnotationPluginPackage),
       ]"
     >
       <template #default="{ pluginsReady }">
@@ -172,6 +182,24 @@ const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine
                             />
                             <MarqueeZoom :page-index="page.pageIndex" :scale="page.scale" />
                             <SearchLayer :page-index="page.pageIndex" :scale="page.scale" />
+                            <AnnotationLayer
+                              :page-index="page.pageIndex"
+                              :scale="page.scale"
+                              :page-width="page.width"
+                              :page-height="page.height"
+                              :rotation="page.rotation"
+                            >
+                              <template
+                                #selection-menu="{ annotation, selected, menuWrapperProps, rect }"
+                              >
+                                <AnnotationSelectionMenu
+                                  v-if="selected"
+                                  :annotation="annotation"
+                                  :menu-wrapper-props="menuWrapperProps"
+                                  :rect="rect"
+                                />
+                              </template>
+                            </AnnotationLayer>
                             <RedactionLayer
                               :page-index="page.pageIndex"
                               :scale="page.scale"

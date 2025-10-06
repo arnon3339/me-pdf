@@ -1,87 +1,137 @@
-import { ref, watch, computed, onUnmounted } from 'vue';
+import { ref, watch, computed, onUnmounted, markRaw, type Ref } from 'vue';
+import type { Position, Rect } from '@embedpdf/models';
 import {
   DragResizeController,
-  DragResizeConfig,
-  InteractionEvent,
-  ResizeHandle,
+  type DragResizeConfig,
+  type InteractionEvent,
+  type ResizeHandle,
 } from '../../shared/plugin-interaction-primitives';
+import {
+  norm,
+  rectDTO,
+  vertsDTO,
+  constraintsDTO,
+  boolDTO,
+  numDTO,
+  type MaybeRef,
+} from '../utils/interaction-normalize';
 
-export interface UseDragResizeOptions extends DragResizeConfig {
+export interface UseDragResizeOptions {
+  element: MaybeRef<Rect>;
+  vertices?: MaybeRef<Position[]>;
+  constraints?: MaybeRef<DragResizeConfig['constraints']>;
+  maintainAspectRatio?: MaybeRef<boolean>;
+  pageRotation?: MaybeRef<number>;
+  scale?: MaybeRef<number>;
   onUpdate?: (event: InteractionEvent) => void;
-  enabled?: boolean;
+  enabled?: MaybeRef<boolean>;
 }
 
 export function useDragResize(options: UseDragResizeOptions) {
   const controller = ref<DragResizeController | null>(null);
 
-  // Extract reactive options
-  const { onUpdate, enabled = true, ...config } = options;
+  const {
+    onUpdate,
+    element,
+    vertices,
+    constraints,
+    maintainAspectRatio,
+    pageRotation,
+    scale,
+    enabled,
+  } = options;
 
-  // Initialize controller
+  // Build initial plain config
+  const initialCfg: DragResizeConfig = {
+    element: rectDTO(norm(element)),
+    vertices: vertices ? vertsDTO(norm(vertices)) : undefined,
+    constraints: constraintsDTO(constraints),
+    maintainAspectRatio: boolDTO(enabled === undefined ? undefined : norm(maintainAspectRatio!)),
+    pageRotation: numDTO(pageRotation === undefined ? undefined : norm(pageRotation!)),
+    scale: numDTO(scale === undefined ? undefined : norm(scale!)),
+  };
+
   if (!controller.value) {
-    controller.value = new DragResizeController(config, (event) => onUpdate?.(event));
+    controller.value = markRaw(new DragResizeController(initialCfg, (ev) => onUpdate?.(ev)));
   }
 
-  // Watch for config changes
+  // Reactive updates → always normalize before passing to controller
   watch(
     () => ({
-      element: config.element,
-      constraints: config.constraints,
-      maintainAspectRatio: config.maintainAspectRatio,
-      pageRotation: config.pageRotation,
-      scale: config.scale,
+      element,
+      vertices,
+      constraints,
+      maintainAspectRatio,
+      pageRotation,
+      scale,
     }),
-    (newConfig) => {
-      controller.value?.updateConfig(newConfig);
+    (nc) => {
+      controller.value?.updateConfig({
+        element: rectDTO(norm(nc.element)),
+        vertices: nc.vertices ? vertsDTO(norm(nc.vertices)) : undefined,
+        constraints: constraintsDTO(nc.constraints),
+        maintainAspectRatio: boolDTO(
+          nc.maintainAspectRatio === undefined ? undefined : norm(nc.maintainAspectRatio!),
+        ),
+        pageRotation: numDTO(nc.pageRotation === undefined ? undefined : norm(nc.pageRotation!)),
+        scale: numDTO(nc.scale === undefined ? undefined : norm(nc.scale!)),
+      });
     },
     { deep: true },
   );
 
-  // Cleanup on unmount
   onUnmounted(() => {
     controller.value = null;
   });
 
-  // Drag handlers
+  const isEnabled = () => Boolean(enabled === undefined ? true : norm(enabled));
+
+  // Pointer handlers
   const handleDragStart = (e: PointerEvent) => {
-    if (!enabled) return;
+    if (!isEnabled()) return;
     e.preventDefault();
     e.stopPropagation();
     controller.value?.startDrag(e.clientX, e.clientY);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
   };
-
-  const handleMove = (e: PointerEvent) => {
-    controller.value?.move(e.clientX, e.clientY);
-  };
-
+  const handleMove = (e: PointerEvent) => controller.value?.move(e.clientX, e.clientY);
   const handleEnd = (e: PointerEvent) => {
     controller.value?.end();
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
   };
-
   const handleCancel = (e: PointerEvent) => {
     controller.value?.cancel();
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
   };
 
-  // Create resize handler factory
   const createResizeProps = (handle: ResizeHandle) => ({
     onPointerdown: (e: PointerEvent) => {
-      if (!enabled) return;
+      if (!isEnabled()) return;
       e.preventDefault();
       e.stopPropagation();
       controller.value?.startResize(handle, e.clientX, e.clientY);
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     },
     onPointermove: handleMove,
     onPointerup: handleEnd,
     onPointercancel: handleCancel,
   });
 
-  // Computed drag props
+  const createVertexProps = (vertexIndex: number) => ({
+    onPointerdown: (e: PointerEvent) => {
+      if (!isEnabled()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      controller.value?.startVertexEdit(vertexIndex, e.clientX, e.clientY);
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    },
+    onPointermove: handleMove,
+    onPointerup: handleEnd,
+    onPointercancel: handleCancel,
+  });
+
   const dragProps = computed(() =>
-    enabled
+    isEnabled()
       ? {
           onPointerdown: handleDragStart,
           onPointermove: handleMove,
@@ -91,8 +141,5 @@ export function useDragResize(options: UseDragResizeOptions) {
       : {},
   );
 
-  return {
-    dragProps,
-    createResizeProps,
-  };
+  return { dragProps, createResizeProps, createVertexProps };
 }

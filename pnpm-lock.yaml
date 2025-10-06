@@ -388,6 +388,9 @@ importers:
       '@embedpdf/models':
         specifier: workspace:*
         version: link:../../packages/models
+      '@embedpdf/plugin-annotation':
+        specifier: workspace:*
+        version: link:../../packages/plugin-annotation
       '@embedpdf/plugin-export':
         specifier: workspace:*
         version: link:../../packages/plugin-export

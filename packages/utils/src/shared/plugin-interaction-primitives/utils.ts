@@ -63,7 +63,7 @@ export function describeResizeFromConfig(
   const rotation = ((cfg.pageRotation ?? 0) % 4) as QuarterTurns;
 
   const off = (edge: 'top' | 'right' | 'bottom' | 'left') => ({
-    [edge]: edgeOffset(handleSize, spacing, offsetMode),
+    [edge]: edgeOffset(handleSize, spacing, offsetMode) + 'px',
   });
 
   const corners: Array<[ResizeHandle, Record<string, number | string>]> = [
@@ -87,8 +87,8 @@ export function describeResizeFromConfig(
     handle,
     style: {
       position: 'absolute',
-      width: handleSize,
-      height: handleSize,
+      width: handleSize + 'px',
+      height: handleSize + 'px',
       borderRadius: '50%',
       zIndex,
       cursor: rotationAwareCursor ? diagonalCursor(handle, rotation) : 'default',
@@ -116,10 +116,10 @@ export function describeVerticesFromConfig(
       handle: 'nw', // not used; kept for type
       style: {
         position: 'absolute',
-        left,
-        top,
-        width: vertexSize,
-        height: vertexSize,
+        left: left + 'px',
+        top: top + 'px',
+        width: vertexSize + 'px',
+        height: vertexSize + 'px',
         borderRadius: '50%',
         cursor: 'pointer',
         zIndex,
