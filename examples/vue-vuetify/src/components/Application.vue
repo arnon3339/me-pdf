@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePdfiumEngine } from '@embedpdf/engines/vue';
 import { EmbedPDF } from '@embedpdf/core/vue';
-import { createPluginRegistration } from '@embedpdf/core';
+import { createPluginRegistration, PluginRegistry } from '@embedpdf/core';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/vue';
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/vue';
 import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll/vue';
@@ -24,7 +24,14 @@ import { PrintPluginPackage } from '@embedpdf/plugin-print/vue';
 import { SearchPluginPackage, SearchLayer } from '@embedpdf/plugin-search/vue';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/vue';
 import { RedactionPluginPackage, RedactionLayer } from '@embedpdf/plugin-redaction/vue';
-import { AnnotationPluginPackage, AnnotationLayer } from '@embedpdf/plugin-annotation/vue';
+import {
+  AnnotationPluginPackage,
+  AnnotationLayer,
+  AnnotationPlugin,
+} from '@embedpdf/plugin-annotation/vue';
+import type { AnnotationTool } from '@embedpdf/plugin-annotation/vue';
+import { PdfAnnotationSubtype } from '@embedpdf/models';
+import type { PdfStampAnnoObject } from '@embedpdf/models';
 
 import Toolbar from './Toolbar.vue';
 import DrawerProvider from './drawer-system/DrawerProvider.vue';
@@ -34,7 +41,6 @@ import Sidebar from './Sidebar.vue';
 import RedactionSelectionMenu from './RedactionSelectionMenu.vue';
 import AnnotationSelectionMenu from './AnnotationSelectionMenu.vue';
 import { AllLogger, ConsoleLogger } from '@embedpdf/models';
-
 // Define drawer components
 const drawerComponents = [
   {
@@ -53,13 +59,26 @@ const drawerComponents = [
   },
 ];
 
-const {
-  engine,
-  isLoading: engineLoading,
-  error: engineError,
-} = usePdfiumEngine({
-  //logger: new AllLogger([new ConsoleLogger()]),
-});
+const { engine, isLoading: engineLoading, error: engineError } = usePdfiumEngine();
+
+const handleInitialized = async (registry: PluginRegistry) => {
+  const annotation = registry.getPlugin<AnnotationPlugin>('annotation')?.provides();
+  annotation?.addTool<AnnotationTool<PdfStampAnnoObject>>({
+    id: 'stampApproved',
+    name: 'Stamp Approved',
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+    },
+    matchScore: () => 0,
+    defaults: {
+      type: PdfAnnotationSubtype.STAMP,
+      imageSrc:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Eo_circle_green_checkmark.svg/512px-Eo_circle_green_checkmark.svg.png',
+      imageSize: { width: 20, height: 20 },
+    },
+  });
+};
 </script>
 
 <template>
@@ -83,6 +102,7 @@ const {
   <div v-else-if="engine" class="fill-height">
     <EmbedPDF
       :engine="engine"
+      :on-initialized="handleInitialized"
       :plugins="[
         createPluginRegistration(LoaderPluginPackage, {
           loadingOptions: {

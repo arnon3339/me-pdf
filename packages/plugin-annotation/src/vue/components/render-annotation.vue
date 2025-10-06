@@ -13,9 +13,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted, CSSProperties } from 'vue';
+import { ref, watch, onUnmounted, CSSProperties, computed } from 'vue';
 import { ignore, PdfAnnotationObject, PdfErrorCode } from '@embedpdf/models';
 import { useAnnotationCapability } from '../hooks';
+import { deepToRaw } from '@embedpdf/utils/vue';
 
 const props = withDefaults(
   defineProps<{
@@ -34,14 +35,19 @@ const imageUrl = ref<string | null>(null);
 const urlRef = ref<string | null>(null);
 const currentTask = ref<any>(null);
 
+// Extract primitive values to avoid unnecessary re-renders
+const annotationId = computed(() => props.annotation.id);
+const rectWidth = computed(() => props.annotation.rect.size.width);
+const rectHeight = computed(() => props.annotation.rect.size.height);
+
 watch(
   () => [
     props.pageIndex,
     props.scaleFactor,
-    props.annotation.id,
-    props.annotation.rect.size.width,
-    props.annotation.rect.size.height,
-    annotationProvides,
+    annotationId.value,
+    rectWidth.value,
+    rectHeight.value,
+    annotationProvides.value,
   ],
   (_, __, onCleanup) => {
     if (annotationProvides.value) {
@@ -52,7 +58,7 @@ watch(
 
       const task = annotationProvides.value.renderAnnotation({
         pageIndex: props.pageIndex,
-        annotation: props.annotation,
+        annotation: deepToRaw(props.annotation),
         options: {
           scaleFactor: props.scaleFactor,
           dpr: window.devicePixelRatio,

@@ -1,4 +1,3 @@
-// utils/interaction-normalize.ts
 import { isRef, unref, toRaw, type Ref } from 'vue';
 import type { Rect, Position } from '@embedpdf/models';
 import type { DragResizeConfig } from '../../shared/plugin-interaction-primitives';
