@@ -51,13 +51,7 @@ const withNextra = nextra({
 })
 
 const nextConfig = async (phase: string) => {
-  const nextConfig: NextConfig = {
-    reactStrictMode: true,
-    compiler: {
-      reactRemoveProperties: false,
-    },
-    productionBrowserSourceMaps: true,
-  }
+  const nextConfig: NextConfig = {}
 
   if (phase === 'phase-development-server') {
     const fs = await import('node:fs')
