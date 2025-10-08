@@ -107,7 +107,7 @@ This example combines the toolbar and the marquee zoom component into a complete
 
 import { ZoomExample } from '../code-examples/zoom-example';
 
-\<ZoomExample /\>
+<ZoomExample />
 
 ## API Reference
 
@@ -115,9 +115,9 @@ import { ZoomExample } from '../code-examples/zoom-example';
 
 | Option | Type | Description |
 | :--- | :--- | :--- |
-| **`defaultZoomLevel`** | `ZoomMode \| number` | The initial zoom level. Can be a numeric scale factor (e.g., `1.5` for 150%) or a `ZoomMode` enum. \<br /\>**Default**: `ZoomMode.Automatic` |
-| **`minZoom`** | `number` | The minimum allowed numeric zoom level. \<br /\>**Default**: `0.2` |
-| **`maxZoom`** | `number` | The maximum allowed numeric zoom level. \<br /\>**Default**: `60` |
+| **`defaultZoomLevel`** | `ZoomMode \| number` | The initial zoom level. Can be a numeric scale factor (e.g., `1.5` for 150%) or a `ZoomMode` enum. <br />**Default**: `ZoomMode.Automatic` |
+| **`minZoom`** | `number` | The minimum allowed numeric zoom level. <br />**Default**: `0.2` |
+| **`maxZoom`** | `number` | The maximum allowed numeric zoom level. <br />**Default**: `60` |
 | **`presets`** | `ZoomPreset[]` | An array of objects `{ name: string, value: ZoomMode \| number }` to define options for a zoom dropdown menu. |
 
 ### Composable: `useZoom()`
