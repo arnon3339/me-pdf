@@ -1836,9 +1836,6 @@ importers:
       unist-util-visit:
         specifier: ^5.0.0
         version: 5.0.0
-      veaury:
-        specifier: ^2.5.0-beta.0
-        version: 2.6.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       vue:
         specifier: ^3.5.6
         version: 3.5.17(typescript@5.7.3)
@@ -10383,12 +10380,6 @@ packages:
 
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
-
-  veaury@2.6.3:
-    resolution: {integrity: sha512-hb4R1iAjaN0wlNdPJefF2E7z4JCXKzipaFIuWUarFism6OSnHdk74fMsj7uRe38/iSNGPiHPy0+x6H25uLUR4g==}
-    peerDependencies:
-      react: '>= 16.4.0'
-      react-dom: '>= 16.4.0'
 
   verror@1.10.0:
     resolution: {integrity: sha512-ZZKSmDAEFOijERBLkmYfJ+vmk3w+7hOLYDNkRCuRuMJGEmqYNCNLyBBFwWKVMhfwaEF3WOd0Zlw86U/WC/+nYw==}
@@ -21150,11 +21141,6 @@ snapshots:
       convert-source-map: 2.0.0
 
   varint@6.0.0: {}
-
-  veaury@2.6.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
 
   verror@1.10.0:
     dependencies:

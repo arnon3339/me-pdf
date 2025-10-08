@@ -12,7 +12,7 @@ export default defineConfig({
       tsconfigPath: './tsconfig.lib.json',
       rollupTypes: false,
       entryRoot: 'src/examples',
-      outDir: 'dist',
+      outDir: 'dist/examples',
       // Only include .vue files for type generation
       include: ['src/examples/**/*.vue'],
       beforeWriteFile: (filePath, content) => {
@@ -28,7 +28,7 @@ export default defineConfig({
     }),
   ],
   build: {
-    outDir: 'dist',
+    outDir: 'dist/examples',
     sourcemap: true,
     emptyOutDir: true,
     lib: {

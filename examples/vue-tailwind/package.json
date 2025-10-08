@@ -5,12 +5,12 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    "./*": "./dist/*.js"
+    "./*": "./dist/examples/*.js"
   },
   "typesVersions": {
     "*": {
       "*": [
-        "./dist/*.d.ts"
+        "./dist/examples/*.d.ts"
       ]
     }
   },
@@ -19,7 +19,8 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "pnpm build:app && pnpm build:examples",
+    "build:app": "vite build",
     "build:examples": "vite --config vite.lib.config.ts build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,vue --report-unused-disable-directives --max-warnings 0"
