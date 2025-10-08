@@ -6,5 +6,6 @@ export const CaptureExample = () => {
     () => import('@embedpdf/example-vue-tailwind/capture-example'),
   )
 
-  return <div ref={containerRef} />
+  // Add suppressHydrationWarning to prevent the warning
+  return <div ref={containerRef} suppressHydrationWarning />
 }

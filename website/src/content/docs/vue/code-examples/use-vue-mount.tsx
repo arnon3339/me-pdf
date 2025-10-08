@@ -44,10 +44,6 @@ export function useVueMount(loader: () => Promise<{ default: any }>) {
     }
   }, [loader, isMounted])
 
-  // Return null during SSR to match what client will initially render
-  if (!isMounted) {
-    return null
-  }
-
+  // ALWAYS return the ref, never return null
   return containerRef
 }
