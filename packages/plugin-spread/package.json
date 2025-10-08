@@ -1,6 +1,6 @@
 {
   "name": "@embedpdf/plugin-spread",
-  "version": "1.3.13",
+  "version": "1.3.14",
   "type": "module",
   "license": "MIT",
   "main": "./dist/index.cjs",

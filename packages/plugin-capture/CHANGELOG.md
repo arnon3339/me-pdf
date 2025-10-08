@@ -1,5 +1,11 @@
 # @embedpdf/plugin-capture
 
+## 1.3.14
+
+### Patch Changes
+
+- [#212](https://github.com/embedpdf/embed-pdf-viewer/pull/212) by [@bobsingor](https://github.com/bobsingor) – Add reactive state for marquee capture mode
+
 ## 1.3.13
 
 ## 1.3.12
