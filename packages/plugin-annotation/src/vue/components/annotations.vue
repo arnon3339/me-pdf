@@ -10,6 +10,7 @@
       :lockAspectRatio="lockAspectRatio(annotation)"
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -41,6 +42,7 @@
       :lockAspectRatio="lockAspectRatio(annotation)"
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -72,6 +74,7 @@
       :lockAspectRatio="lockAspectRatio(annotation)"
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -103,6 +106,7 @@
       :lockAspectRatio="lockAspectRatio(annotation)"
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -134,6 +138,7 @@
       :lockAspectRatio="lockAspectRatio(annotation)"
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -165,6 +170,7 @@
       :lockAspectRatio="lockAspectRatio(annotation)"
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -197,6 +203,7 @@
       :onSelect="(e) => handleClick(e, annotation)"
       :onDoubleClick="(e) => handleDoubleClick(e, annotation.object.id)"
       :vertexConfig="getVertexConfig(annotation)"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -230,6 +237,7 @@
       :lockAspectRatio="lockAspectRatio(annotation)"
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default>
@@ -263,6 +271,7 @@
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
       :zIndex="0"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -287,6 +296,7 @@
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
       :zIndex="0"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -311,6 +321,7 @@
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
       :zIndex="0"
+      :style="{ mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Normal) }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -335,6 +346,9 @@
       :onSelect="(e) => handleClick(e, annotation)"
       :vertexConfig="getVertexConfig(annotation)"
       :zIndex="0"
+      :style="{
+        mixBlendMode: blendModeToCss(annotation.object.blendMode ?? PdfBlendMode.Multiply),
+      }"
       v-bind="props"
     >
       <template #default="{ annotation: currentObject }">
@@ -353,7 +367,7 @@
 
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue';
-import { Position } from '@embedpdf/models';
+import { blendModeToCss, PdfBlendMode, Position } from '@embedpdf/models';
 import {
   getAnnotationsByPageIndex,
   getSelectedAnnotationByPageIndex,
