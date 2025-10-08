@@ -25,19 +25,25 @@ export function CounterRotate({ children, ...props }: CounterRotateComponentProp
   const { matrix, width, height } = getCounterRotation(rect, rotation);
   const elementRef = useRef<HTMLDivElement | null>(null);
 
-  // Use native event listeners with capture phase to prevent text selection
+  // Use native event listeners with capture phase to prevent event propagation
   useEffect(() => {
     const element = elementRef.current;
     if (!element) return;
 
     const handlePointerDown = (e: Event) => {
+      // Stop propagation to prevent underlying layers from receiving the event
       e.stopPropagation();
-      e.preventDefault();
+      // DO NOT use e.preventDefault() here - it breaks click events on mobile/tablet!
+      // preventDefault() stops the browser from generating click events from touch,
+      // which makes buttons inside this container non-functional on touch devices.
     };
 
     const handleTouchStart = (e: Event) => {
+      // Stop propagation to prevent underlying layers from receiving the event
       e.stopPropagation();
-      e.preventDefault();
+      // DO NOT use e.preventDefault() here - it breaks click events on mobile/tablet!
+      // preventDefault() stops the browser from generating click events from touch,
+      // which makes buttons inside this container non-functional on touch devices.
     };
 
     // Use capture phase to intercept before synthetic events
