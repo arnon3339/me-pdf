@@ -1,5 +1,13 @@
 # @embedpdf/plugin-annotation
 
+## 1.3.14
+
+### Patch Changes
+
+- [`fb323ea`](https://github.com/embedpdf/embed-pdf-viewer/commit/fb323ea28c02b43d885760c952e5a5cf9a0461f9) by [@bobsingor](https://github.com/bobsingor) – Update event type definitions for vue annotation handlers
+
+- [`867c84f`](https://github.com/embedpdf/embed-pdf-viewer/commit/867c84f139ac4f6a9d92ab662985c918e70b86f7) by [@bobsingor](https://github.com/bobsingor) – Add blend mode styling to Vue annotation components
+
 ## 1.3.13
 
 ### Patch Changes
