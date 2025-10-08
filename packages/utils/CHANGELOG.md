@@ -1,5 +1,11 @@
 # @embedpdf/utils
 
+## 1.3.14
+
+### Patch Changes
+
+- [`d4092ea`](https://github.com/embedpdf/embed-pdf-viewer/commit/d4092ea637d92c42af4ca2e51db589e707cad920) by [@bobsingor](https://github.com/bobsingor) – Removed preventDefault() from pointer and touch event handlers in CounterRotateContainer to ensure buttons remain functional on mobile and tablet devices. Now only stopPropagation() is used to prevent event propagation without interfering with native click generation.
+
 ## 1.3.13
 
 ### Patch Changes
