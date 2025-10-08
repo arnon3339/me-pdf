@@ -440,7 +440,7 @@ const handleClick = (e: MouseEvent | TouchEvent, annotation: TrackedAnnotation) 
   }
 };
 
-const handleDoubleClick = (_e: MouseEvent, id: string) => {
+const handleDoubleClick = (_e: MouseEvent | PointerEvent, id: string) => {
   if (isFreeText(annotations.value.find((a) => a.object.id === id)!)) {
     editingId.value = id;
   }

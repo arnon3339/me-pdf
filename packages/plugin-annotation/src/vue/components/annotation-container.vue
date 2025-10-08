@@ -80,8 +80,8 @@ const props = withDefaults(
     lockAspectRatio?: boolean;
     vertexConfig?: VertexConfig<T>;
     outlineOffset?: number;
-    onDoubleClick?: (event: any) => void;
-    onSelect: (event: any) => void;
+    onDoubleClick?: (event: PointerEvent | MouseEvent) => void;
+    onSelect: (event: TouchEvent | MouseEvent) => void;
     zIndex?: number;
     selectionOutlineColor?: string;
   }>(),
