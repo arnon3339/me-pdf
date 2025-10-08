@@ -1,11 +1,19 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export function useVueMount(loader: () => Promise<{ default: any }>) {
   const containerRef = useRef<HTMLDivElement>(null)
   const vueAppRef = useRef<any>(null)
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Ensure we only render on client
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
+    if (!isMounted) return
+
     let mounted = true
 
     const loadAndMount = async () => {
@@ -34,7 +42,12 @@ export function useVueMount(loader: () => Promise<{ default: any }>) {
         vueAppRef.current = null
       }
     }
-  }, [loader])
+  }, [loader, isMounted])
+
+  // Return null during SSR to match what client will initially render
+  if (!isMounted) {
+    return null
+  }
 
   return containerRef
 }
