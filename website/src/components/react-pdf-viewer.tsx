@@ -23,6 +23,7 @@ import {
   Settings,
   Zap,
 } from 'lucide-react'
+import Link from 'next/link'
 
 const CheckCircle = ({ className }: { className?: string }) => {
   return (
@@ -173,7 +174,7 @@ export default function ReactPDFViewerPage() {
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
+              <Link
                 href="/docs/react/introduction"
                 className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gray-900 px-8 py-4 text-base font-medium text-white shadow-xl transition-all hover:scale-105"
               >
@@ -182,7 +183,7 @@ export default function ReactPDFViewerPage() {
                   View Documentation
                   <ArrowRight />
                 </span>
-              </a>
+              </Link>
 
               <a
                 href="https://mui.embedpdf.com"
@@ -269,7 +270,7 @@ export default function ReactPDFViewerPage() {
                 {/* Highlights */}
                 <div className="flex-1 px-8 py-8">
                   <h4 className="tracking-wider mb-6 text-sm font-bold uppercase text-slate-400">
-                    What you'll get
+                    What you&apos;ll get
                   </h4>
                   <ul className="space-y-4">
                     <li className="flex items-center">
@@ -312,13 +313,13 @@ export default function ReactPDFViewerPage() {
                 {/* CTAs */}
                 <div className="border-t border-slate-700/50 bg-slate-800/50 px-8 py-6">
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <a
+                    <Link
                       href="/docs/snippet/introduction"
                       className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-cyan-500 hover:to-blue-500 hover:shadow-xl"
                     >
                       <span>Try simple snippet</span>
                       <ArrowRight className="ml-3 h-6 w-6" />
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -345,7 +346,7 @@ export default function ReactPDFViewerPage() {
                 {/* Highlights */}
                 <div className="flex-1 px-8 py-8">
                   <h4 className="tracking-wider mb-6 text-sm font-bold uppercase text-slate-400">
-                    What you'll get
+                    What you&apos;ll get
                   </h4>
                   <ul className="space-y-4">
                     <li className="flex items-center">
@@ -545,13 +546,15 @@ export default function ReactPDFViewerPage() {
                 <span className="text-purple-400">import</span>{' '}
                 <span className="text-blue-300">{'{ EmbedPDF }'}</span>{' '}
                 <span className="text-purple-400">from</span>{' '}
-                <span className="text-yellow-300">'@embedpdf/core/react'</span>;
-                {'\n'}
+                <span className="text-yellow-300">
+                  &apos;@embedpdf/core/react&apos;
+                </span>
+                ;{'\n'}
                 <span className="text-purple-400">import</span>{' '}
                 <span className="text-blue-300">{'{ usePdfiumEngine }'}</span>{' '}
                 <span className="text-purple-400">from</span>{' '}
                 <span className="text-yellow-300">
-                  '@embedpdf/engines/react'
+                  &apos;@embedpdf/engines/react&apos;
                 </span>
                 ;{'\n\n'}
                 <span className="text-purple-400">
@@ -591,13 +594,13 @@ export default function ReactPDFViewerPage() {
           </div>
 
           <div className="mt-8 text-center">
-            <a
+            <Link
               href="/docs/react/getting-started"
               className="inline-flex items-center gap-2 text-lg font-medium text-blue-400 transition-colors hover:text-blue-300"
             >
               View Full Getting Started Guide
               <ArrowRight />
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -727,13 +730,13 @@ export default function ReactPDFViewerPage() {
                 PDF experiences
               </p>
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                <a
+                <Link
                   href="/docs/react/introduction"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-base font-medium text-gray-900 shadow-lg transition-all hover:scale-105 hover:shadow-xl"
                 >
                   Get Started Now
                   <ArrowRight />
-                </a>
+                </Link>
                 <a
                   href="https://github.com/embedpdf/embed-pdf-viewer"
                   target="_blank"
