@@ -390,13 +390,13 @@ export default function ReactPDFViewerPage() {
                 {/* CTAs */}
                 <div className="border-t border-slate-700/50 bg-slate-800/50 px-8 py-6">
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <a
+                    <Link
                       href="/docs/react/introduction"
                       className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-emerald-500 hover:to-teal-500 hover:shadow-xl"
                     >
                       <span>Explore headless</span>
                       <ArrowRight className="ml-3 h-6 w-6" />
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
