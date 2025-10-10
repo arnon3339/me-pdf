@@ -15,6 +15,6 @@ export function setPDFContext(ctx: PDFContextState) {
 
 export function getPDFContext(): PDFContextState {
   const ctx = getContext<PDFContextState>(pdfKey);
-  if (!ctx) throw new Error('getPDFContext must be used inside <EmbedPdf>');
+  if (!ctx) throw new Error('getPDFContext must be used inside <EmbedPDF>');
   return ctx;
 }

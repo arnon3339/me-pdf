@@ -1,6 +1,5 @@
 import type { Logger, PdfEngine } from '@embedpdf/models';
-
-const defaultWasmUrl = `https://cdn.jsdelivr.net/npm/@embedpdf/pdfium@__PDFIUM_VERSION__/dist/pdfium.wasm`;
+import { DEFAULT_PDFIUM_WASM_URL } from '@embedpdf/engines';
 
 export interface UsePdfiumEngineProps {
   wasmUrl?: string;
@@ -9,7 +8,7 @@ export interface UsePdfiumEngineProps {
 }
 
 export function usePdfiumEngine(config?: UsePdfiumEngineProps) {
-  const { wasmUrl = defaultWasmUrl, worker = true, logger } = config ?? {};
+  const { wasmUrl = DEFAULT_PDFIUM_WASM_URL, worker = true, logger } = config ?? {};
 
   let engine = $state<PdfEngine | null>(null);
   let isLoading = $state(true);

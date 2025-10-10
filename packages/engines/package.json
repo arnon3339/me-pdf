@@ -54,7 +54,7 @@
     },
     "./svelte": {
       "types": "./dist/svelte/index.d.ts",
-      "svelte": "./dist/svelte/index.ts",
+      "svelte": "./dist/svelte/index.js",
       "import": "./dist/svelte/index.js",
       "require": "./dist/svelte/index.cjs"
     }
@@ -69,7 +69,7 @@
     "build:react": "vite build --mode react",
     "build:preact": "vite build --mode preact",
     "build:vue": "vite build --mode vue",
-    "build:svelte": "svelte-package -v",
+    "build:svelte": "svelte-package -i src/svelte -o dist/svelte -t && node tools/replace-version.js",
     "build": "pnpm run clean && concurrently -c auto -n base,react,preact,vue,svelte \"vite build --mode base\" \"vite build --mode react\" \"vite build --mode preact\" \"vite build --mode vue\" \"pnpm run build:svelte\"",
     "clean": "rimraf dist",
     "lint": "eslint src --color",
