@@ -47,7 +47,7 @@
     "vite": "^6.3.5"
   },
   "lint-staged": {
-    "**/*.{ts,tsx,js,jsx,json,css,md,vue}": "prettier --write"
+    "**/*.{ts,tsx,js,jsx,json,css,md,vue,svelte}": "prettier --write"
   },
   "pnpm": {
     "overrides": {

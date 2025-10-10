@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { defineConfig, type UserConfig, Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import dts from 'unplugin-dts/vite';
 
 const sharedExternal = [/^@embedpdf\/(?!.*\/@framework$)/];
@@ -169,11 +170,21 @@ export function defineLibrary() {
           dtsOptions: { processor: 'vue' },
         });
 
+      case 'svelte':
+        if (!exists('svelte/index.ts')) throw new Error('No Svelte adapter');
+        return createConfig({
+          tsconfigPath: 'svelte/tsconfig.svelte.json',
+          entryPath: 'svelte/index.ts',
+          outputPrefix: 'svelte',
+          external: ['svelte', 'svelte/internal'],
+          additionalPlugins: [svelte()],
+        });
+
       default: // base
         return createConfig({
           tsconfigPath: './tsconfig.json',
           entryPath: 'index.ts',
-          dtsExclude: ['**/react/**', '**/preact/**', '**/vue/**', '**/shared/**'], // exclude framework dirs for base build
+          dtsExclude: ['**/react/**', '**/preact/**', '**/vue/**', '**/svelte/**', '**/shared/**'], // exclude framework dirs for base build
         });
     }
   });
