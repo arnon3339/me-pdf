@@ -40,7 +40,7 @@ const packages = [
     id: 'engine',
     name: '@embedpdf/engines',
     description:
-      'Pluggable rendering engines for EmbedPDF. Ships with PdfiumEngine – a high‑level, promise‑first wrapper with advanced PDF processing capabilities.',
+      'Pluggable rendering engines for EmbedPdf. Ships with PdfiumEngine – a high‑level, promise‑first wrapper with advanced PDF processing capabilities.',
     icon: <Zap className="h-6 w-6 text-white" />,
     color: 'from-blue-600 to-cyan-600',
     tags: ['High-level API', 'Universal Runtime', 'TypeScript', 'PDFium'],
@@ -120,7 +120,7 @@ const packages = [
   {
     id: "annotations",
     name: "@embedpdf/annotations",
-    description: "Advanced PDF annotation capabilities that can be used with any of the EmbedPDF packages.",
+    description: "Advanced PDF annotation capabilities that can be used with any of the EmbedPdf packages.",
     icon: <Settings className="h-6 w-6 text-white" />,
     color: "from-green-600 to-yellow-500",
     tags: ["Annotations", "Markup", "Collaboration"],
@@ -777,7 +777,7 @@ function MyPDFViewer() {
                 <Book size={24} />
               </div>
               <h3 className="text-xl font-bold mb-2">API Reference</h3>
-              <p className="text-gray-600 mb-4">Complete API documentation for all EmbedPDF packages and modules.</p>
+              <p className="text-gray-600 mb-4">Complete API documentation for all EmbedPdf packages and modules.</p>
               <Link
                 href="/api-reference"
                 className="inline-flex items-center text-purple-700 font-medium hover:text-purple-900"

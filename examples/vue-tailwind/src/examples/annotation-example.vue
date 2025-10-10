@@ -37,7 +37,7 @@ const plugins = [
   createPluginRegistration(SelectionPluginPackage),
   createPluginRegistration(HistoryPluginPackage),
   createPluginRegistration(AnnotationPluginPackage, {
-    annotationAuthor: 'EmbedPDF User',
+    annotationAuthor: 'EmbedPdf User',
   }),
 ];
 

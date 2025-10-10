@@ -49,7 +49,7 @@ const plugins = [
   createPluginRegistration(HistoryPluginPackage), // Optional, for undo/redo
   // The Annotation Plugin
   createPluginRegistration(AnnotationPluginPackage, {
-    annotationAuthor: 'EmbedPDF User',
+    annotationAuthor: 'EmbedPdf User',
   }),
 ]
 

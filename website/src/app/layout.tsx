@@ -3,9 +3,9 @@ import { getPageMap } from 'nextra/page-map'
 
 export const metadata = {
   title:
-    'Open-Source JavaScript PDF Viewer – Fast, Customizable & Framework-Agnostic | EmbedPDF',
+    'Open-Source JavaScript PDF Viewer – Fast, Customizable & Framework-Agnostic | EmbedPdf',
   description:
-    'EmbedPDF is a blazing-fast, MIT-licensed JavaScript PDF viewer that works with React, Vue, Svelte, and plain JS. Fully customizable, zero vendor lock-in, and perfect for modern web apps.',
+    'EmbedPdf is a blazing-fast, MIT-licensed JavaScript PDF viewer that works with React, Vue, Svelte, and plain JS. Fully customizable, zero vendor lock-in, and perfect for modern web apps.',
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',

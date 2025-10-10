@@ -16,7 +16,7 @@ export default function PDFViewer({ style, className }: PDFViewerProps) {
     setIsClient(true)
   }, [])
 
-  // Load EmbedPDF only on client side
+  // Load EmbedPdf only on client side
   useEffect(() => {
     if (!isClient || !viewerRef.current) return
 
@@ -32,7 +32,7 @@ export default function PDFViewer({ style, className }: PDFViewerProps) {
           worker: true,
         })
       } catch (error) {
-        console.error('Failed to load EmbedPDF:', error)
+        console.error('Failed to load EmbedPdf:', error)
       }
     }
 

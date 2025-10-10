@@ -3,6 +3,6 @@ import { pdfKey } from '../context';
 
 export function useRegistry() {
   const ctx = inject(pdfKey);
-  if (!ctx) throw new Error('useRegistry must be used inside <EmbedPDF>');
+  if (!ctx) throw new Error('useRegistry must be used inside <EmbedPdf>');
   return ctx;
 }

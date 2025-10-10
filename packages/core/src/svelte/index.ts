@@ -1,2 +1,2 @@
 export * from './composables';
-export { EmbedPDF } from './components';
+export { EmbedPdf } from './components';

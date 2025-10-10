@@ -30,6 +30,7 @@
     "./svelte": {
       "types": "./dist/svelte/index.d.ts",
       "import": "./dist/svelte/index.js",
+      "svelte": "./dist/svelte/index.js",
       "require": "./dist/svelte/index.cjs"
     }
   },
@@ -57,8 +58,8 @@
     "preact": "^10.26.4",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0",
-    "vue": ">=3.2.0",
-    "svelte": ">=5.39.11"
+    "svelte": ">=5.39.11",
+    "vue": ">=3.2.0"
   },
   "files": [
     "dist",
