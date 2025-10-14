@@ -663,7 +663,7 @@ export default function Enterprise() {
             </div>
           </div>
 
-          {/* About EmbedPdf */}
+          {/* About EmbedPDF */}
           <div className="mb-24 rounded-3xl bg-white p-12 md:p-16">
             <div className="mx-auto max-w-4xl text-center">
               <h2 className="mb-8 text-4xl font-black text-gray-900 md:text-5xl">

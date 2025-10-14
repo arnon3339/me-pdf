@@ -4,7 +4,7 @@ export default {
     type: 'page',
   },
   snippet: {
-    title: 'EmbedPdf Snippet',
+    title: 'EmbedPDF Snippet',
     type: 'page',
   },
   engines: {

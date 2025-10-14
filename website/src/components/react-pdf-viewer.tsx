@@ -544,7 +544,7 @@ export default function ReactPDFViewerPage() {
             <pre className="overflow-x-auto p-6 text-sm leading-relaxed">
               <code className="text-gray-300">
                 <span className="text-purple-400">import</span>{' '}
-                <span className="text-blue-300">{'{ EmbedPdf }'}</span>{' '}
+                <span className="text-blue-300">{'{ EmbedPDF }'}</span>{' '}
                 <span className="text-purple-400">from</span>{' '}
                 <span className="text-yellow-300">
                   &apos;@embedpdf/core/react&apos;

@@ -3,7 +3,6 @@
   import type { PdfEngine } from '@embedpdf/models';
   import {setEngineContext} from "../context/pdf-engine-context";
 
-
   export interface PdfEngineProviderProps {
     children: Snippet;
     engine: PdfEngine | null;

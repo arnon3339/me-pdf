@@ -14,7 +14,7 @@
 
 # Svelte Tailwind PDF Viewer Example
 
-This example shows how to build a fully‑featured PDF viewer with **EmbedPDF**, **Svelte 5** and **Tailwind CSS**. It demonstrates how to combine EmbedPDF's plugin system with Tailwind CSS to create a polished reading experience that feels right at home in any Svelte + Tailwind CSS project.
+This example shows how to build a PDF viewer with **EmbedPDF**, **Svelte 5** and **Tailwind CSS**. It demonstrates how to combine EmbedPDF's plugin system with Tailwind CSS to create a polished reading experience that feels right at home in any Svelte + Tailwind CSS project.
 
 **Note:** This example is currently work in progress and provides a minimal implementation.
 

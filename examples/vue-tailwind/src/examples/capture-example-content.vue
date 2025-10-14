@@ -6,7 +6,7 @@ import { RenderLayer } from '@embedpdf/plugin-render/vue';
 import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/vue';
 import { MarqueeCapture, useCapture, type CaptureAreaEvent } from '@embedpdf/plugin-capture/vue';
 
-// Now this is safe because we're guaranteed to be inside <EmbedPdf>
+// Now this is safe because we're guaranteed to be inside <EmbedPDF>
 const { provides: capture, isMarqueeCaptureActive } = useCapture();
 const captureResult = ref<CaptureAreaEvent | null>(null);
 const imageUrl = ref<string | null>(null);
