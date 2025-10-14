@@ -8,7 +8,7 @@
     import { RenderPluginPackage } from '@embedpdf/plugin-render';
     import MyRenderLayer from '$lib/components/MyRenderLayer.svelte';
 
-    const pdfEngine = usePdfiumEngine();
+    const {engine, isLoading} = $derived(usePdfiumEngine());
 
     const plugins = [
         createPluginRegistration(LoaderPluginPackage, {
@@ -26,11 +26,11 @@
 
 </script>
 
-{#if !pdfEngine.engine || pdfEngine.isLoading}
+{#if !engine || isLoading}
     <div>loading...</div>
 {:else}
     <div id="pdf-container" class="mx-auto w-3/4">
-        <EmbedPDF engine={pdfEngine.engine} logger={undefined} {plugins}>
+        <EmbedPDF engine={engine} logger={undefined} {plugins}>
             <div class="flex h-full flex-col">
                 <Viewport class="bg-transparent">
                     <MyRenderLayer />
