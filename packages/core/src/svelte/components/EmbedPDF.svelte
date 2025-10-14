@@ -3,7 +3,8 @@
     import {type IPlugin, type PluginBatchRegistration, PluginRegistry} from '@embedpdf/core';
     import {type Snippet} from 'svelte';
     import AutoMount from "./AutoMount.svelte";
-    import { type PDFContextState, setPDFContext } from "../context";
+    import {pdfContext, type PDFContextState} from "../hooks";
+
 
 
     interface EmbedPDFProps {
@@ -43,14 +44,10 @@
     autoMountDomElements = true
   }: EmbedPDFProps = $props();
 
-  const ctx = $state<PDFContextState>({
-    registry: null,
-    isInitializing: true,
-    pluginsReady: false
-  });
+
 
   let latestInit = onInitialized;
-  setPDFContext(ctx);
+
 
   $effect(() => {
     if (onInitialized) {
@@ -81,28 +78,28 @@
 
         reg.pluginsReady().then(() => {
           if (!reg.isDestroyed()) {
-            ctx.pluginsReady = true;
+            pdfContext.pluginsReady = true;
           }
         });
 
         // Provide the registry to children via context
-        ctx.registry = reg;
-        ctx.isInitializing = false;
+        pdfContext.registry = reg;
+        pdfContext.isInitializing = false;
       };
       initialize().catch(console.error);
 
       return () => {
         reg.destroy();
-        ctx.registry = null;
-        ctx.isInitializing = false;
-        ctx.pluginsReady = false;
+        pdfContext.registry = null;
+        pdfContext.isInitializing = false;
+        pdfContext.pluginsReady = false;
       };
     }
   });
 </script>
 
-{#if ctx.pluginsReady && autoMountDomElements}
-  <AutoMount {plugins}>{@render children(ctx)}</AutoMount>
+{#if pdfContext.pluginsReady && autoMountDomElements}
+  <AutoMount {plugins}>{@render children(pdfContext)}</AutoMount>
 {:else}
-  {@render children(ctx)}
+  {@render children(pdfContext)}
 {/if}

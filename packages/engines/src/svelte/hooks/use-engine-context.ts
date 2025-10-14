@@ -1,5 +1,16 @@
-import { pdfEngineKey, type PdfEngineContextState } from '../context/pdf-engine-context';
-import { getContext } from 'svelte';
+import type { PdfEngine } from '@embedpdf/models';
+
+export interface PdfEngineContextState {
+  engine: PdfEngine | null;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+export const engineContext = $state<PdfEngineContextState>({
+  engine: null,
+  isLoading: true,
+  error: null,
+});
 
 /**
  * Composable to access the PDF engine from context.
@@ -7,9 +18,7 @@ import { getContext } from 'svelte';
  * @throws Error if used outside of PdfEngineProvider
  */
 export function useEngineContext(): PdfEngineContextState {
-  const ctx = getContext<PdfEngineContextState>(pdfEngineKey);
-  if (!ctx) throw new Error('useEngineContext must be used within a PdfEngineProvider');
-  return ctx;
+  return engineContext;
 }
 
 /**
@@ -17,8 +26,6 @@ export function useEngineContext(): PdfEngineContextState {
  * @returns The PDF engine or null if loading/error
  */
 export function useEngine() {
-  const engineContext = useEngineContext();
-
   if (engineContext.error) {
     throw engineContext.error;
   }

@@ -1,9 +1,9 @@
 <script lang="ts">
     import {useViewportCapability, useViewportRef} from '../hooks';
-  import type { HTMLAttributes } from 'svelte/elements';
-  import type { Snippet } from 'svelte';
+    import type {HTMLAttributes} from 'svelte/elements';
+    import type {Snippet} from 'svelte';
 
-  type ViewportProps = HTMLAttributes<HTMLDivElement> & {
+    type ViewportProps = HTMLAttributes<HTMLDivElement> & {
     children: Snippet;
     class?: string;
   };
@@ -12,20 +12,20 @@
 
   let viewportGap = $state(0);
 
-  let viewportRef = $derived(useViewportRef());
+  let viewportRef = useViewportRef();
 
-  const c = useViewportCapability();
+  const {provides} = useViewportCapability();
 
   $effect(() => {
-    if (c.provides) {
-      viewportGap = c.provides.getViewportGap();
+    if (provides) {
+      viewportGap = provides.getViewportGap();
     }
   });
 </script>
 
 <div
   {...restProps}
-  bind:this={viewportRef.containerRef}
+  bind:this={viewportRef.ref}
   style:width="100%"
   style:height="100%"
   style:overflow="auto"

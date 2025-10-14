@@ -9,7 +9,7 @@ type ViewportProps = HTMLAttributes<HTMLDivElement> & {
 
 export function Viewport({ children, ...props }: ViewportProps) {
   const [viewportGap, setViewportGap] = useState(0);
-  const viewportRef = useViewportRef();
+  const viewportRef = $derived(useViewportRef());
   const { provides: viewportProvides } = useViewportCapability();
 
   useEffect(() => {

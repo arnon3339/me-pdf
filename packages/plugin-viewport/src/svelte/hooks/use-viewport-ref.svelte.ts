@@ -1,14 +1,17 @@
 import { type Rect } from '@embedpdf/models';
 import { useViewportPlugin } from './use-viewport';
 
+export const containerRef = $state<{ref: HTMLDivElement | null}>({
+  ref: null
+});
+
 export function useViewportRef() {
-  const p = $derived(useViewportPlugin());
-  let containerRef = $state<HTMLDivElement | null>(null);
+  const {plugin} = useViewportPlugin();
 
   $effect.pre(() => {
-    if (!p.plugin) return;
+    if (!plugin) return;
 
-    const container = containerRef;
+    const container = containerRef.ref;
     if (!container) return;
 
     /* ---------- live rect provider --------------------------------- */
@@ -19,11 +22,11 @@ export function useViewportRef() {
         size: { width: r.width, height: r.height }
       };
     };
-    p.plugin.registerBoundingRectProvider(provideRect);
+    plugin.registerBoundingRectProvider(provideRect);
 
     // Example: On scroll, call setMetrics
     const onScroll = () => {
-      p.plugin?.setViewportScrollMetrics({
+      plugin?.setViewportScrollMetrics({
         scrollTop: container.scrollTop,
         scrollLeft: container.scrollLeft
       });
@@ -32,7 +35,7 @@ export function useViewportRef() {
 
     // Example: On resize, call setMetrics
     const resizeObserver = new ResizeObserver(() => {
-      p.plugin?.setViewportResizeMetrics({
+      plugin?.setViewportResizeMetrics({
         width: container.offsetWidth,
         height: container.offsetHeight,
         clientWidth: container.clientWidth,
@@ -45,7 +48,7 @@ export function useViewportRef() {
     });
     resizeObserver.observe(container);
 
-    const unsubscribeScrollRequest = p.plugin.onScrollRequest(({ x, y, behavior = 'auto' }) => {
+    const unsubscribeScrollRequest = plugin.onScrollRequest(({ x, y, behavior = 'auto' }) => {
       requestAnimationFrame(() => {
         container.scrollTo({ left: x, top: y, behavior });
       });
@@ -53,7 +56,7 @@ export function useViewportRef() {
 
     // Cleanup
     return () => {
-      p.plugin?.registerBoundingRectProvider(null);
+      plugin?.registerBoundingRectProvider(null);
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
       unsubscribeScrollRequest();
@@ -61,12 +64,5 @@ export function useViewportRef() {
   });
 
   // Return the ref so your Svelte code can attach it to a div
-  return {
-    get containerRef() {
-      return containerRef;
-    },
-    set containerRef(el: HTMLDivElement | null) {
-      containerRef = el;
-    }
-  };
+  return containerRef
 }

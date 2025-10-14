@@ -1,5 +1,5 @@
 import type { BasePlugin } from '@embedpdf/core';
-import { useRegistry } from './use-registry.svelte.js';
+import { pdfContext } from './use-registry.svelte.js';
 
 type PluginState<T extends BasePlugin> = {
   plugin: T | null;
@@ -16,8 +16,8 @@ type PluginState<T extends BasePlugin> = {
  * const zoom = usePlugin<ZoomPlugin>(ZoomPlugin.id);
  */
 export function usePlugin<T extends BasePlugin>(pluginId: T['id']): PluginState<T> {
-  const r = useRegistry();
-  if (r.registry === null) {
+  const {registry } = pdfContext;
+  if (registry === null) {
     return {
       plugin: null,
       isLoading: true,
@@ -25,7 +25,7 @@ export function usePlugin<T extends BasePlugin>(pluginId: T['id']): PluginState<
     };
   }
 
-  const plugin = r.registry.getPlugin<T>(pluginId);
+  const plugin = registry.getPlugin<T>(pluginId);
 
   if (!plugin) {
     throw new Error(`Plugin ${pluginId} not found`);
