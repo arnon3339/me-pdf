@@ -1,17 +1,15 @@
 import { type Rect } from '@embedpdf/models';
 import { useViewportPlugin } from './use-viewport';
 
-export const containerRef = $state<{ref: HTMLDivElement | null}>({
-  ref: null
-});
 
 export function useViewportRef() {
   const {plugin} = useViewportPlugin();
+  let containerRef = $state<HTMLDivElement | null>(null);
 
   $effect.pre(() => {
     if (!plugin) return;
 
-    const container = containerRef.ref;
+    const container = containerRef;
     if (!container) return;
 
     /* ---------- live rect provider --------------------------------- */
@@ -64,5 +62,12 @@ export function useViewportRef() {
   });
 
   // Return the ref so your Svelte code can attach it to a div
-  return containerRef
+  return {
+    get containerRef() {
+      return containerRef;
+    },
+    set containerRef(el: HTMLDivElement | null) {
+      containerRef = el;
+    }
+  };
 }

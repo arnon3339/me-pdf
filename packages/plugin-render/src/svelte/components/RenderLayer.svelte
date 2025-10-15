@@ -1,7 +1,7 @@
 <script lang="ts">
-    import type { HTMLImgAttributes } from 'svelte/elements';
+    import type {HTMLImgAttributes} from 'svelte/elements';
     import {ignore, type PdfDocumentObject, PdfErrorCode} from '@embedpdf/models';
-    import { useRenderCapability, useRenderPlugin } from '../hooks';
+    import {useRenderCapability, useRenderPlugin} from '../hooks';
 
     interface RenderLayerProps extends Omit<HTMLImgAttributes, 'style'> {
         pageIndex: number;
@@ -25,15 +25,14 @@
     // Subscribe/unsubscribe whenever the plugin instance changes (not just on mount)
     $effect(() => {
         if (!renderPlugin.plugin) return; // nothing yet; try again when it appears
-        const unsubscribe = renderPlugin.plugin.onRefreshPages((pages) => {
+        return renderPlugin.plugin.onRefreshPages((pages) => {
             if (pages.includes(pageIndex)) {
                 refreshTick++; // trigger a re-render
             }
         });
-        return unsubscribe;
     });
 
-    // Render whenever inputs change (pageIndex, scale, dpr, provides, refreshTick)
+    // Render whenever inputs change (pageIndex, doc, scale, dpr, provides, refreshTick)
     $effect(() => {
         // Explicitly read doc and refreshTick so the effect tracks it
         const _tick = refreshTick;

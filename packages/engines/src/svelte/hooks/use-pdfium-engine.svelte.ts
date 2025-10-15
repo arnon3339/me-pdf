@@ -1,7 +1,5 @@
 import { ignore, Logger, PdfEngine } from '@embedpdf/models';
 import { DEFAULT_PDFIUM_WASM_URL } from '@embedpdf/engines';
-import { engineContext } from './use-engine-context';
-import { useEffect } from '@framework';
 
 export interface UsePdfiumEngineProps {
   wasmUrl?: string;
@@ -12,74 +10,59 @@ export interface UsePdfiumEngineProps {
 export function usePdfiumEngine(config?: UsePdfiumEngineProps) {
   const { wasmUrl = DEFAULT_PDFIUM_WASM_URL, worker = true, logger } = config ?? {};
 
+  let engine = $state<PdfEngine | null>(null);
+  let loading = $state(true);
+  let error = $state<Error | null>(null);
   let engineRef = $state<PdfEngine | null>();
-  let token = 0;
 
-  async function loadEngine() {
-    const myToken = ++token;
-    engineContext.isLoading = true;
-    engineContext.error = null;
+  $effect(() => {
+    let cancelled = false;
 
-    try {
-      const { createPdfiumEngine } = worker
-        ? await import('@embedpdf/engines/pdfium-worker-engine')
-        : await import('@embedpdf/engines/pdfium-direct-engine');
-      const pdfEngine = await createPdfiumEngine(wasmUrl, logger);
+    (async () => {
+      try {
+        const { createPdfiumEngine } = worker
+          ? await import('@embedpdf/engines/pdfium-worker-engine')
+          : await import('@embedpdf/engines/pdfium-direct-engine');
 
-      if (myToken !== token) {
-        pdfEngine?.destroy?.();
-        return;
-      }
-
-      engineRef = pdfEngine;
-      engineContext.engine = pdfEngine;
-      engineContext.isLoading = false;
-    } catch (e) {
-      if (myToken !== token) return;
-      engineContext.error = e as Error;
-      engineContext.isLoading = false;
-    }
-  }
-
-  useEffect(() => {
-    if (wasmUrl || worker || logger) {
-      let cancelled = false;
-
-      (async () => {
-        try {
-          const { createPdfiumEngine } = worker
-            ? await import('@embedpdf/engines/pdfium-worker-engine')
-            : await import('@embedpdf/engines/pdfium-direct-engine');
-
-          const pdfEngine = await createPdfiumEngine(wasmUrl, logger);
-          engineRef = pdfEngine;
-          pdfEngine.initialize().wait(
-            () => {
-              engineContext.engine = pdfEngine;
-              engineContext.isLoading = false;
-            },
-            (e) => {
-              engineContext.error = new Error(e.reason.message);
-              engineContext.isLoading = false;
-            },
-          );
-        } catch (e) {
-          if (!cancelled) {
-            engineContext.error = e as Error;
-            engineContext.isLoading = false;
-          }
+        const pdfEngine = await createPdfiumEngine(wasmUrl, logger);
+        engineRef = pdfEngine;
+        pdfEngine.initialize().wait(
+          () => {
+            engine = pdfEngine;
+            loading = false;
+          },
+          (e) => {
+            error = new Error(e.reason.message);
+            loading = false;
+          },
+        );
+      } catch (e) {
+        if (!cancelled) {
+          error = e as Error;
+          loading = false;
         }
-      })();
+      }
+    })();
 
-      return () => {
-        cancelled = true;
-        engineRef?.closeAllDocuments?.().wait(() => {
-          engineRef?.destroy?.();
-          engineRef = null;
-        }, ignore);
-      };
-    }
+    return () => {
+      cancelled = true;
+      engineRef?.closeAllDocuments?.().wait(() => {
+        engineRef?.destroy?.();
+        engineRef = null;
+      }, ignore);
+    };
   });
 
-  return engineContext;
+  // IMPORTANT: expose *getters* so consumers read live state
+  return {
+    get engine() {
+      return engine;
+    },
+    get isLoading() {
+      return loading;
+    },
+    get error() {
+      return error;
+    },
+  };
 }

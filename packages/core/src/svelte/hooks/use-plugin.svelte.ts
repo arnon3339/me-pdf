@@ -16,7 +16,7 @@ type PluginState<T extends BasePlugin> = {
  * const zoom = usePlugin<ZoomPlugin>(ZoomPlugin.id);
  */
 export function usePlugin<T extends BasePlugin>(pluginId: T['id']): PluginState<T> {
-  const {registry } = pdfContext;
+  const { registry } = pdfContext;
   if (registry === null) {
     return {
       plugin: null,
