@@ -9,6 +9,7 @@
 
   const reg = useRegistry();
   let document = $state(reg?.registry?.getStore().getState().core.document);
+  let renderKey = $state(0);
 
   async function handleDocChange(
     e: Event & {
@@ -29,10 +30,14 @@
         },
       });
       document = reg?.registry?.getStore().getState().core.document;
+      // increment key to force re-render
+      renderKey++;
     }
   }
 </script>
 
 <input type="file" accept="application/pdf" onchange={handleDocChange} />
 
-<RenderLayer {pageIndex} doc={document} {scale} />
+{#key renderKey}
+  <RenderLayer {pageIndex} {scale} />
+{/key}
