@@ -1,14 +1,11 @@
 <script lang="ts">
   import { RenderLayer } from '@embedpdf/plugin-render/svelte';
   import { useLoaderCapability } from '@embedpdf/plugin-loader/svelte';
-  import { useRegistry } from '@embedpdf/core/svelte';
 
   let { pageIndex, scale } = $props();
 
   const loaderCapability = $derived(useLoaderCapability());
 
-  const reg = useRegistry();
-  let document = $state(reg?.registry?.getStore().getState().core.document);
   let renderKey = $state(0);
 
   async function handleDocChange(
@@ -29,7 +26,6 @@
           content: arrayBuffer,
         },
       });
-      document = reg?.registry?.getStore().getState().core.document;
       // increment key to force re-render
       renderKey++;
     }
