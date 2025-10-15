@@ -3,7 +3,7 @@
   import type { HTMLAttributes } from 'svelte/elements';
   import { type PageLayout, type ScrollerLayout, ScrollStrategy } from '@embedpdf/plugin-scroll';
   import type { PdfDocumentObject, Rotation } from '@embedpdf/models';
-  import { useRegistry } from '@embedpdf/core/svelte';
+  import { useRegistry, useCoreState } from '@embedpdf/core/svelte';
   import { type Snippet } from 'svelte';
 
   export interface RenderPageProps extends PageLayout {
@@ -17,8 +17,9 @@
     overlayElements?: Snippet[];
   };
 
-  const { plugin: scrollPlugin } = useScrollPlugin();
-  const { registry } = useRegistry();
+  const { plugin: scrollPlugin } = $derived(useScrollPlugin());
+  const { registry } = $derived(useRegistry());
+  let {coreState} = $derived(useCoreState());
   let scrollerLayout = $state<ScrollerLayout | null>(scrollPlugin?.getScrollerLayout() ?? null);
 
   let { RenderPageSnippet, overlayElements, ...restProps }: ScrollerProps = $props();
@@ -32,10 +33,10 @@
     if (!scrollPlugin) return;
     scrollPlugin.setLayoutReady();
   });
+
 </script>
 
-{#if scrollerLayout && registry}
-  {@const coreState = registry.getStore().getState()}
+{#if scrollerLayout && registry && coreState}
   <div
     {...restProps}
     style:width={`${scrollerLayout.totalWidth}px`}
@@ -81,9 +82,9 @@
             >
               {@render RenderPageSnippet?.({
                 ...layout,
-                rotation: coreState.core.rotation,
-                scale: coreState.core.scale,
-                document: coreState.core.document,
+                rotation: coreState.rotation,
+                scale: coreState.scale,
+                document: coreState.document,
               })}
             </div>
           {/each}
@@ -98,7 +99,7 @@
         ? '100%'
         : `${scrollerLayout.endSpacing}`}
       style:flex-shrink="0"
-    />
+    ></div>
     {#if overlayElements && overlayElements.length > 0}
       {#each overlayElements as OverLay}
         {@render OverLay?.()}
