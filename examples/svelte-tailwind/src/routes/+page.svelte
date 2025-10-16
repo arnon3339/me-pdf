@@ -5,7 +5,7 @@
     type IPlugin,
     type PluginBatchRegistration,
   } from '@embedpdf/core';
-  import { EmbedPDF } from '@embedpdf/core/svelte';
+  import { EmbedPDF, useRegistry } from '@embedpdf/core/svelte';
   import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
   import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
   import { Viewport } from '@embedpdf/plugin-viewport/svelte';
@@ -13,13 +13,16 @@
   import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/svelte';
   import { useLoaderCapability } from '@embedpdf/plugin-loader/svelte';
   import { RenderLayer } from '@embedpdf/plugin-render/svelte';
-  import { MarqueeZoom, ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom/svelte';
+  import { MarqueeZoom, ZoomMode } from '@embedpdf/plugin-zoom/svelte';
+  import { ZoomPluginPackage } from '@embedpdf/plugin-zoom';
   import {
     InteractionManagerPluginPackage,
     PagePointerProvider,
   } from '@embedpdf/plugin-interaction-manager/svelte';
   import ZoomToolbar from '$lib/components/ZoomToolbar.svelte';
   import type { Rotation } from '@embedpdf/models';
+  import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
+  import { TilingLayer } from '@embedpdf/plugin-tiling/svelte';
 
   type RenderPageProps = {
     width: number;
@@ -47,22 +50,16 @@
             id: '1',
             url: 'https://snippet.embedpdf.com/ebook.pdf',
           },
-          options: {
-            mode: 'full-fetch',
-          },
         },
       }),
-      createPluginRegistration(ViewportPluginPackage, {
-        viewportGap: 10,
-      }),
+      createPluginRegistration(ViewportPluginPackage),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage),
-      createPluginRegistration(ZoomPluginPackage, {
-        defaultZoomLevel: ZoomMode.FitPage,
-      }),
+      createPluginRegistration(TilingPluginPackage),
+      createPluginRegistration(ZoomPluginPackage),
     ];
     if (withMarqueeZoom) {
-      basePlugins.push(createPluginRegistration(InteractionManagerPluginPackage));
+      basePlugins.splice(4, 0, createPluginRegistration(InteractionManagerPluginPackage));
     }
     return basePlugins;
   });
@@ -85,14 +82,23 @@
           name: file.name,
           content: arrayBuffer,
         },
+        options: {
+          mode: 'full-fetch',
+        },
       });
       activeFileLoaded = true;
     }
   }
+  // TODO - <TilingLayer {pageIndex} {scale} /> cannot be used yet because this line in render-plugin.ts:
+  // return this.engine.renderPage(coreState.document, page, options);
+  // throws this error:
+  // Uncaught DataCloneError: Failed to execute 'postMessage' on 'Worker': #<Object> could not be cloned.
+  // This likely is because Svelte is making some values reactive Proxies which can't be cloned
 </script>
 
-{#snippet RenderLayers({  pageIndex, scale}: RenderPageProps)}
+{#snippet RenderLayers({ pageIndex, scale }: RenderPageProps)}
   <RenderLayer {pageIndex} {scale} />
+  <!--    <TilingLayer {pageIndex} {scale} />-->
   {#if withMarqueeZoom}
     <MarqueeZoom {pageIndex} {scale} />
   {/if}
@@ -114,10 +120,6 @@
       {:else}
         {@render RenderLayers(props)}
       {/if}
-      <RenderLayer pageIndex={props.pageIndex} scale={props.scale} />
-      {#if withMarqueeZoom}
-        <MarqueeZoom pageIndex={props.pageIndex} scale={props.scale} />
-      {/if}
     {/if}
   </div>
 {/snippet}
@@ -125,11 +127,11 @@
 {#if !engine || isLoading}
   <div>loading...</div>
 {:else}
-  <div id="pdf-container" class="h-screen">
+  <div id="view-page" class="flex flex-1 flex-col overflow-hidden">
     <EmbedPDF {engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
         <ZoomToolbar {withMarqueeZoom} />
-        <Viewport class="bg-transparent ">
+        <Viewport class="h-full w-full flex-1 overflow-auto bg-transparent select-none">
           <input type="file" accept="application/pdf" onchange={handleDocChange} />
           <Scroller {RenderPageSnippet} />
         </Viewport>

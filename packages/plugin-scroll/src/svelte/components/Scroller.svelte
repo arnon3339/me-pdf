@@ -24,6 +24,7 @@
 
   let { RenderPageSnippet, overlayElements, ...restProps }: ScrollerProps = $props();
 
+
   $effect(() => {
     if (!scrollPlugin) return;
     return scrollPlugin.onScrollerData((layout) => (scrollerLayout = layout));

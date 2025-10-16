@@ -93,5 +93,9 @@ export function useIsPageExclusive() {
     });
   });
 
-  return isPageExclusive;
+  return {
+    get isPageExclusive() {
+      return isPageExclusive;
+    },
+  };
 }

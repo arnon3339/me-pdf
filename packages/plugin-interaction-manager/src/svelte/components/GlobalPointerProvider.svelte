@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Snippet } from 'svelte';
+  import type { Snippet } from 'svelte';
   import { useInteractionManagerCapability } from '../hooks';
   import { createPointerProvider } from '../../shared/utils';
-  import { HTMLAttributes } from 'svelte/elements';
+  import type { HTMLAttributes } from 'svelte/elements';
 
   interface GlobalPointerProviderProps extends HTMLAttributes<HTMLDivElement> {
     children: Snippet;

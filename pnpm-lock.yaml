@@ -333,6 +333,9 @@ importers:
       '@embedpdf/plugin-scroll':
         specifier: workspace:*
         version: link:../../packages/plugin-scroll
+      '@embedpdf/plugin-tiling':
+        specifier: workspace:*
+        version: link:../../packages/plugin-tiling
       '@embedpdf/plugin-viewport':
         specifier: workspace:*
         version: link:../../packages/plugin-viewport
@@ -599,12 +602,18 @@ importers:
 
   packages/build:
     dependencies:
+      '@sveltejs/package':
+        specifier: ^2.5.4
+        version: 2.5.4(svelte@5.39.11)(typescript@5.9.3)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.0.0
         version: 6.2.1(svelte@5.39.11)(vite@6.3.5(@types/node@22.16.4)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.39.0)(yaml@2.8.0))
       '@vitejs/plugin-vue':
         specifier: ^6.0.0
         version: 6.0.0(vite@6.3.5(@types/node@22.16.4)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.39.0)(yaml@2.8.0))(vue@3.5.17(typescript@5.9.3))
+      glob:
+        specifier: ^11.0.1
+        version: 11.0.1
       unplugin-dts:
         specifier: 1.0.0-beta.6
         version: 1.0.0-beta.6(@microsoft/api-extractor@7.52.8(@types/node@22.16.4))(@vue/language-core@3.0.6(typescript@5.9.3))(esbuild@0.25.0)(rollup@4.52.4)(typescript@5.9.3)(vite@6.3.5(@types/node@22.16.4)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.39.0)(yaml@2.8.0))(webpack@5.98.0(esbuild@0.25.0))
@@ -1470,6 +1479,9 @@ importers:
       react-dom:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
+      svelte:
+        specifier: '>=5.39.11'
+        version: 5.39.11
       vue:
         specifier: '>=3.2.0'
         version: 3.5.17(typescript@5.8.3)
@@ -1489,6 +1501,12 @@ importers:
       '@embedpdf/plugin-viewport':
         specifier: workspace:*
         version: link:../plugin-viewport
+      '@sveltejs/package':
+        specifier: ^2.5.4
+        version: 2.5.4(svelte@5.39.11)(typescript@5.8.3)
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^6.0.0
+        version: 6.2.1(svelte@5.39.11)(vite@7.1.10(@types/node@22.16.4)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.39.0)(yaml@2.8.0))
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.18
@@ -13961,6 +13979,17 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  '@sveltejs/package@2.5.4(svelte@5.39.11)(typescript@5.9.3)':
+    dependencies:
+      chokidar: 4.0.3
+      kleur: 4.1.5
+      sade: 1.8.1
+      semver: 7.7.2
+      svelte: 5.39.11
+      svelte2tsx: 0.7.45(svelte@5.39.11)(typescript@5.9.3)
+    transitivePeerDependencies:
+      - typescript
+
   '@sveltejs/vite-plugin-svelte-inspector@5.0.1(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.11)(vite@6.3.5(@types/node@22.16.4)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.39.0)(yaml@2.8.0)))(svelte@5.39.11)(vite@6.3.5(@types/node@22.16.4)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.11)(vite@6.3.5(@types/node@22.16.4)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.39.0)(yaml@2.8.0))
@@ -21506,6 +21535,13 @@ snapshots:
       scule: 1.3.0
       svelte: 5.39.11
       typescript: 5.8.3
+
+  svelte2tsx@0.7.45(svelte@5.39.11)(typescript@5.9.3):
+    dependencies:
+      dedent-js: 1.0.1
+      scule: 1.3.0
+      svelte: 5.39.11
+      typescript: 5.9.3
 
   svelte@5.39.11:
     dependencies:

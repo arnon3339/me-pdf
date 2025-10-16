@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Rect } from '@embedpdf/models';
+  import type { Rect } from '@embedpdf/models';
   import { useZoomCapability } from '../hooks/use-zoom.svelte';
 
   interface MarqueeZoomProps {

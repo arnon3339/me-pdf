@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Position, restorePosition, Size, transformSize } from '@embedpdf/models';
-  import { Snippet } from 'svelte';
-  import { HTMLAttributes } from 'svelte/elements';
+  import { type Position, restorePosition, type Size, transformSize } from '@embedpdf/models';
+  import type { Snippet } from 'svelte';
+  import type { HTMLAttributes } from 'svelte/elements';
   import { createPointerProvider } from '../../shared/utils';
   import { useInteractionManagerCapability, useIsPageExclusive } from '../hooks';
 
