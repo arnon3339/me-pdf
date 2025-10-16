@@ -51,6 +51,8 @@
   "devDependencies": {
     "@embedpdf/build": "workspace:*",
     "@embedpdf/core": "workspace:*",
+    "@sveltejs/package": "^2.5.4",
+    "@sveltejs/vite-plugin-svelte": "^6.0.0",
     "@embedpdf/plugin-viewport": "workspace:*",
     "@types/react": "^18.2.0",
     "typescript": "^5.0.0"
@@ -58,8 +60,6 @@
   "peerDependencies": {
     "@embedpdf/core": "workspace:*",
     "@embedpdf/plugin-viewport": "workspace:*",
-    "@sveltejs/package": "^2.5.4",
-    "@sveltejs/vite-plugin-svelte": "^6.0.0",
     "preact": "^10.26.4",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0",

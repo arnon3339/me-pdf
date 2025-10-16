@@ -1,6 +1,10 @@
 <script lang="ts">
   import { usePdfiumEngine } from '@embedpdf/engines/svelte';
-  import { createPluginRegistration } from '@embedpdf/core';
+  import {
+    createPluginRegistration,
+    type IPlugin,
+    type PluginBatchRegistration,
+  } from '@embedpdf/core';
   import { EmbedPDF } from '@embedpdf/core/svelte';
   import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
   import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
@@ -9,37 +13,59 @@
   import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/svelte';
   import { useLoaderCapability } from '@embedpdf/plugin-loader/svelte';
   import { RenderLayer } from '@embedpdf/plugin-render/svelte';
+  import { MarqueeZoom, ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom/svelte';
+  import {
+    InteractionManagerPluginPackage,
+    PagePointerProvider,
+  } from '@embedpdf/plugin-interaction-manager/svelte';
+  import ZoomToolbar from '$lib/components/ZoomToolbar.svelte';
+  import type { Rotation } from '@embedpdf/models';
 
   type RenderPageProps = {
     width: number;
     height: number;
     pageIndex: number;
     scale: number;
+    rotation: Rotation;
   };
+
+  type PageProps = {
+    withMarqueeZoom?: boolean;
+  };
+  let { withMarqueeZoom = false }: PageProps = $props();
 
   const { engine, isLoading } = $derived(usePdfiumEngine());
   const { provides: loaderProvides } = $derived(useLoaderCapability());
   let activeFileLoaded = $state(true);
 
-  const plugins = [
-    createPluginRegistration(LoaderPluginPackage, {
-      loadingOptions: {
-        type: 'url',
-        pdfFile: {
-          id: '1',
-          url: 'https://snippet.embedpdf.com/ebook.pdf',
+  let plugins = $derived.by(() => {
+    const basePlugins: PluginBatchRegistration<IPlugin<any>, any>[] = [
+      createPluginRegistration(LoaderPluginPackage, {
+        loadingOptions: {
+          type: 'url',
+          pdfFile: {
+            id: '1',
+            url: 'https://snippet.embedpdf.com/ebook.pdf',
+          },
+          options: {
+            mode: 'full-fetch',
+          },
         },
-        options: {
-          mode: 'full-fetch',
-        },
-      },
-    }),
-    createPluginRegistration(ViewportPluginPackage,  {
+      }),
+      createPluginRegistration(ViewportPluginPackage, {
         viewportGap: 10,
-    }),
-    createPluginRegistration(ScrollPluginPackage),
-    createPluginRegistration(RenderPluginPackage),
-  ];
+      }),
+      createPluginRegistration(ScrollPluginPackage),
+      createPluginRegistration(RenderPluginPackage),
+      createPluginRegistration(ZoomPluginPackage, {
+        defaultZoomLevel: ZoomMode.FitPage,
+      }),
+    ];
+    if (withMarqueeZoom) {
+      basePlugins.push(createPluginRegistration(InteractionManagerPluginPackage));
+    }
+    return basePlugins;
+  });
 
   async function handleDocChange(
     e: Event & {
@@ -65,10 +91,33 @@
   }
 </script>
 
-{#snippet RenderPageSnippet({ width, height, pageIndex, scale }: RenderPageProps)}
-  <div style:width={`${width}`} style:height={`${height}`} style:position="relative">
+{#snippet RenderLayers({  pageIndex, scale}: RenderPageProps)}
+  <RenderLayer {pageIndex} {scale} />
+  {#if withMarqueeZoom}
+    <MarqueeZoom {pageIndex} {scale} />
+  {/if}
+{/snippet}
+
+{#snippet RenderPageSnippet(props: RenderPageProps)}
+  <div style:width={`${props.width}`} style:height={`${props.height}`} style:position="relative">
     {#if activeFileLoaded}
-      <RenderLayer {pageIndex} {scale} />
+      {#if withMarqueeZoom}
+        <PagePointerProvider
+          pageIndex={props.pageIndex}
+          pageWidth={props.width}
+          pageHeight={props.height}
+          rotation={props.rotation}
+          scale={props.scale}
+        >
+          {@render RenderLayers(props)}
+        </PagePointerProvider>
+      {:else}
+        {@render RenderLayers(props)}
+      {/if}
+      <RenderLayer pageIndex={props.pageIndex} scale={props.scale} />
+      {#if withMarqueeZoom}
+        <MarqueeZoom pageIndex={props.pageIndex} scale={props.scale} />
+      {/if}
     {/if}
   </div>
 {/snippet}
@@ -79,6 +128,7 @@
   <div id="pdf-container" class="h-screen">
     <EmbedPDF {engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
+        <ZoomToolbar {withMarqueeZoom} />
         <Viewport class="bg-transparent ">
           <input type="file" accept="application/pdf" onchange={handleDocChange} />
           <Scroller {RenderPageSnippet} />
