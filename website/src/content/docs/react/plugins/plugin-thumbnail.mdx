@@ -54,7 +54,7 @@ The plugin features two main components: `<ThumbnailsPane />` (the virtualized c
 
 You'll typically place `<ThumbnailsPane />` in a sidebar next to your main `<Viewport />`. It uses a **render prop** pattern, where you provide a function as its child. This function gets called for each visible thumbnail, receiving metadata (`m`) about its dimensions and position. You then use this metadata to style your thumbnail container, inside of which you'll render the `<ThumbImg meta={m} />` component.
 
-To handle navigation, you can use the `useScrollSvelte` hook to get the `scrollToPage` function and the `currentPage` for highlighting the active thumbnail.
+To handle navigation, you can use the `useScroll` hook to get the `scrollToPage` function and the `currentPage` for highlighting the active thumbnail.
 
 ### Using the `meta` Object
 
@@ -69,11 +69,11 @@ The `meta` object passed to your render prop contains pre-calculated values that
 By correctly applying `top` and `wrapperHeight`, you ensure that the virtualized layout is rendered without gaps or overlaps.
 
 ```tsx
-import { useScrollSvelte } from '@embedpdf/plugin-scroll/react';
+import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { ThumbnailsPane, ThumbImg } from '@embedpdf/plugin-thumbnail/react';
 
 const ThumbnailSidebar = () => {
-  const { state, provides } = useScrollSvelte();
+  const { state, provides } = useScroll();
 
   return (
     <ThumbnailsPane>

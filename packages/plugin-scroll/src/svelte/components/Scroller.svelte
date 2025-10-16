@@ -48,15 +48,15 @@
   >
     <div
       style:width={scrollerLayout.strategy === ScrollStrategy.Horizontal
-        ? `${scrollerLayout.startSpacing}`
+        ? `${scrollerLayout.startSpacing}px`
         : '100%'}
       style:height={scrollerLayout.strategy === ScrollStrategy.Horizontal
         ? '100%'
-        : `${scrollerLayout.startSpacing}`}
+        : `${scrollerLayout.startSpacing}px`}
       style:flex-shrink="0"
     ></div>
     <div
-      style:gap={`${scrollerLayout.pageGap}`}
+      style:gap={`${scrollerLayout.pageGap}px`}
       style:display="flex"
       style:align-items="center"
       style:position="relative"
@@ -72,7 +72,7 @@
         <div
           style:display="flex"
           style:justify-content="center"
-          style:gap={`${scrollerLayout.pageGap}`}
+          style:gap={`${scrollerLayout.pageGap}px`}
         >
           {#each item.pageLayouts as layout (layout.pageNumber)}
             <div
@@ -92,11 +92,11 @@
     </div>
     <div
       style:width={scrollerLayout.strategy === ScrollStrategy.Horizontal
-        ? `${scrollerLayout.endSpacing}`
+        ? `${scrollerLayout.endSpacing}px`
         : '100%'}
       style:height={scrollerLayout.strategy === ScrollStrategy.Horizontal
         ? '100%'
-        : `${scrollerLayout.endSpacing}`}
+        : `${scrollerLayout.endSpacing}px`}
       style:flex-shrink="0"
     ></div>
     {#if overlayElements && overlayElements.length > 0}

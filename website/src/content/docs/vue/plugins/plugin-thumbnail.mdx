@@ -53,7 +53,7 @@ The plugin features two main components: `<ThumbnailsPane />` (the virtualized c
 
 You'll typically place `<ThumbnailsPane />` in a sidebar. It uses a **scoped slot**, which is called for each visible thumbnail, receiving metadata (`meta`) about its dimensions and position. You then use this metadata to style your thumbnail container and render the `<ThumbImg :meta="meta" />` component inside.
 
-To handle navigation, you can use the `useScrollSvelte` composable to get the `scrollToPage` function and the `currentPage` for highlighting the active thumbnail.
+To handle navigation, you can use the `useScroll` composable to get the `scrollToPage` function and the `currentPage` for highlighting the active thumbnail.
 
 ### Using the `meta` Object
 
@@ -66,10 +66,10 @@ The `meta` object passed to your scoped slot contains pre-calculated values cruc
 
 ```vue
 <script setup lang="ts">
-import { useScrollSvelte } from '@embedpdf/plugin-scroll/vue';
+import { useScroll } from '@embedpdf/plugin-scroll/vue';
 import { ThumbnailsPane, ThumbImg } from '@embedpdf/plugin-thumbnail/vue';
 
-const { state, provides } = useScrollSvelte();
+const { state, provides } = useScroll();
 </script>
 
 <template>
