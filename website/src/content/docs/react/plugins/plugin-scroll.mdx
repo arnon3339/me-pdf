@@ -6,7 +6,7 @@ searchable: true
 
 # Scroll Plugin
 
-The Scroll Plugin is a foundational plugin responsible for page layout, virtualization, and navigation. It provides the essential `<Scroller />` component, which intelligently renders only the visible pages to ensure high performance, and the `useScroll` hook for building page navigation controls.
+The Scroll Plugin is a foundational plugin responsible for page layout, virtualization, and navigation. It provides the essential `<Scroller />` component, which intelligently renders only the visible pages to ensure high performance, and the `useScrollSvelte` hook for building page navigation controls.
 
 ## Installation
 
@@ -45,7 +45,7 @@ const plugins = [
 
 ## Usage
 
-The plugin provides the `<Scroller />` component for rendering pages and the `useScroll` hook for navigation.
+The plugin provides the `<Scroller />` component for rendering pages and the `useScrollSvelte` hook for navigation.
 
 ### The `<Scroller />` and `renderPage` Prop
 
@@ -69,13 +69,13 @@ import { RenderLayer } from '@embedpdf/plugin-render/react';
 
 ### Page Navigation
 
-The `useScroll` hook provides everything you need to build a page navigation UI. It returns a `provides` object with action methods and a `state` object with reactive data like the current page number.
+The `useScrollSvelte` hook provides everything you need to build a page navigation UI. It returns a `provides` object with action methods and a `state` object with reactive data like the current page number.
 
 ```tsx {1,4, 8-9}
-import { useScroll } from '@embedpdf/plugin-scroll/react';
+import { useScrollSvelte } from '@embedpdf/plugin-scroll/react';
 
 const PageControls = () => {
-  const { provides: scroll, state } = useScroll();
+  const { provides: scroll, state } = useScrollSvelte();
 
   return (
     <div>
@@ -113,7 +113,7 @@ The virtualized container that lays out pages.
 | :--- | :--- | :--- |
 | **`renderPage`** | `(props) => ReactNode` | **(Required)** A function that returns the content for a single page. It receives an object with page layout data like `pageIndex`, `width`, `height`, and `scale`. |
 
-### Hook: `useScroll()`
+### Hook: `useScrollSvelte()`
 
 A convenience hook for building page navigation UIs. It returns an object containing a `provides` object for actions and a `state` object for reactive data.
 

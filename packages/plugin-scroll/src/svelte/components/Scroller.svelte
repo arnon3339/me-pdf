@@ -19,7 +19,7 @@
 
   const { plugin: scrollPlugin } = $derived(useScrollPlugin());
   const { registry } = $derived(useRegistry());
-  let {coreState} = $derived(useCoreState());
+  let { coreState } = $derived(useCoreState());
   let scrollerLayout = $derived<ScrollerLayout | null>(scrollPlugin?.getScrollerLayout() ?? null);
 
   let { RenderPageSnippet, overlayElements, ...restProps }: ScrollerProps = $props();
@@ -33,7 +33,6 @@
     if (!scrollPlugin) return;
     scrollPlugin.setLayoutReady();
   });
-
 </script>
 
 {#if scrollerLayout && registry && coreState}

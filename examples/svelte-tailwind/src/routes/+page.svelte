@@ -26,12 +26,17 @@
       loadingOptions: {
         type: 'url',
         pdfFile: {
-          id: 'embed-pdf-doc',
+          id: '1',
           url: 'https://snippet.embedpdf.com/ebook.pdf',
+        },
+        options: {
+          mode: 'full-fetch',
         },
       },
     }),
-    createPluginRegistration(ViewportPluginPackage),
+    createPluginRegistration(ViewportPluginPackage,  {
+        viewportGap: 10,
+    }),
     createPluginRegistration(ScrollPluginPackage),
     createPluginRegistration(RenderPluginPackage),
   ];

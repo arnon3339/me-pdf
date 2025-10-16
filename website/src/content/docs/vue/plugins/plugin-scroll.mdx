@@ -6,7 +6,7 @@ searchable: true
 
 # Scroll Plugin
 
-The Scroll Plugin is a foundational plugin responsible for page layout, virtualization, and navigation. It provides the essential `<Scroller />` component, which intelligently renders only the visible pages to ensure high performance, and the `useScroll` composable for building page navigation controls.
+The Scroll Plugin is a foundational plugin responsible for page layout, virtualization, and navigation. It provides the essential `<Scroller />` component, which intelligently renders only the visible pages to ensure high performance, and the `useScrollSvelte` composable for building page navigation controls.
 
 ## Installation
 
@@ -44,7 +44,7 @@ const plugins = [
 
 ## Usage
 
-The plugin provides the `<Scroller />` component for rendering pages and the `useScroll` composable for navigation.
+The plugin provides the `<Scroller />` component for rendering pages and the `useScrollSvelte` composable for navigation.
 
 ### The `<Scroller />` and Scoped Slot
 
@@ -69,13 +69,13 @@ import { RenderLayer } from '@embedpdf/plugin-render/vue';
 
 ### Page Navigation
 
-The `useScroll` composable provides everything you need to build a page navigation UI. It returns a `provides` object with action methods and a reactive `state` object with data like the current page number.
+The `useScrollSvelte` composable provides everything you need to build a page navigation UI. It returns a `provides` object with action methods and a reactive `state` object with data like the current page number.
 
 ```vue
 <script setup lang="ts">
-import { useScroll } from '@embedpdf/plugin-scroll/vue';
+import { useScrollSvelte } from '@embedpdf/plugin-scroll/vue';
 
-const { provides: scroll, state } = useScroll();
+const { provides: scroll, state } = useScrollSvelte();
 </script>
 
 <template>
@@ -115,7 +115,7 @@ The virtualized container that lays out pages.
 | :--- | :--- | :--- |
 | **`page`** | `object` | An object containing all layout data for the page, including `pageIndex`, `width`, `height`, `scale`, and `rotation`. |
 
-### Composable: `useScroll()`
+### Composable: `useScrollSvelte()`
 
 A convenience composable for building page navigation UIs.
 

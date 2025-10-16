@@ -26,7 +26,7 @@ interface UseScrollReturn {
 }
 
 export const useScroll = (): UseScrollReturn => {
-  const { provides } = useScrollCapability();
+  const { provides } = $derived(useScrollCapability());
   let currentPage = $state(1);
   let totalPages = $state(1);
 
@@ -40,7 +40,9 @@ export const useScroll = (): UseScrollReturn => {
 
   return {
     // New format (preferred)
-    provides,
+    get provides(){
+      return provides;
+    },
     // TODO - is this the correct way to keep it reactive?
     get state() {
       return { currentPage, totalPages };
