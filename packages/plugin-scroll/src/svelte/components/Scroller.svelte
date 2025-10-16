@@ -20,7 +20,7 @@
   const { plugin: scrollPlugin } = $derived(useScrollPlugin());
   const { registry } = $derived(useRegistry());
   let {coreState} = $derived(useCoreState());
-  let scrollerLayout = $state<ScrollerLayout | null>(scrollPlugin?.getScrollerLayout() ?? null);
+  let scrollerLayout = $derived<ScrollerLayout | null>(scrollPlugin?.getScrollerLayout() ?? null);
 
   let { RenderPageSnippet, overlayElements, ...restProps }: ScrollerProps = $props();
 
