@@ -89,16 +89,11 @@
       activeFileLoaded = true;
     }
   }
-  // TODO - <TilingLayer {pageIndex} {scale} /> cannot be used yet because this line in render-plugin.ts:
-  // return this.engine.renderPage(coreState.document, page, options);
-  // throws this error:
-  // Uncaught DataCloneError: Failed to execute 'postMessage' on 'Worker': #<Object> could not be cloned.
-  // This likely is because Svelte is making some values reactive Proxies which can't be cloned
 </script>
 
 {#snippet RenderLayers({ pageIndex, scale }: RenderPageProps)}
   <RenderLayer {pageIndex} {scale} />
-  <!--    <TilingLayer {pageIndex} {scale} />-->
+  <TilingLayer {pageIndex} {scale} />
   {#if withMarqueeZoom}
     <MarqueeZoom {pageIndex} {scale} />
   {/if}

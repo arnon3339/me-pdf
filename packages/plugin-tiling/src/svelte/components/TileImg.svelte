@@ -17,6 +17,19 @@
 
   const relativeScale = scale / tile.srcScale;
 
+  
+  const createPlainTile = (t: Tile): Tile => ({
+    ...t,
+    pageRect: {
+      origin: { x: t.pageRect.origin.x, y: t.pageRect.origin.y },
+      size: { width: t.pageRect.size.width, height: t.pageRect.size.height },
+    },
+    screenRect: {
+      origin: { x: t.screenRect.origin.x, y: t.screenRect.origin.y },
+      size: { width: t.screenRect.size.width, height: t.screenRect.size.height },
+    },
+  });
+
   /* kick off render exactly once per tile */
   $effect(() => {
     // use tile.id as effect dependency
@@ -24,7 +37,10 @@
 
     if (tile.status === 'ready' && urlRef) return; // already done
     if (!tilingCapability) return;
-    const task = tilingCapability.renderTile({ pageIndex, tile, dpr });
+
+    // clone to avoid reactive proxies that Web Workers cannot clone
+    const plainTile = createPlainTile(tile);
+    const task = tilingCapability.renderTile({ pageIndex, tile: plainTile, dpr });
     task.wait((blob) => {
       const objectUrl = URL.createObjectURL(blob);
       urlRef = objectUrl;
