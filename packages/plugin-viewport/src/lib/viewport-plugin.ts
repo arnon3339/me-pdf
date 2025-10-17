@@ -85,11 +85,25 @@ export class ViewportPlugin extends BasePlugin<
   }
 
   public setViewportResizeMetrics(viewportMetrics: ViewportInputMetrics) {
+    /**
+     * Guard against late ResizeObserver/scroll callbacks during teardown.
+     * On unmount the Registry may be destroyed before pending browser callbacks
+     * run—short-circuit so we don’t dispatch into a torn-down store.
+     */
+    if (this.registry.isDestroyed()) return;
+
     this.dispatch(setViewportMetrics(viewportMetrics));
     this.viewportResize$.emit(this.state.viewportMetrics);
   }
 
   public setViewportScrollMetrics(scrollMetrics: ViewportScrollMetrics) {
+    /**
+     * Guard against late ResizeObserver/scroll callbacks during teardown.
+     * On unmount the Registry may be destroyed before pending browser callbacks
+     * run—short-circuit so we don’t dispatch into a torn-down store.
+     */
+    if (this.registry.isDestroyed()) return;
+
     if (
       scrollMetrics.scrollTop !== this.state.viewportMetrics.scrollTop ||
       scrollMetrics.scrollLeft !== this.state.viewportMetrics.scrollLeft
