@@ -1,5 +1,7 @@
 # @embedpdf/plugin-selection
 
+## 1.3.16
+
 ## 1.3.15
 
 ## 1.3.14
