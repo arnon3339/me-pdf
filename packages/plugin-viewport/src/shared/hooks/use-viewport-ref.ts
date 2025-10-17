@@ -13,6 +13,8 @@ export function useViewportRef() {
     const container = containerRef.current;
     if (!container) return;
 
+    let cleanedUp = false;
+
     /* ---------- live rect provider --------------------------------- */
     const provideRect = (): Rect => {
       const r = container.getBoundingClientRect();
@@ -34,6 +36,7 @@ export function useViewportRef() {
 
     // Example: On resize, call setMetrics
     const resizeObserver = new ResizeObserver(() => {
+      if (cleanedUp) return;
       viewportPlugin.setViewportResizeMetrics({
         width: container.offsetWidth,
         height: container.offsetHeight,
@@ -57,9 +60,10 @@ export function useViewportRef() {
 
     // Cleanup
     return () => {
+      cleanedUp = true;
+      resizeObserver.disconnect();
       viewportPlugin.registerBoundingRectProvider(null);
       container.removeEventListener('scroll', onScroll);
-      resizeObserver.disconnect();
       unsubscribeScrollRequest();
     };
   }, [viewportPlugin]);
