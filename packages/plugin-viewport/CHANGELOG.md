@@ -1,5 +1,11 @@
 # @embedpdf/plugin-viewport
 
+## 1.3.15
+
+### Patch Changes
+
+- [`d64672d`](https://github.com/embedpdf/embed-pdf-viewer/commit/d64672df3ba1e5b1d0c0d94c25677158aac85fb9) by [@bobsingor](https://github.com/bobsingor) – Prevent resize handling after cleanup in useViewportRef
+
 ## 1.3.14
 
 ## 1.3.13
