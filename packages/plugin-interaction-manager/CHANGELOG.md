@@ -1,5 +1,11 @@
 # @embedpdf/plugin-interaction-manager
 
+## 1.3.16
+
+### Patch Changes
+
+- [`fa0e3a8`](https://github.com/embedpdf/embed-pdf-viewer/commit/fa0e3a87977dfdd2e040a2612bcc4779a286db03) by [@bobsingor](https://github.com/bobsingor) – Guard against late callbacks after registry teardown
+
 ## 1.3.15
 
 ## 1.3.14
