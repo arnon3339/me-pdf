@@ -4,7 +4,9 @@
     "baseUrl": "../..",
     "paths": {
       "@embedpdf/plugin-loader": ["src/lib/index.ts"]
-    }
+    },
+    "declaration": false,
+    "emitDeclarationOnly": false
   },
   "include": ["./**/*.ts", "./**/*.svelte"]
 }
