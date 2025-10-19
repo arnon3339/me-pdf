@@ -13,7 +13,7 @@
 
 {#if zoom}
   <div
-    class="mb-4 mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+    class="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
   >
     <!-- Zoom Level Display -->
     <div class="flex items-center gap-2">

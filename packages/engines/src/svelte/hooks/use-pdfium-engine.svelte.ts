@@ -15,43 +15,48 @@ export function usePdfiumEngine(config?: UsePdfiumEngineProps) {
   let error = $state<Error | null>(null);
   let engineRef = $state<PdfEngine | null>();
 
-  $effect(() => {
-    let cancelled = false;
+  // Check if we're in browser environment
+  const isBrowser = typeof window !== 'undefined';
 
-    (async () => {
-      try {
-        const { createPdfiumEngine } = worker
-          ? await import('@embedpdf/engines/pdfium-worker-engine')
-          : await import('@embedpdf/engines/pdfium-direct-engine');
+  if (isBrowser) {
+    $effect(() => {
+      let cancelled = false;
 
-        const pdfEngine = await createPdfiumEngine(wasmUrl, logger);
-        engineRef = pdfEngine;
-        pdfEngine.initialize().wait(
-          () => {
-            engine = pdfEngine;
+      (async () => {
+        try {
+          const { createPdfiumEngine } = worker
+            ? await import('@embedpdf/engines/pdfium-worker-engine')
+            : await import('@embedpdf/engines/pdfium-direct-engine');
+
+          const pdfEngine = await createPdfiumEngine(wasmUrl, logger);
+          engineRef = pdfEngine;
+          pdfEngine.initialize().wait(
+            () => {
+              engine = pdfEngine;
+              loading = false;
+            },
+            (e) => {
+              error = new Error(e.reason.message);
+              loading = false;
+            },
+          );
+        } catch (e) {
+          if (!cancelled) {
+            error = e as Error;
             loading = false;
-          },
-          (e) => {
-            error = new Error(e.reason.message);
-            loading = false;
-          },
-        );
-      } catch (e) {
-        if (!cancelled) {
-          error = e as Error;
-          loading = false;
+          }
         }
-      }
-    })();
+      })();
 
-    return () => {
-      cancelled = true;
-      engineRef?.closeAllDocuments?.().wait(() => {
-        engineRef?.destroy?.();
-        engineRef = null;
-      }, ignore);
-    };
-  });
+      return () => {
+        cancelled = true;
+        engineRef?.closeAllDocuments?.().wait(() => {
+          engineRef?.destroy?.();
+          engineRef = null;
+        }, ignore);
+      };
+    });
+  }
 
   // IMPORTANT: expose *getters* so consumers read live state
   return {

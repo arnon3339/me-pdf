@@ -6,15 +6,14 @@
     type PluginBatchRegistration,
   } from '@embedpdf/core';
   import { EmbedPDF, useRegistry } from '@embedpdf/core/svelte';
-  import { LoaderPluginPackage } from '@embedpdf/plugin-loader';
-  import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
+  import { LoaderPluginPackage } from '@embedpdf/plugin-loader/svelte';
+  import { ViewportPluginPackage } from '@embedpdf/plugin-viewport/svelte';
   import { Viewport } from '@embedpdf/plugin-viewport/svelte';
-  import { RenderPluginPackage } from '@embedpdf/plugin-render';
+  import { RenderPluginPackage } from '@embedpdf/plugin-render/svelte';
   import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/svelte';
-  import { useLoaderCapability } from '@embedpdf/plugin-loader/svelte';
   import { RenderLayer } from '@embedpdf/plugin-render/svelte';
   import { MarqueeZoom, ZoomMode } from '@embedpdf/plugin-zoom/svelte';
-  import { ZoomPluginPackage } from '@embedpdf/plugin-zoom';
+  import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/svelte';
   import {
     InteractionManagerPluginPackage,
     PagePointerProvider,
@@ -38,7 +37,6 @@
   let { withMarqueeZoom = false }: PageProps = $props();
 
   const { engine, isLoading } = $derived(usePdfiumEngine());
-  const { provides: loaderProvides } = $derived(useLoaderCapability());
   let activeFileLoaded = $state(true);
 
   let plugins = $derived.by(() => {
@@ -63,32 +61,6 @@
     }
     return basePlugins;
   });
-
-  async function handleDocChange(
-    e: Event & {
-      currentTarget: EventTarget & HTMLInputElement;
-    },
-  ) {
-    activeFileLoaded = false;
-    const target = e.target as HTMLInputElement;
-    const file = target.files?.[0];
-
-    if (file && loaderProvides) {
-      const arrayBuffer = await file.arrayBuffer();
-      await loaderProvides.loadDocument({
-        type: 'buffer',
-        pdfFile: {
-          id: Math.random().toString(36).substring(2, 15),
-          name: file.name,
-          content: arrayBuffer,
-        },
-        options: {
-          mode: 'full-fetch',
-        },
-      });
-      activeFileLoaded = true;
-    }
-  }
 </script>
 
 {#snippet RenderLayers({ pageIndex, scale }: RenderPageProps)}
@@ -122,12 +94,11 @@
 {#if !engine || isLoading}
   <div>loading...</div>
 {:else}
-  <div id="view-page" class="flex flex-1 flex-col overflow-hidden">
+  <div id="view-page" class="flex h-screen flex-1 flex-col overflow-hidden">
     <EmbedPDF {engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
         <ZoomToolbar {withMarqueeZoom} />
-        <Viewport class="h-full w-full flex-1 overflow-auto bg-transparent select-none">
-          <input type="file" accept="application/pdf" onchange={handleDocChange} />
+        <Viewport class="h-full w-full flex-1 overflow-auto select-none bg-gray-100">
           <Scroller {RenderPageSnippet} />
         </Viewport>
       </div>
