@@ -44,7 +44,7 @@ const exists = (rel: string) =>
 export interface ConfigOptions {
   tsconfigPath: string;
   entryPath: string | Record<string, string>;
-  outputPrefix?: string;           // controls lib file placement (svelte/, react/, etc.)
+  outputPrefix?: string;           
   external?: (string | RegExp)[];
   additionalPlugins?: any[];
   esbuildOptions?: UserConfig['esbuild'];
@@ -95,7 +95,6 @@ export function createConfig(opts: ConfigOptions): UserConfig {
         ? [dts({
             tsconfigPath: tsconfigAbs,
             exclude: dtsExclude,
-            // default behavior uses outputPrefix; individual builds can override via dtsOptions
             beforeWriteFile: beforeWriteFile(outputPrefix),
             ...dtsOptions,
           })]
@@ -168,7 +167,7 @@ export function defineLibrary() {
         return createConfig({
           tsconfigPath: 'svelte/tsconfig.svelte.json',
           entryPath: 'svelte/index.ts',
-          outputPrefix: 'svelte', // ensures dist/svelte/index.{js,cjs}
+          outputPrefix: 'svelte',
           external: ['svelte', 'svelte/internal', /\.svelte($|\/)/],
           additionalPlugins: [
             viteSveltePackagePlugin({
@@ -178,15 +177,15 @@ export function defineLibrary() {
               tsconfig: 'src/svelte/tsconfig.svelte.json'
             }),
           ],
-          // ✅ DTS so shared TS gets .d.ts; route shared → shared-svelte
-          dtsEnabled: false
+          // Enable DTS for shared files only
+          dtsEnabled: false,
         });
 
       default: // base
         return createConfig({
           tsconfigPath: './tsconfig.json',
           entryPath: 'index.ts',
-          dtsExclude: ['**/react/**', '**/preact/**', '**/vue/**', '**/svelte/**', '**/shared/**'],
+          dtsExclude: ['**/react/**', '**/preact/**', '**/vue/**', '**/svelte/**', '**/shared-svelte/**'],
         });
     }
   });
