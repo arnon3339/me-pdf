@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": "../..",
+    "types": ["svelte"],
     "paths": {
       "@embedpdf/plugin-scroll": ["src/lib/index.ts"]
     }

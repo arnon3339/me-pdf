@@ -39,8 +39,8 @@
     "build:react": "vite build --mode react",
     "build:preact": "vite build --mode preact",
     "build:vue": "vite build --mode vue",
-    "build:svelte": "svelte-package -i src/svelte -o dist/svelte -t && node node_modules/@embedpdf/build/src/scripts/post-svelte-build.js && find src -name '*.d.ts' -type f -delete",
-    "build": "pnpm run clean && concurrently -c auto -n base,react,preact,vue \"vite build --mode base\" \"vite build --mode react\" \"vite build --mode preact\" \"vite build --mode vue\" \"pnpm run build:svelte\"",
+    "build:svelte": "vite build --mode svelte",
+    "build": "pnpm run clean && concurrently -c auto -n base,react,preact,vue,svelte \"vite build --mode base\" \"vite build --mode react\" \"vite build --mode preact\" \"vite build --mode vue\" \"vite build --mode svelte\"",
     "clean": "rimraf dist",
     "lint": "eslint src --color",
     "lint:fix": "eslint src --color --fix"
@@ -51,8 +51,6 @@
   "devDependencies": {
     "@embedpdf/core": "workspace:*",
     "@embedpdf/build": "workspace:*",
-    "@sveltejs/package": "^2.5.4",
-    "@sveltejs/vite-plugin-svelte": "^6.0.0",
     "@types/react": "^18.2.0",
     "typescript": "^5.0.0"
   },

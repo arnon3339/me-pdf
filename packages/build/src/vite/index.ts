@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { defineConfig, type UserConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import dts from 'unplugin-dts/vite';
-import { viteSveltePackagePlugin } from './plugins/vite-svelte-package.js';
 
 const sharedExternal = [/^@embedpdf\/(?!.*\/@framework$)/];
 
@@ -160,6 +160,9 @@ export function defineLibrary() {
           external: ['vue'],
           additionalPlugins: [vue()],
           dtsOptions: { processor: 'vue' },
+          optimizeDeps: {
+            exclude: ['@embedpdf/plugin-interaction-manager']
+          }
         });
 
       case 'svelte':
@@ -168,17 +171,8 @@ export function defineLibrary() {
           tsconfigPath: 'svelte/tsconfig.svelte.json',
           entryPath: 'svelte/index.ts',
           outputPrefix: 'svelte',
-          external: ['svelte', 'svelte/internal', /\.svelte($|\/)/],
-          additionalPlugins: [
-            viteSveltePackagePlugin({
-              input: 'src/svelte',
-              output: 'dist/svelte',
-              preserveOutput: false,
-              tsconfig: 'src/svelte/tsconfig.svelte.json'
-            }),
-          ],
-          // Enable DTS for shared files only
-          dtsEnabled: false,
+          external: [/^svelte($|\/)/],
+          additionalPlugins: [svelte()]
         });
 
       default: // base
