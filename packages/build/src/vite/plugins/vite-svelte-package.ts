@@ -80,7 +80,8 @@ export function viteSveltePackagePlugin(opts: SveltePackagePluginOptions): Plugi
   const cwd = process.cwd();
   const inputAbs = path.resolve(cwd, opts.input);
   const outputAbs = path.resolve(cwd, opts.output);
-  const tmpTypesAbs = path.resolve(outputAbs, '__package_types_tmp__');
+  // Keep temp dir INSIDE inputAbs to avoid relative paths going upward
+  const tmpTypesAbs = path.resolve(inputAbs, '__package_types_tmp__');
   const alias = opts.alias ?? {};
   const require = createRequire(import.meta.url);
 
@@ -126,7 +127,7 @@ export function viteSveltePackagePlugin(opts: SveltePackagePluginOptions): Plugi
       if (didEmit) return;
       didEmit = true;
 
-      // 1) build .d.ts files
+      // 1) build .d.ts into temp dir
       rimraf(tmpTypesAbs);
       mkdirp(tmpTypesAbs);
 
@@ -141,34 +142,13 @@ export function viteSveltePackagePlugin(opts: SveltePackagePluginOptions): Plugi
         svelteShimsPath = require.resolve('svelte2tsx/svelte-shims-v4.d.ts');
       }
 
+      // Pass relative path to avoid nested absolute paths
       await emitDtsFromS2T({
         libRoot: inputAbs,
         svelteShimsPath,
-        declarationDir: tmpTypesAbs,
+        declarationDir: path.relative(inputAbs, tmpTypesAbs),
         tsconfig: opts.tsconfig
       });
-      
-      // svelte2tsx writes files relative to tsconfig location, not to declarationDir
-      // Find where it actually wrote the files
-      let actualTypesLocation: string;
-      const option1 = path.join(inputAbs, path.relative(cwd, tmpTypesAbs));
-      const option2 = path.join(inputAbs, tmpTypesAbs);
-      
-      if (fs.existsSync(option1)) {
-        actualTypesLocation = option1;
-      } else if (fs.existsSync(option2)) {
-        actualTypesLocation = option2;
-      } else {
-        // Fallback: search for .d.ts files and find their __package_types_tmp__ parent
-        const allFiles = await walk(inputAbs);
-        const dtsFile = allFiles.find(f => f.endsWith('.d.ts') && f.includes('__package_types_tmp__'));
-        if (dtsFile) {
-          const parts = dtsFile.split('__package_types_tmp__');
-          actualTypesLocation = parts[0] + '__package_types_tmp__';
-        } else {
-          actualTypesLocation = tmpTypesAbs;
-        }
-      }
 
       const outSubdir = posixify(path.relative(viteOutDirAbs, outputAbs)) || '';
       const emitAsset = (absDestInsideOutput: string, source: string | Uint8Array) => {
@@ -178,7 +158,7 @@ export function viteSveltePackagePlugin(opts: SveltePackagePluginOptions): Plugi
         this.emitFile({ type: 'asset', fileName, source });
       };
 
-      // 2) copy source files
+      // 2) copy sources
       const allFilesAbs = await walk(inputAbs);
       for (const abs of allFilesAbs) {
         const relFromInput = posixify(path.relative(inputAbs, abs));
@@ -214,89 +194,66 @@ export function viteSveltePackagePlugin(opts: SveltePackagePluginOptions): Plugi
         emitAsset(destAbs, resolved);
       }
 
-      // 3) copy .d.ts files with normalized paths
-      const normalizeTypePath = (absPath: string): string => {
-        const posixPath = posixify(absPath);
-        const marker = '__package_types_tmp__/';
-        const lastMarkerIdx = posixPath.lastIndexOf(marker);
+      // 3) move .d.ts from temp dir → output
+      if (fs.existsSync(tmpTypesAbs)) {
+        const typeFilesAbs = await walk(tmpTypesAbs);
         
-        let rel: string;
-        if (lastMarkerIdx !== -1) {
-          rel = posixPath.slice(lastMarkerIdx + marker.length);
-        } else {
-          rel = posixify(path.relative(actualTypesLocation, absPath));
-        }
-        
-        return sanitizeRel(rel);
-      };
+        for (const abs of typeFilesAbs) {
+          const rel = posixify(path.relative(tmpTypesAbs, abs));
+          const destAbs = path.join(outputAbs, rel);
+          
+          let text = await fsp.readFile(abs, 'utf8');
 
-      const typeFilesAbs = fs.existsSync(actualTypesLocation) 
-        ? await walk(actualTypesLocation)
-        : [];
-      const seen = new Set<string>();
-
-      for (const abs of typeFilesAbs) {
-        let rel = normalizeTypePath(abs);
-        if (!rel || seen.has(rel)) continue;
-        seen.add(rel);
-
-        const destAbs = path.join(outputAbs, rel);
-        let text = await fsp.readFile(abs, 'utf8');
-
-        if (abs.endsWith('.d.ts.map')) {
-          try {
-            const parsed = JSON.parse(text);
-            if (parsed?.sources) {
-              parsed.sources = (parsed.sources as string[]).map((src: string) => {
-                const finalDir = path.dirname(destAbs);
-                const fromDir = path.dirname(path.join(inputAbs, rel));
-                return posixify(path.join(path.relative(finalDir, fromDir), path.basename(src)));
-              });
-              text = JSON.stringify(parsed);
+          if (abs.endsWith('.d.ts.map')) {
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed?.sources) {
+                parsed.sources = (parsed.sources as string[]).map((src: string) => {
+                  const finalDir = path.dirname(destAbs);
+                  const fromDir = path.dirname(path.join(inputAbs, rel));
+                  return posixify(path.join(path.relative(finalDir, fromDir), path.basename(src)));
+                });
+                text = JSON.stringify(parsed);
+              }
+            } catch {
+              // ignore malformed maps
             }
-          } catch {
-            // ignore malformed maps
+          } else {
+            text = resolveAliases(inputAbs, rel, text, alias);
           }
-        } else {
-          text = resolveAliases(inputAbs, rel, text, alias);
+
+          emitAsset(destAbs, text);
         }
-
-        emitAsset(destAbs, text);
       }
 
-      // 4) cleanup temp directories and stray .d.ts files
+      // 4) cleanup temp directory and any stray .d.ts files
       rimraf(tmpTypesAbs);
-      if (actualTypesLocation !== tmpTypesAbs && fs.existsSync(actualTypesLocation)) {
-        rimraf(actualTypesLocation);
-      }
       
-      // Clean up any .d.ts files that svelte2tsx created in the source directory
+      // Clean up any stray .d.ts files that TypeScript created in the source directory
+      // This can happen when tsconfig has paths that resolve to absolute locations
       if (fs.existsSync(inputAbs)) {
         const srcFiles = await walk(inputAbs);
         const dtsFiles = srcFiles.filter(f => f.endsWith('.d.ts') || f.endsWith('.d.ts.map'));
         for (const f of dtsFiles) {
           try {
             await fsp.unlink(f);
-          } catch {
-            // ignore errors
-          }
-        }
-        
-        // Remove any stray directories that svelte2tsx created (like Users/, dist/)
-        // These happen when svelte2tsx embeds absolute paths
-        const topLevelDirs = await fsp.readdir(inputAbs, { withFileTypes: true });
-        for (const entry of topLevelDirs) {
-          if (entry.isDirectory()) {
-            const dirPath = path.join(inputAbs, entry.name);
-            // Remove directories that look like absolute paths got embedded
-            // (e.g., "Users", "dist", or drive letters on Windows)
-            if (entry.name === 'Users' || entry.name === 'dist' || /^[A-Z]:?$/.test(entry.name)) {
+            // Try to remove empty parent directories
+            let dir = path.dirname(f);
+            while (dir !== inputAbs && dir.startsWith(inputAbs)) {
               try {
-                rimraf(dirPath);
+                const contents = await fsp.readdir(dir);
+                if (contents.length === 0) {
+                  await fsp.rmdir(dir);
+                  dir = path.dirname(dir);
+                } else {
+                  break;
+                }
               } catch {
-                // ignore errors
+                break;
               }
             }
+          } catch {
+            // ignore errors
           }
         }
       }
