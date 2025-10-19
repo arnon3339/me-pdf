@@ -3,7 +3,7 @@ import path from 'node:path';
 import { defineConfig, type UserConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import dts from 'unplugin-dts/vite';
-
+import { viteSveltePackagePlugin } from './plugins/vite-svelte-package.js';
 const sharedExternal = [/^@embedpdf\/(?!.*\/@framework$)/];
 
 // ⚠️ rename shared directory for framework builds to avoid conflicts
@@ -51,12 +51,14 @@ export interface ConfigOptions {
   tsconfigPath: string;
   entryPath: string | Record<string, string>;  // ⚠️ Support both single and multiple entries
   outputPrefix?: string;
-  external?: string[];
+  external?: (string | RegExp)[];
   additionalPlugins?: any[];
   esbuildOptions?: UserConfig['esbuild'];
   dtsExclude?: string[];
   dtsOptions?: Record<string, any>;
-
+  globals?: Record<string, string>;
+  optimizeDeps?: UserConfig['optimizeDeps'];
+  dtsEnabled?: boolean; 
 }
 
 export function createConfig(opts: ConfigOptions): UserConfig {
@@ -69,6 +71,8 @@ export function createConfig(opts: ConfigOptions): UserConfig {
     esbuildOptions = {},
     dtsExclude = [],
     dtsOptions = {},
+    optimizeDeps, 
+    dtsEnabled = true, 
   } = opts;
 
   const pkgRoot = process.cwd();
@@ -92,14 +96,17 @@ export function createConfig(opts: ConfigOptions): UserConfig {
   return {
     resolve: { alias: aliasFromTsconfig(tsconfigAbs) },
     esbuild: esbuildOptions,
+    optimizeDeps,
     plugins: [
       ...additionalPlugins, 
-      dts({ 
-        tsconfigPath: tsconfigAbs,
-        exclude: dtsExclude,
-        beforeWriteFile: beforeWriteFile(outputPrefix),
-        ...dtsOptions,
-      })
+      ...(dtsEnabled
+        ? [dts({
+            tsconfigPath: tsconfigAbs,
+            exclude: dtsExclude,
+            beforeWriteFile: beforeWriteFile(outputPrefix),
+            ...dtsOptions,
+          })]
+        : []),
     ],
     build: {
       emptyOutDir: false,
@@ -169,7 +176,26 @@ export function defineLibrary() {
           dtsOptions: { processor: 'vue' },
         });
 
-
+      case 'svelte':
+        if (!exists('svelte/index.ts')) throw new Error('No Svelte adapter');
+        return createConfig({
+          tsconfigPath: 'svelte/tsconfig.svelte.json',
+          entryPath: 'svelte/index.ts',
+          outputPrefix: 'svelte',
+          external: ['svelte', 'svelte/internal', /\.svelte($|\/)/],
+          additionalPlugins: [
+            viteSveltePackagePlugin({
+              input: 'src/svelte',
+              output: 'dist/svelte',
+              preserveOutput: false,
+              tsconfig: 'src/svelte/tsconfig.svelte.json'
+            }),
+          ],
+          dtsEnabled: false,
+          optimizeDeps: {
+            //exclude: ['@embedpdf/*']
+          }
+        });
 
       default: // base
         return createConfig({
