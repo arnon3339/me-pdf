@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Tile } from '@embedpdf/plugin-tiling';
+  import { useCoreState } from '@embedpdf/core/svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import TileImg from './TileImg.svelte';
   import { useTilingCapability } from '../hooks';
-  import {useCoreState} from "@embedpdf/core/svelte";
 
   type TilingLayoutProps = HTMLAttributes<HTMLDivElement> & {
     pageIndex: number;
@@ -21,13 +21,13 @@
   $effect(() => {
     if (!tilingProvides) return;
     return tilingProvides.onTileRendering((tilesMap) => {
-      const pageTiles = tilesMap[pageIndex] ?? [];
+      tiles = tilesMap[pageIndex] ?? [];
     });
   });
 </script>
 
 <div class={propsClass} {...restProps}>
-  {#each tiles as tile (`${coreState.document?.id}-${tile.id}`)}
+  {#each tiles as tile (`${coreState?.document?.id}-${tile.id}`)}
     <TileImg {pageIndex} {tile} dpr={window.devicePixelRatio} {scale} />
   {/each}
 </div>

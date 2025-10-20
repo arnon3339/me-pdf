@@ -2,6 +2,7 @@
   import type { Tile } from '@embedpdf/plugin-tiling';
   import { useTilingCapability } from '../hooks';
   import { ignore, PdfErrorCode } from '@embedpdf/models';
+  import { untrack } from 'svelte';
 
   interface TileImgProps {
     pageIndex: number;
@@ -13,11 +14,15 @@
   let { pageIndex, tile, dpr, scale }: TileImgProps = $props();
   const { provides: tilingCapability } = $derived(useTilingCapability());
   let url = $state<string>('');
-  let urlRef = $state<string | null>(null);
+  // urlRef is NOT reactive - similar to React's useRef
+  let urlRef: string | null = null;
 
-  const relativeScale = scale / tile.srcScale;
+  // Capture these values once per tile change
+  const tileId = $derived(tile.id);
+  const tileSrcScale = $derived(tile.srcScale);
+  const tileScreenRect = $derived(tile.screenRect);
+  const relativeScale = $derived(scale / tileSrcScale);
 
-  
   const createPlainTile = (t: Tile): Tile => ({
     ...t,
     pageRect: {
@@ -32,15 +37,18 @@
 
   /* kick off render exactly once per tile */
   $effect(() => {
-    // use tile.id as effect dependency
-    const _tileId = tile.id;
+    // Track only tileId and pageIndex as dependencies (like React's [pageIndex, tile.id])
+    const _tileId = tileId;
+    const _pageIndex = pageIndex;
 
-    if (tile.status === 'ready' && urlRef) return; // already done
+    // Check if we already have a URL for this tile (already rendered)
+    if (urlRef) return;
+
     if (!tilingCapability) return;
 
-    // clone to avoid reactive proxies that Web Workers cannot clone
-    const plainTile = createPlainTile(tile);
-    const task = tilingCapability.renderTile({ pageIndex, tile: plainTile, dpr });
+    // Clone to avoid reactive proxies that Web Workers cannot clone
+    const plainTile = untrack(() => createPlainTile(tile));
+    const task = tilingCapability.renderTile({ pageIndex: _pageIndex, tile: plainTile, dpr });
     task.wait((blob) => {
       const objectUrl = URL.createObjectURL(blob);
       urlRef = objectUrl;
@@ -72,12 +80,12 @@
   <img
     src={url}
     alt=""
-    onLoad={handleImageLoad}
-    style:postion="absolute"
-    style:left={`${tile.screenRect.origin.x * relativeScale}px`}
-    style:top={`${tile.screenRect.origin.y * relativeScale}px`}
-    style:width={`${tile.screenRect.size.width * relativeScale}px`}
-    style:height={`${tile.screenRect.size.height * relativeScale}px`}
+    onload={handleImageLoad}
+    style:position="absolute"
+    style:left={`${tileScreenRect.origin.x * relativeScale}px`}
+    style:top={`${tileScreenRect.origin.y * relativeScale}px`}
+    style:width={`${tileScreenRect.size.width * relativeScale}px`}
+    style:height={`${tileScreenRect.size.height * relativeScale}px`}
     style:display="block"
   />
 {/if}
