@@ -23,6 +23,7 @@
   import { SelectionPluginPackage, SelectionLayer } from '@embedpdf/plugin-selection/svelte';
   import { PrintPluginPackage } from '@embedpdf/plugin-print/svelte';
   import { SpreadPluginPackage } from '@embedpdf/plugin-spread/svelte';
+  import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/svelte';
   import ZoomToolbar from '$lib/components/ZoomToolbar.svelte';
 
   type RenderPageProps = {
@@ -55,6 +56,7 @@
       createPluginRegistration(InteractionManagerPluginPackage),
       createPluginRegistration(PrintPluginPackage),
       createPluginRegistration(SpreadPluginPackage),
+      createPluginRegistration(RotatePluginPackage),
     ];
     return basePlugins;
   });
@@ -76,7 +78,9 @@
       rotation={props.rotation}
       scale={props.scale}
     >
-      {@render RenderLayers(props)}
+      <Rotate pageSize={{ width: props.width, height: props.height }}>
+        {@render RenderLayers(props)}
+      </Rotate>
     </PagePointerProvider>
   </div>
 {/snippet}

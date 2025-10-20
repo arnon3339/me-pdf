@@ -179,7 +179,7 @@ export function defineLibrary() {
         return createConfig({
           tsconfigPath: './tsconfig.json',
           entryPath: 'index.ts',
-          dtsExclude: ['**/react/**', '**/preact/**', '**/vue/**', '**/svelte/**', '**/shared-svelte/**'],
+          dtsExclude: ['**/react/**', '**/preact/**', '**/vue/**', '**/svelte/**'],
         });
     }
   });
