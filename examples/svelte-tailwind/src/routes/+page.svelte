@@ -21,6 +21,7 @@
   } from '@embedpdf/plugin-interaction-manager/svelte';
   import { TilingPluginPackage, TilingLayer } from '@embedpdf/plugin-tiling/svelte';
   import { SelectionPluginPackage, SelectionLayer } from '@embedpdf/plugin-selection/svelte';
+  import { PrintPluginPackage } from '@embedpdf/plugin-print/svelte';
   import ZoomToolbar from '$lib/components/ZoomToolbar.svelte';
 
   type RenderPageProps = {
@@ -51,6 +52,7 @@
       createPluginRegistration(ZoomPluginPackage),
       createPluginRegistration(SelectionPluginPackage),
       createPluginRegistration(InteractionManagerPluginPackage),
+      createPluginRegistration(PrintPluginPackage),
     ];
     return basePlugins;
   });
