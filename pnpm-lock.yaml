@@ -21954,7 +21954,7 @@ snapshots:
       debug: 4.4.1
       kolorist: 1.8.0
       local-pkg: 1.1.1
-      magic-string: 0.30.17
+      magic-string: 0.30.19
       typescript: 5.9.3
       unplugin: 2.3.5
     optionalDependencies:

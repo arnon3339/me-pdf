@@ -4,6 +4,7 @@ import { defineConfig, type UserConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import dts from 'unplugin-dts/vite';
+import { SvelteDtsResolver } from './svelte-dts-resolver.js';
 
 const sharedExternal = [/^@embedpdf\/(?!.*\/@framework$)/];
 
@@ -96,6 +97,7 @@ export function createConfig(opts: ConfigOptions): UserConfig {
             tsconfigPath: tsconfigAbs,
             exclude: dtsExclude,
             beforeWriteFile: beforeWriteFile(outputPrefix),
+            resolvers: [SvelteDtsResolver()],
             ...dtsOptions,
           })]
         : []),
