@@ -39,12 +39,12 @@
   <div
     style:position="absolute"
     style:pointer-events="none"
-    style:left={`${rect.origin.x * scale}`}
-    style:top={`${rect.origin.y * scale}`}
-    style:width={`${rect.size.width * scale}`}
-    style:height={`${rect.size.height * scale}`}
+    style:left={`${rect.origin.x * scale}px`}
+    style:top={`${rect.origin.y * scale}px`}
+    style:width={`${rect.size.width * scale}px`}
+    style:height={`${rect.size.height * scale}px`}
     style:border={`1px solid ${stroke}`}
-    style:background="fill"
+    style:background={fill}
     style:box-sizing="border-box"
     class={propsClass}
   ></div>
