@@ -627,7 +627,7 @@ importers:
         specifier: ^5.39.5
         version: 5.39.11
       svelte2tsx:
-        specifier: ^0.7.45
+        specifier: ~0.7.33
         version: 0.7.45(svelte@5.39.11)(typescript@5.9.3)
       unplugin-dts:
         specifier: 1.0.0-beta.6
