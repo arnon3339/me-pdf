@@ -1,5 +1,11 @@
 # @embedpdf/plugin-viewport
 
+## 1.4.0
+
+### Minor Changes
+
+- [#222](https://github.com/embedpdf/embed-pdf-viewer/pull/222) by [@andrewrisse](https://github.com/andrewrisse) – feat: Add Svelte 5 adapter (`/svelte` export) with Rune-based hooks (`useViewportPlugin`, `useViewportCapability`, `useViewportRef`) and `Viewport.svelte` component. Thanks to @andrewrisse for the Svelte integration!
+
 ## 1.3.16
 
 ### Patch Changes

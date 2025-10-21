@@ -1,5 +1,11 @@
 # @embedpdf/plugin-thumbnail
 
+## 1.4.0
+
+### Minor Changes
+
+- [#222](https://github.com/embedpdf/embed-pdf-viewer/pull/222) by [@andrewrisse](https://github.com/andrewrisse) – feat: Add Svelte 5 adapter (`/svelte` export) with Rune-based hooks (`useThumbnailPlugin`, `useThumbnailCapability`) and components (`ThumbnailsPane.svelte`, `ThumbImg.svelte`).
+
 ## 1.3.16
 
 ## 1.3.15
