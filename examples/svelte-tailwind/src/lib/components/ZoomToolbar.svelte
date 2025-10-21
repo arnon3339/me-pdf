@@ -94,7 +94,6 @@
         <path d="M21 21l-6 -6" />
       </svg>
     </button>
-
     <!-- Zoom In Button -->
     <button
       class="flex h-8 w-8 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"

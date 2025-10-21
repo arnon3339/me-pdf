@@ -20,6 +20,7 @@
   import { SpreadPluginPackage } from '@embedpdf/plugin-spread/svelte';
   import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/svelte';
   import Toolbar from '$lib/components/Toolbar.svelte';
+  import PageControls from '$lib/components/PageControls.svelte';
 
   type RenderPageProps = {
     width: number;
@@ -104,8 +105,9 @@
     <EmbedPDF {engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
         <Toolbar />
-        <Viewport class="h-full w-full flex-1 overflow-auto select-none bg-gray-100">
+        <Viewport class="h-full w-full overflow-auto select-none bg-gray-100">
           <Scroller {RenderPageSnippet} />
+          <PageControls />
         </Viewport>
       </div>
     </EmbedPDF>
