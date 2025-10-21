@@ -1,13 +1,13 @@
 <script lang="ts">
-    import type {Logger, PdfEngine} from '@embedpdf/models';
-    import {type IPlugin, type PluginBatchRegistration, PluginRegistry} from '@embedpdf/core';
-    import {type Snippet} from 'svelte';
-    import AutoMount from "./AutoMount.svelte";
-    import {pdfContext, type PDFContextState} from "../hooks";
+  import type { Logger, PdfEngine } from '@embedpdf/models';
+  import { type IPlugin, type PluginBatchRegistrations, PluginRegistry } from '@embedpdf/core';
+  import { type Snippet } from 'svelte';
+  import AutoMount from './AutoMount.svelte';
+  import { pdfContext, type PDFContextState } from '../hooks';
 
+  export type { PluginBatchRegistrations };
 
-
-    interface EmbedPDFProps {
+  interface EmbedPDFProps {
     /**
      * The PDF engine to use for the PDF viewer.
      */
@@ -23,7 +23,7 @@
     /**
      * The plugins to use for the PDF viewer.
      */
-    plugins: PluginBatchRegistration<IPlugin<any>, any>[];
+    plugins: PluginBatchRegistrations;
     /**
      * The children to render for the PDF viewer.
      */
@@ -41,13 +41,10 @@
     onInitialized,
     plugins,
     children,
-    autoMountDomElements = true
+    autoMountDomElements = true,
   }: EmbedPDFProps = $props();
 
-
-
   let latestInit = onInitialized;
-
 
   $effect(() => {
     if (onInitialized) {

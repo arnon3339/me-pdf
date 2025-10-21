@@ -1,10 +1,6 @@
 <script lang="ts">
   import { usePdfiumEngine } from '@embedpdf/engines/svelte';
-  import {
-    createPluginRegistration,
-    type IPlugin,
-    type PluginBatchRegistration,
-  } from '@embedpdf/core';
+  import { createPluginRegistration, type PluginBatchRegistrations } from '@embedpdf/core';
   import type { Rotation } from '@embedpdf/models';
   import { EmbedPDF } from '@embedpdf/core/svelte';
   import { LoaderPluginPackage } from '@embedpdf/plugin-loader/svelte';
@@ -21,10 +17,9 @@
   } from '@embedpdf/plugin-interaction-manager/svelte';
   import { TilingPluginPackage, TilingLayer } from '@embedpdf/plugin-tiling/svelte';
   import { SelectionPluginPackage, SelectionLayer } from '@embedpdf/plugin-selection/svelte';
-  import { PrintPluginPackage } from '@embedpdf/plugin-print/svelte';
   import { SpreadPluginPackage } from '@embedpdf/plugin-spread/svelte';
   import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/svelte';
-  import ZoomToolbar from '$lib/components/ZoomToolbar.svelte';
+  import Toolbar from '$lib/components/Toolbar.svelte';
 
   type RenderPageProps = {
     width: number;
@@ -37,7 +32,7 @@
   const { engine, isLoading } = $derived(usePdfiumEngine());
 
   let plugins = $derived.by(() => {
-    const basePlugins: PluginBatchRegistration<IPlugin<any>, any>[] = [
+    const basePlugins: PluginBatchRegistrations = [
       createPluginRegistration(LoaderPluginPackage, {
         loadingOptions: {
           type: 'url',
@@ -54,7 +49,6 @@
       createPluginRegistration(ZoomPluginPackage),
       createPluginRegistration(SelectionPluginPackage),
       createPluginRegistration(InteractionManagerPluginPackage),
-      createPluginRegistration(PrintPluginPackage),
       createPluginRegistration(SpreadPluginPackage),
       createPluginRegistration(RotatePluginPackage),
     ];
@@ -71,27 +65,45 @@
 
 {#snippet RenderPageSnippet(props: RenderPageProps)}
   <div style:width={`${props.width}`} style:height={`${props.height}`} style:position="relative">
-    <PagePointerProvider
-      pageIndex={props.pageIndex}
-      pageWidth={props.width}
-      pageHeight={props.height}
-      rotation={props.rotation}
-      scale={props.scale}
-    >
-      <Rotate pageSize={{ width: props.width, height: props.height }}>
+    <Rotate pageSize={{ width: props.width, height: props.height }}>
+      <PagePointerProvider
+        pageIndex={props.pageIndex}
+        pageWidth={props.width}
+        pageHeight={props.height}
+        rotation={props.rotation}
+        scale={props.scale}
+      >
         {@render RenderLayers(props)}
-      </Rotate>
-    </PagePointerProvider>
+      </PagePointerProvider>
+    </Rotate>
   </div>
 {/snippet}
 
 {#if !engine || isLoading}
-  <div>loading...</div>
+  <div class="flex h-screen items-center justify-center bg-gray-100">
+    <div class="flex flex-col items-center gap-4">
+      <svg
+        class="h-12 w-12 animate-spin text-blue-600"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <p class="text-sm text-gray-600">Loading PDF...</p>
+    </div>
+  </div>
 {:else}
   <div id="view-page" class="flex h-screen flex-1 flex-col overflow-hidden">
     <EmbedPDF {engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
-        <ZoomToolbar />
+        <Toolbar />
         <Viewport class="h-full w-full flex-1 overflow-auto select-none bg-gray-100">
           <Scroller {RenderPageSnippet} />
         </Viewport>

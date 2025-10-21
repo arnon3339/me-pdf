@@ -18,7 +18,7 @@ export const useSpreadPlugin = () => usePlugin<SpreadPlugin>(SpreadPlugin.id);
  * Returns the capability provider and reactive spread mode.
  */
 export const useSpread = () => {
-  const { provides } = useSpreadCapability();
+  const { provides } = $derived(useSpreadCapability());
   let spreadMode = $state<SpreadMode>(SpreadMode.None);
 
   $effect(() => {
@@ -36,9 +36,11 @@ export const useSpread = () => {
   });
 
   return {
-    provides,
     get spreadMode() {
       return spreadMode;
+    },
+    get provides() {
+      return provides;
     },
   };
 };
