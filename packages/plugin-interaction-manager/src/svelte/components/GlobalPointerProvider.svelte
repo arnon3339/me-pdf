@@ -22,5 +22,5 @@
 </script>
 
 <div bind:this={ref} style:width="100%" style:height="100%" class={propsClass} {...restProps}>
-  {children}
+  {@render children()}
 </div>

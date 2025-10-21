@@ -333,6 +333,9 @@ importers:
       '@embedpdf/plugin-loader':
         specifier: workspace:*
         version: link:../../packages/plugin-loader
+      '@embedpdf/plugin-pan':
+        specifier: workspace:*
+        version: link:../../packages/plugin-pan
       '@embedpdf/plugin-print':
         specifier: workspace:*
         version: link:../../packages/plugin-print
@@ -1118,6 +1121,9 @@ importers:
       react-dom:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
+      svelte:
+        specifier: '>=5.39.11'
+        version: 5.39.11
       vue:
         specifier: '>=3.2.0'
         version: 3.5.17(typescript@5.8.3)

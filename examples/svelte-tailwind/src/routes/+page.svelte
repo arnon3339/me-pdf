@@ -13,15 +13,16 @@
   import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/svelte';
   import {
     InteractionManagerPluginPackage,
+    GlobalPointerProvider,
     PagePointerProvider,
   } from '@embedpdf/plugin-interaction-manager/svelte';
   import { TilingPluginPackage, TilingLayer } from '@embedpdf/plugin-tiling/svelte';
   import { SelectionPluginPackage, SelectionLayer } from '@embedpdf/plugin-selection/svelte';
   import { SpreadPluginPackage } from '@embedpdf/plugin-spread/svelte';
   import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/svelte';
-  import { ExportPluginPackage, Download } from '@embedpdf/plugin-export/svelte';
-  import { FullscreenPluginPackage, FullscreenProvider } from '@embedpdf/plugin-fullscreen/svelte';
-  import { FilePicker } from '@embedpdf/plugin-loader/svelte';
+  import { ExportPluginPackage } from '@embedpdf/plugin-export/svelte';
+  import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen/svelte';
+  import { PanPluginPackage } from '@embedpdf/plugin-pan/svelte';
   import Toolbar from '$lib/components/Toolbar.svelte';
   import PageControls from '$lib/components/PageControls.svelte';
 
@@ -57,6 +58,7 @@
       createPluginRegistration(RotatePluginPackage),
       createPluginRegistration(ExportPluginPackage),
       createPluginRegistration(FullscreenPluginPackage),
+      createPluginRegistration(PanPluginPackage),
     ];
     return basePlugins;
   });
@@ -110,10 +112,14 @@
     <EmbedPDF {engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
         <Toolbar />
-        <Viewport class="h-full w-full overflow-auto select-none bg-gray-100">
-          <Scroller {RenderPageSnippet} />
-          <PageControls />
-        </Viewport>
+        <div class="flex-1 overflow-hidden">
+          <GlobalPointerProvider>
+            <Viewport class="h-full w-full overflow-auto select-none bg-gray-100">
+              <Scroller {RenderPageSnippet} />
+              <PageControls />
+            </Viewport>
+          </GlobalPointerProvider>
+        </div>
       </div>
     </EmbedPDF>
   </div>
