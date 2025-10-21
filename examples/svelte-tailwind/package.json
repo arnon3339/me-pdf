@@ -26,6 +26,7 @@
     "@embedpdf/plugin-tiling": "workspace:*",
     "@embedpdf/plugin-zoom": "workspace:*",
     "@embedpdf/plugin-export": "workspace:*",
+    "@embedpdf/plugin-fullscreen": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/engines": "workspace:*",

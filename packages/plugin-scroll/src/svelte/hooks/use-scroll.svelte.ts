@@ -13,27 +13,29 @@ interface UseScrollReturn {
   };
 }
 
+interface SimpleScrollState {
+  currentPage: number;
+  totalPages: number;
+}
+
 export const useScroll = (): UseScrollReturn => {
   const { provides } = $derived(useScrollCapability());
-  let currentPage = $state(1);
-  let totalPages = $state(1);
+  const state = $state<SimpleScrollState>({ currentPage: 1, totalPages: 1 });
 
   $effect(() => {
     if (!provides) return;
-    return provides.onPageChange(({ pageNumber, totalPages: tp }) => {
-      currentPage = pageNumber;
-      totalPages = tp;
+    return provides.onPageChange(({ pageNumber, totalPages }) => {
+      state.currentPage = pageNumber;
+      state.totalPages = totalPages;
     });
   });
 
   return {
-    // New format (preferred)
     get provides() {
       return provides;
     },
-    // TODO - is this the correct way to keep it reactive?
     get state() {
-      return { currentPage, totalPages };
+      return state;
     },
   };
 };

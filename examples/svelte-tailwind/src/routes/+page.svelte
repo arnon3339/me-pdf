@@ -19,7 +19,9 @@
   import { SelectionPluginPackage, SelectionLayer } from '@embedpdf/plugin-selection/svelte';
   import { SpreadPluginPackage } from '@embedpdf/plugin-spread/svelte';
   import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/svelte';
-  import { ExportPluginPackage } from '@embedpdf/plugin-export/svelte';
+  import { ExportPluginPackage, Download } from '@embedpdf/plugin-export/svelte';
+  import { FullscreenPluginPackage, FullscreenProvider } from '@embedpdf/plugin-fullscreen/svelte';
+  import { FilePicker } from '@embedpdf/plugin-loader/svelte';
   import Toolbar from '$lib/components/Toolbar.svelte';
   import PageControls from '$lib/components/PageControls.svelte';
 
@@ -54,6 +56,7 @@
       createPluginRegistration(SpreadPluginPackage),
       createPluginRegistration(RotatePluginPackage),
       createPluginRegistration(ExportPluginPackage),
+      createPluginRegistration(FullscreenPluginPackage),
     ];
     return basePlugins;
   });
