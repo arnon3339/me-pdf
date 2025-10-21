@@ -1,11 +1,10 @@
+// SvelteDtsResolver.ts
 import ts from 'typescript';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 
-/**
- * Minimal local copy of the resolver type used by unplugin-dts.
- * If you can import it from 'unplugin-dts', feel free to replace this with:
- *   import type { Resolver } from 'unplugin-dts';
- */
+// Minimal local copy of the Resolver type.
+// If you can import it from 'unplugin-dts', do that instead.
 export interface Resolver {
   name: string;
   supports: (id: string) => boolean | void;
@@ -26,229 +25,192 @@ export interface Resolver {
   >;
 }
 
-/* ───────────────────────── helpers ───────────────────────── */
+/* ───────────────── helpers ───────────────── */
 
-let _s2t: undefined | ((code: string, opts: any) => { code: string });
-async function s2t() {
-  if (_s2t) return _s2t;
+const SVELTE_RE = /\.svelte$/;
+
+let _svelte2tsx:
+  | undefined
+  | ((code: string, opts: { filename: string; isTsFile?: boolean; mode: 'dts' | 'ts'; noSvelteComponentTyped?: boolean; version?: string }) => { code: string });
+
+async function getSvelte2Tsx() {
+  if (_svelte2tsx) return _svelte2tsx;
   const { svelte2tsx } = await import('svelte2tsx');
-  _s2t = svelte2tsx;
-  return _s2t;
-}
-
-function relativeToRoot(root: string, abs: string) {
-  const norm = abs.replace(/\\/g, '/');
-  const r = root.replace(/\\/g, '/').replace(/\/$/, '');
-  return norm.startsWith(r + '/') ? norm.slice(r.length + 1) : norm;
-}
-
-function extractScript(source: string) {
-  const m = source.match(/<script[^>]*>([\s\S]*?)<\/script>/);
-  const script = m?.[1] ?? '';
-  // keep only normal import lines; drop svelte/internal early
-  const importLines = script
-    .split('\n')
-    .filter((l) => /^\s*import\s+/.test(l) && !/from\s+['"]svelte\/internal['"]/.test(l));
-  return { script, importLines };
-}
-
-/** Find `$props` binding and its interface (e.g., `RotateProps`) from the original <script> */
-function findPropsInterfaceFromScript(script: string) {
-  const sf = ts.createSourceFile('comp.ts', script, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TS);
-
-  let propsTypeName: string | undefined;
-  let propsInterfaceText: string | undefined;
-
-  sf.forEachChild((node) => {
-    if (ts.isVariableStatement(node)) {
-      for (const d of node.declarationList.declarations) {
-        const hasObjBinding = d.name && ts.isObjectBindingPattern(d.name);
-        const hasType =
-          !!d.type && ts.isTypeReferenceNode(d.type) && ts.isIdentifier(d.type.typeName);
-        const isPropsInit =
-          d.initializer && ts.isIdentifier(d.initializer) && d.initializer.text === '$props';
-
-        if (hasObjBinding && hasType && isPropsInit) {
-          propsTypeName = (d.type!.typeName as ts.Identifier).text; // e.g. "RotateProps"
-        }
-      }
-    }
-  });
-
-  if (propsTypeName) {
-    sf.forEachChild((node) => {
-      if (ts.isInterfaceDeclaration(node) && node.name.text === propsTypeName) {
-        const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
-        propsInterfaceText = printer.printNode(ts.EmitHint.Unspecified, node, sf);
-      }
-    });
-  }
-
-  return { propsTypeName, propsInterfaceText };
-}
-
-/** If we didn’t find props in <script>, try a generic pattern in text (tsx or dts-like) */
-function findPropsInterfaceFromText(text: string) {
-  const m = text.match(/interface\s+([A-Za-z0-9_]+Props)\s*\{[^]*?\}/m);
-  return { propsTypeName: m?.[1], propsInterfaceText: m?.[0] };
-}
-
-/** Walk the props interface to collect referenced type identifiers (e.g., Size, Snippet) */
-function collectTypeRefsFromInterface(propsInterfaceText?: string): Set<string> {
-  const refs = new Set<string>();
-  if (!propsInterfaceText) return refs;
-
-  const sf = ts.createSourceFile('props.ts', propsInterfaceText, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TS);
-
-  function visit(n: ts.Node) {
-    if (ts.isTypeReferenceNode(n)) {
-      const addIdent = (id: ts.EntityName) => {
-        if (ts.isIdentifier(id)) refs.add(id.text);
-        else {
-          addIdent(id.left);
-          refs.add(id.right.text);
-        }
-      };
-      addIdent(n.typeName);
-    }
-    n.forEachChild(visit);
-  }
-  sf.forEachChild(visit);
-  return refs;
+  _svelte2tsx = svelte2tsx;
+  return _svelte2tsx;
 }
 
 /**
- * Keep only import lines relevant for the props interface and convert them to `import type`.
- * - relevant if the imported name is referenced in props (or svelte’s Snippet/SvelteComponent)
- * - avoid `import type type` with a negative lookahead
- * - drop value-only imports like hooks
+ * Resolve the right shim for your Svelte version.
+ * - v4/v5+ => svelte-shims-v4.d.ts (no SvelteComponentTyped)
+ * - v3     => svelte-shims.d.ts (with SvelteComponentTyped)
  */
-function normalizeImportsToType(importLines: string[], propsInterfaceText?: string) {
-  const needed = collectTypeRefsFromInterface(propsInterfaceText);
-  const alwaysFromSvelte = new Set(['Snippet', 'SvelteComponent', 'SvelteComponentTyped']);
+function resolveSvelteShim(): { shimPath: string; noSvelteComponentTyped: boolean } {
+  // make a CommonJS-like resolver in ESM
+  const req = createRequire(import.meta.url);
 
-  const keep: string[] = [];
+  try {
+    // Svelte 4/5: no SvelteComponentTyped
+    const p = req.resolve('svelte2tsx/svelte-shims-v4.d.ts');
+    return { shimPath: p, noSvelteComponentTyped: true };
+  } catch {
+    // Fall back to Svelte 3 shims
+    const p = req.resolve('svelte2tsx/svelte-shims.d.ts');
+    return { shimPath: p, noSvelteComponentTyped: false };
+  }
+}
 
-  for (const line of importLines) {
-    if (!/^\s*import\s+/.test(line)) continue;
+function normalizeSlash(p: string) {
+  return p.replace(/\\/g, '/');
+}
 
-    // Parse this individual line to see what it imports
-    const sf = ts.createSourceFile('i.ts', line, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TS);
+function relToRoot(root: string, abs: string) {
+  const A = normalizeSlash(abs);
+  const R = normalizeSlash(root).replace(/\/$/, '');
+  return A.startsWith(R + '/') ? A.slice(R.length + 1) : A;
+}
 
-    let sourceModule = '';
-    const namesInImport = new Set<string>();
-    let hasTypeModifier = /\bimport\s+type\b/.test(line);
+/* ───────── per-file DTS emit via a patched TS host (SvelteKit approach) ───────── */
 
-    sf.forEachChild((n) => {
-      if (ts.isImportDeclaration(n) && ts.isStringLiteral(n.moduleSpecifier)) {
-        sourceModule = n.moduleSpecifier.text;
-        const ic = n.importClause;
-        if (ic) {
-          if (ic.name) namesInImport.add(ic.name.text);
-          if (ic.namedBindings && ts.isNamedImports(ic.namedBindings)) {
-            for (const el of ic.namedBindings.elements) {
-              namesInImport.add((el.propertyName ?? el.name).text);
-            }
-          }
-        }
-      }
-    });
+async function emitSingleSvelteDts(
+  absFilename: string,
+  svelteSource: string,
+  rootDir: string
+): Promise<Map<string, string>> {
+  const outputs = new Map<string, string>();
+  const svelte2tsx = await getSvelte2Tsx();
+  const { shimPath, noSvelteComponentTyped } = resolveSvelteShim();
 
-    // Drop svelte/internal and side-effect imports
-    if (sourceModule === 'svelte/internal') continue;
+  // Create a tiny TS program that “knows” how to read .svelte through svelte2tsx
+  const options: ts.CompilerOptions = {
+    // critical flags for declaration emit
+    declaration: true,
+    emitDeclarationOnly: true,
+    noEmit: false,
+    allowNonTsExtensions: true,
+    rootDir: rootDir,
+    outDir: rootDir, // we’ll rewrite paths anyway
+    sourceMap: false,
+    // sensible default to avoid Classic resolution pitfalls
+    moduleResolution:
+      (ts.ModuleResolutionKind as any).NodeNext ??
+      (ts.version.startsWith('5') ? ts.ModuleResolutionKind.Bundler : ts.ModuleResolutionKind.Node10),
+  };
 
-    // Keep only if used by props (or useful Svelte symbols)
-    const hasNeeded =
-      [...namesInImport].some((n) => needed.has(n)) ||
-      (sourceModule === 'svelte' && [...namesInImport].some((n) => alwaysFromSvelte.has(n)));
+  // Cache the transformed code per file
+  const transformed = new Map<string, { code: string; isTs: boolean }>();
+  const toKey = (p: string) => normalizeSlash(p);
 
-    if (!hasNeeded) continue;
-
-    // Ensure 'import type' exactly once, using negative lookahead to avoid "import type type"
-    const fixed = hasTypeModifier
-      ? line
-      : line.replace(/^(\s*)import(?!\s+type\b)(\s+)/, '$1import type$2');
-
-    keep.push(fixed);
+  // prime the cache for this file
+  {
+    const isTs = /<script\s+[^>]*lang\s*=\s*['"](ts|typescript)['"][^>]*>/.test(svelteSource);
+    const out = svelte2tsx(svelteSource, {
+      filename: absFilename,
+      isTsFile: isTs,
+      mode: 'dts',
+      noSvelteComponentTyped,
+      // version can be passed if you want to force svelte3 behavior
+      // version: noSvelteComponentTyped ? undefined : '3.42.0'
+    }).code;
+    transformed.set(toKey(absFilename), { code: out, isTs });
   }
 
-  // De-dupe and return
-  return Array.from(new Set(keep));
+  const sys = ts.sys;
+
+  const svelteSys: ts.System = {
+    ...sys,
+    fileExists(p) {
+      if (SVELTE_RE.test(p)) return true;
+      return sys.fileExists(p);
+    },
+    readDirectory(dir, exts, exclude, include, depth) {
+      const withSvelte = (exts || []).concat('.svelte');
+      return sys.readDirectory(dir, withSvelte, exclude, include, depth);
+    },
+    readFile(p, enc = 'utf-8') {
+      // Svelte files: return transformed code
+      if (SVELTE_RE.test(p)) {
+        const entry = transformed.get(toKey(p));
+        if (entry) return entry.code;
+        // If TS asks for another .svelte (dependency), transform it on demand
+        const source = sys.readFile(p, 'utf-8');
+        if (source != null) {
+          const isTs = /<script\s+[^>]*lang\s*=\s*['"](ts|typescript)['"][^>]*>/.test(source);
+          const out = svelte2tsx(source, {
+            filename: p,
+            isTsFile: isTs,
+            mode: 'dts',
+            noSvelteComponentTyped,
+          }).code;
+          transformed.set(toKey(p), { code: out, isTs });
+          return out;
+        }
+      }
+      return sys.readFile(p, enc);
+    },
+    writeFile(fileName, data) {
+      outputs.set(normalizeSlash(fileName), data);
+    },
+  };
+
+  // Wrap a host that delegates to svelteSys for module resolution
+  const host = ts.createCompilerHost(options);
+  host.readDirectory = svelteSys.readDirectory;
+  host.readFile = svelteSys.readFile;
+  host.writeFile = svelteSys.writeFile;
+
+  const resolveMod = (
+    name: string,
+    containingFile: string,
+    compilerOptions: ts.CompilerOptions
+  ) => {
+    // try TS default first
+    const tsResolved = ts.resolveModuleName(name, containingFile, compilerOptions, sys).resolvedModule;
+    if (tsResolved && !SVELTE_RE.test(tsResolved.resolvedFileName)) return tsResolved;
+    // then fall back to our svelte-aware system
+    return ts.resolveModuleName(name, containingFile, compilerOptions, svelteSys).resolvedModule!;
+  };
+
+  host.resolveModuleNames = (moduleNames, containingFile, _reused, _redir, compilerOptions) =>
+    moduleNames.map((m) => resolveMod(m, containingFile, compilerOptions));
+  host.resolveModuleNameLiterals = (lits, containingFile, _redir, compilerOptions) =>
+    lits.map((lit) => ({ resolvedModule: resolveMod(lit.text, containingFile, compilerOptions) }));
+
+  // The “program” contains: shims + this .svelte file
+  const rootNames = [shimPath, absFilename];
+  const program = ts.createProgram({ rootNames, options, host });
+  program.emit(undefined, undefined, undefined, true); // declaration emit only
+
+  return outputs;
 }
 
-/** Build the final .d.ts */
-function synthesizeDts(
-  componentName: string,
-  importsBlock: string,
-  propsBlock?: string,
-  propsName?: string
-) {
-  const needSvelteImport =
-    !/from\s+['"]svelte['"]/.test(importsBlock) || !/SvelteComponent/.test(importsBlock);
-
-  const header = needSvelteImport ? `import type { SvelteComponent } from 'svelte';\n` : '';
-
-  const props =
-    propsBlock && propsBlock.trim()
-      ? propsBlock.startsWith('export ') ? propsBlock : `export ${propsBlock}`
-      : 'export interface Props {}';
-
-  // If we had a named interface (e.g., RotateProps) use it; else fall back to generic Props
-  const propsId = propsName ?? (props.includes('interface Props') ? 'Props' : 'Props');
-
-  return [
-    header,
-    importsBlock,
-    importsBlock ? '\n' : '',
-    props,
-    '\n\n',
-    `export default class ${componentName} extends SvelteComponent<${propsId}> {}`,
-    '\n',
-  ].join('');
-}
-
-/* ───────────────────────── resolver ───────────────────────── */
+/* ─────────────── Resolver that uses the TS host trick per file ─────────────── */
 
 export function SvelteDtsResolver(): Resolver {
-  // Svelte 5 (and 4+) friendly: prefer SvelteComponent base
-  const noSvelteComponentTyped = true;
-
   return {
-    name: 'svelte',
-    supports: (id) => /\.svelte$/.test(id),
-
+    name: 'svelte', // overrides the built-in simple resolver
+    supports(id) {
+      return SVELTE_RE.test(id);
+    },
     async transform({ id, code, root }) {
-      const baseName = path.basename(id, '.svelte');
-      const relOut = (abs: string) => relativeToRoot(root, abs);
-      const svelte2tsx = await s2t();
+      // Run a per-file TS emit using the SvelteKit-style host
+      const outMap = await emitSingleSvelteDts(path.resolve(id), code, path.resolve(root));
 
-      // We always generate a TSX transform; it's the richest source for the Props interface
-      const isTsFile = /<script\s+[^>]*lang\s*=\s*['"](ts|typescript)['"][^>]*>/.test(code);
-      const tsx = svelte2tsx(code, {
-        filename: id,
-        isTsFile,
-        mode: 'ts',
-        noSvelteComponentTyped,
-      }).code;
+      // Find the .d.ts result for this file and return it
+      // TS will emit `<abs>/.../YourFile.svelte.d.ts`
+      const wanted = normalizeSlash(path.resolve(id)) + '.d.ts';
+      const produced = [...outMap.entries()].find(([file]) => file === wanted);
 
-      // 1) Prefer extracting props from the original <script> block
-      const { script, importLines } = extractScript(code);
-      let { propsTypeName, propsInterfaceText } = findPropsInterfaceFromScript(script);
-
-      // 2) If missing, try the TSX text (usually contains `interface XProps {}`)
-      if (!propsInterfaceText) {
-        const alt = findPropsInterfaceFromText(tsx);
-        propsTypeName = propsTypeName || alt.propsTypeName;
-        propsInterfaceText = propsInterfaceText || alt.propsInterfaceText;
+      if (!produced) {
+        // If nothing was produced (e.g. diagnostics), fall back to a simple export
+        const rel = relToRoot(root, wanted);
+        const { noSvelteComponentTyped } = resolveSvelteShim();
+        const base = noSvelteComponentTyped ? 'SvelteComponent' : 'SvelteComponentTyped';
+        return [{ path: rel, content: `export { ${base} as default } from 'svelte';\n` }];
       }
 
-      // 3) Keep only type-relevant imports (and convert them to `import type`)
-      const imports = normalizeImportsToType(importLines, propsInterfaceText).join('\n');
-
-      // 4) Build the final declaration
-      const content = synthesizeDts(baseName, imports, propsInterfaceText, propsTypeName);
-
-      return [{ path: relOut(`${id}.d.ts`), content }];
+      const [absPath, content] = produced;
+      return [{ path: relToRoot(root, absPath), content }];
     },
   };
 }

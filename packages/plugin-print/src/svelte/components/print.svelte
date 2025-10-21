@@ -51,4 +51,5 @@
   title="Print Document"
   src="about:blank"
   style="position: absolute; display: none;"
-/>
+>
+</iframe>
