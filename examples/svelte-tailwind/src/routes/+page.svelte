@@ -23,8 +23,10 @@
   import { ExportPluginPackage } from '@embedpdf/plugin-export/svelte';
   import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen/svelte';
   import { PanPluginPackage } from '@embedpdf/plugin-pan/svelte';
+  import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/svelte';
   import Toolbar from '$lib/components/Toolbar.svelte';
   import PageControls from '$lib/components/PageControls.svelte';
+  import Sidebar from '$lib/components/Sidebar.svelte';
 
   type RenderPageProps = {
     width: number;
@@ -35,6 +37,12 @@
   };
 
   const { engine, isLoading } = $derived(usePdfiumEngine());
+
+  let isSidebarOpen = $state(false);
+
+  const toggleSidebar = () => {
+    isSidebarOpen = !isSidebarOpen;
+  };
 
   let plugins = $derived.by(() => {
     const basePlugins: PluginBatchRegistrations = [
@@ -59,6 +67,10 @@
       createPluginRegistration(ExportPluginPackage),
       createPluginRegistration(FullscreenPluginPackage),
       createPluginRegistration(PanPluginPackage),
+      createPluginRegistration(ThumbnailPluginPackage, {
+        imagePadding: 10,
+        labelHeight: 25,
+      }),
     ];
     return basePlugins;
   });
@@ -111,14 +123,21 @@
   <div id="view-page" class="flex h-screen flex-1 flex-col overflow-hidden">
     <EmbedPDF {engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
-        <Toolbar />
-        <div class="flex-1 overflow-hidden">
-          <GlobalPointerProvider>
-            <Viewport class="h-full w-full overflow-auto select-none bg-gray-100">
-              <Scroller {RenderPageSnippet} />
-              <PageControls />
-            </Viewport>
-          </GlobalPointerProvider>
+        <Toolbar {isSidebarOpen} onToggleSidebar={toggleSidebar} />
+        <div class="flex flex-1 overflow-hidden">
+          {#if isSidebarOpen}
+            <div class="w-64 shrink-0 overflow-hidden">
+              <Sidebar />
+            </div>
+          {/if}
+          <div class="flex-1 overflow-hidden">
+            <GlobalPointerProvider>
+              <Viewport class="h-full w-full overflow-auto select-none bg-gray-100">
+                <Scroller {RenderPageSnippet} />
+                <PageControls />
+              </Viewport>
+            </GlobalPointerProvider>
+          </div>
         </div>
       </div>
     </EmbedPDF>

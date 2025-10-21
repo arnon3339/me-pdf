@@ -354,6 +354,9 @@ importers:
       '@embedpdf/plugin-spread':
         specifier: workspace:*
         version: link:../../packages/plugin-spread
+      '@embedpdf/plugin-thumbnail':
+        specifier: workspace:*
+        version: link:../../packages/plugin-thumbnail
       '@embedpdf/plugin-tiling':
         specifier: workspace:*
         version: link:../../packages/plugin-tiling
@@ -1451,6 +1454,9 @@ importers:
       react-dom:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
+      svelte:
+        specifier: '>=5.39.11'
+        version: 5.39.11
       vue:
         specifier: '>=3.2.0'
         version: 3.5.17(typescript@5.8.3)

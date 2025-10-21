@@ -8,6 +8,13 @@
   import ZoomToolbar from './ZoomToolbar.svelte';
   import PageSettings from './PageSettings.svelte';
 
+  interface Props {
+    isSidebarOpen?: boolean;
+    onToggleSidebar?: () => void;
+  }
+
+  const { isSidebarOpen = false, onToggleSidebar }: Props = $props();
+
   const { provides: fullscreenProvider, state: fullscreenState } = useFullscreen();
   const { provides: exportProvider } = useExportCapability();
   const { provides: loaderProvider } = useLoaderCapability();
@@ -182,6 +189,33 @@
       </div>
     {/if}
   </div>
+
+  <div class="h-6 w-px bg-gray-300"></div>
+
+  <!-- Sidebar Toggle Button -->
+  <button
+    class="flex h-8 w-8 items-center justify-center text-gray-600 transition-colors {isSidebarOpen
+      ? 'bg-gray-200 text-gray-900'
+      : 'hover:bg-gray-100 hover:text-gray-900'}"
+    onclick={onToggleSidebar}
+    title="Toggle Sidebar"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+      <path d="M9 4l0 16" />
+    </svg>
+  </button>
 
   <div class="h-6 w-px bg-gray-300"></div>
 
