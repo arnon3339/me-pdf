@@ -1,5 +1,11 @@
 # @embedpdf/core
 
+## 1.4.0
+
+### Minor Changes
+
+- [#222](https://github.com/embedpdf/embed-pdf-viewer/pull/222) by [@andrewrisse](https://github.com/andrewrisse) – feat: Add Svelte 5 adapter (`/svelte` export) with Rune-based hooks (`useRegistry`, `usePlugin`, `useCapability`, `useCoreState`) and components (`EmbedPDF`, `AutoMount`, `NestedWrapper`). Enhanced core `Store` to prevent dispatches within reducers. Thanks to @andrewrisse for the Svelte integration work!
+
 ## 1.3.16
 
 ## 1.3.15

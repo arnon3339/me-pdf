@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.4.0
+
+### Minor Changes
+
+- [#222](https://github.com/embedpdf/embed-pdf-viewer/pull/222) by [@andrewrisse](https://github.com/andrewrisse) – feat: Add Svelte 5 adapter (`/svelte` export) with `PdfEngineProvider` component and Rune-based hooks (`useEngineContext`, `useEngine`, `usePdfiumEngine`). Removed deprecated mock engine. Thanks to @andrewrisse!
+
 ## 1.3.16
 
 ## 1.3.15
