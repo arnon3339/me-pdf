@@ -1,5 +1,5 @@
 import { useCapability, usePlugin } from '@embedpdf/core/@framework';
-import { SearchPlugin, SearchState } from '@embedpdf/plugin-search';
+import { initialState, SearchPlugin, SearchState } from '@embedpdf/plugin-search';
 import { useEffect, useState } from '@framework';
 
 export const useSearchPlugin = () => usePlugin<SearchPlugin>(SearchPlugin.id);
@@ -7,16 +7,7 @@ export const useSearchCapability = () => useCapability<SearchPlugin>(SearchPlugi
 
 export const useSearch = () => {
   const { provides } = useSearchCapability();
-  const [searchState, setSearchState] = useState<SearchState>({
-    flags: [],
-    results: [],
-    total: 0,
-    activeResultIndex: 0,
-    showAllResults: true,
-    query: '',
-    loading: false,
-    active: false,
-  });
+  const [searchState, setSearchState] = useState<SearchState>(initialState);
 
   useEffect(() => {
     return provides?.onStateChange((state) => setSearchState(state));
