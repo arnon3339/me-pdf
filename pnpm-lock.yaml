@@ -673,7 +673,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -707,7 +707,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -958,7 +958,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -992,7 +992,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1057,7 +1057,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1091,7 +1091,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1128,7 +1128,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1165,7 +1165,7 @@ importers:
         specifier: '>=18.0.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1242,7 +1242,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1276,7 +1276,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1310,7 +1310,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1347,7 +1347,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1384,7 +1384,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1424,7 +1424,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1461,7 +1461,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1501,7 +1501,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1572,7 +1572,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
@@ -1609,7 +1609,7 @@ importers:
         specifier: '>=16.8.0'
         version: 18.3.1(react@18.3.1)
       svelte:
-        specifier: '>=5.39.11'
+        specifier: '>=5 <6'
         version: 5.39.11
       vue:
         specifier: '>=3.2.0'
