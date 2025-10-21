@@ -29,6 +29,7 @@
     "@embedpdf/plugin-fullscreen": "workspace:*",
     "@embedpdf/plugin-pan": "workspace:*",
     "@embedpdf/plugin-thumbnail": "workspace:*",
+    "@embedpdf/plugin-search": "workspace:*",
     "@embedpdf/models": "workspace:*",
     "@embedpdf/pdfium": "workspace:*",
     "@embedpdf/engines": "workspace:*",

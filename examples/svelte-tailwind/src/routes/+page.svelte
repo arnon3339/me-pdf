@@ -24,9 +24,13 @@
   import { FullscreenPluginPackage } from '@embedpdf/plugin-fullscreen/svelte';
   import { PanPluginPackage } from '@embedpdf/plugin-pan/svelte';
   import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/svelte';
+  import { SearchPluginPackage, SearchLayer } from '@embedpdf/plugin-search/svelte';
+  import { PrintPluginPackage } from '@embedpdf/plugin-print/svelte';
   import Toolbar from '$lib/components/Toolbar.svelte';
   import PageControls from '$lib/components/PageControls.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
+  import Search from '$lib/components/Search.svelte';
+  import PrintDialog from '$lib/components/PrintDialog.svelte';
 
   type RenderPageProps = {
     width: number;
@@ -39,9 +43,23 @@
   const { engine, isLoading } = $derived(usePdfiumEngine());
 
   let isSidebarOpen = $state(false);
+  let isSearchOpen = $state(false);
+  let isPrintDialogOpen = $state(false);
 
   const toggleSidebar = () => {
     isSidebarOpen = !isSidebarOpen;
+  };
+
+  const toggleSearch = () => {
+    isSearchOpen = !isSearchOpen;
+  };
+
+  const openPrintDialog = () => {
+    isPrintDialogOpen = true;
+  };
+
+  const closePrintDialog = () => {
+    isPrintDialogOpen = false;
   };
 
   let plugins = $derived.by(() => {
@@ -67,6 +85,8 @@
       createPluginRegistration(ExportPluginPackage),
       createPluginRegistration(FullscreenPluginPackage),
       createPluginRegistration(PanPluginPackage),
+      createPluginRegistration(SearchPluginPackage),
+      createPluginRegistration(PrintPluginPackage),
       createPluginRegistration(ThumbnailPluginPackage, {
         imagePadding: 10,
         labelHeight: 25,
@@ -80,6 +100,7 @@
   <RenderLayer {pageIndex} scale={1} />
   <TilingLayer {pageIndex} {scale} />
   <SelectionLayer {pageIndex} {scale} />
+  <SearchLayer {pageIndex} {scale} />
   <MarqueeZoom {pageIndex} {scale} />
 {/snippet}
 
@@ -123,10 +144,16 @@
   <div id="view-page" class="flex h-screen flex-1 flex-col overflow-hidden">
     <EmbedPDF {engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
-        <Toolbar {isSidebarOpen} onToggleSidebar={toggleSidebar} />
+        <Toolbar
+          {isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          {isSearchOpen}
+          onToggleSearch={toggleSearch}
+          onOpenPrint={openPrintDialog}
+        />
         <div class="flex flex-1 overflow-hidden">
           {#if isSidebarOpen}
-            <div class="w-64 shrink-0 overflow-hidden">
+            <div class="w-64 shrink-0 overflow-hidden border-r border-gray-200">
               <Sidebar />
             </div>
           {/if}
@@ -138,8 +165,14 @@
               </Viewport>
             </GlobalPointerProvider>
           </div>
+          {#if isSearchOpen}
+            <div class="w-80 shrink-0 overflow-hidden border-l border-gray-200">
+              <Search />
+            </div>
+          {/if}
         </div>
       </div>
+      <PrintDialog open={isPrintDialogOpen} onClose={closePrintDialog} />
     </EmbedPDF>
   </div>
 {/if}
