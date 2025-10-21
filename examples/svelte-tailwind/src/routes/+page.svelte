@@ -19,6 +19,7 @@
   import { SelectionPluginPackage, SelectionLayer } from '@embedpdf/plugin-selection/svelte';
   import { SpreadPluginPackage } from '@embedpdf/plugin-spread/svelte';
   import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/svelte';
+  import { ExportPluginPackage } from '@embedpdf/plugin-export/svelte';
   import Toolbar from '$lib/components/Toolbar.svelte';
   import PageControls from '$lib/components/PageControls.svelte';
 
@@ -52,6 +53,7 @@
       createPluginRegistration(InteractionManagerPluginPackage),
       createPluginRegistration(SpreadPluginPackage),
       createPluginRegistration(RotatePluginPackage),
+      createPluginRegistration(ExportPluginPackage),
     ];
     return basePlugins;
   });
