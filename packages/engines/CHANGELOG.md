@@ -1,5 +1,11 @@
 # @embedpdf/engines
 
+## 1.4.1
+
+### Patch Changes
+
+- [#234](https://github.com/embedpdf/embed-pdf-viewer/pull/234) by [@bobsingor](https://github.com/bobsingor) – refactor(svelte): Update `usePdfiumEngine` hook to return a reactive `$state` object directly, simplifying state management for consumers.
+
 ## 1.4.0
 
 ### Minor Changes
