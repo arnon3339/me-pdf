@@ -1,17 +1,16 @@
 <script lang="ts">
   import { useLoaderCapability } from '../hooks';
 
-  const { provides: loaderProvides } = useLoaderCapability();
+  const loaderCapability = useLoaderCapability();
 
   let inputRef: HTMLInputElement | null = null;
 
   // Subscribe/unsubscribe whenever the capability changes
   $effect(() => {
-    const cap = loaderProvides;
-    if (!cap) return;
+    if (!loaderCapability.provides) return;
 
     // Listen for "open file" requests
-    const unsubscribe = cap.onOpenFileRequest((req) => {
+    const unsubscribe = loaderCapability.provides.onOpenFileRequest((req) => {
       if (req === 'open' && inputRef) {
         inputRef.click();
       }
@@ -27,7 +26,7 @@
   async function onChange(event: Event) {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
-    const cap = loaderProvides;
+    const cap = loaderCapability.provides;
 
     if (file && cap) {
       const arrayBuffer = await file.arrayBuffer();

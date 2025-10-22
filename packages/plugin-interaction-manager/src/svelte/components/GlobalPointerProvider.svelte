@@ -12,12 +12,12 @@
   let { children, class: propsClass, ...restProps }: GlobalPointerProviderProps = $props();
 
   let ref = $state<HTMLDivElement | null>(null);
-  const { provides: cap } = $derived(useInteractionManagerCapability());
+  const interactionManagerCapability = useInteractionManagerCapability();
 
   $effect(() => {
-    if (!cap || !ref) return;
+    if (!interactionManagerCapability.provides || !ref) return;
 
-    return createPointerProvider(cap, { type: 'global' }, ref);
+    return createPointerProvider(interactionManagerCapability.provides, { type: 'global' }, ref);
   });
 </script>
 

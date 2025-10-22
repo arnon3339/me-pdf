@@ -13,7 +13,7 @@
 
   let { pageIndex, scale, background = 'rgba(33, 150, 243, 0.4)' }: SelectionLayerProps = $props();
 
-  const { plugin: selPlugin } = $derived(useSelectionPlugin());
+  const selectionPlugin = useSelectionPlugin();
   let rects = $state<Rect[]>([]);
   let boundingRect = $state<Rect | null>(null);
 
@@ -21,9 +21,9 @@
     // Track pageIndex as dependency
     const _pageIndex = pageIndex;
 
-    if (!selPlugin) return;
+    if (!selectionPlugin.plugin) return;
 
-    return selPlugin.registerSelectionOnPage({
+    return selectionPlugin.plugin.registerSelectionOnPage({
       pageIndex: _pageIndex,
       onRectsChange: ({ rects: newRects, boundingRect: newBoundingRect }) => {
         rects = newRects;

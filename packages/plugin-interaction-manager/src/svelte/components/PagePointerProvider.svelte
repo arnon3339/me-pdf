@@ -30,8 +30,8 @@
 
   let ref = $state<HTMLDivElement | null>(null);
 
-  const { provides: cap } = $derived(useInteractionManagerCapability());
-  const isPageExclusive = $derived(useIsPageExclusive());
+  const interactionManagerCapability = useInteractionManagerCapability();
+  const isPageExclusive = useIsPageExclusive();
 
   // Memoize the default conversion function
   const defaultConvertEventToPoint = $derived.by(() => {
@@ -53,10 +53,10 @@
   });
 
   $effect(() => {
-    if (!cap || !ref) return;
+    if (!interactionManagerCapability.provides || !ref) return;
 
     return createPointerProvider(
-      cap,
+      interactionManagerCapability.provides,
       { type: 'page', pageIndex },
       ref,
       convertEventToPoint || defaultConvertEventToPoint,

@@ -10,16 +10,16 @@
 
   const { children, class: className, style }: Props = $props();
 
-  const { provides: fullscreenCapability } = useFullscreenCapability();
-  const { plugin } = useFullscreenPlugin();
+  const fullscreenCapability = useFullscreenCapability();
+  const fullscreenPlugin = useFullscreenPlugin();
 
   let containerElement: HTMLDivElement | undefined;
 
   // Handle fullscreen requests
   $effect(() => {
-    if (!fullscreenCapability) return;
+    if (!fullscreenCapability.provides) return;
 
-    const unsub = fullscreenCapability.onRequest(async (action) => {
+    const unsub = fullscreenCapability.provides.onRequest(async (action) => {
       if (action === 'enter') {
         const el = containerElement;
         if (el && !document.fullscreenElement) {
@@ -37,10 +37,10 @@
 
   // Listen for fullscreen changes
   $effect(() => {
-    if (!plugin) return;
+    if (!fullscreenPlugin.plugin) return;
 
     const handler = () => {
-      plugin.setFullscreenState(!!document.fullscreenElement);
+      fullscreenPlugin.plugin.setFullscreenState(!!document.fullscreenElement);
     };
 
     document.addEventListener('fullscreenchange', handler);

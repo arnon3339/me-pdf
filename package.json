@@ -12,6 +12,7 @@
     "build": "turbo run build",
     "build:react-mui": "turbo run build --filter=\"./packages/*\" --filter=\"./examples/react-mui\"",
     "build:vue-vuetify": "turbo run build --filter=\"./packages/*\" --filter=\"./examples/vue-vuetify\"",
+    "build:svelte-tailwind": "turbo run build --filter=\"./packages/*\" --filter=\"./examples/svelte-tailwind\"",
     "build:packages": "turbo run build --filter=\"./packages/*\"",
     "build:snippet": "turbo run build --filter=\"./packages/*\" --filter=\"./snippet\"",
     "build:watch": "ROARR_LOG=true turbowatch ./config/turbowatch.config.ts | roarr",

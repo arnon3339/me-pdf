@@ -1,12 +1,12 @@
 <script lang="ts">
   import { useSelectionCapability } from '../hooks/use-selection.svelte';
 
-  const { provides: sel } = $derived(useSelectionCapability());
+  const selectionCapability = useSelectionCapability();
 
   $effect(() => {
-    if (!sel) return;
+    if (!selectionCapability.provides) return;
 
-    return sel.onCopyToClipboard((text) => {
+    return selectionCapability.provides.onCopyToClipboard((text) => {
       navigator.clipboard.writeText(text).catch((err) => {
         console.error('Failed to copy text to clipboard:', err);
       });

@@ -5,22 +5,21 @@ export const useFullscreenPlugin = () => usePlugin<FullscreenPlugin>(FullscreenP
 export const useFullscreenCapability = () => useCapability<FullscreenPlugin>(FullscreenPlugin.id);
 
 export const useFullscreen = () => {
-  const { provides } = $derived(useFullscreenCapability());
-  const state = $state<FullscreenState>(initialState);
+  const capability = useFullscreenCapability();
+
+  const state = $state({
+    get provides() {
+      return capability.provides;
+    },
+    state: initialState as FullscreenState,
+  });
 
   $effect(() => {
-    if (!provides) return;
-    return provides.onStateChange((newState) => {
-      state.isFullscreen = newState.isFullscreen;
+    if (!capability.provides) return;
+    return capability.provides.onStateChange((newState) => {
+      state.state = newState;
     });
   });
 
-  return {
-    get provides() {
-      return provides;
-    },
-    get state() {
-      return state;
-    },
-  };
+  return state;
 };

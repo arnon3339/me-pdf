@@ -13,21 +13,21 @@
 
   let { pageIndex, scale, class: propsClass, ...restProps }: TilingLayoutProps = $props();
 
-  const { provides: tilingProvides } = $derived(useTilingCapability());
+  const tilingCapability = useTilingCapability();
   let tiles = $state<Tile[]>([]);
 
-  let { coreState } = $derived(useCoreState());
+  const core = useCoreState();
 
   $effect(() => {
-    if (!tilingProvides) return;
-    return tilingProvides.onTileRendering((tilesMap) => {
+    if (!tilingCapability.provides) return;
+    return tilingCapability.provides.onTileRendering((tilesMap) => {
       tiles = tilesMap[pageIndex] ?? [];
     });
   });
 </script>
 
 <div class={propsClass} {...restProps}>
-  {#each tiles as tile (`${coreState?.document?.id}-${tile.id}`)}
+  {#each tiles as tile (`${core.coreState?.document?.id}-${tile.id}`)}
     <TileImg {pageIndex} {tile} dpr={window.devicePixelRatio} {scale} />
   {/each}
 </div>

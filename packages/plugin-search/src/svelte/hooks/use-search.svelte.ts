@@ -5,22 +5,21 @@ export const useSearchPlugin = () => usePlugin<SearchPlugin>(SearchPlugin.id);
 export const useSearchCapability = () => useCapability<SearchPlugin>(SearchPlugin.id);
 
 export const useSearch = () => {
-  const { provides } = $derived(useSearchCapability());
-  let searchState = $state<SearchState>(initialState);
+  const capability = useSearchCapability();
+
+  const state = $state({
+    get provides() {
+      return capability.provides;
+    },
+    state: initialState as SearchState,
+  });
 
   $effect(() => {
-    if (!provides) return;
-    return provides.onStateChange((state) => {
-      searchState = state;
+    if (!capability.provides) return;
+    return capability.provides.onStateChange((newState) => {
+      state.state = newState;
     });
   });
 
-  return {
-    get state() {
-      return searchState;
-    },
-    get provides() {
-      return provides;
-    },
-  };
+  return state;
 };

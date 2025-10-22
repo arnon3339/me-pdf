@@ -6,7 +6,7 @@
   import { tick } from 'svelte';
 
   const search = useSearch();
-  const { provides: scroll } = useScrollCapability();
+  const scrollCapability = useScrollCapability();
 
   let inputValue = $state(search.state.query || '');
   let inputRef: HTMLInputElement | undefined;
@@ -65,7 +65,7 @@
       { x: Infinity, y: Infinity },
     );
 
-    scroll?.scrollToPage({
+    scrollCapability.provides?.scrollToPage({
       pageNumber: item.pageIndex + 1,
       pageCoordinates: minCoordinates,
       center: true,
