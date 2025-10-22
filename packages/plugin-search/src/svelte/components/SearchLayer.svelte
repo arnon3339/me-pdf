@@ -18,12 +18,12 @@
     ...divProps
   }: Props = $props();
 
-  const { provides: searchProvides } = useSearchCapability();
+  const searchCapability = useSearchCapability();
   let searchResultState = $state<SearchResultState | null>(null);
 
   $effect(() => {
-    if (!searchProvides) return;
-    return searchProvides.onSearchResultStateChange((state) => {
+    if (!searchCapability.provides) return;
+    return searchCapability.provides.onSearchResultStateChange((state) => {
       searchResultState = state;
     });
   });

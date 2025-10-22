@@ -10,11 +10,11 @@
 
   let { pageSize, children }: RotateProps = $props();
 
-  const { plugin: rotate } = useRotatePlugin();
+  const rotatePlugin = useRotatePlugin();
 
   const transformMatrix = $derived(
-    rotate
-      ? rotate.getMatrixAsString({
+    rotatePlugin.plugin
+      ? rotatePlugin.plugin.getMatrixAsString({
           w: pageSize.width,
           h: pageSize.height,
         })

@@ -1,12 +1,6 @@
 import type { BasePlugin } from '@embedpdf/core';
 import { pdfContext } from './use-registry.svelte.js';
 
-type PluginState<T extends BasePlugin> = {
-  plugin: T | null;
-  isLoading: boolean;
-  ready: Promise<void>;
-};
-
 /**
  * Hook to access a plugin.
  * @param pluginId The ID of the plugin to access
@@ -15,14 +9,17 @@ type PluginState<T extends BasePlugin> = {
  * // Get zoom plugin
  * const zoom = usePlugin<ZoomPlugin>(ZoomPlugin.id);
  */
-export function usePlugin<T extends BasePlugin>(pluginId: T['id']): PluginState<T> {
+export function usePlugin<T extends BasePlugin>(pluginId: T['id']) {
   const { registry } = pdfContext;
+
+  const state = $state({
+    plugin: null as T | null,
+    isLoading: true,
+    ready: new Promise<void>(() => {}),
+  });
+
   if (registry === null) {
-    return {
-      plugin: null,
-      isLoading: true,
-      ready: new Promise(() => {})
-    };
+    return state;
   }
 
   const plugin = registry.getPlugin<T>(pluginId);
@@ -31,9 +28,9 @@ export function usePlugin<T extends BasePlugin>(pluginId: T['id']): PluginState<
     throw new Error(`Plugin ${pluginId} not found`);
   }
 
-  return {
-    plugin,
-    isLoading: false,
-    ready: plugin.ready()
-  };
+  state.plugin = plugin;
+  state.isLoading = false;
+  state.ready = plugin.ready();
+
+  return state;
 }

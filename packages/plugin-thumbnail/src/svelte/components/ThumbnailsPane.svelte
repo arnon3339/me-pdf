@@ -10,15 +10,15 @@
 
   const { children, ...divProps }: Props = $props();
 
-  const { plugin: thumbnailPlugin } = useThumbnailPlugin();
+  const thumbnailPlugin = useThumbnailPlugin();
 
   let viewportRef: HTMLDivElement | undefined;
   let window = $state<WindowState | null>(null);
 
   // 1) subscribe once to window updates
   $effect(() => {
-    if (!thumbnailPlugin) return;
-    return thumbnailPlugin.onWindow((newWindow) => {
+    if (!thumbnailPlugin.plugin) return;
+    return thumbnailPlugin.plugin.onWindow((newWindow) => {
       window = newWindow;
     });
   });
@@ -26,10 +26,10 @@
   // 2) keep plugin in sync while the user scrolls
   $effect(() => {
     const vp = viewportRef;
-    if (!vp || !thumbnailPlugin) return;
+    if (!vp || !thumbnailPlugin.plugin) return;
 
     const onScroll = () => {
-      thumbnailPlugin.updateWindow(vp.scrollTop, vp.clientHeight);
+      thumbnailPlugin.plugin.updateWindow(vp.scrollTop, vp.clientHeight);
     };
 
     vp.addEventListener('scroll', onScroll);
@@ -39,10 +39,10 @@
   // 2.5) keep plugin in sync when viewport resizes (e.g., menu opens/closes)
   $effect(() => {
     const vp = viewportRef;
-    if (!vp || !thumbnailPlugin) return;
+    if (!vp || !thumbnailPlugin.plugin) return;
 
     const resizeObserver = new ResizeObserver(() => {
-      thumbnailPlugin.updateWindow(vp.scrollTop, vp.clientHeight);
+      thumbnailPlugin.plugin.updateWindow(vp.scrollTop, vp.clientHeight);
     });
 
     resizeObserver.observe(vp);
@@ -52,23 +52,23 @@
   // 3) kick-start after document change
   $effect(() => {
     const vp = viewportRef;
-    if (!vp || !thumbnailPlugin || !window) return;
+    if (!vp || !thumbnailPlugin.plugin || !window) return;
 
     // push initial metrics
-    thumbnailPlugin.updateWindow(vp.scrollTop, vp.clientHeight);
+    thumbnailPlugin.plugin.updateWindow(vp.scrollTop, vp.clientHeight);
   });
 
   // 4) let plugin drive scroll – only after window is set, and only once
   $effect(() => {
     const vp = viewportRef;
-    if (!vp || !thumbnailPlugin || !window) return;
+    if (!vp || !thumbnailPlugin.plugin || !window) return;
 
-    return thumbnailPlugin.onScrollTo(({ top, behavior }) => {
+    return thumbnailPlugin.plugin.onScrollTo(({ top, behavior }) => {
       vp.scrollTo({ top, behavior });
     });
   });
 
-  const paddingY = $derived(thumbnailPlugin?.cfg.paddingY ?? 0);
+  const paddingY = $derived(thumbnailPlugin?.plugin?.cfg.paddingY ?? 0);
   const totalHeight = $derived(window?.totalHeight ?? 0);
   const items = $derived(window?.items ?? []);
 </script>

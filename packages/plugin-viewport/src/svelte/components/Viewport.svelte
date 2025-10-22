@@ -12,13 +12,13 @@
 
   let viewportGap = $state(0);
 
-  let viewportRef = $derived(useViewportRef());
+  let viewportRef = useViewportRef();
 
-  const { provides } = $derived(useViewportCapability());
+  const viewportCapability = useViewportCapability();
 
   $effect(() => {
-    if (provides) {
-      viewportGap = provides.getViewportGap();
+    if (viewportCapability.provides) {
+      viewportGap = viewportCapability.provides.getViewportGap();
     }
   });
 </script>

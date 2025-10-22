@@ -1,42 +1,36 @@
 <script lang="ts">
   import { useScrollPlugin } from '../hooks';
   import type { HTMLAttributes } from 'svelte/elements';
-  import { type PageLayout, type ScrollerLayout, ScrollStrategy } from '@embedpdf/plugin-scroll';
-  import type { PdfDocumentObject, Rotation } from '@embedpdf/models';
-  import { useRegistry, useCoreState } from '@embedpdf/core/svelte';
+  import { type ScrollerLayout, ScrollStrategy } from '@embedpdf/plugin-scroll';
+  import { useCoreState } from '@embedpdf/core/svelte';
+  import { type RenderPageProps } from '../../shared/types';
   import { type Snippet } from 'svelte';
-
-  export interface RenderPageProps extends PageLayout {
-    rotation: Rotation;
-    scale: number;
-    document: PdfDocumentObject | null;
-  }
 
   type ScrollerProps = HTMLAttributes<HTMLDivElement> & {
     RenderPageSnippet: Snippet<RenderPageProps>;
     overlayElements?: Snippet[];
   };
 
-  const { plugin: scrollPlugin } = $derived(useScrollPlugin());
-  const { registry } = $derived(useRegistry());
-  let { coreState } = $derived(useCoreState());
-  let scrollerLayout = $derived<ScrollerLayout | null>(scrollPlugin?.getScrollerLayout() ?? null);
+  const scrollPlugin = useScrollPlugin();
+  const core = useCoreState();
+  let scrollerLayout = $derived<ScrollerLayout | null>(
+    scrollPlugin.plugin?.getScrollerLayout() ?? null,
+  );
 
   let { RenderPageSnippet, overlayElements, ...restProps }: ScrollerProps = $props();
 
-
   $effect(() => {
-    if (!scrollPlugin) return;
-    return scrollPlugin.onScrollerData((layout) => (scrollerLayout = layout));
+    if (!scrollPlugin.plugin) return;
+    return scrollPlugin.plugin.onScrollerData((layout) => (scrollerLayout = layout));
   });
 
   $effect(() => {
-    if (!scrollPlugin) return;
-    scrollPlugin.setLayoutReady();
+    if (!scrollPlugin.plugin) return;
+    scrollPlugin.plugin.setLayoutReady();
   });
 </script>
 
-{#if scrollerLayout && registry && coreState}
+{#if scrollerLayout && core.coreState}
   <div
     {...restProps}
     style:width={`${scrollerLayout.totalWidth}px`}
@@ -82,9 +76,9 @@
             >
               {@render RenderPageSnippet?.({
                 ...layout,
-                rotation: coreState.rotation,
-                scale: coreState.scale,
-                document: coreState.document,
+                rotation: core.coreState.rotation,
+                scale: core.coreState.scale,
+                document: core.coreState.document,
               })}
             </div>
           {/each}

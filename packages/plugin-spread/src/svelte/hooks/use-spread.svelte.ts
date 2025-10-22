@@ -18,29 +18,28 @@ export const useSpreadPlugin = () => usePlugin<SpreadPlugin>(SpreadPlugin.id);
  * Returns the capability provider and reactive spread mode.
  */
 export const useSpread = () => {
-  const { provides } = $derived(useSpreadCapability());
-  let spreadMode = $state<SpreadMode>(SpreadMode.None);
+  const capability = useSpreadCapability();
+
+  const state = $state({
+    get provides() {
+      return capability.provides;
+    },
+    spreadMode: SpreadMode.None as SpreadMode,
+  });
 
   $effect(() => {
-    if (!provides) return;
+    if (!capability.provides) return;
 
     // Set initial spread mode
-    spreadMode = provides.getSpreadMode();
+    state.spreadMode = capability.provides.getSpreadMode();
 
     // Subscribe to spread mode changes
-    const unsubscribe = provides.onSpreadChange((newSpreadMode) => {
-      spreadMode = newSpreadMode;
+    const unsubscribe = capability.provides.onSpreadChange((newSpreadMode) => {
+      state.spreadMode = newSpreadMode;
     });
 
     return unsubscribe;
   });
 
-  return {
-    get spreadMode() {
-      return spreadMode;
-    },
-    get provides() {
-      return provides;
-    },
-  };
+  return state;
 };

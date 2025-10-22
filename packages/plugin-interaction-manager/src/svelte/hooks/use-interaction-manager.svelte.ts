@@ -12,36 +12,38 @@ export const useInteractionManagerCapability = () =>
   useCapability<InteractionManagerPlugin>(InteractionManagerPlugin.id);
 
 export function useInteractionManager() {
-  const { provides } = $derived(useInteractionManagerCapability());
-  let interactionManagerState = $state<InteractionManagerState>(initialState);
+  const capability = useInteractionManagerCapability();
+
+  const state = $state({
+    get provides() {
+      return capability.provides;
+    },
+    state: initialState as InteractionManagerState,
+  });
 
   $effect(() => {
-    if (!provides) return;
-    return provides.onStateChange((state) => {
-      interactionManagerState = state;
+    if (!capability.provides) return;
+    return capability.provides.onStateChange((newState) => {
+      state.state = newState;
     });
   });
 
-  return {
-    get provides() {
-      return provides;
-    },
-    get state() {
-      return interactionManagerState;
-    },
-  };
+  return state;
 }
 
 export function useCursor() {
-  const { provides } = $derived(useInteractionManagerCapability());
-  return {
+  const capability = useInteractionManagerCapability();
+
+  const state = $state({
     setCursor: (token: string, cursor: string, prio = 0) => {
-      provides?.setCursor(token, cursor, prio);
+      capability.provides?.setCursor(token, cursor, prio);
     },
     removeCursor: (token: string) => {
-      provides?.removeCursor(token);
+      capability.provides?.removeCursor(token);
     },
-  };
+  });
+
+  return state;
 }
 
 interface UsePointerHandlersOptions {
@@ -49,8 +51,9 @@ interface UsePointerHandlersOptions {
   pageIndex?: number;
 }
 
-export function usePointerHandlers({ modeId, pageIndex }: UsePointerHandlersOptions) {
-  const { provides } = $derived(useInteractionManagerCapability());
+export function usePointerHandlers({ modeId, pageIndex }: UsePointerHandlersOptions = {}) {
+  const capability = useInteractionManagerCapability();
+
   return {
     register: (
       handlers: PointerEventHandlersWithLifecycle,
@@ -61,12 +64,12 @@ export function usePointerHandlers({ modeId, pageIndex }: UsePointerHandlersOpti
       const finalPageIndex = options?.pageIndex ?? pageIndex;
 
       return finalModeId
-        ? provides?.registerHandlers({
+        ? capability.provides?.registerHandlers({
             modeId: finalModeId,
             handlers,
             pageIndex: finalPageIndex,
           })
-        : provides?.registerAlways({
+        : capability.provides?.registerAlways({
             scope:
               finalPageIndex !== undefined
                 ? { type: 'page', pageIndex: finalPageIndex }
@@ -78,24 +81,26 @@ export function usePointerHandlers({ modeId, pageIndex }: UsePointerHandlersOpti
 }
 
 export function useIsPageExclusive() {
-  const { provides: cap } = $derived(useInteractionManagerCapability());
-  let isPageExclusive = $derived.by(() => {
-    const m = cap?.getActiveInteractionMode();
-    return m?.scope === 'page' && !!m.exclusive;
+  const capability = useInteractionManagerCapability();
+
+  const state = $state({
+    isPageExclusive: false,
   });
 
+  // Initialize and update on changes
   $effect(() => {
-    if (!cap) return;
+    if (!capability.provides) return;
 
-    return cap.onModeChange(() => {
-      const mode = cap.getActiveInteractionMode();
-      isPageExclusive = mode?.scope === 'page' && !!mode?.exclusive;
+    // Set initial value
+    const mode = capability.provides.getActiveInteractionMode();
+    state.isPageExclusive = mode?.scope === 'page' && !!mode.exclusive;
+
+    // Listen for changes
+    return capability.provides.onModeChange(() => {
+      const mode = capability.provides?.getActiveInteractionMode();
+      state.isPageExclusive = mode?.scope === 'page' && !!mode?.exclusive;
     });
   });
 
-  return {
-    get isPageExclusive() {
-      return isPageExclusive;
-    },
-  };
+  return state;
 }

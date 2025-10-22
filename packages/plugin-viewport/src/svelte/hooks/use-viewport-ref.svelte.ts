@@ -1,9 +1,8 @@
 import { type Rect } from '@embedpdf/models';
-import { useViewportPlugin } from './use-viewport';
-
+import { useViewportPlugin } from './use-viewport.svelte';
 
 export function useViewportRef() {
-  const {plugin} = useViewportPlugin();
+  const { plugin } = useViewportPlugin();
   let containerRef = $state<HTMLDivElement | null>(null);
 
   $effect.pre(() => {
@@ -17,7 +16,7 @@ export function useViewportRef() {
       const r = container.getBoundingClientRect();
       return {
         origin: { x: r.left, y: r.top },
-        size: { width: r.width, height: r.height }
+        size: { width: r.width, height: r.height },
       };
     };
     plugin.registerBoundingRectProvider(provideRect);
@@ -26,7 +25,7 @@ export function useViewportRef() {
     const onScroll = () => {
       plugin?.setViewportScrollMetrics({
         scrollTop: container.scrollTop,
-        scrollLeft: container.scrollLeft
+        scrollLeft: container.scrollLeft,
       });
     };
     container.addEventListener('scroll', onScroll);
@@ -41,7 +40,7 @@ export function useViewportRef() {
         scrollTop: container.scrollTop,
         scrollLeft: container.scrollLeft,
         scrollWidth: container.scrollWidth,
-        scrollHeight: container.scrollHeight
+        scrollHeight: container.scrollHeight,
       });
     });
     resizeObserver.observe(container);
@@ -68,6 +67,6 @@ export function useViewportRef() {
     },
     set containerRef(el: HTMLDivElement | null) {
       containerRef = el;
-    }
+    },
   };
 }

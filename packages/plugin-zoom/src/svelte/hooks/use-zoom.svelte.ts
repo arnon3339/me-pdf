@@ -5,21 +5,21 @@ export const useZoomCapability = () => useCapability<ZoomPlugin>(ZoomPlugin.id);
 export const useZoomPlugin = () => usePlugin<ZoomPlugin>(ZoomPlugin.id);
 
 export const useZoom = () => {
-  const { provides } = $derived(useZoomCapability());
-  let zoomState = $state<ZoomState>(initialState);
+  const capability = useZoomCapability();
+
+  const state = $state({
+    get provides() {
+      return capability.provides;
+    },
+    state: initialState as ZoomState,
+  });
 
   $effect(() => {
-    return provides?.onStateChange((action) => {
-      zoomState = action;
+    if (!capability.provides) return;
+    return capability.provides.onStateChange((newState) => {
+      state.state = newState;
     });
   });
 
-  return {
-    get state() {
-      return zoomState;
-    },
-    get provides() {
-      return provides;
-    },
-  };
+  return state;
 };

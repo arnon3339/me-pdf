@@ -9,11 +9,11 @@
   };
 
   let { children, class: propsClass, ...restProps }: PinchWrapperProps = $props();
-  const { elementRef } = $derived(usePinch());
+  const pinch = usePinch();
 </script>
 
 <div
-  ref={elementRef}
+  bind:this={pinch.elementRef}
   {...restProps}
   style:display="block"
   style:width="fit-content"
@@ -24,5 +24,3 @@
 >
   {children}
 </div>
-
-}

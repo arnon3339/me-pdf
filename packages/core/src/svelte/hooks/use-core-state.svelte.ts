@@ -6,8 +6,11 @@ import { useRegistry } from './use-registry.svelte';
  * and re-renders the component only when the core state changes
  */
 export function useCoreState() {
-  const { registry } = $derived(useRegistry());
-  let coreState = $state<CoreState | null>(null);
+  const { registry } = useRegistry();
+
+  const state = $state({
+    coreState: null as CoreState | null,
+  });
 
   $effect(() => {
     if (!registry) return;
@@ -15,19 +18,16 @@ export function useCoreState() {
     const store = registry.getStore();
 
     // Get initial core state
-    coreState = store.getState().core;
+    state.coreState = store.getState().core;
 
     // Create a single subscription that handles all core actions
     return store.subscribe((action, newState, oldState) => {
       // Only update if it's a core action and the core state changed
       if (store.isCoreAction(action) && !arePropsEqual(newState.core, oldState.core)) {
-        coreState = newState.core;
+        state.coreState = newState.core;
       }
     });
   });
-  return {
-    get coreState() {
-      return coreState;
-    },
-  };
+
+  return state;
 }

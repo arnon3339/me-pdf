@@ -10,12 +10,15 @@ export interface UsePdfiumEngineProps {
 export function usePdfiumEngine(config?: UsePdfiumEngineProps) {
   const { wasmUrl = DEFAULT_PDFIUM_WASM_URL, worker = true, logger } = config ?? {};
 
-  let engine = $state<PdfEngine | null>(null);
-  let loading = $state(true);
-  let error = $state<Error | null>(null);
-  let engineRef = $state<PdfEngine | null>();
+  // Create a reactive state object
+  const state = $state({
+    engine: null as PdfEngine | null,
+    isLoading: true,
+    error: null as Error | null,
+  });
 
-  // Check if we're in browser environment
+  let engineRef = $state<PdfEngine | null>(null);
+
   const isBrowser = typeof window !== 'undefined';
 
   if (isBrowser) {
@@ -30,20 +33,21 @@ export function usePdfiumEngine(config?: UsePdfiumEngineProps) {
 
           const pdfEngine = await createPdfiumEngine(wasmUrl, logger);
           engineRef = pdfEngine;
+
           pdfEngine.initialize().wait(
             () => {
-              engine = pdfEngine;
-              loading = false;
+              state.engine = pdfEngine;
+              state.isLoading = false;
             },
             (e) => {
-              error = new Error(e.reason.message);
-              loading = false;
+              state.error = new Error(e.reason.message);
+              state.isLoading = false;
             },
           );
         } catch (e) {
           if (!cancelled) {
-            error = e as Error;
-            loading = false;
+            state.error = e as Error;
+            state.isLoading = false;
           }
         }
       })();
@@ -58,16 +62,6 @@ export function usePdfiumEngine(config?: UsePdfiumEngineProps) {
     });
   }
 
-  // IMPORTANT: expose *getters* so consumers read live state
-  return {
-    get engine() {
-      return engine;
-    },
-    get isLoading() {
-      return loading;
-    },
-    get error() {
-      return error;
-    },
-  };
+  // Return the reactive state object directly
+  return state;
 }

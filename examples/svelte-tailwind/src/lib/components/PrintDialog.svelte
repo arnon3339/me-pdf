@@ -10,7 +10,7 @@
 
   const { open, onClose }: Props = $props();
 
-  const { provides: printCapability } = usePrintCapability();
+  const printCapability = usePrintCapability();
   const scroll = useScroll();
 
   type PageSelection = 'all' | 'current' | 'custom';
@@ -51,7 +51,7 @@
     };
 
     try {
-      const task = printCapability.print(options);
+      const task = printCapability.provides?.print(options);
 
       if (task) {
         task.wait(

@@ -1,15 +1,9 @@
 import { ReactNode, useEffect, useState, HTMLAttributes } from '@framework';
-import { ScrollStrategy, ScrollerLayout, PageLayout } from '@embedpdf/plugin-scroll';
+import { ScrollStrategy, ScrollerLayout } from '@embedpdf/plugin-scroll';
 import { useRegistry } from '@embedpdf/core/@framework';
-import { PdfDocumentObject, Rotation } from '@embedpdf/models';
 
 import { useScrollPlugin } from '../hooks';
-
-export interface RenderPageProps extends PageLayout {
-  rotation: Rotation;
-  scale: number;
-  document: PdfDocumentObject | null;
-}
+import { RenderPageProps } from '../types';
 
 type ScrollerProps = HTMLAttributes<HTMLDivElement> & {
   renderPage: (props: RenderPageProps) => ReactNode;

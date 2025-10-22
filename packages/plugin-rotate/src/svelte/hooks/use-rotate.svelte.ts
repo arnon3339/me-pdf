@@ -17,23 +17,24 @@ export const useRotateCapability = () => useCapability<RotatePlugin>(RotatePlugi
  * Hook that provides reactive rotation state and methods.
  */
 export const useRotate = () => {
-  const { provides } = useRotateCapability();
-  let rotation = $state<Rotation>(0);
+  const capability = useRotateCapability();
+
+  const state = $state({
+    get provides() {
+      return capability.provides;
+    },
+    rotation: 0 as Rotation,
+  });
 
   $effect(() => {
-    if (!provides) return;
+    if (!capability.provides) return;
 
-    const unsubscribe = provides.onRotateChange((newRotation) => {
-      rotation = newRotation;
+    const unsubscribe = capability.provides.onRotateChange((newRotation) => {
+      state.rotation = newRotation;
     });
 
     return unsubscribe;
   });
 
-  return {
-    get rotation() {
-      return rotation;
-    },
-    provides,
-  };
+  return state;
 };
