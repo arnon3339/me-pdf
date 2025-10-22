@@ -1,5 +1,11 @@
 # @embedpdf/plugin-scroll
 
+## 1.4.1
+
+### Patch Changes
+
+- [#234](https://github.com/embedpdf/embed-pdf-viewer/pull/234) by [@bobsingor](https://github.com/bobsingor) – refactor(svelte): Update `Scroller.svelte` component and `useScroll` hook to use refactored core hooks and return a reactive state object. Introduced shared `RenderPageProps` type. Adjusted Vue components accordingly.
+
 ## 1.4.0
 
 ### Minor Changes

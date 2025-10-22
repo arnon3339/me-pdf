@@ -1,5 +1,11 @@
 # @embedpdf/plugin-selection
 
+## 1.4.1
+
+### Patch Changes
+
+- [#234](https://github.com/embedpdf/embed-pdf-viewer/pull/234) by [@bobsingor](https://github.com/bobsingor) – refactor(svelte): Update `CopyToClipboard.svelte` and `SelectionLayer.svelte` components to correctly access plugin/capability instances from refactored hooks.
+
 ## 1.4.0
 
 ### Minor Changes

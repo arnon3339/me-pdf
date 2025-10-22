@@ -1,5 +1,11 @@
 # @embedpdf/plugin-tiling
 
+## 1.4.1
+
+### Patch Changes
+
+- [#234](https://github.com/embedpdf/embed-pdf-viewer/pull/234) by [@bobsingor](https://github.com/bobsingor) – refactor(svelte): Update `TileImg.svelte` and `TilingLayer.svelte` components to correctly access capability/core state instances from refactored hooks.
+
 ## 1.4.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @embedpdf/plugin-search
 
+## 1.4.1
+
+### Patch Changes
+
+- [#234](https://github.com/embedpdf/embed-pdf-viewer/pull/234) by [@bobsingor](https://github.com/bobsingor) – refactor(svelte): Update `SearchLayer.svelte` component and `useSearch` hook to use refactored core hooks and return a reactive state object.
+
 ## 1.4.0
 
 ### Minor Changes

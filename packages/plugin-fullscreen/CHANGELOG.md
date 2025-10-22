@@ -1,5 +1,11 @@
 # @embedpdf/plugin-fullscreen
 
+## 1.4.1
+
+### Patch Changes
+
+- [#234](https://github.com/embedpdf/embed-pdf-viewer/pull/234) by [@bobsingor](https://github.com/bobsingor) – refactor(svelte): Update `FullscreenProvider.svelte` component and `useFullscreen` hook to work with the refactored Svelte core hooks, returning reactive state objects.
+
 ## 1.4.0
 
 ### Minor Changes

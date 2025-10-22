@@ -1,5 +1,11 @@
 # @embedpdf/plugin-zoom
 
+## 1.4.1
+
+### Patch Changes
+
+- [#234](https://github.com/embedpdf/embed-pdf-viewer/pull/234) by [@bobsingor](https://github.com/bobsingor) – refactor(svelte): Update `MarqueeZoom.svelte`, `PinchWrapper.svelte` components and `useZoom`, `usePinch` hooks to work with refactored core hooks and return reactive state objects.
+
 ## 1.4.0
 
 ### Minor Changes

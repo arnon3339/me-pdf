@@ -1,5 +1,11 @@
 # @embedpdf/plugin-loader
 
+## 1.4.1
+
+### Patch Changes
+
+- [#234](https://github.com/embedpdf/embed-pdf-viewer/pull/234) by [@bobsingor](https://github.com/bobsingor) – refactor(svelte): Update `FilePicker.svelte` component to correctly access the loader capability instance from the refactored hook.
+
 ## 1.4.0
 
 ### Minor Changes
