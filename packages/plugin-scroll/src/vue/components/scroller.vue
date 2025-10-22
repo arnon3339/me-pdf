@@ -8,7 +8,7 @@ import type { StyleValue } from 'vue';
 import { useScrollPlugin } from '../hooks';
 import { ScrollStrategy, type ScrollerLayout, type PageLayout } from '@embedpdf/plugin-scroll';
 import { useRegistry } from '@embedpdf/core/vue';
-import type { PdfDocumentObject, Rotation } from '@embedpdf/models';
+import { RenderPageProps } from '../../shared/types';
 
 /* ------------------------------------------------------------------ */
 /* props – pure layout; page content comes from the *slot*            */
@@ -45,17 +45,8 @@ onMounted(() => {
   scrollPlugin.value?.setLayoutReady();
 });
 
-/* ------------------------------------------------------------------ */
-/* helpers                                                            */
-/* ------------------------------------------------------------------ */
-interface PageSlotProps extends PageLayout {
-  rotation: Rotation;
-  scale: number;
-  document: PdfDocumentObject | null;
-}
-
 /** Build the prop object that we’ll forward into the default slot */
-function pageSlotProps(pl: PageLayout): PageSlotProps {
+function pageSlotProps(pl: PageLayout): RenderPageProps {
   const core = registry.value!.getStore().getState().core;
   return {
     ...pl,

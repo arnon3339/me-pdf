@@ -4,22 +4,25 @@ import { useCapability } from '@embedpdf/core/svelte';
 import { setupPinchZoom } from '../../shared/utils/pinch-zoom-logic';
 
 export function usePinch() {
-  const { provides: viewportProvides } = $derived(useCapability<ViewportPlugin>('viewport'));
-  const { provides: zoomProvides } = $derived(useZoomCapability());
-  const elementRef = $state<HTMLDivElement | null>(null);
+  const viewportCapability = useCapability<ViewportPlugin>('viewport');
+  const zoomCapability = useZoomCapability();
+
+  const state = $state({
+    elementRef: null as HTMLDivElement | null,
+  });
 
   $effect(() => {
-    const element = elementRef;
-    if (!element || !viewportProvides || !zoomProvides) {
+    const element = state.elementRef;
+    if (!element || !viewportCapability.provides || !zoomCapability.provides) {
       return;
     }
 
-    return setupPinchZoom({ element, viewportProvides, zoomProvides });
+    return setupPinchZoom({
+      element,
+      viewportProvides: viewportCapability.provides,
+      zoomProvides: zoomCapability.provides,
+    });
   });
 
-  return {
-    get elementRef() {
-      return elementRef;
-    },
-  };
+  return state;
 }

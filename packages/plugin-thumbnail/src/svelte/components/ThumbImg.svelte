@@ -10,8 +10,8 @@
 
   const { meta, ...imgProps }: Props = $props();
 
-  const { provides: thumbs } = useThumbnailCapability();
-  const { plugin: thumbnailPlugin } = useThumbnailPlugin();
+  const thumbnailCapability = useThumbnailCapability();
+  const thumbnailPlugin = useThumbnailPlugin();
 
   let url = $state<string | undefined>(undefined);
   let urlRef: string | null = null;
@@ -19,8 +19,8 @@
 
   // Listen for refresh events
   $effect(() => {
-    if (!thumbnailPlugin) return;
-    return thumbnailPlugin.onRefreshPages((pages) => {
+    if (!thumbnailPlugin.plugin) return;
+    return thumbnailPlugin.plugin.onRefreshPages((pages) => {
       if (pages.includes(meta.pageIndex)) {
         refreshTick = refreshTick + 1;
       }
@@ -29,7 +29,7 @@
 
   // Render thumbnail
   $effect(() => {
-    const task = thumbs?.renderThumb(meta.pageIndex, window.devicePixelRatio);
+    const task = thumbnailCapability.provides?.renderThumb(meta.pageIndex, window.devicePixelRatio);
     task?.wait((blob) => {
       const objectUrl = URL.createObjectURL(blob);
       urlRef = objectUrl;

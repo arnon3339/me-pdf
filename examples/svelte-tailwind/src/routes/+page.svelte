@@ -40,7 +40,7 @@
     rotation: Rotation;
   };
 
-  const { engine, isLoading } = $derived(usePdfiumEngine());
+  const pdfEngine = usePdfiumEngine();
 
   let isSidebarOpen = $state(false);
   let isSearchOpen = $state(false);
@@ -120,7 +120,7 @@
   </div>
 {/snippet}
 
-{#if !engine || isLoading}
+{#if !pdfEngine.engine || pdfEngine.isLoading}
   <div class="flex h-screen items-center justify-center bg-gray-100">
     <div class="flex flex-col items-center gap-4">
       <svg
@@ -142,7 +142,7 @@
   </div>
 {:else}
   <div id="view-page" class="flex h-screen flex-1 flex-col overflow-hidden">
-    <EmbedPDF {engine} logger={undefined} {plugins}>
+    <EmbedPDF engine={pdfEngine.engine} logger={undefined} {plugins}>
       <div class="flex h-full flex-col">
         <Toolbar
           {isSidebarOpen}

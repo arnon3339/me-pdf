@@ -24,9 +24,9 @@
     onOpenPrint,
   }: Props = $props();
 
-  const { provides: fullscreenProvider, state: fullscreenState } = useFullscreen();
-  const { provides: exportProvider } = useExportCapability();
-  const { provides: loaderProvider } = useLoaderCapability();
+  const fullscreen = useFullscreen();
+  const exportCapability = useExportCapability();
+  const loaderCapability = useLoaderCapability();
   const pan = usePan();
   const interactionManager = useInteractionManager();
 
@@ -41,12 +41,12 @@
   };
 
   const handleOpenFile = () => {
-    loaderProvider?.openFileDialog();
+    loaderCapability.provides?.openFileDialog();
     closeMenu();
   };
 
   const handleDownload = () => {
-    exportProvider?.download();
+    exportCapability.provides?.download();
     closeMenu();
   };
 
@@ -56,7 +56,7 @@
   };
 
   const handleFullscreenToggle = () => {
-    fullscreenProvider?.toggleFullscreen();
+    fullscreen.provides?.toggleFullscreen();
     closeMenu();
   };
 
@@ -180,7 +180,7 @@
             class="flex w-full items-center justify-start gap-2 px-3 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
             onclick={handleFullscreenToggle}
           >
-            {#if fullscreenState.isFullscreen}
+            {#if fullscreen.state.isFullscreen}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"

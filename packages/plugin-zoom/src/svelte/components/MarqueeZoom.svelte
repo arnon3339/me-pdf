@@ -22,12 +22,12 @@
     fill = 'rgba(33,150,243,0.15)',
   }: MarqueeZoomProps = $props();
 
-  const { provides: zoomPlugin } = $derived(useZoomCapability());
+  const zoomCapability = useZoomCapability();
   let rect = $state<Rect | null>(null);
 
   $effect(() => {
-    if (!zoomPlugin) return;
-    return zoomPlugin.registerMarqueeOnPage({
+    if (!zoomCapability.provides) return;
+    return zoomCapability.provides.registerMarqueeOnPage({
       pageIndex,
       scale,
       callback: { onPreview: (val) => (rect = val) },

@@ -5,22 +5,21 @@ export const usePanPlugin = () => usePlugin<PanPlugin>(PanPlugin.id);
 export const usePanCapability = () => useCapability<PanPlugin>(PanPlugin.id);
 
 export const usePan = () => {
-  const { provides } = $derived(usePanCapability());
-  let isPanning = $state(false);
+  const capability = usePanCapability();
+
+  const state = $state({
+    get provides() {
+      return capability.provides;
+    },
+    isPanning: false,
+  });
 
   $effect(() => {
-    if (!provides) return;
-    return provides.onPanModeChange((isPanningState) => {
-      isPanning = isPanningState;
+    if (!capability.provides) return;
+    return capability.provides.onPanModeChange((isPanningState) => {
+      state.isPanning = isPanningState;
     });
   });
 
-  return {
-    get provides() {
-      return provides;
-    },
-    get isPanning() {
-      return isPanning;
-    },
-  };
+  return state;
 };
