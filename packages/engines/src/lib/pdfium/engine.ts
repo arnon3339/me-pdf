@@ -6956,6 +6956,8 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
     const bytes = stride * hDev;
 
     const pageCtx = ctx.acquirePage(page.index);
+    const shouldRenderForms = options?.renderForms ?? false;
+    const formHandle = shouldRenderForms ? pageCtx.getFormHandle() : undefined;
 
     // ---- 2) allocate a BGRA bitmap in WASM
     const heapPtr = this.memoryManager.malloc(bytes);
@@ -6992,6 +6994,20 @@ export class PdfiumEngine<T = Blob> implements PdfEngine<T> {
         clipPtr,
         flags,
       );
+
+      if (formHandle !== undefined) {
+        this.pdfiumModule.FPDF_FFLDraw(
+          formHandle,
+          bitmapPtr,
+          pageCtx.pagePtr,
+          0,
+          0,
+          wDev,
+          hDev,
+          rotation,
+          flags,
+        );
+      }
     } finally {
       pageCtx.release();
       this.memoryManager.free(mPtr);
