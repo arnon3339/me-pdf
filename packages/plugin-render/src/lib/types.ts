@@ -6,7 +6,12 @@ export interface RenderPluginConfig extends BasePluginConfig {
    * Initialize and draw form widgets during renders.
    * Defaults to `false`.
    */
-  initForms?: boolean;
+  withForms?: boolean;
+  /**
+   * Whether to render annotations
+   * Defaults to `false`.
+   */
+  withAnnotations?: boolean;
 }
 
 export interface RenderPageRectOptions {
