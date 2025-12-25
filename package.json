@@ -31,7 +31,7 @@
     "@roarr/cli": "^5.12.4",
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
-    "@typescript-eslint/parser": "^8.32.1",
+    "@typescript-eslint/parser": "^8.50.1",
     "concurrently": "^9.2.0",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.2",
