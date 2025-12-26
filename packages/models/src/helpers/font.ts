@@ -16,6 +16,85 @@ export enum PdfStandardFontFamily {
   Unknown = 'Unknown',
 }
 
+/**
+ * Reference to a custom font loaded via Local Font Access API.
+ * Custom fonts must be loaded with loadCustomFont() before use.
+ */
+export interface PdfCustomFontRef {
+  /** Discriminator to identify this as a custom font */
+  type: 'custom';
+  /** PostScript name of the font (used as unique identifier) */
+  postscriptName: string;
+  /** Font family name for display */
+  family: string;
+  /** Full name of the font */
+  fullName: string;
+  /** Font style (e.g., "Regular", "Bold") */
+  style: string;
+  /** Font handle returned by loadCustomFont, set when loaded */
+  handle?: number;
+}
+
+/**
+ * Reference to a standard PDF font.
+ */
+export interface PdfStandardFontRef {
+  /** Discriminator to identify this as a standard font */
+  type: 'standard';
+  /** The standard font enum value */
+  font: PdfStandardFont;
+}
+
+/**
+ * Unified font reference that can be either a standard font or a custom font.
+ */
+export type PdfFontRef = PdfStandardFontRef | PdfCustomFontRef;
+
+/**
+ * Type guard to check if a font reference is a custom font
+ */
+export function isCustomFontRef(ref: PdfFontRef): ref is PdfCustomFontRef {
+  return ref.type === 'custom';
+}
+
+/**
+ * Type guard to check if a font reference is a standard font
+ */
+export function isStandardFontRef(ref: PdfFontRef): ref is PdfStandardFontRef {
+  return ref.type === 'standard';
+}
+
+/**
+ * Create a standard font reference from a PdfStandardFont enum
+ */
+export function createStandardFontRef(font: PdfStandardFont): PdfStandardFontRef {
+  return { type: 'standard', font };
+}
+
+/**
+ * Create a custom font reference
+ */
+export function createCustomFontRef(
+  postscriptName: string,
+  family: string,
+  fullName: string,
+  style: string,
+  handle?: number,
+): PdfCustomFontRef {
+  return { type: 'custom', postscriptName, family, fullName, style, handle };
+}
+
+/**
+ * Get a CSS font-family string for a font reference
+ */
+export function fontRefToCss(ref: PdfFontRef): string {
+  if (isStandardFontRef(ref)) {
+    return standardFontCss(ref.font);
+  }
+  // For custom fonts, use the family name as CSS with fallback
+  return `"${ref.family}", sans-serif`;
+}
+
 const DEFAULT_FALLBACK_FONT = PdfStandardFont.Helvetica;
 
 /** UI sentinel when multiple different fonts are selected at once.            */

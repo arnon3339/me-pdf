@@ -1,5 +1,6 @@
 import { Size, Rect, Position, Rotation } from './geometry';
 import { Task, TaskError } from './task';
+import { PdfFontRef } from './helpers/font';
 
 /**
  * Representation of pdf page
@@ -333,31 +334,31 @@ export interface PdfDestinationObject {
    * zoom config for target destination
    */
   zoom:
-    | {
-        mode: PdfZoomMode.Unknown;
-      }
-    | { mode: PdfZoomMode.XYZ; params: { x: number; y: number; zoom: number } }
-    | {
-        mode: PdfZoomMode.FitPage;
-      }
-    | {
-        mode: PdfZoomMode.FitHorizontal;
-      }
-    | {
-        mode: PdfZoomMode.FitVertical;
-      }
-    | {
-        mode: PdfZoomMode.FitRectangle;
-      }
-    | {
-        mode: PdfZoomMode.FitBoundingBox;
-      }
-    | {
-        mode: PdfZoomMode.FitBoundingBoxHorizontal;
-      }
-    | {
-        mode: PdfZoomMode.FitBoundingBoxVertical;
-      };
+  | {
+    mode: PdfZoomMode.Unknown;
+  }
+  | { mode: PdfZoomMode.XYZ; params: { x: number; y: number; zoom: number } }
+  | {
+    mode: PdfZoomMode.FitPage;
+  }
+  | {
+    mode: PdfZoomMode.FitHorizontal;
+  }
+  | {
+    mode: PdfZoomMode.FitVertical;
+  }
+  | {
+    mode: PdfZoomMode.FitRectangle;
+  }
+  | {
+    mode: PdfZoomMode.FitBoundingBox;
+  }
+  | {
+    mode: PdfZoomMode.FitBoundingBoxHorizontal;
+  }
+  | {
+    mode: PdfZoomMode.FitBoundingBoxVertical;
+  };
   view: number[];
 }
 
@@ -412,24 +413,24 @@ export type ImageDataLike = {
  */
 export type PdfActionObject =
   | {
-      type: PdfActionType.Unsupported;
-    }
+    type: PdfActionType.Unsupported;
+  }
   | {
-      type: PdfActionType.Goto;
-      destination: PdfDestinationObject;
-    }
+    type: PdfActionType.Goto;
+    destination: PdfDestinationObject;
+  }
   | {
-      type: PdfActionType.RemoteGoto;
-      destination: PdfDestinationObject;
-    }
+    type: PdfActionType.RemoteGoto;
+    destination: PdfDestinationObject;
+  }
   | {
-      type: PdfActionType.URI;
-      uri: string;
-    }
+    type: PdfActionType.URI;
+    uri: string;
+  }
   | {
-      type: PdfActionType.LaunchAppOrOpenFile;
-      path: string;
-    };
+    type: PdfActionType.LaunchAppOrOpenFile;
+    path: string;
+  };
 
 /**
  * target of pdf link
@@ -438,13 +439,13 @@ export type PdfActionObject =
  */
 export type PdfLinkTarget =
   | {
-      type: 'action';
-      action: PdfActionObject;
-    }
+    type: 'action';
+    action: PdfActionObject;
+  }
   | {
-      type: 'destination';
-      destination: PdfDestinationObject;
-    };
+    type: 'destination';
+    destination: PdfDestinationObject;
+  };
 
 /**
  * PDF bookmark
@@ -1591,6 +1592,11 @@ export interface PdfHighlightAnnoObject extends PdfAnnotationObjectBase {
    * quads of highlight area
    */
   segmentRects: Rect[];
+
+  /**
+   * stroke-width of squiggly annotation
+   */
+  strokeWidth?: number;
 }
 
 /**
@@ -1872,7 +1878,15 @@ export interface PdfUnderlineAnnoObject extends PdfAnnotationObjectBase {
   /**
    * quads of highlight area
    */
+  /**
+   * quads of highlight area
+   */
   segmentRects: Rect[];
+
+  /**
+   * stroke-width of underline annotation
+   */
+  strokeWidth?: number;
 }
 
 /**
@@ -1902,6 +1916,11 @@ export interface PdfStrikeOutAnnoObject extends PdfAnnotationObjectBase {
    * quads of highlight area
    */
   segmentRects: Rect[];
+
+  /**
+   * stroke-width of strike out annotation
+   */
+  strokeWidth?: number;
 }
 
 /**
@@ -1927,9 +1946,10 @@ export interface PdfFreeTextAnnoObject extends PdfAnnotationObjectBase {
    */
   contents: string;
   /**
-   * Font family of the free text annotation
+   * Font family of the free text annotation.
+   * Can be a standard PDF font or a custom font loaded via Local Font Access API.
    */
-  fontFamily: PdfStandardFont;
+  fontFamily: PdfFontRef;
   /**
    * Font size of the free text annotation
    */
@@ -2986,6 +3006,25 @@ export interface PdfEngine<T = Blob> {
    * @returns task that all documents are closed or not
    */
   closeAllDocuments: () => PdfTask<boolean>;
+  /**
+   * Load a custom font from binary data into the document
+   * @param doc - pdf document
+   * @param fontData - font file data (TrueType or Type1)
+   * @param fontType - 1 for Type1, 2 for TrueType
+   * @param isCid - whether the font is a CID font
+   * @returns task containing a font handle (number) or error
+   */
+  loadCustomFont?: (
+    doc: PdfDocumentObject,
+    fontData: ArrayBuffer,
+    fontType: 1 | 2,
+    isCid?: boolean,
+  ) => PdfTask<number>;
+  /**
+   * Close a custom font loaded with loadCustomFont
+   * @param fontHandle - the font handle returned by loadCustomFont
+   */
+  closeCustomFont?: (fontHandle: number) => PdfTask<boolean>;
 }
 
 /**

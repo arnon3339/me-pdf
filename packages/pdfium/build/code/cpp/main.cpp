@@ -1,8 +1,11 @@
 #include "fpdfview.h"
 #include "fpdf_formfill.h"
+#include "fpdf_annot.h"
+#include "fpdf_edit.h"
 #include <emscripten.h>
 #include "filewriter.h"
 #include "string.h"
+#include <cstdio>
 
 #ifdef __cplusplus
 extern "C"
@@ -22,6 +25,10 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE void PDFiumExt_ExitFormFillEnvironment(void *form_handle);
 
     EMSCRIPTEN_KEEPALIVE int PDFiumExt_SaveAsCopy(void *document, void *writer);
+
+    EMSCRIPTEN_KEEPALIVE bool EPDFAnnot_SetDefaultAppearanceWithFont(
+        void* annot, void* font, float font_size,
+        unsigned int R, unsigned int G, unsigned int B);
 
 #ifdef __cplusplus
 }
@@ -90,4 +97,65 @@ void *PDFiumExt_InitFormFillEnvironment(void *document, void *form_fill_info)
 void PDFiumExt_ExitFormFillEnvironment(void *form_handle)
 {
     FPDFDOC_ExitFormFillEnvironment(static_cast<FPDF_FORMHANDLE>(form_handle));
+}
+
+/**
+ * Set the default appearance (font, size, color) for a FreeText annotation
+ * using a custom font loaded via FPDFText_LoadFont.
+ * 
+ * @param annot     - Annotation handle from FPDFPage_CreateAnnot or FPDFPage_GetAnnot
+ * @param font      - Font handle from FPDFText_LoadFont or FPDFText_LoadStandardFont
+ * @param font_size - Font size in points
+ * @param R,G,B     - Font color components (0-255)
+ * @returns true on success, false on failure
+ */
+EMSCRIPTEN_KEEPALIVE bool EPDFAnnot_SetDefaultAppearanceWithFont(
+    void* annot,
+    void* font,
+    float font_size,
+    unsigned int R,
+    unsigned int G,
+    unsigned int B)
+{
+    FPDF_ANNOTATION annotation = static_cast<FPDF_ANNOTATION>(annot);
+    FPDF_FONT pdfFont = static_cast<FPDF_FONT>(font);
+    
+    if (!annotation || !pdfFont) {
+        return false;
+    }
+    
+    // Get font name from the font handle
+    char fontName[256];
+    unsigned long fontNameLen = FPDFFont_GetBaseFontName(pdfFont, fontName, sizeof(fontName));
+    
+    if (fontNameLen == 0) {
+        // Fallback: try to get family name
+        fontNameLen = FPDFFont_GetFamilyName(pdfFont, fontName, sizeof(fontName));
+    }
+    
+    if (fontNameLen == 0) {
+        return false;
+    }
+    
+    // Build the DA string: "/FontName fontSize Tf r g b rg"
+    // Colors need to be normalized from 0-255 to 0.0-1.0
+    float r = R / 255.0f;
+    float g = G / 255.0f;
+    float b = B / 255.0f;
+    
+    char daString[512];
+    snprintf(daString, sizeof(daString), "/%s %.1f Tf %.3f %.3f %.3f rg", 
+             fontName, font_size, r, g, b);
+    
+    // Set the DA string on the annotation
+    // We need to convert to wide string for FPDFAnnot_SetStringValue
+    size_t len = strlen(daString);
+    
+    // Create a simple wide string buffer
+    wchar_t wideDA[512];
+    for (size_t i = 0; i <= len; i++) {
+        wideDA[i] = static_cast<wchar_t>(daString[i]);
+    }
+    
+    return FPDFAnnot_SetStringValue(annotation, "DA", reinterpret_cast<FPDF_WIDESTRING>(wideDA));
 }

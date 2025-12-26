@@ -17,7 +17,18 @@ import {
   ArrowIcon,
   UndoIcon,
   RedoIcon,
+  SettingsIcon,
 } from './icons';
+import { FreeTextFontPanel } from './free-text-font-panel';
+import { ShapeSettingsPanel } from './shape-settings-panel';
+import { MarkupSettingsPanel } from './markup-settings-panel';
+import { InkSettingsPanel } from './ink-settings-panel';
+import { ExportButton } from './export-button';
+
+// Tool groups for showing different settings panels
+const SHAPE_TOOLS = ['circle', 'square', 'polygon', 'polyline', 'line', 'lineArrow'];
+const MARKUP_TOOLS = ['highlight', 'underline', 'strikeout', 'squiggly'];
+const INK_TOOLS = ['ink', 'inkHighlighter'];
 
 type AnnotationToolbarProps = {
   documentId: string;
@@ -45,6 +56,10 @@ export function AnnotationToolbar({ documentId }: AnnotationToolbarProps) {
   const [activeTool, setActiveTool] = useState<AnnotationTool | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const [showFontPanel, setShowFontPanel] = useState(false);
+  const [showShapePanel, setShowShapePanel] = useState(false);
+  const [showMarkupPanel, setShowMarkupPanel] = useState(false);
+  const [showInkPanel, setShowInkPanel] = useState(false);
 
   // Initialize tool colors synchronously to avoid flash
   const [toolColors, setToolColors] = useState<ToolColors>(() =>
@@ -72,6 +87,22 @@ export function AnnotationToolbar({ documentId }: AnnotationToolbarProps) {
     // Subscribe to changes
     return annotationProvides.onActiveToolChange((tool) => {
       setActiveTool(tool);
+      // Reset all panels first
+      setShowFontPanel(false);
+      setShowShapePanel(false);
+      setShowMarkupPanel(false);
+      setShowInkPanel(false);
+
+      // Then show the appropriate panel based on tool
+      if (tool?.id === 'freeText') {
+        setShowFontPanel(true);
+      } else if (tool && SHAPE_TOOLS.includes(tool.id)) {
+        setShowShapePanel(true);
+      } else if (tool && MARKUP_TOOLS.includes(tool.id)) {
+        setShowMarkupPanel(true);
+      } else if (tool && INK_TOOLS.includes(tool.id)) {
+        setShowInkPanel(true);
+      }
     });
   }, [annotationProvides]);
 
@@ -180,6 +211,18 @@ export function AnnotationToolbar({ documentId }: AnnotationToolbarProps) {
         <TextIcon className="h-4 w-4" style={{ color: toolColors.freeText?.primaryColor }} />
       </ToolbarButton>
 
+      {/* Font Settings button - only visible when freeText tool is active */}
+      {activeTool?.id === 'freeText' && (
+        <ToolbarButton
+          onClick={() => setShowFontPanel(!showFontPanel)}
+          isActive={showFontPanel}
+          aria-label="Font settings"
+          title="Font Settings"
+        >
+          <SettingsIcon className="h-4 w-4" />
+        </ToolbarButton>
+      )}
+
       <ToolbarButton
         onClick={() => toggleTool('circle')}
         isActive={activeTool?.id === 'circle'}
@@ -245,6 +288,40 @@ export function AnnotationToolbar({ documentId }: AnnotationToolbarProps) {
       <ToolbarButton onClick={handleRedo} disabled={!canRedo} aria-label="Redo" title="Redo">
         <RedoIcon className="h-4 w-4" />
       </ToolbarButton>
+
+      {/* Divider */}
+      <div className="mx-1 h-6 w-px bg-gray-300" />
+
+      {/* Export Button */}
+      <ExportButton documentId={documentId} className="text-xs px-2 py-1" />
+
+      {/* Font Settings Panel */}
+      <FreeTextFontPanel
+        documentId={documentId}
+        isVisible={showFontPanel && activeTool?.id === 'freeText'}
+        onClose={() => setShowFontPanel(false)}
+      />
+
+      {/* Shape Settings Panel */}
+      <ShapeSettingsPanel
+        isVisible={showShapePanel && activeTool !== null && SHAPE_TOOLS.includes(activeTool.id)}
+        toolId={activeTool?.id || ''}
+        onClose={() => setShowShapePanel(false)}
+      />
+
+      {/* Markup Settings Panel (highlight, underline, strikethrough, squiggly) */}
+      <MarkupSettingsPanel
+        isVisible={showMarkupPanel && activeTool !== null && MARKUP_TOOLS.includes(activeTool.id)}
+        toolId={activeTool?.id || ''}
+        onClose={() => setShowMarkupPanel(false)}
+      />
+
+      {/* Ink Settings Panel (pen, highlighter) */}
+      <InkSettingsPanel
+        isVisible={showInkPanel && activeTool !== null && INK_TOOLS.includes(activeTool.id)}
+        toolId={activeTool?.id || ''}
+        onClose={() => setShowInkPanel(false)}
+      />
     </div>
   );
 }

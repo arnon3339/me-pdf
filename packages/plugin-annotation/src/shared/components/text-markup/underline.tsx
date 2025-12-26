@@ -9,6 +9,7 @@ type UnderlineProps = {
   scale: number;
   onClick?: (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => void;
   style?: CSSProperties;
+  strokeWidth?: number;
 };
 
 export function Underline({
@@ -19,8 +20,9 @@ export function Underline({
   scale,
   onClick,
   style,
+  strokeWidth,
 }: UnderlineProps) {
-  const thickness = 2 * scale; // 2 CSS px at 100 % zoom
+  const thickness = (strokeWidth ?? 2) * scale; // Default 2 CSS px at 100% zoom
 
   return (
     <>

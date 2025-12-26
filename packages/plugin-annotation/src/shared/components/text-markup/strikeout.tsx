@@ -9,6 +9,7 @@ type StrikeoutProps = {
   scale: number;
   onClick?: (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => void;
   style?: CSSProperties;
+  strokeWidth?: number;
 };
 
 export function Strikeout({
@@ -19,8 +20,9 @@ export function Strikeout({
   scale,
   onClick,
   style,
+  strokeWidth,
 }: StrikeoutProps) {
-  const thickness = 2 * scale;
+  const thickness = (strokeWidth ?? 2) * scale;
 
   return (
     <>

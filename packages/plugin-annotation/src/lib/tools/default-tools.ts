@@ -6,6 +6,7 @@ import {
   PdfStandardFont,
   PdfTextAlignment,
   PdfVerticalAlignment,
+  createStandardFontRef,
 } from '@embedpdf/models';
 import { AnnotationTool } from './types';
 
@@ -42,6 +43,7 @@ export const defaultTools = [
       type: PdfAnnotationSubtype.UNDERLINE,
       color: '#E44234',
       opacity: 1,
+      strokeWidth: 2,
     },
   },
   {
@@ -56,6 +58,7 @@ export const defaultTools = [
       type: PdfAnnotationSubtype.STRIKEOUT,
       color: '#E44234',
       opacity: 1,
+      strokeWidth: 2,
     },
   },
   {
@@ -72,6 +75,7 @@ export const defaultTools = [
       type: PdfAnnotationSubtype.SQUIGGLY,
       color: '#E44234',
       opacity: 1,
+      strokeWidth: 2,
     },
   },
 
@@ -274,7 +278,7 @@ export const defaultTools = [
       contents: 'Insert text',
       fontSize: 14,
       fontColor: '#E44234',
-      fontFamily: PdfStandardFont.Helvetica,
+      fontFamily: createStandardFontRef(PdfStandardFont.Helvetica),
       textAlign: PdfTextAlignment.Left,
       verticalAlign: PdfVerticalAlignment.Top,
       backgroundColor: 'transparent',

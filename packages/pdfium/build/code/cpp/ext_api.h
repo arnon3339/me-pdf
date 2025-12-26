@@ -21,6 +21,10 @@ void        PDFiumExt_ExitFormFillEnvironment(void* formHandle);
 
 int         PDFiumExt_SaveAsCopy(void* document, void* writer);
 
+// Custom font support for FreeText annotations
+int         EPDFAnnot_SetDefaultAppearanceWithFont(void* annot, void* font,
+                float font_size, unsigned int R, unsigned int G, unsigned int B);
+
 #ifdef __cplusplus
 }
 #endif

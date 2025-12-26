@@ -111,6 +111,9 @@ import {
   PdfTrappedStatus,
   PdfStampFit,
   PdfAddAttachmentParams,
+  isStandardFontRef,
+  PdfFontRef,
+  createStandardFontRef,
 } from '@embedpdf/models';
 import { computeFormDrawParams, isValidCustomKey, readArrayBuffer, readString } from './helper';
 import { WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -463,9 +466,9 @@ export class PdfiumNative implements IPdfiumExecutor {
     return ok
       ? PdfTaskHelper.resolve(true)
       : PdfTaskHelper.reject({
-          code: PdfErrorCode.Unknown,
-          message: 'one or more metadata fields could not be written',
-        });
+        code: PdfErrorCode.Unknown,
+        message: 'one or more metadata fields could not be written',
+      });
   }
 
   /**
@@ -709,9 +712,9 @@ export class PdfiumNative implements IPdfiumExecutor {
     return ok
       ? PdfTaskHelper.resolve(true)
       : PdfTaskHelper.reject({
-          code: PdfErrorCode.Unknown,
-          message: 'failed to clear bookmarks',
-        });
+        code: PdfErrorCode.Unknown,
+        message: 'failed to clear bookmarks',
+      });
   }
 
   /**
@@ -1129,9 +1132,9 @@ export class PdfiumNative implements IPdfiumExecutor {
     return ok
       ? PdfTaskHelper.resolve<boolean>(true)
       : PdfTaskHelper.reject<boolean>({
-          code: PdfErrorCode.CantSetAnnotContent,
-          message: 'failed to update annotation',
-        });
+        code: PdfErrorCode.CantSetAnnotContent,
+        message: 'failed to update annotation',
+      });
   }
 
   /**
@@ -2239,14 +2242,14 @@ export class PdfiumNative implements IPdfiumExecutor {
     if (!this.setAnnotationVerticalAlignment(annotationPtr, annotation.verticalAlign)) {
       return false;
     }
-    if (
-      !this.setAnnotationDefaultAppearance(
-        annotationPtr,
-        annotation.fontFamily,
-        annotation.fontSize,
-        annotation.fontColor,
-      )
-    ) {
+    // Handle font appearance based on font type
+    const fontAppearanceResult = this.setAnnotationFontAppearance(
+      annotationPtr,
+      annotation.fontFamily,
+      annotation.fontSize,
+      annotation.fontColor,
+    );
+    if (!fontAppearanceResult) {
       return false;
     }
     if (annotation.intent && !this.setAnnotIntent(annotationPtr, annotation.intent)) {
@@ -2630,6 +2633,24 @@ export class PdfiumNative implements IPdfiumExecutor {
       )
     ) {
       return false;
+    }
+
+    if (
+      (annotation.type === PdfAnnotationSubtype.UNDERLINE ||
+        annotation.type === PdfAnnotationSubtype.STRIKEOUT ||
+        annotation.type === PdfAnnotationSubtype.SQUIGGLY) &&
+      'strokeWidth' in annotation &&
+      annotation.strokeWidth
+    ) {
+      if (
+        !this.setBorderStyle(
+          annotationPtr,
+          PdfAnnotationBorderStyle.SOLID,
+          annotation.strokeWidth,
+        )
+      ) {
+        return false;
+      }
     }
 
     return true;
@@ -4004,6 +4025,46 @@ export class PdfiumNative implements IPdfiumExecutor {
   }
 
   /**
+   * Set the font appearance for a **FreeText** annotation, handling both
+   * standard PDF fonts and custom fonts.
+   *
+   * For standard fonts, uses the existing setAnnotationDefaultAppearance.
+   * For custom fonts, loads the font into PDFium and sets a custom /DA string.
+   *
+   * @param annotationPtr pointer to `FPDF_ANNOTATION`
+   * @param fontRef       `PdfFontRef` (standard or custom)
+   * @param fontSize      size in points (≥ 0)
+   * @param color         CSS-style `#rrggbb` string (alpha ignored)
+   * @returns `true` on success
+   */
+  private setAnnotationFontAppearance(
+    annotationPtr: number,
+    fontRef: PdfFontRef,
+    fontSize: number,
+    color: WebColor,
+  ): boolean {
+    if (isStandardFontRef(fontRef)) {
+      // Standard font - use existing method
+      return this.setAnnotationDefaultAppearance(annotationPtr, fontRef.font, fontSize, color);
+    }
+
+    // Custom font - for now, fall back to Helvetica as default
+    // TODO: Full custom font embedding requires additional PDFium work
+    // to support setting custom font handles in annotation appearances
+    this.logger.warn(
+      LOG_SOURCE,
+      LOG_CATEGORY,
+      `Custom font "${fontRef.fullName}" not yet fully supported for PDF export. Using Helvetica as fallback.`,
+    );
+    return this.setAnnotationDefaultAppearance(
+      annotationPtr,
+      PdfStandardFont.Helvetica,
+      fontSize,
+      color,
+    );
+  }
+
+  /**
    * Border‐style + width helper
    *
    * Tries the new PDFium helper `EPDFAnnot_GetBorderStyle()` (patch series
@@ -4770,7 +4831,9 @@ export class PdfiumNative implements IPdfiumExecutor {
       custom,
       id: index,
       type: PdfAnnotationSubtype.FREETEXT,
-      fontFamily: da?.fontFamily ?? PdfStandardFont.Unknown,
+      fontFamily: da?.fontFamily !== undefined
+        ? createStandardFontRef(da.fontFamily)
+        : createStandardFontRef(PdfStandardFont.Unknown),
       fontSize: da?.fontSize ?? 12,
       fontColor: da?.fontColor ?? '#000000',
       verticalAlign,
@@ -5232,6 +5295,7 @@ export class PdfiumNative implements IPdfiumExecutor {
     const opacity = this.getAnnotationOpacity(annotationPtr);
     const blendMode = this.pdfiumModule.EPDFAnnot_GetBlendMode(annotationPtr);
     const flags = this.getAnnotationFlags(annotationPtr);
+    const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     return {
       pageIndex: page.index,
@@ -5248,6 +5312,7 @@ export class PdfiumNative implements IPdfiumExecutor {
       author,
       modified,
       created,
+      strokeWidth,
     };
   }
 
@@ -5277,15 +5342,15 @@ export class PdfiumNative implements IPdfiumExecutor {
     const opacity = this.getAnnotationOpacity(annotationPtr);
     const blendMode = this.pdfiumModule.EPDFAnnot_GetBlendMode(annotationPtr);
     const flags = this.getAnnotationFlags(annotationPtr);
+    const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     return {
       pageIndex: page.index,
       custom,
       id: index,
-      blendMode,
       type: PdfAnnotationSubtype.STRIKEOUT,
-      flags,
       rect,
+      flags,
       contents,
       segmentRects,
       color: color ?? '#FF0000',
@@ -5293,6 +5358,7 @@ export class PdfiumNative implements IPdfiumExecutor {
       author,
       modified,
       created,
+      strokeWidth,
     };
   }
 
@@ -5322,6 +5388,7 @@ export class PdfiumNative implements IPdfiumExecutor {
     const opacity = this.getAnnotationOpacity(annotationPtr);
     const blendMode = this.pdfiumModule.EPDFAnnot_GetBlendMode(annotationPtr);
     const flags = this.getAnnotationFlags(annotationPtr);
+    const { width: strokeWidth } = this.getBorderStyle(annotationPtr);
 
     return {
       pageIndex: page.index,
@@ -5338,6 +5405,7 @@ export class PdfiumNative implements IPdfiumExecutor {
       author,
       modified,
       created,
+      strokeWidth,
     };
   }
 
@@ -7859,6 +7927,110 @@ export class PdfiumNative implements IPdfiumExecutor {
     } catch (error) {
       this.logger.error(LOG_SOURCE, LOG_CATEGORY, `Error sanitizing page range: ${error}`);
       return null; // Fallback to all pages
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Custom Font Loading
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Load a custom font from binary data into the document
+   *
+   * @param doc - pdf document
+   * @param fontData - font file data (TrueType or Type1)
+   * @param fontType - 1 for Type1, 2 for TrueType
+   * @param isCid - whether the font is a CID font (for CJK support)
+   * @returns task containing a font handle (FPDF_FONT pointer) or error
+   *
+   * @public
+   */
+  loadCustomFont(
+    doc: PdfDocumentObject,
+    fontData: ArrayBuffer,
+    fontType: 1 | 2,
+    isCid: boolean = false,
+  ): PdfTask<number> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'loadCustomFont', doc, fontType, isCid);
+
+    const ctx = this.cache.getContext(doc.id);
+    if (!ctx) {
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.DocNotOpen,
+        message: 'document does not open',
+      });
+    }
+
+    try {
+      // Allocate memory for font data on the WASM heap
+      const fontDataPtr = this.memoryManager.malloc(fontData.byteLength);
+      const fontDataView = new Uint8Array(fontData);
+      this.pdfiumModule.pdfium.HEAPU8.set(fontDataView, fontDataPtr);
+
+      // Call FPDFText_LoadFont
+      const fontHandle = this.pdfiumModule.FPDFText_LoadFont(
+        ctx.docPtr,
+        fontDataPtr,
+        fontData.byteLength,
+        fontType,
+        isCid,
+      );
+
+      // Free the font data memory (PDFium copies it internally)
+      this.memoryManager.free(fontDataPtr);
+
+      if (fontHandle === 0) {
+        this.logger.error(LOG_SOURCE, LOG_CATEGORY, 'Failed to load custom font');
+        return PdfTaskHelper.reject({
+          code: PdfErrorCode.Unknown,
+          message: 'Failed to load custom font',
+        });
+      }
+
+      this.logger.info(
+        LOG_SOURCE,
+        LOG_CATEGORY,
+        `Custom font loaded successfully, handle: ${fontHandle}`,
+      );
+
+      return PdfTaskHelper.resolve(fontHandle);
+    } catch (error) {
+      this.logger.error(LOG_SOURCE, LOG_CATEGORY, `Error loading custom font: ${error}`);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: `Error loading custom font: ${error}`,
+      });
+    }
+  }
+
+  /**
+   * Close a custom font loaded with loadCustomFont
+   *
+   * @param fontHandle - the font handle returned by loadCustomFont
+   * @returns task indicating success
+   *
+   * @public
+   */
+  closeCustomFont(fontHandle: number): PdfTask<boolean> {
+    this.logger.debug(LOG_SOURCE, LOG_CATEGORY, 'closeCustomFont', fontHandle);
+
+    if (!fontHandle || fontHandle === 0) {
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: 'Invalid font handle',
+      });
+    }
+
+    try {
+      this.pdfiumModule.FPDFFont_Close(fontHandle);
+      this.logger.info(LOG_SOURCE, LOG_CATEGORY, `Custom font closed, handle: ${fontHandle}`);
+      return PdfTaskHelper.resolve(true);
+    } catch (error) {
+      this.logger.error(LOG_SOURCE, LOG_CATEGORY, `Error closing custom font: ${error}`);
+      return PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: `Error closing custom font: ${error}`,
+      });
     }
   }
 }

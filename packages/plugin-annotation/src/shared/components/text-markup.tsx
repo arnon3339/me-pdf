@@ -61,6 +61,7 @@ export function TextMarkup({ documentId, pageIndex, scale }: TextMarkupProps) {
             opacity={activeTool.defaults?.opacity}
             segmentRects={rects}
             scale={scale}
+            strokeWidth={activeTool.defaults?.strokeWidth}
           />
         </div>
       );
@@ -97,6 +98,7 @@ export function TextMarkup({ documentId, pageIndex, scale }: TextMarkupProps) {
             opacity={activeTool.defaults?.opacity}
             segmentRects={rects}
             scale={scale}
+            strokeWidth={activeTool.defaults?.strokeWidth}
           />
         </div>
       );
@@ -115,6 +117,7 @@ export function TextMarkup({ documentId, pageIndex, scale }: TextMarkupProps) {
             opacity={activeTool.defaults?.opacity}
             segmentRects={rects}
             scale={scale}
+            strokeWidth={activeTool.defaults?.strokeWidth}
           />
         </div>
       );

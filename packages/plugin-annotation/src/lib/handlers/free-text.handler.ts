@@ -6,6 +6,7 @@ import {
   PdfVerticalAlignment,
   Rect,
   uuidV4,
+  createStandardFontRef,
 } from '@embedpdf/models';
 import { HandlerFactory, PreviewState } from './types';
 import { useState } from '../utils/use-state';
@@ -31,7 +32,7 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
         fontColor: tool.defaults.fontColor ?? '#000000',
         opacity: tool.defaults.opacity ?? 1,
         fontSize: tool.defaults.fontSize ?? 12,
-        fontFamily: tool.defaults.fontFamily ?? PdfStandardFont.Helvetica,
+        fontFamily: tool.defaults.fontFamily ?? createStandardFontRef(PdfStandardFont.Helvetica),
         backgroundColor: tool.defaults.backgroundColor ?? 'transparent',
         textAlign: tool.defaults.textAlign ?? PdfTextAlignment.Left,
         verticalAlign: tool.defaults.verticalAlign ?? PdfVerticalAlignment.Top,

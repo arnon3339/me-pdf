@@ -1,0 +1,11 @@
+services:
+  react-app:
+    build:
+      context: .
+      dockerfile: examples/react-tailwind/Dockerfile
+    ports:
+      - "3001:3000"
+    volumes:
+      - .:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true

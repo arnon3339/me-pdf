@@ -57,6 +57,19 @@
       <TextIcon class="h-4 w-4" :style="{ color: toolColors.freeText?.primaryColor }" />
     </ToolbarButton>
 
+    <!-- Font Settings Button (visible when freeText is active) -->
+    <ToolbarButton
+      v-if="activeTool?.id === 'freeText'"
+      :onClick="() => showFontPanel = !showFontPanel"
+      :isActive="showFontPanel"
+      aria-label="Font settings"
+      title="Font Settings"
+    >
+      <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd" />
+      </svg>
+    </ToolbarButton>
+
     <ToolbarButton
       :onClick="() => toggleTool('circle')"
       :isActive="activeTool?.id === 'circle'"
@@ -122,6 +135,13 @@
     <ToolbarButton :onClick="handleRedo" :disabled="!canRedo" aria-label="Redo" title="Redo">
       <RedoIcon class="h-4 w-4" />
     </ToolbarButton>
+
+    <!-- Font Panel -->
+    <FreeTextFontPanel
+      :documentId="props.documentId"
+      :isVisible="showFontPanel && activeTool?.id === 'freeText'"
+      @close="showFontPanel = false"
+    />
   </div>
 </template>
 
@@ -147,6 +167,7 @@ import {
   UndoIcon,
   RedoIcon,
 } from './icons';
+import FreeTextFontPanel from './FreeTextFontPanel.vue';
 
 const props = defineProps<{
   documentId: string;
@@ -172,6 +193,7 @@ const activeTool = ref<AnnotationTool | null>(null);
 const canUndo = ref(false);
 const canRedo = ref(false);
 const toolColors = ref<ToolColors>({});
+const showFontPanel = ref(false);
 
 const annotationProvides = computed(() =>
   annotationCapability.value ? annotationCapability.value.forDocument(props.documentId) : null,
@@ -202,6 +224,10 @@ watch(
 
     const unsubscribe = provides.onActiveToolChange((tool) => {
       activeTool.value = tool;
+      // Auto-show font panel when freeText tool is activated
+      if (tool?.id === 'freeText') {
+        showFontPanel.value = true;
+      }
     });
 
     onUnmounted(() => {
@@ -247,3 +273,4 @@ const handleRedo = () => {
   historyProvides.value?.redo();
 };
 </script>
+

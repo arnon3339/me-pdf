@@ -3,7 +3,7 @@
   import {
     type PdfFreeTextAnnoObject,
     PdfVerticalAlignment,
-    standardFontCss,
+    fontRefToCss,
     textAlignmentToCss,
   } from '@embedpdf/models';
   import type { TrackedAnnotation } from '@embedpdf/plugin-annotation';
@@ -117,7 +117,7 @@
     style:justify-content={justify}
     style:color={annotation.object.fontColor}
     style:font-size={`${adjustedFontPx}px`}
-    style:font-family={standardFontCss(annotation.object.fontFamily)}
+    style:font-family={fontRefToCss(annotation.object.fontFamily)}
     style:text-align={textAlignmentToCss(annotation.object.textAlign)}
     style:background-color={annotation.object.backgroundColor}
     style:opacity={annotation.object.opacity}

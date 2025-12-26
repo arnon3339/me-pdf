@@ -10,7 +10,7 @@ import {
   LineEndings,
   PdfInkListObject,
   PdfFreeTextAnnoObject,
-  PdfStandardFont,
+  PdfFontRef,
   PdfTextAlignment,
   PdfVerticalAlignment,
 } from '@embedpdf/models';
@@ -26,7 +26,7 @@ export interface CirclePreviewData {
   strokeDashArray: number[];
 }
 
-interface SquarePreviewData extends CirclePreviewData {}
+interface SquarePreviewData extends CirclePreviewData { }
 
 export interface PolygonPreviewData {
   rect: Rect;
@@ -76,7 +76,7 @@ export interface FreeTextPreviewData {
   fontColor?: string;
   opacity?: number;
   fontSize?: number;
-  fontFamily?: PdfStandardFont;
+  fontFamily?: PdfFontRef;
   backgroundColor?: string;
   textAlign?: PdfTextAlignment;
   verticalAlign?: PdfVerticalAlignment;
