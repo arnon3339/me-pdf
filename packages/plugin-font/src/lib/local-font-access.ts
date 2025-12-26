@@ -36,12 +36,36 @@ export async function queryLocalFonts(): Promise<LocalFont[]> {
 
     try {
         const fonts = await window.queryLocalFonts!();
+        const seenNames = new Map<string, number>();
+
         return fonts.map((font) => {
+            let psName = font.postscriptName;
+
+            // Handle duplicates by appending counter
+            if (seenNames.has(psName)) {
+                const count = seenNames.get(psName)! + 1;
+                seenNames.set(psName, count);
+                psName = `${psName}#${count}`;
+            } else {
+                seenNames.set(psName, 0);
+            }
+
             const { weight, italic } = parseFontStyle(font.style, font.fullName);
+            let specialFamily = font.family;
+
+            const upperName = font.fullName.toUpperCase();
+            if (upperName.includes('IT9') || upperName.includes('IT๙')) {
+                specialFamily = `${font.family} (IT9)`;
+            } else if (psName !== font.postscriptName) {
+                // If it's a duplicate but didn't match IT9, label it as variant
+                // to distinguish in UI.
+                specialFamily = `${font.family} (Variant ${seenNames.get(font.postscriptName)})`;
+            }
+
             return {
-                family: font.family,
+                family: specialFamily,
                 fullName: font.fullName,
-                postscriptName: font.postscriptName,
+                postscriptName: psName, // Use unique internal name
                 style: font.style,
                 weight,
                 italic,
@@ -64,8 +88,21 @@ export async function loadFontData(postscriptName: string): Promise<LoadedFont |
         throw new Error('Local Font Access API is not supported in this browser');
     }
 
+    // Check for duplicate index suffix (e.g. "MyFont#1")
+    let targetPsName = postscriptName;
+    let targetIndex = 0;
+
+    const duplicateMatch = postscriptName.match(/^(.+)#(\d+)$/);
+    if (duplicateMatch) {
+        targetPsName = duplicateMatch[1];
+        targetIndex = parseInt(duplicateMatch[2], 10);
+    }
+
     const fonts = await window.queryLocalFonts!();
-    const fontData = fonts.find((f) => f.postscriptName === postscriptName);
+
+    // Find all matches
+    const matches = fonts.filter((f) => f.postscriptName === targetPsName);
+    const fontData = matches[targetIndex];
 
     if (!fontData) {
         return null;
