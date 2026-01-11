@@ -86,7 +86,7 @@ const viewerRef = ref<InstanceType<typeof PDFViewer> | null>(null);
 const isReady = ref(false);
 
 const viewerConfig: PDFViewerConfig = {
-  src: 'https://snippet.embedpdf.com/ebook.pdf',
+  src: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
   theme: {
     preference: 'dark',
   },

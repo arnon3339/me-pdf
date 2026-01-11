@@ -149,11 +149,10 @@ const ViewPaneTabBar = ({
                 e.stopPropagation()
                 setActiveDocument(doc.id)
               }}
-              className={`group flex min-w-0 max-w-[120px] cursor-pointer items-center gap-1.5 rounded px-2 py-1 text-[11px] font-medium transition-all ${
-                isActive
+              className={`group flex min-w-0 max-w-[120px] cursor-pointer items-center gap-1.5 rounded px-2 py-1 text-[11px] font-medium transition-all ${isActive
                   ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:ring-gray-600'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-300'
-              } `}
+                } `}
             >
               <FileText size={12} className="flex-shrink-0" />
               <span className="truncate">{doc.name || 'Untitled'}</span>
@@ -326,7 +325,7 @@ export const PDFViewer = () => {
           // Open first document and add to first view
           const { documentId: doc1 } = await docPlugin
             .openDocumentUrl({
-              url: 'https://snippet.embedpdf.com/ebook.pdf',
+              url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
             })
             .toPromise()
 
@@ -338,7 +337,7 @@ export const PDFViewer = () => {
           // Open second document and add to second view
           const { documentId: doc2 } = await docPlugin
             .openDocumentUrl({
-              url: 'https://snippet.embedpdf.com/ebook.pdf',
+              url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
             })
             .toPromise()
 

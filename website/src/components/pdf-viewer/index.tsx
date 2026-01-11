@@ -32,7 +32,7 @@ export default function PDFViewer({ style, className }: PDFViewerProps) {
         const viewer = EmbedPDF.init({
           type: 'container',
           target: viewerRef.current!,
-          src: 'https://snippet.embedpdf.com/ebook.pdf',
+          src: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
           worker: true,
           tabBar: 'always',
           theme: {

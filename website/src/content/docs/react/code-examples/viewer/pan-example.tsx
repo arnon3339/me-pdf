@@ -65,22 +65,20 @@ export default function PanExample({
         </span>
         <button
           onClick={togglePanMode}
-          className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-            !isPanMode
+          className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${!isPanMode
               ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
               : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-          }`}
+            }`}
         >
           <MousePointer2 size={16} />
           Select Text
         </button>
         <button
           onClick={togglePanMode}
-          className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-            isPanMode
+          className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${isPanMode
               ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
               : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-          }`}
+            }`}
         >
           <Hand size={16} />
           Pan (Hand Tool)
@@ -100,7 +98,7 @@ export default function PanExample({
             documentManager: {
               initialDocuments: [
                 {
-                  url: 'https://snippet.embedpdf.com/ebook.pdf',
+                  url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
                   documentId: 'pan-doc',
                 },
               ],

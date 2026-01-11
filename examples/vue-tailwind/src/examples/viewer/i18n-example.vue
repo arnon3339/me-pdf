@@ -98,7 +98,7 @@ const handleLocaleChange = (event: Event) => {
         @init="handleInit"
         @ready="handleReady"
         :config="{
-          src: 'https://snippet.embedpdf.com/ebook.pdf',
+          src: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
           theme: { preference: themePreference },
           i18n: {
             defaultLocale: 'en',

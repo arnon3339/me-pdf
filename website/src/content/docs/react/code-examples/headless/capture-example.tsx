@@ -28,7 +28,7 @@ import { Camera, Download, Loader2 } from 'lucide-react'
 
 const plugins = [
   createPluginRegistration(DocumentManagerPluginPackage, {
-    initialDocuments: [{ url: 'https://snippet.embedpdf.com/ebook.pdf' }],
+    initialDocuments: [{ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' }],
   }),
   createPluginRegistration(ViewportPluginPackage),
   createPluginRegistration(ScrollPluginPackage),
@@ -47,11 +47,10 @@ const CaptureToolbar = ({ documentId }: { documentId: string }) => {
     <div className="flex items-center gap-2 border-b border-gray-300 bg-gray-100 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
       <button
         onClick={() => capture?.toggleMarqueeCapture()}
-        className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium shadow-sm transition-all ${
-          state.isMarqueeCaptureActive
+        className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium shadow-sm transition-all ${state.isMarqueeCaptureActive
             ? 'bg-blue-500 text-white ring-1 ring-blue-600'
             : 'bg-white text-gray-600 ring-1 ring-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-600 dark:hover:text-gray-100'
-        } `}
+          } `}
       >
         <Camera size={16} />
         {state.isMarqueeCaptureActive ? 'Cancel' : 'Capture Area'}

@@ -95,7 +95,7 @@ const paramResolvers: ParamResolvers<State> = {
 
 const plugins = [
   createPluginRegistration(DocumentManagerPluginPackage, {
-    initialDocuments: [{ url: 'https://snippet.embedpdf.com/ebook.pdf' }],
+    initialDocuments: [{ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' }],
   }),
   createPluginRegistration(ViewportPluginPackage),
   createPluginRegistration(ScrollPluginPackage),

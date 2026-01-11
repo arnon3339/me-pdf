@@ -82,44 +82,40 @@ export default function AnnotationExample({
             <div className="flex gap-1">
               <button
                 onClick={() => setTool(null)}
-                className={`rounded p-2 transition-colors ${
-                  activeTool === null
+                className={`rounded p-2 transition-colors ${activeTool === null
                     ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
                     : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-                }`}
+                  }`}
                 title="Select / None"
               >
                 <MousePointer2 size={18} />
               </button>
               <button
                 onClick={() => setTool('highlight')}
-                className={`rounded p-2 transition-colors ${
-                  activeTool === 'highlight'
+                className={`rounded p-2 transition-colors ${activeTool === 'highlight'
                     ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
                     : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-                }`}
+                  }`}
                 title="Highlighter"
               >
                 <Highlighter size={18} />
               </button>
               <button
                 onClick={() => setTool('ink')}
-                className={`rounded p-2 transition-colors ${
-                  activeTool === 'ink'
+                className={`rounded p-2 transition-colors ${activeTool === 'ink'
                     ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
                     : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-                }`}
+                  }`}
                 title="Pen (Ink)"
               >
                 <Pen size={18} />
               </button>
               <button
                 onClick={() => setTool('square')}
-                className={`rounded p-2 transition-colors ${
-                  activeTool === 'square'
+                className={`rounded p-2 transition-colors ${activeTool === 'square'
                     ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
                     : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-                }`}
+                  }`}
                 title="Square"
               >
                 <Square size={18} />
@@ -146,7 +142,7 @@ export default function AnnotationExample({
             documentManager: {
               initialDocuments: [
                 {
-                  url: 'https://snippet.embedpdf.com/ebook.pdf',
+                  url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
                   documentId: 'annotation-doc',
                 },
               ],

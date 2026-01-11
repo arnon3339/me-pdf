@@ -26,7 +26,7 @@ import { Loader2 } from 'lucide-react'
 
 const plugins = [
   createPluginRegistration(DocumentManagerPluginPackage, {
-    initialDocuments: [{ url: 'https://snippet.embedpdf.com/ebook.pdf' }],
+    initialDocuments: [{ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' }],
   }),
   createPluginRegistration(ViewportPluginPackage),
   createPluginRegistration(ScrollPluginPackage),
@@ -61,11 +61,10 @@ const ThumbnailSidebar = ({ documentId }: { documentId: string }) => {
             >
               {/* Thumbnail image container */}
               <div
-                className={`overflow-hidden rounded-md transition-all ${
-                  isActive
+                className={`overflow-hidden rounded-md transition-all ${isActive
                     ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-900'
                     : 'ring-1 ring-gray-300 hover:ring-gray-400 dark:ring-gray-700 dark:hover:ring-gray-600'
-                } `}
+                  } `}
                 style={{
                   width: m.width,
                   height: m.height,
@@ -83,11 +82,10 @@ const ThumbnailSidebar = ({ documentId }: { documentId: string }) => {
                 style={{ height: m.labelHeight }}
               >
                 <span
-                  className={`text-xs font-medium ${
-                    isActive
+                  className={`text-xs font-medium ${isActive
                       ? 'text-blue-600 dark:text-blue-400'
                       : 'text-gray-600 dark:text-gray-300'
-                  } `}
+                    } `}
                 >
                   {m.pageIndex + 1}
                 </span>

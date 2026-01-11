@@ -1,5 +1,5 @@
 'use client'
-import {} from '@embedpdf/models'
+import { } from '@embedpdf/models'
 import {
   PDFViewer,
   PDFViewerRef,
@@ -78,7 +78,7 @@ export default function SelectionTextExample({
             documentManager: {
               initialDocuments: [
                 {
-                  url: 'https://snippet.embedpdf.com/ebook.pdf',
+                  url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
                   documentId: 'ebook',
                 },
               ],

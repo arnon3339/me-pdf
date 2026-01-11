@@ -6,6 +6,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
+import { Slider } from "@/components/ui/slider"
 
 interface MarkupSettingsPanelProps {
     isVisible: boolean;
@@ -18,7 +19,7 @@ const colorPresets = [
     '#16A34A', '#0284C7', '#7C3AED', '#000000', '#FFFFFF',
 ];
 
-const strokeWidths = [1, 2, 4, 6, 8, 10];
+
 
 export function MarkupSettingsPanel({ isVisible, toolId, onClose }: MarkupSettingsPanelProps) {
     const { provides: annotationCapability } = useAnnotationCapability();
@@ -86,23 +87,19 @@ export function MarkupSettingsPanel({ isVisible, toolId, onClose }: MarkupSettin
                 toolId === 'strikeout' ||
                 toolId === 'squiggly') && (
                     <div className="mb-4">
-                        <label className="mb-2 block text-xs font-medium text-gray-600">
-                            Line Thickness
-                        </label>
-                        <div className="flex flex-wrap gap-1">
-                            {strokeWidths.map((width) => (
-                                <button
-                                    key={width}
-                                    onClick={() => handleStrokeWidthChange(width)}
-                                    className={`flex h-8 w-8 items-center justify-center rounded border text-xs font-medium transition-colors ${strokeWidth === width
-                                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                        : 'border-gray-200 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    {width}
-                                </button>
-                            ))}
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-gray-600">Line Thickness</span>
+                            <span className="text-xs text-muted-foreground">{strokeWidth}px</span>
                         </div>
+                        <Slider
+                            value={[strokeWidth]}
+                            onValueChange={(vals) => handleStrokeWidthChange(vals[0] ?? strokeWidth)}
+                            color={color === '#FFFFFF' ? '#9CA3AF' : color}
+                            min={1}
+                            max={20}
+                            step={1}
+                            className="w-full h-8"
+                        />
                     </div>
                 )}
 

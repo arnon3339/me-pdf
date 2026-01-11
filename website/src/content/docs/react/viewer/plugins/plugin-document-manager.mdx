@@ -21,7 +21,7 @@ You can configure initial documents and limits via the `documentManager` config 
       // Load these files on startup
       initialDocuments: [
         { 
-          url: 'https://snippet.embedpdf.com/ebook.pdf',
+          url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
           // By default, autoActivate is true. 
           // This document will open and become active.
           autoActivate: true,
@@ -30,7 +30,7 @@ You can configure initial documents and limits via the `documentManager` config 
           documentId: 'ebook-embedpdf',
         },
         { 
-          url: 'https://snippet.embedpdf.com/ebook.pdf',
+          url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
           // If we don't set this to false, this document would
           // steal focus immediately after loading!
           autoActivate: false 
@@ -70,7 +70,7 @@ const openRemotePdf = async () => {
   const docManager = registry.getPlugin('document-manager').provides();
 
   docManager.openDocumentUrl({
-    url: 'https://snippet.embedpdf.com/ebook.pdf',
+    url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
     documentId: 'invoice-123', // Optional: fixed ID for easy reference
     autoActivate: true         // Switch tab to this document immediately
   });

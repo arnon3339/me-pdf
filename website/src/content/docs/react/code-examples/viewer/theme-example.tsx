@@ -102,11 +102,10 @@ export default function ThemeExample({
             <button
               key={color.name}
               onClick={() => changeColor(color)}
-              className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                selectedColor.name === color.name
+              className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${selectedColor.name === color.name
                   ? 'border-gray-900 ring-2 ring-offset-2 dark:border-white'
                   : 'border-transparent'
-              }`}
+                }`}
               style={{ backgroundColor: color.primary }}
               title={color.name}
             />
@@ -122,7 +121,7 @@ export default function ThemeExample({
         <PDFViewer
           ref={viewerRef}
           config={{
-            src: 'https://snippet.embedpdf.com/ebook.pdf',
+            src: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
             theme: {
               preference: themePreference,
               light: {

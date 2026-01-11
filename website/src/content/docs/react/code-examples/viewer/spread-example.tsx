@@ -45,33 +45,30 @@ export default function SpreadExample({
         <div className="flex gap-1">
           <button
             onClick={() => setSpreadMode(SpreadMode.None)}
-            className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-              currentMode === SpreadMode.None
+            className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${currentMode === SpreadMode.None
                 ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
                 : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-            }`}
+              }`}
           >
             <File size={16} />
             Single Page
           </button>
           <button
             onClick={() => setSpreadMode(SpreadMode.Odd)}
-            className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-              currentMode === SpreadMode.Odd
+            className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${currentMode === SpreadMode.Odd
                 ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
                 : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-            }`}
+              }`}
           >
             <BookOpen size={16} />
             Two-Page (Odd)
           </button>
           <button
             onClick={() => setSpreadMode(SpreadMode.Even)}
-            className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-              currentMode === SpreadMode.Even
+            className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors ${currentMode === SpreadMode.Even
                 ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
                 : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-            }`}
+              }`}
           >
             <Book size={16} />
             Two-Page (Even)
@@ -92,7 +89,7 @@ export default function SpreadExample({
             documentManager: {
               initialDocuments: [
                 {
-                  url: 'https://snippet.embedpdf.com/ebook.pdf',
+                  url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
                   documentId: 'spread-doc',
                 },
               ],

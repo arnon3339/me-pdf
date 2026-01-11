@@ -61,11 +61,10 @@ function TabBar({ activeDocumentId }: TabBarProps) {
                   handleSelect(doc.id)
                 }
               }}
-              className={`group relative flex min-w-[100px] max-w-[180px] cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all ${
-                isActive
+              className={`group relative flex min-w-[100px] max-w-[180px] cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all ${isActive
                   ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:ring-gray-600'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
-              } `}
+                } `}
             >
               <FileText size={14} className="flex-shrink-0" />
               <span className="min-w-0 flex-1 truncate">
@@ -131,9 +130,9 @@ export const PDFViewer = () => {
     () => [
       createPluginRegistration(DocumentManagerPluginPackage, {
         initialDocuments: [
-          { url: 'https://snippet.embedpdf.com/ebook.pdf' },
+          { url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' },
           {
-            url: 'https://snippet.embedpdf.com/ebook.pdf',
+            url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
             autoActivate: false,
           },
         ],

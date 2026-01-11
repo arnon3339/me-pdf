@@ -21,12 +21,12 @@ You can configure initial documents and limits via the `documentManager` config 
         // Load these files on startup
         initialDocuments: [
           { 
-            url: 'https://snippet.embedpdf.com/ebook.pdf',
+            url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
             autoActivate: true,
             documentId: 'ebook-embedpdf',
           },
           { 
-            url: 'https://snippet.embedpdf.com/ebook.pdf',
+            url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
             autoActivate: false 
           }
         ],
@@ -69,7 +69,7 @@ const openRemotePdf = () => {
   const docManager = registry.value?.getPlugin('document-manager')?.provides();
 
   docManager?.openDocumentUrl({
-    url: 'https://snippet.embedpdf.com/ebook.pdf',
+    url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
     documentId: 'invoice-123',
     autoActivate: true
   });

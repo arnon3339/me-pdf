@@ -1,4 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
+import {
+  dutchTranslations,
+  englishTranslations,
+  germanTranslations,
+  paramResolvers,
+  spanishTranslations,
+  thaiTranslations,
+} from '../config/translations';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
 import { createPluginRegistration } from '@embedpdf/core';
@@ -55,6 +63,24 @@ type SidebarState = {
   thumbnails: boolean;
 };
 
+// Helper to detect system language and match with available locales
+const detectSystemLanguage = (availableLocales: string[]): string => {
+  if (typeof navigator === 'undefined') return 'en-US';
+
+  const systemLocales = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en-US'];
+  for (const locale of systemLocales) {
+    if (!locale) continue;
+    // Try exact match (e.g. 'th-TH' -> 'th-TH')
+    if (availableLocales.includes(locale)) return locale;
+
+    // Try language code match (e.g. 'th-TH' -> 'th')
+    const langCode = locale.split('-')[0];
+    if (langCode && availableLocales.includes(langCode)) return langCode;
+  }
+
+  return 'en-US'; // Fallback
+};
+
 export function ViewerPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { engine, isLoading, error } = usePdfiumEngine({
@@ -109,7 +135,17 @@ export function ViewerPage() {
       createPluginRegistration(ViewManagerPluginPackage, {
         defaultViewCount: 1,
       }),
-      createPluginRegistration(I18nPluginPackage),
+      createPluginRegistration(I18nPluginPackage, {
+        defaultLocale: detectSystemLanguage(['en-US', 'th']), // Add other supported locales here
+        locales: [
+          englishTranslations,
+          spanishTranslations,
+          germanTranslations,
+          dutchTranslations,
+          thaiTranslations,
+        ],
+        paramResolvers,
+      }),
     ],
     [], // Empty dependency array since these never change
   );
@@ -165,7 +201,7 @@ export function ViewerPage() {
             const document = await registry
               ?.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id)
               ?.provides()
-              ?.openDocumentUrl({ url: 'https://snippet.embedpdf.com/ebook.pdf' })
+              ?.openDocumentUrl({ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' })
               .toPromise();
 
             if (!document) return;

@@ -291,7 +291,7 @@ const handleInitialized = async (registry: PluginRegistry) => {
   registry
     ?.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id)
     ?.provides()
-    ?.openDocumentUrl({ url: 'https://snippet.embedpdf.com/ebook.pdf' })
+    ?.openDocumentUrl({ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' })
     .toPromise();
 };
 </script>

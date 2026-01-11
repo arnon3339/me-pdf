@@ -12,7 +12,37 @@ import {
   PdfVerticalAlignment,
   fontRefToCss,
   textAlignmentToCss,
+  isStandardFontRef,
+  standardFontIsBold,
+  standardFontIsItalic,
+  PdfFontRef,
 } from '@embedpdf/models';
+
+function getFontStyles(font: PdfFontRef) {
+  if (isStandardFontRef(font)) {
+    return {
+      fontWeight: standardFontIsBold(font.font) ? 'bold' : 'normal',
+      fontStyle: standardFontIsItalic(font.font) ? 'italic' : 'normal',
+    };
+  }
+  // Custom font
+  const styleStr = (font.style + ' ' + font.fullName).toLowerCase();
+
+  let fontWeight = 'normal';
+  if (styleStr.includes('thin') || styleStr.includes('hairline')) fontWeight = '100';
+  else if (styleStr.includes('extra light') || styleStr.includes('extralight') || styleStr.includes('ultra light')) fontWeight = '200';
+  else if (styleStr.includes('light')) fontWeight = '300';
+  else if (styleStr.includes('semi bold') || styleStr.includes('semibold') || styleStr.includes('demi')) fontWeight = '600';
+  else if (styleStr.includes('extra bold') || styleStr.includes('extrabold') || styleStr.includes('ultra bold')) fontWeight = '800';
+  else if (styleStr.includes('bold')) fontWeight = 'bold';
+  else if (styleStr.includes('black') || styleStr.includes('heavy')) fontWeight = '900';
+  else if (styleStr.includes('medium')) fontWeight = '500';
+
+  return {
+    fontWeight,
+    fontStyle: styleStr.includes('italic') || styleStr.includes('oblique') ? 'italic' : 'normal',
+  };
+}
 import { useAnnotationCapability } from '../..';
 import { TrackedAnnotation } from '@embedpdf/plugin-annotation';
 
@@ -104,6 +134,7 @@ export function FreeText({
           color: annotation.object.fontColor,
           fontSize: adjustedFontPx,
           fontFamily: fontRefToCss(annotation.object.fontFamily),
+          ...getFontStyles(annotation.object.fontFamily),
           textAlign: textAlignmentToCss(annotation.object.textAlign),
           flexDirection: 'column',
           justifyContent:

@@ -23,7 +23,7 @@ import { Loader2, FileText, BookOpen, Book } from 'lucide-react'
 
 const plugins = [
   createPluginRegistration(DocumentManagerPluginPackage, {
-    initialDocuments: [{ url: 'https://snippet.embedpdf.com/ebook.pdf' }],
+    initialDocuments: [{ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' }],
   }),
   createPluginRegistration(ViewportPluginPackage),
   createPluginRegistration(ScrollPluginPackage),
@@ -61,11 +61,10 @@ const SpreadToolbar = ({ documentId }: { documentId: string }) => {
             <button
               key={mode.value}
               onClick={() => spread.setSpreadMode(mode.value)}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium shadow-sm transition-all ${
-                isActive
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium shadow-sm transition-all ${isActive
                   ? 'bg-blue-500 text-white ring-1 ring-blue-600'
                   : 'bg-white text-gray-600 ring-1 ring-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-600 dark:hover:text-gray-100'
-              } `}
+                } `}
             >
               <Icon size={14} />
               <span className="hidden sm:inline">{mode.label}</span>

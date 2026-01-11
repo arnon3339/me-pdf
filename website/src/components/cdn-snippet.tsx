@@ -5,4 +5,4 @@ const EMBEDPDF_MAJOR_VERSION =
   process.env.NEXT_PUBLIC_SNIPPET_MAJOR_VERSION ?? '0'
 
 export const EMBEDPDF_JS_URL = `https://cdn.jsdelivr.net/npm/@embedpdf/snippet@${EMBEDPDF_MAJOR_VERSION}/dist/embedpdf.js`
-export const DEMO_PDF_URL = 'https://snippet.embedpdf.com/ebook.pdf'
+export const DEMO_PDF_URL = 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf'

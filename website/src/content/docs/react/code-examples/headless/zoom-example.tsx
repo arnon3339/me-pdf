@@ -84,11 +84,10 @@ const ZoomToolbar = ({ documentId }: ZoomToolbarProps) => {
       <div className="h-4 w-px bg-gray-300 dark:bg-gray-600" />
       <button
         onClick={zoom.toggleMarqueeZoom}
-        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium shadow-sm transition-all ${
-          state.isMarqueeZoomActive
+        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium shadow-sm transition-all ${state.isMarqueeZoomActive
             ? 'bg-blue-500 text-white ring-1 ring-blue-600'
             : 'bg-white text-gray-600 ring-1 ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-600'
-        } `}
+          } `}
         title="Toggle Area Zoom"
       >
         <Scan size={14} />
@@ -110,7 +109,7 @@ export const PDFViewer = () => {
   const plugins = useMemo(
     () => [
       createPluginRegistration(DocumentManagerPluginPackage, {
-        initialDocuments: [{ url: 'https://snippet.embedpdf.com/ebook.pdf' }],
+        initialDocuments: [{ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' }],
       }),
       createPluginRegistration(ViewportPluginPackage),
       createPluginRegistration(ScrollPluginPackage),

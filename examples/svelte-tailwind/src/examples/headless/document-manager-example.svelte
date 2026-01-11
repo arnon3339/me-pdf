@@ -19,8 +19,13 @@
   const plugins = [
     createPluginRegistration(DocumentManagerPluginPackage, {
       initialDocuments: [
-        { url: 'https://snippet.embedpdf.com/ebook.pdf' },
-        { url: 'https://snippet.embedpdf.com/ebook.pdf', autoActivate: false },
+        {
+          url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
+        },
+        {
+          url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
+          autoActivate: false,
+        },
       ],
     }),
     createPluginRegistration(ViewportPluginPackage),

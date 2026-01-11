@@ -30,7 +30,7 @@ import { Loader2, Copy, Check, Type } from 'lucide-react'
 
 const plugins = [
   createPluginRegistration(DocumentManagerPluginPackage, {
-    initialDocuments: [{ url: 'https://snippet.embedpdf.com/ebook.pdf' }],
+    initialDocuments: [{ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' }],
   }),
   createPluginRegistration(ViewportPluginPackage),
   createPluginRegistration(ScrollPluginPackage),
@@ -148,11 +148,10 @@ const SelectionToolbar = ({ documentId }: { documentId: string }) => {
       <button
         onClick={handleCopy}
         disabled={!hasSelection}
-        className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium shadow-sm transition-all ${
-          hasSelection
+        className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium shadow-sm transition-all ${hasSelection
             ? 'bg-blue-500 text-white ring-1 ring-blue-600 hover:bg-blue-600'
             : 'cursor-not-allowed bg-white text-gray-400 ring-1 ring-gray-300 dark:bg-gray-700 dark:text-gray-500 dark:ring-gray-600'
-        } `}
+          } `}
         title="Copy Selected Text"
       >
         {copied ? (

@@ -21,7 +21,7 @@ const EMBEDPDF_VERSION = snippetPackageJson.version
 const EMBEDPDF_MAJOR_VERSION = EMBEDPDF_VERSION.split('.')[0]
 
 const EMBEDPDF_JS_URL = `https://cdn.jsdelivr.net/npm/@embedpdf/snippet@${EMBEDPDF_MAJOR_VERSION}/dist/embedpdf.js`
-const DEMO_PDF_URL = 'https://snippet.embedpdf.com/ebook.pdf'
+const DEMO_PDF_URL = 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf'
 
 /**
  * Rehype plugin that replaces CDN URL placeholders in code blocks at build time.

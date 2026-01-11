@@ -24,7 +24,7 @@ import {
 
 const plugins = [
   createPluginRegistration(DocumentManagerPluginPackage, {
-    initialDocuments: [{ url: 'https://snippet.embedpdf.com/ebook.pdf' }],
+    initialDocuments: [{ url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf' }],
   }),
   createPluginRegistration(ViewportPluginPackage, {
     viewportGap: 20,
@@ -101,11 +101,10 @@ const ScrollToolbar = ({ documentId }: { documentId: string }) => {
       {/* Scroll activity indicator */}
       <div className="flex items-center gap-2">
         <div
-          className={`h-2 w-2 rounded-full transition-colors duration-200 ${
-            scrollActivity.isScrolling
+          className={`h-2 w-2 rounded-full transition-colors duration-200 ${scrollActivity.isScrolling
               ? 'animate-pulse bg-green-500'
               : 'bg-gray-300 dark:bg-gray-600'
-          } `}
+            } `}
         />
         <span className="text-xs text-gray-600 dark:text-gray-300">
           {scrollActivity.isScrolling ? 'Scrolling...' : 'Idle'}

@@ -52,7 +52,14 @@ export const freeTextHandlerFactory: HandlerFactory<PdfFreeTextAnnoObject> = {
         const clickConfig = tool.clickBehavior;
         if (!clickConfig?.enabled) return;
 
-        const { width, height } = clickConfig.defaultSize;
+        const { width: defaultWidth, height: defaultHeight } = clickConfig.defaultSize;
+        const fontSize = defaults.fontSize || 12;
+        // Scale the box based on font size (assuming default is good for ~12px)
+        const scale = fontSize / 12;
+        const width = defaultWidth * scale;
+        const height = defaultHeight * scale;
+
+        console.log('FreeText creation: fontSize', fontSize, 'scale', scale, 'size', width, height);
 
         // Center the text box at click position, but keep within bounds
         const halfWidth = width / 2;

@@ -47,7 +47,7 @@ Add the CDN module and point it at a container:
   EmbedPDF.init({
     type: 'container', // mount strategy
     target: document.getElementById('pdf-viewer'),
-    src: 'https://snippet.embedpdf.com/ebook.pdf', // your PDF URL
+    src: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf', // your PDF URL
   });
 </script>
 ```
@@ -78,7 +78,7 @@ That’s it—refresh and enjoy a full‑featured viewer.
       EmbedPDF.init({
         type: 'container',
         target: document.getElementById('pdf-viewer'),
-        src: 'https://snippet.embedpdf.com/ebook.pdf',
+        src: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
       });
     </script>
   </body>

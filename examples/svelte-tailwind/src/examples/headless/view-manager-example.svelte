@@ -41,7 +41,9 @@
 
       // Open first document and add to first view
       const { documentId: doc1 } = await docPlugin
-        .openDocumentUrl({ url: 'https://snippet.embedpdf.com/ebook.pdf' })
+        .openDocumentUrl({
+          url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
+        })
         .toPromise();
 
       if (views[0]) {
@@ -51,7 +53,9 @@
 
       // Open second document and add to second view
       const { documentId: doc2 } = await docPlugin
-        .openDocumentUrl({ url: 'https://snippet.embedpdf.com/ebook.pdf' })
+        .openDocumentUrl({
+          url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
+        })
         .toPromise();
 
       if (views[1]) {

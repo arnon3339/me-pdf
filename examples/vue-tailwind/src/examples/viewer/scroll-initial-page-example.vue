@@ -85,7 +85,7 @@ onUnmounted(() => {
           documentManager: {
             initialDocuments: [
               {
-                url: 'https://snippet.embedpdf.com/ebook.pdf',
+                url: 'https://raw.githubusercontent.com/arnon3339/pubme/main/pdf/Digital_Inno_Cover.pdf',
                 documentId: 'ebook',
               },
             ],
